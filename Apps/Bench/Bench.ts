@@ -81,11 +81,14 @@ class RitualBench {
     return section(
       'Kettle and heater',
       row(this.live(() => `kettle: ${this.vesselSummary('kettle')}`)),
+      row(this.live(() => this.heaterSummary())),
       row(
-        button('On heater', () => this.send({ type: 'placeOnHeater', vesselId: 'kettle' })),
-        button('Off heater', () => this.send({ type: 'takeOffHeater' })),
-        button('Switch on', () => this.send({ type: 'switchHeaterOn' })),
-        button('Switch off', () => this.send({ type: 'switchHeaterOff' })),
+        button('Put kettle on heater', () => this.send({ type: 'placeOnHeater', vesselId: 'kettle' })),
+        button('Lift kettle off', () => this.send({ type: 'takeOffHeater' })),
+      ),
+      row(
+        button('Heater: switch on', () => this.send({ type: 'switchHeaterOn' })),
+        button('Heater: switch off', () => this.send({ type: 'switchHeaterOff' })),
       ),
       row(...this.lidButtons('kettle')),
       row(this.live(() => `thermos: ${this.vesselSummary('thermos')}`)),
@@ -215,6 +218,11 @@ class RitualBench {
     const leaves = vessel.leaves === null ? '' : ` · leaves ${vessel.leaves.grams.toFixed(1)} g`
     const lid = vessel.isLidOpen ? ' · lid open' : ''
     return `${volumeMl.toFixed(0)} ml · ${temperatureC.toFixed(1)} °C · strength ${strength.toFixed(0)} · bitterness ${bitterness.toFixed(0)}${leaves}${lid}`
+  }
+
+  private heaterSummary(): string {
+    const { isOn, vesselIdOnTop } = this.session.state.heater
+    return `heater ${isOn ? 'on' : 'off'} · ${vesselIdOnTop === null ? 'nothing on it' : `${vesselIdOnTop} on it`}`
   }
 
   private leavesSummary(): string {
