@@ -1,11 +1,12 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, heatLiquid } from '../Physics/Heat.ts'
+import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { wetMlAfterDrying } from '../Physics/Table.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
-import { chosenTea, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { chosenTea, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
@@ -33,6 +34,7 @@ function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatu
   if (tea === null || draft.state.heater.hasAnnouncedTargetTemperature) return
   if (temperatureC < tea.water.good.lowestC) return
   draft.state.heater.hasAnnouncedTargetTemperature = true
+  note(draft, `${vesselId} reached the good range of ${tea.id} at ${temperatureC.toFixed(1)} °C while heating`)
   draft.events.push({ type: 'targetTemperatureReached', vesselId })
 }
 
@@ -64,7 +66,12 @@ function continuePour(draft: Draft, seconds: number): void {
   draft.state.tableWetMl += landing.spilledMl
   if (target !== undefined && landing.overflowedMl > 0 && !pour.hasOverflowed) {
     pour.hasOverflowed = true
+    note(draft, `${target.id} overflowed at ${target.liquid.volumeMl.toFixed(1)} ml while pouring from ${source.id}`)
     draft.events.push({ type: 'vesselOverflowed', vesselId: target.id })
+  }
+  if (isEmpty(source.liquid) && !pour.hasRunDry) {
+    pour.hasRunDry = true
+    note(draft, `${source.id} ran dry while pouring into ${pour.targetId ?? 'the table'}`)
   }
 }
 

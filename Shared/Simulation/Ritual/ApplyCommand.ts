@@ -3,7 +3,7 @@ import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
-import { outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
+import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
 import { placeOnHeater, switchHeaterOff, switchHeaterOn, takeOffHeater } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
 import { moveCaddyLid, moveVesselLid } from './LidCommands.ts'
@@ -14,6 +14,7 @@ import { beginRitual, chooseAtmosphere, finishRitual, leaveRoom } from './Sessio
 
 export function applyCommand(state: SessionState, command: Command, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
+  noteDetail(draft, `received ${JSON.stringify(command)} in phase ${state.phase}`)
   const phaseRefusal = refusalInPhase(state.phase, command.type)
   if (phaseRefusal !== null) {
     refuse(draft, command, phaseRefusal)

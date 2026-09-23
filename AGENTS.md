@@ -22,7 +22,7 @@ Inside the simulation:
 - `Judgement/` holds pure decision tables: water, taste, offering, the gods.
 - `Ritual/` holds commands, events and handlers, the fixed-step `SimulationStep`, and `RitualSession`, the only object a presentation talks to.
 
-A presentation calls `session.dispatch(command)` for each player decision and `session.advance(seconds)` once per frame, renders `session.state`, and reacts to the returned events. It never writes state.
+A presentation creates `RitualSession` with a `RitualLog`, calls `session.dispatch(command)` for each player decision and `session.advance(seconds)` once per frame, renders `session.state`, and reacts to the returned events. It never writes state.
 
 Adding content (a tea, a vessel, a figurine, a room):
 
@@ -49,6 +49,7 @@ External dependencies: none at run time. TypeScript and `@types/node` for develo
 - Every refusal is an `actionRefused` event with a reason. A handler never throws for a player mistake and never ignores a command silently.
 - A gods judgement that should happen once per ritual is guarded by `godsJudgementsMade`.
 - Source files use only erasable TypeScript syntax: no enums, namespaces or constructor parameter properties. Relative imports end in `.ts`. Node runs the files as they are.
+- Every decision writes a log line where it is taken, with the values that decided it and the ids involved: `note(draft, ...)` for the story, `noteDetail(draft, ...)` for frequent raw input such as tilt changes. `refuse` logs by itself. An early return that skips a decision says so in a line. The simulation never writes to the console: `RitualSession` passes the lines, prefixed with simulated time to the millisecond, to the `RitualLog` it was given.
 - Text the player reads is not in the simulation. The simulation emits ids such as remark names, and the presentation turns them into words.
 
 ## Conventions

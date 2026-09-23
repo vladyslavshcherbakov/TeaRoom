@@ -2,6 +2,7 @@ import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Command } from '../../Shared/Simulation/Ritual/Command.ts'
 import type { RitualEvent } from '../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
+import { RecordingLog } from './RecordingLog.ts'
 import { testCatalog } from './TestCatalog.ts'
 
 export const halfFlowTiltDegrees = 27.5
@@ -10,10 +11,11 @@ export const fullFlowTiltDegrees = 45
 const longestWaitSeconds = 3600
 
 export class TestRitual {
+  readonly log = new RecordingLog()
   readonly session: RitualSession
 
   constructor(catalog: Catalog = testCatalog(), roomId = 'testRoom') {
-    this.session = new RitualSession(catalog, roomId)
+    this.session = new RitualSession(catalog, roomId, this.log)
   }
 
   static begun(catalog: Catalog = testCatalog(), teaId = 'testGreen', roomId = 'testRoom'): TestRitual {

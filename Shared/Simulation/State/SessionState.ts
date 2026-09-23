@@ -38,6 +38,7 @@ export type PourState = {
   pouredMl: number
   spilledMl: number
   hasOverflowed: boolean
+  hasRunDry: boolean
 }
 
 export type FigurineState = {

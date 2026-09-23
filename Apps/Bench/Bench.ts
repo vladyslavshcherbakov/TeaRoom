@@ -2,20 +2,22 @@ import { defaultCatalog } from '../../Shared/Content/DefaultCatalog.ts'
 import type { TimeOfDay, Weather } from '../../Shared/Simulation/Definitions/Atmosphere.ts'
 import { definitionIn } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Command } from '../../Shared/Simulation/Ritual/Command.ts'
-import type { RitualEvent } from '../../Shared/Simulation/Ritual/RitualEvent.ts'
+import type { LogLevel } from '../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
+import { BenchLog } from './BenchLog.ts'
 import { button, holdButton, picker, readout, row, section, slider, type Readout } from './Controls.ts'
 
 const roomId = 'quietRoom'
 const tableTargetLabel = 'table'
-const visibleEventLines = 16
+const visibleLogLines = 40
+const logLevels: readonly LogLevel[] = ['info', 'debug']
 const timeScales = ['1', '5', '20'] as const
 
 class RitualBench {
   private readonly room = definitionIn(defaultCatalog, 'rooms', roomId)
   private readonly liveReadouts = new Map<HTMLElement, Readout>()
-  private readonly eventLines: string[] = []
-  private session = new RitualSession(defaultCatalog, roomId)
+  private readonly log = new BenchLog(visibleLogLines)
+  private session = new RitualSession(defaultCatalog, roomId, this.log)
   private timeScale = 1
   private lastFrameMs: number | null = null
   private teaId = Object.keys(defaultCatalog.teas)[0] ?? ''
@@ -44,21 +46,13 @@ class RitualBench {
   private frame(nowMs: number): void {
     const elapsedSeconds = this.lastFrameMs === null ? 0 : (nowMs - this.lastFrameMs) / 1000
     this.lastFrameMs = nowMs
-    this.record(this.session.advance(Math.min(elapsedSeconds, 0.25) * this.timeScale))
+    this.session.advance(Math.min(elapsedSeconds, 0.25) * this.timeScale)
     for (const [element, text] of this.liveReadouts) element.textContent = text()
     requestAnimationFrame((nextMs) => this.frame(nextMs))
   }
 
   private send(command: Command): void {
-    this.record(this.session.dispatch(command))
-  }
-
-  private record(events: readonly RitualEvent[]): void {
-    for (const event of events) {
-      const { type, ...details } = event
-      this.eventLines.unshift(`${this.session.state.elapsedSeconds.toFixed(1)}s ${type} ${JSON.stringify(details)}`)
-    }
-    this.eventLines.length = Math.min(this.eventLines.length, visibleEventLines)
+    this.session.dispatch(command)
   }
 
   private setupSection(): HTMLElement {
@@ -165,9 +159,9 @@ class RitualBench {
   }
 
   private logSection(): HTMLElement {
-    const log = this.live(() => this.eventLines.join('\n'))
+    const log = this.live(() => this.log.newestFirst.join('\n'))
     log.id = 'log'
-    return section('Events, newest first', log)
+    return section('Log, newest first', row(picker(logLevels, (level) => this.log.showLevelsFrom(level))), log)
   }
 
   private lidButtons(vesselId: string): HTMLElement[] {
@@ -205,8 +199,8 @@ class RitualBench {
   }
 
   private restart(): void {
-    this.session = new RitualSession(defaultCatalog, roomId)
-    this.eventLines.length = 0
+    this.log.clear()
+    this.session = new RitualSession(defaultCatalog, roomId, this.log)
   }
 
   private sessionSummary(): string {

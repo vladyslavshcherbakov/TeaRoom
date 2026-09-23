@@ -5,8 +5,17 @@ import { judgeTaste } from '../Judgement/TasteJudgement.ts'
 import { isEmpty, splitLiquid } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
+import {
+  chosenTea,
+  describeLiquid,
+  isInvolvedInPour,
+  letTheGodsJudge,
+  note,
+  refuse,
+  vesselDefinitionOf,
+  type Draft,
+} from './Draft.ts'
 import type { RefusalReason } from './RitualEvent.ts'
-import { chosenTea, isInvolvedInPour, letTheGodsJudge, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 
 const sipMl = 20
 
@@ -16,16 +25,18 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
   if (tea === null) return refuse(draft, command, 'ritualNotStarted')
   if (cup === undefined) return refuse(draft, command, 'unknownVessel')
   const refusal = refusalToServe(draft, cup)
-  if (refusal !== null) return refuse(draft, command, refusal)
+  if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(cup))
   const { taken: sip, left } = splitLiquid(cup.liquid, sipMl)
   cup.liquid = left
   const verdict = judgeTaste(sip, tea)
+  note(
+    draft,
+    `sipped ${sip.volumeMl.toFixed(1)} ml of ${tea.id} from ${cup.id} at ${sip.temperatureC.toFixed(1)} °C, ` +
+      `strength ${sip.strength.toFixed(0)}, bitterness ${sip.bitterness.toFixed(0)}: ` +
+      `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}`,
+  )
   draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict })
-  if (draft.state.godsJudgementsMade.firstSip) return
-  const godsVerdict = godsVerdictOnFirstSip(verdict.reaction)
-  if (godsVerdict === null) return
-  draft.state.godsJudgementsMade.firstSip = true
-  letTheGodsJudge(draft, godsVerdict)
+  letTheGodsJudgeTheFirstSip(draft, verdict.reaction)
 }
 
 export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void {
@@ -37,13 +48,25 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   if (figurine === undefined) return refuse(draft, command, 'unknownFigurine')
   if (figurine.wasOfferedTeaThisRitual) return refuse(draft, command, 'figurineAlreadyOffered')
   const refusal = refusalToServe(draft, cup)
-  if (refusal !== null) return refuse(draft, command, refusal)
-  const offering = judgeOffering(cup.liquid, teaId, definitionIn(draft.catalog, 'figurines', figurine.id))
+  if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(cup))
+  const definition = definitionIn(draft.catalog, 'figurines', figurine.id)
+  const offering = judgeOffering(cup.liquid, teaId, definition)
+  const satisfactionBefore = figurine.satisfaction
+  note(draft, `offered to ${figurine.id}: ${describeLiquid(cup)}, affinity for ${teaId} ${definition.affinityByTeaId[teaId] ?? 0}`)
   cup.liquid = { ...cup.liquid, volumeMl: 0 }
   figurine.wasOfferedTeaThisRitual = true
   figurine.satisfaction = Math.min(100, Math.max(0, figurine.satisfaction + offering.satisfactionDelta))
+  note(draft, `${figurine.id} satisfaction ${satisfactionBefore} → ${figurine.satisfaction}, response ${offering.response}`)
   draft.events.push({ type: 'figurineAcceptedTea', figurineId: figurine.id, response: offering.response })
   letTheGodsJudge(draft, godsVerdictOnOffering(offering))
+}
+
+function letTheGodsJudgeTheFirstSip(draft: Draft, reaction: Parameters<typeof godsVerdictOnFirstSip>[0]): void {
+  if (draft.state.godsJudgementsMade.firstSip) return note(draft, 'the gods already judged a sip this ritual')
+  const godsVerdict = godsVerdictOnFirstSip(reaction)
+  if (godsVerdict === null) return note(draft, 'the sip was too hot to judge, the gods wait for the next one')
+  draft.state.godsJudgementsMade.firstSip = true
+  letTheGodsJudge(draft, godsVerdict)
 }
 
 function refusalToServe(draft: Draft, cup: VesselState): RefusalReason | null {
