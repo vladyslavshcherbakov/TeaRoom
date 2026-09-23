@@ -1,0 +1,60 @@
+import { godsVerdictOnSpill } from '../Judgement/GodsMood.ts'
+import { isEmpty } from '../Physics/Liquid.ts'
+import type { VesselState } from '../State/SessionState.ts'
+import type { CommandOfType } from './Command.ts'
+import type { RefusalReason } from './RitualEvent.ts'
+import { letTheGodsJudge, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+
+export function startPouring(draft: Draft, command: CommandOfType<'startPouring'>): void {
+  if (draft.state.pour !== null) return refuse(draft, command, 'alreadyPouring')
+  const source = draft.state.vessels[command.sourceId]
+  const target = command.targetId === null ? null : draft.state.vessels[command.targetId]
+  if (source === undefined || target === undefined) return refuse(draft, command, 'unknownVessel')
+  const refusal = refusalToPour(draft, source, target)
+  if (refusal !== null) return refuse(draft, command, refusal)
+  draft.state.pour = {
+    sourceId: source.id,
+    targetId: target?.id ?? null,
+    tiltDegrees: 0,
+    streamOnTargetFraction: 1,
+    pouredMl: 0,
+    spilledMl: 0,
+    hasOverflowed: false,
+  }
+  draft.events.push({ type: 'pourStarted', sourceId: source.id, targetId: target?.id ?? null })
+}
+
+export function adjustPour(draft: Draft, command: CommandOfType<'adjustPour'>): void {
+  if (draft.state.pour === null) return refuse(draft, command, 'notPouring')
+  draft.state.pour.tiltDegrees = command.tiltDegrees
+  draft.state.pour.streamOnTargetFraction = command.streamOnTargetFraction
+}
+
+export function stopPouring(draft: Draft, command: CommandOfType<'stopPouring'>): void {
+  if (draft.state.pour === null) return refuse(draft, command, 'notPouring')
+  finishPour(draft)
+}
+
+export function finishPour(draft: Draft): void {
+  const pour = draft.state.pour
+  if (pour === null) return
+  draft.state.pour = null
+  draft.events.push({
+    type: 'pourFinished',
+    sourceId: pour.sourceId,
+    targetId: pour.targetId,
+    pouredMl: pour.pouredMl,
+    spilledMl: pour.spilledMl,
+  })
+  letTheGodsJudge(draft, godsVerdictOnSpill(pour.spilledMl))
+}
+
+function refusalToPour(draft: Draft, source: VesselState, target: VesselState | null): RefusalReason | null {
+  if (source.id === target?.id) return 'cannotPourIntoItself'
+  if (draft.state.heater.vesselIdOnTop === source.id) return 'vesselIsOnTheHeater'
+  if (isEmpty(source.liquid)) return 'sourceIsEmpty'
+  if (vesselDefinitionOf(draft, source).lid?.mustBeOpenToPour === true && !source.isLidOpen) return 'lidClosed'
+  if (target === null) return null
+  if (vesselDefinitionOf(draft, target).lid?.mustBeOpenToFill === true && !target.isLidOpen) return 'lidClosed'
+  return null
+}

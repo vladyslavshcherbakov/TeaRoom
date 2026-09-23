@@ -1,0 +1,78 @@
+import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
+import { steepLeaves } from '../Physics/Brewing.ts'
+import { coolingPerSecondOf, coolLiquid, heatLiquid } from '../Physics/Heat.ts'
+import { pourStream } from '../Physics/Pouring.ts'
+import { wetMlAfterDrying } from '../Physics/Table.ts'
+import type { SessionState } from '../State/SessionState.ts'
+import { startOrEndBrews } from './Brews.ts'
+import { chosenTea, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+
+export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
+  const draft = startDraft(state, catalog)
+  if (state.phase === 'ended') return outcomeOf(draft)
+  coolVessels(draft, seconds)
+  heatVesselOnHeater(draft, seconds)
+  continuePour(draft, seconds)
+  steepAllLeaves(draft, seconds)
+  draft.state.tableWetMl = wetMlAfterDrying(draft.state.tableWetMl, seconds)
+  startOrEndBrews(draft)
+  draft.state.elapsedSeconds += seconds
+  return outcomeOf(draft)
+}
+
+function heatVesselOnHeater(draft: Draft, seconds: number): void {
+  const heater = draft.state.heater
+  const vessel = heater.vesselIdOnTop === null ? undefined : draft.state.vessels[heater.vesselIdOnTop]
+  if (!heater.isOn || vessel === undefined) return
+  vessel.liquid = heatLiquid(vessel.liquid, definitionIn(draft.catalog, 'heaters', heater.definitionId), seconds)
+  announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
+}
+
+function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatureC: number): void {
+  const tea = chosenTea(draft)
+  if (tea === null || draft.state.heater.hasAnnouncedTargetTemperature) return
+  if (temperatureC < tea.water.good.lowestC) return
+  draft.state.heater.hasAnnouncedTargetTemperature = true
+  draft.events.push({ type: 'targetTemperatureReached', vesselId })
+}
+
+function coolVessels(draft: Draft, seconds: number): void {
+  const ambientC = definitionIn(draft.catalog, 'rooms', draft.state.roomId).ambientTemperatureC
+  for (const vessel of Object.values(draft.state.vessels)) {
+    const coolingPerSecond = coolingPerSecondOf(vesselDefinitionOf(draft, vessel), vessel.isLidOpen)
+    vessel.liquid = coolLiquid(vessel.liquid, ambientC, coolingPerSecond, seconds)
+  }
+}
+
+function continuePour(draft: Draft, seconds: number): void {
+  const pour = draft.state.pour
+  const source = pour === null ? undefined : draft.state.vessels[pour.sourceId]
+  if (pour === null || source === undefined) return
+  const target = pour.targetId === null ? undefined : draft.state.vessels[pour.targetId]
+  const landing = pourStream(
+    source.liquid,
+    vesselDefinitionOf(draft, source),
+    target === undefined ? null : { liquid: target.liquid, definition: vesselDefinitionOf(draft, target) },
+    pour.tiltDegrees,
+    pour.streamOnTargetFraction,
+    seconds,
+  )
+  source.liquid = landing.source
+  if (target !== undefined && landing.target !== null) target.liquid = landing.target
+  pour.pouredMl += landing.landedMl
+  pour.spilledMl += landing.spilledMl
+  draft.state.tableWetMl += landing.spilledMl
+  if (target !== undefined && landing.overflowedMl > 0 && !pour.hasOverflowed) {
+    pour.hasOverflowed = true
+    draft.events.push({ type: 'vesselOverflowed', vesselId: target.id })
+  }
+}
+
+function steepAllLeaves(draft: Draft, seconds: number): void {
+  for (const vessel of Object.values(draft.state.vessels)) {
+    if (vessel.leaves === null || !vessel.leaves.isSteeping) continue
+    const steeped = steepLeaves(vessel.liquid, vessel.leaves, definitionIn(draft.catalog, 'teas', vessel.leaves.teaId), seconds)
+    vessel.liquid = steeped.liquid
+    vessel.leaves = steeped.leaves
+  }
+}
