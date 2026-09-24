@@ -1,11 +1,5 @@
 import * as THREE from 'three'
-
-export type LeafShape = 'needle' | 'ball' | 'chunk'
-
-export type LeafLook = {
-  readonly colour: string
-  readonly shape: LeafShape
-}
+import type { LeafShape, TeaLook } from '../../Table/TeaLooks.ts'
 
 export type LeafPileSize = {
   readonly leafCount: number
@@ -13,30 +7,19 @@ export type LeafPileSize = {
   readonly heightMetres: number
 }
 
-const leafLooksByTeaId: Readonly<Record<string, LeafLook>> = {
-  sencha: { colour: '#3f5f24', shape: 'needle' },
-  oolong: { colour: '#4a5a2c', shape: 'ball' },
-  shouPuerh: { colour: '#3b2417', shape: 'chunk' },
-}
-
-const unknownTeaLook: LeafLook = { colour: '#4d4a2a', shape: 'needle' }
 const shadeSpread = 0.35
 const smallestLeafScale = 0.7
 const leafScaleSpread = 0.6
 const layoutSeed = 20260924
 
-export function leafLookFor(teaId: string | null): LeafLook {
-  return teaId === null ? unknownTeaLook : (leafLooksByTeaId[teaId] ?? unknownTeaLook)
-}
-
 export class LeafPile {
   readonly mesh: THREE.InstancedMesh
   private readonly leafCount: number
 
-  constructor(look: LeafLook, size: LeafPileSize) {
+  constructor(look: TeaLook, size: LeafPileSize) {
     this.leafCount = size.leafCount
     const material = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.85, flatShading: true })
-    this.mesh = new THREE.InstancedMesh(leafGeometryOf(look.shape), material, size.leafCount)
+    this.mesh = new THREE.InstancedMesh(leafGeometryOf(look.leafShape), material, size.leafCount)
     this.mesh.castShadow = false
     this.mesh.receiveShadow = true
     layOutLeaves(this.mesh, look, size)
@@ -61,10 +44,10 @@ function leafGeometryOf(shape: LeafShape): THREE.BufferGeometry {
   }
 }
 
-function layOutLeaves(mesh: THREE.InstancedMesh, look: LeafLook, size: LeafPileSize): void {
+function layOutLeaves(mesh: THREE.InstancedMesh, look: TeaLook, size: LeafPileSize): void {
   const nextRandom = seededRandom(layoutSeed)
   const leaf = new THREE.Object3D()
-  const baseColour = new THREE.Color(look.colour)
+  const baseColour = new THREE.Color(look.leafColour)
   for (let index = 0; index < size.leafCount; index += 1) {
     const angle = nextRandom() * Math.PI * 2
     const distanceFromCentre = Math.sqrt(nextRandom()) * size.radiusMetres

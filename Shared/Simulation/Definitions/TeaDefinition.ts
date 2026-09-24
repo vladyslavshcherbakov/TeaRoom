@@ -26,5 +26,4 @@ export type TeaDefinition = {
     readonly bitternessGainPerDegreeAboveGood: number
   }
   readonly balancedStrength: StrengthRange
-  readonly liquorColour: string
 }

@@ -6,6 +6,7 @@ import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
+import { teaLookFor } from './TeaLooks.ts'
 
 const waterColour = '#5f93b5'
 const overbrewedColour = '#2b1a10'
@@ -65,7 +66,7 @@ function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.
 }
 
 function liquorColour(liquid: Liquid, tea: TeaDefinition): string {
-  const brewed = mixColours(waterColour, tea.liquorColour, liquid.strength / 100)
+  const brewed = mixColours(waterColour, teaLookFor(tea.id).liquorColour, liquid.strength / 100)
   const darkening = share(liquid.bitterness - bitternessWhereDarkeningStarts, 100 - bitternessWhereDarkeningStarts)
   return mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
 }

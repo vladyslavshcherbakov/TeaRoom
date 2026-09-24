@@ -6,7 +6,8 @@ import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
-import { LeafPile, leafLookFor, type LeafPileSize } from './LeafPile.ts'
+import { teaLookFor } from '../../Table/TeaLooks.ts'
+import { LeafPile, type LeafPileSize } from './LeafPile.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
@@ -301,7 +302,7 @@ export class CarriedItems {
     const teaId = scene.state.caddy.teaId
     if (model.leaves === null || model.leaves.teaId !== teaId) {
       if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
-      const pile = new LeafPile(leafLookFor(teaId), model.shape === 'spoon' ? leavesOnTheSpoon : leavesInTheCaddy)
+      const pile = new LeafPile(teaLookFor(teaId), model.shape === 'spoon' ? leavesOnTheSpoon : leavesInTheCaddy)
       pile.mesh.layers.set(model.layer)
       pile.mesh.userData = { ...holder.userData }
       holder.add(pile.mesh)

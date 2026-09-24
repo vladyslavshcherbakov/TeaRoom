@@ -11,7 +11,6 @@ export const sencha: TeaDefinition = {
     bitternessGainPerDegreeAboveGood: 0.06,
   },
   balancedStrength: { lowest: 40, highest: 70 },
-  liquorColour: '#b8c46a',
 }
 
 export const oolong: TeaDefinition = {
@@ -25,7 +24,6 @@ export const oolong: TeaDefinition = {
     bitternessGainPerDegreeAboveGood: 0.03,
   },
   balancedStrength: { lowest: 40, highest: 75 },
-  liquorColour: '#d99a3e',
 }
 
 export const shouPuerh: TeaDefinition = {
@@ -39,5 +37,4 @@ export const shouPuerh: TeaDefinition = {
     bitternessGainPerDegreeAboveGood: 0.02,
   },
   balancedStrength: { lowest: 45, highest: 80 },
-  liquorColour: '#5a2a14',
 }

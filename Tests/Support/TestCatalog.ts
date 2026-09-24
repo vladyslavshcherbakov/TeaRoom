@@ -21,7 +21,6 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
           bitternessGainPerDegreeAboveGood: 0.05,
         },
         balancedStrength: { lowest: 40, highest: 70 },
-        liquorColour: '#99aa55',
       },
     },
     vessels: {

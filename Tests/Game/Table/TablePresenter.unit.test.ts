@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
+import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { testCatalog } from '../../Support/TestCatalog.ts'
@@ -85,16 +86,20 @@ test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
   }
 })
 
-test('liquorColour_blendsFromBlueWaterToTheTeaAndDarkensWhenBitter', () => {
+test('senchaColour_blendsFromBlueWaterToTheTeaAndDarkensWhenBitter', () => {
   const rows = [
     [{ strength: 0, bitterness: 0 }, '#5f93b5'],
-    [{ strength: 50, bitterness: 0 }, '#7c9f85'],
-    [{ strength: 100, bitterness: 0 }, '#99aa55'],
-    [{ strength: 100, bitterness: 100 }, '#626233'],
+    [{ strength: 50, bitterness: 0 }, '#8cac90'],
+    [{ strength: 100, bitterness: 0 }, '#b8c46a'],
+    [{ strength: 100, bitterness: 100 }, '#726f3d'],
   ] as const
 
   for (const [liquid, colour] of rows) {
-    assert.equal(vesselView(stateWithLiquid('cup1', liquid), 'cup1')?.liquorColour, colour, JSON.stringify(liquid))
+    const state = structuredClone(TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom').state) as SessionState
+    const bowl = state.vessels['bowl1']
+    if (bowl === undefined) throw new Error('the quiet room has no bowl1')
+    bowl.liquid = { ...bowl.liquid, volumeMl: 100, ...liquid }
+    assert.equal(tableViewState(state, defaultCatalog).vessels['bowl1']?.liquorColour, colour, JSON.stringify(liquid))
   }
 })
 
