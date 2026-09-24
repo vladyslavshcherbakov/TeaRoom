@@ -381,6 +381,21 @@ test('hand_whenTappedInTheRoomView_isNotChosen', () => {
   assert.equal(room.play.selectedHandIndex, null)
 })
 
+test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehindTheShelf', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.fillTheKettleInHand()
+  room.walkTo('shelf')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'item', itemId: 'bowl1' })
+
+  const spout = room.play.aimedPourView?.spout
+  assertNear(spout?.x ?? 0, -2.772, 0.001)
+  assertNear(spout?.z ?? 0, 0.319, 0.001)
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')

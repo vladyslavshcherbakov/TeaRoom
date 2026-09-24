@@ -7,7 +7,8 @@ import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly
 import type { HandIndex, ItemLocation, SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { AimedPour, type AimedPourView } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
-import { carriedItemShapes, furniture, openingRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
+import { carriedItemShapes, furniture, furnitureWithId, openingRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
 
@@ -230,8 +231,10 @@ export class RoomPlay {
     const sourceId = this.selectedItemId()
     const target = this.ritual.state.vessels[targetId]
     const targetShape = carriedItemShapes[targetId]
-    if (sourceId === null || target?.location.kind !== 'onSurface' || targetShape === undefined) return this.log(`no pour to aim at ${targetId}`)
-    this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, targetId, target.location.spot, openingRadiusMetres[targetShape])
+    const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
+    if (sourceId === null || target?.location.kind !== 'onSurface' || targetShape === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
+    const spoutDirection = screenRightOnTheFloor(furnitureWithId(closeUpFurnitureId).closeUp)
+    this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, targetId, target.location.spot, openingRadiusMetres[targetShape], spoutDirection)
   }
 
   private turnTheTap(): void {

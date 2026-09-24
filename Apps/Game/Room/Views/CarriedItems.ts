@@ -230,10 +230,11 @@ export class CarriedItems {
     const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
     if (target === undefined) return
     const tiltRadians = -THREE.MathUtils.degToRad(Math.max(0, aim.tiltDegrees))
-    const tipAfterTilt = model.spoutTip.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), tiltRadians)
+    const turnRadians = Math.atan2(-aim.spoutDirection.z, aim.spoutDirection.x)
+    const tipAfterTilt = model.spoutTip.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), tiltRadians).applyAxisAngle(new THREE.Vector3(0, 1, 0), turnRadians)
     const tipGoal = new THREE.Vector3(aim.spout.x, target.root.position.y + target.rimHeight + spoutAboveTargetRimMetres, aim.spout.z)
     model.root.visible = true
-    model.root.rotation.set(0, 0, tiltRadians)
+    model.root.rotation.set(0, turnRadians, tiltRadians)
     model.root.position.copy(tipGoal.sub(tipAfterTilt))
   }
 

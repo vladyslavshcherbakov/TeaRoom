@@ -7,6 +7,7 @@ export type AimedPourView = {
   readonly sourceId: string
   readonly targetId: string
   readonly spout: FloorPoint
+  readonly spoutDirection: FloorPoint
   readonly tiltDegrees: number
 }
 
@@ -23,6 +24,7 @@ export class AimedPour {
   private readonly targetId: string
   private readonly target: FloorPoint
   private readonly openingRadiusMetres: number
+  private readonly spoutDirection: FloorPoint
   private spout: FloorPoint
   private tiltDegrees = 0
   private isTiltHeld = false
@@ -30,19 +32,20 @@ export class AimedPour {
   private lastFingerPoint: FloorPoint | null = null
   private lastSentPour = { tiltDegrees: -1, streamOnTargetFraction: -1 }
 
-  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, targetId: string, targetSpot: Spot, openingRadiusMetres: number) {
+  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, targetId: string, targetSpot: Spot, openingRadiusMetres: number, spoutDirection: FloorPoint) {
     this.ritual = ritual
     this.log = log
     this.sourceId = sourceId
     this.targetId = targetId
     this.target = { x: targetSpot.x, z: targetSpot.z }
     this.openingRadiusMetres = openingRadiusMetres
-    this.spout = { x: targetSpot.x - firstSpoutOffsetFromTargetMetres, z: targetSpot.z }
-    log(`aiming ${sourceId} at ${targetId}, the spout starts ${firstSpoutOffsetFromTargetMetres} m to its left`)
+    this.spoutDirection = spoutDirection
+    this.spout = { x: targetSpot.x - spoutDirection.x * firstSpoutOffsetFromTargetMetres, z: targetSpot.z - spoutDirection.z * firstSpoutOffsetFromTargetMetres }
+    log(`aiming ${sourceId} at ${targetId}, the spout starts ${firstSpoutOffsetFromTargetMetres} m to its left on the screen, pointing (${spoutDirection.x.toFixed(2)}, ${spoutDirection.z.toFixed(2)})`)
   }
 
   get view(): AimedPourView {
-    return { sourceId: this.sourceId, targetId: this.targetId, spout: this.spout, tiltDegrees: this.tiltDegrees }
+    return { sourceId: this.sourceId, targetId: this.targetId, spout: this.spout, spoutDirection: this.spoutDirection, tiltDegrees: this.tiltDegrees }
   }
 
   fingerDown(point: FloorPoint): void {

@@ -28,6 +28,12 @@ export function closeUpPose(closeUp: CloseUp, aspect: number): CameraPose {
   return poseLookingAt(closeUp.target, normalised(closeUp.directionToCamera), distance)
 }
 
+export function screenRightOnTheFloor(closeUp: CloseUp): FloorPoint {
+  const { x, z } = closeUp.directionToCamera
+  const length = Math.hypot(x, z)
+  return length === 0 ? { x: 1, z: 0 } : { x: z / length, z: -x / length }
+}
+
 export function visibleWidthMetres(distance: number, aspect: number): number {
   return 2 * distance * halfHeightTangent() * aspect
 }
