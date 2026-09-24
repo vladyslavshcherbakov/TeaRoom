@@ -1,8 +1,8 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
-import { judgeWater } from '../Judgement/WaterJudgement.ts'
 import type { HandIndex } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
+import { isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
+import { liftOffTheHeater } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { finishFilling } from './TapCommands.ts'
 import { closeTheLidAsItIsLifted } from './LidCommands.ts'
@@ -55,13 +55,4 @@ function freeHandOf(draft: Draft): HandIndex | null {
   if (firstHand === null) return 0
   if (secondHand === null) return 1
   return null
-}
-
-function liftOffTheHeater(draft: Draft, vesselId: string): void {
-  const vessel = draft.state.vessels[vesselId]
-  const tea = chosenTea(draft)
-  const waterJudgement = draft.state.heater.isOn && vessel !== undefined && tea !== null ? judgeWater(vessel.liquid.temperatureC, tea) : null
-  draft.state.heater.vesselIdOnTop = null
-  note(draft, `lifted ${vesselId} off the heater${vessel === undefined ? '' : `: ${describeLiquid(vessel)}`}, water ${waterJudgement ?? 'not judged'}`)
-  draft.events.push({ type: 'takenOffHeater', vesselId, waterJudgement })
 }

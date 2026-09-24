@@ -66,10 +66,10 @@ test('kettle_whenLiftedOffAWorkingHeater_isJudgedAndStopsWarming', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
   ritual.wait(14)
 
-  const events = ritual.do({ type: 'takeOffHeater' })
+  const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.wait(10)
 
-  assert.deepEqual(events, [{ type: 'takenOffHeater', vesselId: 'kettle', waterJudgement: 'ideal' }])
+  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', vesselId: 'kettle', waterJudgement: 'ideal' }])
   assertNear(ritual.vessel('kettle').liquid.temperatureC, 76)
 })
 
@@ -112,7 +112,7 @@ test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
 
   for (const [ritual, framesPerSecond] of [[at30, 30], [at60, 60]] as const) {
     for (let frame = 0; frame < 12 * framesPerSecond; frame += 1) ritual.wait(1 / framesPerSecond)
-    ritual.do({ type: 'takeOffHeater' })
+    ritual.do({ type: 'pickUp', itemId: 'kettle' })
     ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
     ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0.9 })
     for (let frame = 0; frame < 6 * framesPerSecond; frame += 1) ritual.wait(1 / framesPerSecond)

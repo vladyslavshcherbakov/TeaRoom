@@ -20,10 +20,7 @@ export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeate
   draft.events.push({ type: 'placedOnHeater', vesselId: vessel.id })
 }
 
-export function takeOffHeater(draft: Draft, command: CommandOfType<'takeOffHeater'>): void {
-  const vesselId = draft.state.heater.vesselIdOnTop
-  if (vesselId === null) return refuse(draft, command, 'heaterIsEmpty')
-  if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
+export function liftOffTheHeater(draft: Draft, vesselId: string): void {
   const waterJudgement = draft.state.heater.isOn ? judgementOfWaterOnHeater(draft) : null
   if (!draft.state.heater.isOn) note(draft, `${vesselId} lifted off a heater that was off, water not judged`)
   draft.state.heater.vesselIdOnTop = null

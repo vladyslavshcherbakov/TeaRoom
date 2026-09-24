@@ -50,7 +50,7 @@ export class TestRitual {
       ...this.do({ type: 'switchHeaterOn' }),
     ]
     events.push(...this.waitUntil(() => this.vessel('kettle').liquid.temperatureC >= temperatureC))
-    events.push(...this.do({ type: 'switchHeaterOff' }), ...this.do({ type: 'takeOffHeater' }))
+    events.push(...this.do({ type: 'switchHeaterOff' }), ...this.do({ type: 'pickUp', itemId: 'kettle' }))
     return events
   }
 

@@ -110,7 +110,7 @@ class RitualBench {
       row(this.live(() => this.heaterSummary())),
       row(
         button('Put kettle on heater', () => this.send({ type: 'placeOnHeater', vesselId: 'kettle' })),
-        button('Lift kettle off', () => this.send({ type: 'takeOffHeater' })),
+        button('Lift kettle off', () => this.send({ type: 'pickUp', itemId: 'kettle' })),
       ),
       row(
         button('Heater: switch on', () => this.send({ type: 'switchHeaterOn' })),

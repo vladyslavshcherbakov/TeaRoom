@@ -5,7 +5,7 @@ import { wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
 import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
 import { pickUp, putDown, standAt } from './KeeperCommands.ts'
-import { placeOnHeater, switchHeaterOff, switchHeaterOn, takeOffHeater } from './HeatingCommands.ts'
+import { placeOnHeater, switchHeaterOff, switchHeaterOn } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
 import { moveCaddyLid, moveVesselLid } from './LidCommands.ts'
 import { refusalInPhase } from './PhaseRules.ts'
@@ -47,8 +47,6 @@ function carryOut(draft: Draft, command: Command): void {
       return moveCaddyLid(draft, command)
     case 'placeOnHeater':
       return placeOnHeater(draft, command)
-    case 'takeOffHeater':
-      return takeOffHeater(draft, command)
     case 'switchHeaterOn':
       return switchHeaterOn(draft, command)
     case 'switchHeaterOff':
