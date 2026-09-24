@@ -31,7 +31,6 @@ export type RoomTapTarget =
   | { readonly kind: 'figurine'; readonly figurineId: string }
   | { readonly kind: 'nothing' }
 
-
 type WipeStroke = {
   lengthMetres: number
   unwipedMetres: number

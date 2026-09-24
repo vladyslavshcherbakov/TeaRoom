@@ -13,8 +13,8 @@ const leafScaleSpread = 0.6
 const layoutSeed = 20260924
 
 export class LeafPile {
-  readonly mesh: THREE.InstancedMesh
   private readonly leafCount: number
+  readonly mesh: THREE.InstancedMesh
 
   constructor(look: TeaLook, size: LeafPileSize) {
     this.leafCount = size.leafCount

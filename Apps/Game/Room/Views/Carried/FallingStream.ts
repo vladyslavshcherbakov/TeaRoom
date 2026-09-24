@@ -15,8 +15,8 @@ type Flow = {
 const fallAccelerationMetresPerSecondSquared = 3
 
 export class FallingStream {
-  readonly mesh: THREE.Mesh
   private flow: Flow | null = null
+  readonly mesh: THREE.Mesh
 
   constructor(radiusMetres: number, material: THREE.Material) {
     this.mesh = new THREE.Mesh(new THREE.CylinderGeometry(radiusMetres, radiusMetres, 1, 6), material)

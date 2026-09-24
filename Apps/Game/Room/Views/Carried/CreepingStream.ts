@@ -10,8 +10,8 @@ const creepMetresPerSecond = 0.12
 const indicesPerSideOfASegment = 6
 
 export class CreepingStream {
-  readonly mesh: THREE.Mesh
   private startedAtSeconds: number | null = null
+  readonly mesh: THREE.Mesh
 
   constructor(material: THREE.Material) {
     this.mesh = new THREE.Mesh(new THREE.BufferGeometry(), material)

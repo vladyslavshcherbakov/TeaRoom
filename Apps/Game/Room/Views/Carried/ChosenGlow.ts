@@ -15,8 +15,8 @@ const dimmingAtThePulseLow = 0.2
 const glowColour = [255, 236, 170] as const
 
 export class ChosenGlow {
-  readonly mesh: THREE.Mesh
   private readonly material: THREE.MeshBasicMaterial
+  readonly mesh: THREE.Mesh
 
   constructor() {
     const texture = new THREE.DataTexture(glowPixels(), textureSize, textureSize)

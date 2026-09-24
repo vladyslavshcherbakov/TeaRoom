@@ -22,12 +22,12 @@ const overflowPointsOnTheKettle = 12
 const overflowStreamRadiusMetres = 0.009
 
 export class WaterStreams {
-  readonly meshes: readonly THREE.Object3D[]
   private readonly pouredLiquid: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
   private readonly pourStream: FallingStream
   private readonly tapStream: FallingStream
   private readonly overflowStream: CreepingStream
   private readonly overflowPathByShape = new Map<CarriedShape, THREE.TubeGeometry>()
+  readonly meshes: readonly THREE.Object3D[]
 
   constructor(materials: RoomMaterials) {
     this.pouredLiquid = materials.unsharedMaterialFor('pouredLiquid')

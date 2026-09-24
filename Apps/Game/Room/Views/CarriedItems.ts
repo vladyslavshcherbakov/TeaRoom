@@ -21,8 +21,6 @@ const spoutAboveTargetRimMetres = 0.1
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
 
 export class CarriedItems {
-  readonly root = new THREE.Group()
-  readonly tappableMeshes: THREE.Object3D[] = []
   private readonly materials: RoomMaterials
   private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
@@ -30,6 +28,8 @@ export class CarriedItems {
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
+  readonly root = new THREE.Group()
+  readonly tappableMeshes: THREE.Object3D[] = []
 
   constructor(materials: RoomMaterials, items: readonly ShapedItem[]) {
     this.materials = materials

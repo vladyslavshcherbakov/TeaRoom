@@ -36,11 +36,11 @@ export type TapTargetTag =
   | { readonly figurineId: string }
 
 export class RoomModel {
-  readonly root = new THREE.Group()
-  readonly tappableMeshes: THREE.Object3D[] = []
   private readonly materials: RoomMaterials
   private readonly heaterPlate: THREE.Mesh
   private readonly puddle: THREE.Mesh
+  readonly root = new THREE.Group()
+  readonly tappableMeshes: THREE.Object3D[] = []
 
   constructor(materials: RoomMaterials, heaterSpot: WorldPoint) {
     this.materials = materials
@@ -146,7 +146,6 @@ export class RoomModel {
     this.root.add(puddle)
     return puddle
   }
-
 
   private addHeater(spot: WorldPoint): THREE.Mesh {
     const plate = this.box('heaterPlate', 0.34, 0.05, 0.3, { x: spot.x, y: spot.y - 0.025, z: spot.z })
