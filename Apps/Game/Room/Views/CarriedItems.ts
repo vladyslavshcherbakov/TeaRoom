@@ -32,15 +32,15 @@ const heldInViewTiltTowardsCameraRadians = 0.55
 const heldInViewInsetShareOfItemWidth = 0.8
 const handTouchAreaShareOfScreenWidth = 0.42
 const handTouchAreaShareOfScreenHeight = 0.2
-const chosenGlowShareOfItemWidth = 1.35
+const chosenGlowShareOfItemWidth = 2
 const chosenGlowTextureSize = 256
 const chosenGlowPeakOpacity = 0.7
-const chosenGlowGradientStops = 24
 const chosenGlowBehindMetres = 0.08
 const chosenGlowAboveTheBaseShareOfItemWidth = 0.2
-const chosenGlowPulsesPerSecond = 0.5
-const chosenGlowPulseShare = 0.025
-const chosenGlowColour = '255, 236, 170'
+const chosenGlowPulsesPerSecond = 0.2
+const chosenGlowPulseShare = 0.03
+const chosenGlowDimmingAtThePulseLow = 0.2
+const chosenGlowColour = [255, 236, 170] as const
 const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
   bowl2: 'pearlGlaze',
@@ -168,7 +168,10 @@ export class CarriedItems {
     this.chosenGlow.visible = heldInView !== null && handIndex !== null && chosen?.isHeldInView === true
     if (!this.chosenGlow.visible || heldInView === null || handIndex === null) return
     const frame = heldInViewFrame(heldInView, handIndex)
-    const pulse = 1 + Math.sin(scene.timeSeconds * chosenGlowPulsesPerSecond * Math.PI * 2) * chosenGlowPulseShare
+    const pulsePhase = Math.sin(scene.timeSeconds * chosenGlowPulsesPerSecond * Math.PI * 2)
+    const pulse = 1 + pulsePhase * chosenGlowPulseShare
+    const material = this.chosenGlow.material
+    if (material instanceof THREE.MeshBasicMaterial) material.opacity = 1 - chosenGlowDimmingAtThePulseLow * (1 - pulsePhase) / 2
     const behindTheItem = frame.baseInCamera.clone().add(new THREE.Vector3(0, frame.itemWidth * chosenGlowAboveTheBaseShareOfItemWidth, -chosenGlowBehindMetres))
     this.chosenGlow.position.copy(heldInView.camera.localToWorld(behindTheItem))
     this.chosenGlow.quaternion.copy(heldInView.camera.quaternion)
@@ -576,28 +579,31 @@ function moveToLayer(model: CarriedModel, layer: number): void {
 }
 
 function newChosenGlow(): THREE.Mesh {
-  const canvas = document.createElement('canvas')
-  canvas.width = chosenGlowTextureSize
-  canvas.height = chosenGlowTextureSize
-  const context = canvas.getContext('2d')
-  const centre = chosenGlowTextureSize / 2
-  if (context !== null) {
-    const gradient = context.createRadialGradient(centre, centre, 0, centre, centre, centre)
-    for (let stop = 0; stop <= chosenGlowGradientStops; stop += 1) {
-      const share = stop / chosenGlowGradientStops
-      const softFalloff = Math.exp(-2.5 * share * share) * (1 - share)
-      gradient.addColorStop(share, `rgba(${chosenGlowColour}, ${(chosenGlowPeakOpacity * softFalloff).toFixed(3)})`)
-    }
-    context.fillStyle = gradient
-    context.fillRect(0, 0, chosenGlowTextureSize, chosenGlowTextureSize)
-  }
-  const texture = new THREE.CanvasTexture(canvas)
+  const texture = new THREE.DataTexture(chosenGlowPixels(), chosenGlowTextureSize, chosenGlowTextureSize)
   texture.colorSpace = THREE.SRGBColorSpace
+  texture.magFilter = THREE.LinearFilter
+  texture.minFilter = THREE.LinearFilter
+  texture.needsUpdate = true
   const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false })
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material)
   glow.layers.set(heldInViewLayer)
   glow.visible = false
   return glow
+}
+
+function chosenGlowPixels(): Uint8Array {
+  const pixels = new Uint8Array(chosenGlowTextureSize * chosenGlowTextureSize * 4)
+  const centre = chosenGlowTextureSize / 2
+  const [red, green, blue] = chosenGlowColour
+  for (let row = 0; row < chosenGlowTextureSize; row += 1) {
+    for (let column = 0; column < chosenGlowTextureSize; column += 1) {
+      const shareOfTheRadius = Math.min(1, Math.hypot(column + 0.5 - centre, row + 0.5 - centre) / centre)
+      const softFalloff = Math.exp(-2.5 * shareOfTheRadius * shareOfTheRadius) * (1 - shareOfTheRadius)
+      const index = (row * chosenGlowTextureSize + column) * 4
+      pixels.set([red, green, blue, Math.round(255 * chosenGlowPeakOpacity * softFalloff)], index)
+    }
+  }
+  return pixels
 }
 
 function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView): void {
