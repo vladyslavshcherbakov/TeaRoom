@@ -360,6 +360,27 @@ test('table_whenTappedWithTheCloth_isNotWiped', () => {
   assert.equal(room.state.tableWetMl, wetMlBeforeTheTap)
 })
 
+test('chosenHand_whenTheKeeperLeavesTheCloseUp_isLetGo', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.takeAndChoose('kettle')
+
+  room.tap({ kind: 'floor', point: { x: 1, z: 1 } })
+
+  assert.equal(room.play.selectedHandIndex, null)
+})
+
+test('hand_whenTappedInTheRoomView_isNotChosen', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.takeAndChoose('kettle')
+  room.tap({ kind: 'floor', point: { x: 1, z: 1 } })
+
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.equal(room.play.selectedHandIndex, null)
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')

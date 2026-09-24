@@ -162,9 +162,16 @@ export class RoomPlay {
   }
 
   private navigate(target: RoomTapTarget, targetFurnitureId: FurnitureId | null): void {
-    if (targetFurnitureId !== null) return this.navigator.tapped({ kind: 'furniture', furnitureId: targetFurnitureId })
-    if (target.kind === 'floor') return this.navigator.tapped(target)
-    this.navigator.tapped({ kind: 'nothing' })
+    if (targetFurnitureId !== null) this.navigator.tapped({ kind: 'furniture', furnitureId: targetFurnitureId })
+    else if (target.kind === 'floor') this.navigator.tapped(target)
+    else this.navigator.tapped({ kind: 'nothing' })
+    this.letGoOfTheChoiceOutsideACloseUp()
+  }
+
+  private letGoOfTheChoiceOutsideACloseUp(): void {
+    if (this.view.kind === 'closeUp' || this.chosenHandIndex === null) return
+    this.log(`hand ${this.chosenHandIndex} let go of the choice: the keeper left the close-up`)
+    this.chosenHandIndex = null
   }
 
   private actAtCloseUp(target: RoomTapTarget): void {
@@ -281,6 +288,7 @@ export class RoomPlay {
   }
 
   private toggleHand(handIndex: HandIndex): void {
+    if (this.view.kind !== 'closeUp') return this.log(`tap on hand ${handIndex} ignored: a hand is chosen only in a close-up`)
     const itemId = this.ritual.state.keeper.hands[handIndex]
     const isAlreadyChosen = this.selectedHandIndex === handIndex
     this.chosenHandIndex = itemId === null || isAlreadyChosen ? null : handIndex
