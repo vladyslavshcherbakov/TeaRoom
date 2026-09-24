@@ -1,4 +1,4 @@
-const captionSeconds = 4
+const captionSeconds = 6
 
 export class RoomCaption {
   private readonly element: HTMLElement
