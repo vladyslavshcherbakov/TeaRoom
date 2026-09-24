@@ -2,14 +2,14 @@ import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition
 import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { carriedItemShapes, footprintRadiusMetres, furniture, heaterFootprintRadiusMetres } from './RoomLayout.ts'
+import { carriedShapeOf, footprintRadiusMetres, furniture, heaterFootprintRadiusMetres } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
 
 export type PlacementRefusal = 'offTheEdge' | 'somethingIsThere' | 'theHeaterIsThere'
 
 export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReadonly<SessionState>, heaterSpot: Spot): PlacementRefusal | null {
-  const radius = footprintRadiusOf(itemId)
+  const radius = footprintRadiusOf(state, itemId)
   const piece = furniture.find((candidate) => candidate.id === spot.placeId)
   if (piece === undefined) return 'offTheEdge'
   const { footprint } = piece
@@ -17,7 +17,7 @@ export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReado
   if (!isInsideTheTop) return 'offTheEdge'
   if (isNear(spot, heaterSpot, radius + heaterFootprintRadiusMetres)) return 'theHeaterIsThere'
   const neighbours = itemsOnSurfaces(state).filter((item) => item.itemId !== itemId)
-  if (neighbours.some((item) => isNear(spot, item.spot, radius + footprintRadiusOf(item.itemId)))) return 'somethingIsThere'
+  if (neighbours.some((item) => isNear(spot, item.spot, radius + footprintRadiusOf(state, item.itemId)))) return 'somethingIsThere'
   return null
 }
 
@@ -33,7 +33,7 @@ function isNear(spot: Spot, other: Spot, distance: number): boolean {
   return Math.hypot(spot.x - other.x, spot.z - other.z) < distance
 }
 
-function footprintRadiusOf(itemId: string): number {
-  const shape = carriedItemShapes[itemId]
+function footprintRadiusOf(state: DeepReadonly<SessionState>, itemId: string): number {
+  const shape = carriedShapeOf(state, itemId)
   return shape === undefined ? 0 : footprintRadiusMetres[shape]
 }

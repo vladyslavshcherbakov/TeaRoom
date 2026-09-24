@@ -4,7 +4,7 @@ import type { DeepReadonly } from '../../../../Shared/Simulation/State/DeepReado
 import type { HandIndex, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
-import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape, type WorldPoint } from '../RoomLayout.ts'
+import { faucetSpout, footprintRadiusMetres, type CarriedShape, type ShapedItem, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { teaLookFor } from '../../Table/TeaLooks.ts'
 import { LeafPile, type LeafPileSize } from './LeafPile.ts'
@@ -143,16 +143,13 @@ export class CarriedItems {
   private readonly streamMaterial: THREE.MeshStandardMaterial
   private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
 
-  constructor(materials: RoomMaterials, itemIds: readonly string[]) {
+  constructor(materials: RoomMaterials, items: readonly ShapedItem[]) {
     this.materials = materials
     this.clothMaterial = materials.unsharedMaterialFor('cloth')
     const clay = materials.unsharedMaterialFor('clay')
     clay.side = THREE.DoubleSide
     this.claySeenFromInside = clay
-    this.models = itemIds.flatMap((itemId) => {
-      const shape = carriedItemShapes[itemId]
-      return shape === undefined ? [] : [this.modelOf(itemId, shape)]
-    })
+    this.models = items.map(({ itemId, shape }) => this.modelOf(itemId, shape))
     this.streamMaterial = new THREE.MeshStandardMaterial({ color: '#dfe7ea', transparent: true, opacity: 0.85 })
     this.stream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.streamMaterial)
     this.stream.visible = false

@@ -9,7 +9,7 @@ import { AimedPour, type AimedPourView } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
-import { carriedItemShapes, furniture, furnitureWithId, openingRadiusMetres, puddleCentre, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { carriedShapeOf, furniture, furnitureWithId, openingRadiusMetres, puddleCentre, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
 
@@ -236,7 +236,7 @@ export class RoomPlay {
   private startAimingAt(targetId: string): void {
     const sourceId = this.chosenItemId()
     const target = this.ritual.state.vessels[targetId]
-    const targetShape = carriedItemShapes[targetId]
+    const targetShape = carriedShapeOf(this.ritual.state, targetId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
     if (sourceId === null || target?.location.kind !== 'onSurface' || targetShape === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
     const spoutDirection = screenRightOnTheFloor(furnitureWithId(closeUpFurnitureId).closeUp)

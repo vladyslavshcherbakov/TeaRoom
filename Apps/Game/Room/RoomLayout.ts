@@ -1,3 +1,7 @@
+import { caddyItemId, clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
+import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
+
 export type FloorPoint = {
   readonly x: number
   readonly z: number
@@ -75,18 +79,26 @@ export const furniture: readonly Furniture[] = [
 
 export type CarriedShape = 'kettle' | 'thermos' | 'caddy' | 'bowl' | 'spoon' | 'cloth'
 
-export const carriedItemShapes: Readonly<Record<string, CarriedShape>> = {
-  kettle: 'kettle',
+export type ShapedItem = {
+  readonly itemId: string
+  readonly shape: CarriedShape
+}
+
+const shapeByVesselDefinitionId: Readonly<Record<string, CarriedShape>> = {
+  clayKettle: 'kettle',
   thermos: 'thermos',
-  caddy: 'caddy',
-  bowl1: 'bowl',
-  bowl2: 'bowl',
-  bowl3: 'bowl',
-  bowl4: 'bowl',
-  bowl5: 'bowl',
-  bowl6: 'bowl',
-  spoon: 'spoon',
-  cloth: 'cloth',
+  teaBowl: 'bowl',
+}
+
+const shapeByToolId: Readonly<Record<string, CarriedShape>> = {
+  [caddyItemId]: 'caddy',
+  [spoonItemId]: 'spoon',
+  [clothItemId]: 'cloth',
+}
+
+export function carriedShapeOf(state: DeepReadonly<SessionState>, itemId: string): CarriedShape | undefined {
+  const vessel = state.vessels[itemId]
+  return vessel === undefined ? shapeByToolId[itemId] : shapeByVesselDefinitionId[vessel.definitionId]
 }
 
 export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {

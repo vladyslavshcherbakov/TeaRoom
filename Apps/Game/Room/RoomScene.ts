@@ -3,6 +3,8 @@ import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitio
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
+import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
+import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { tableViewState } from '../Table/TablePresenter.ts'
 import { remarkText, tasteCardLines } from '../Table/TableTexts.ts'
 import {
@@ -15,7 +17,7 @@ import {
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
-import { carriedItemShapes, furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
+import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type ShapedItem } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { offeringResponseText } from './RoomTexts.ts'
@@ -92,9 +94,7 @@ export class RoomScene {
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
-    const carriedItemIds = carriedItemIdsIn(session.state)
-    reportItemsWithoutAShape(carriedItemIds, log)
-    this.carried = new CarriedItems(materials, carriedItemIds)
+    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log))
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),
@@ -291,12 +291,18 @@ export class RoomScene {
   }
 }
 
-function reportItemsWithoutAShape(itemIds: readonly string[], log: RoomLog): void {
-  const itemIdsWithoutAShape = itemIds.filter((itemId) => carriedItemShapes[itemId] === undefined)
-  if (itemIdsWithoutAShape.length === 0) return
-  const problem = `the room layout has no shape for ${itemIdsWithoutAShape.join(', ')}, so they are not drawn`
-  if (import.meta.env.DEV) throw new Error(problem)
-  log(problem)
+function shapedItemsIn(state: DeepReadonly<SessionState>, log: RoomLog): ShapedItem[] {
+  const itemIds = carriedItemIdsIn(state)
+  const itemIdsWithoutAShape = itemIds.filter((itemId) => carriedShapeOf(state, itemId) === undefined)
+  if (itemIdsWithoutAShape.length > 0) {
+    const problem = `the room layout has no shape for ${itemIdsWithoutAShape.join(', ')}, so they are not drawn`
+    if (import.meta.env.DEV) throw new Error(problem)
+    log(problem)
+  }
+  return itemIds.flatMap((itemId) => {
+    const shape = carriedShapeOf(state, itemId)
+    return shape === undefined ? [] : [{ itemId, shape }]
+  })
 }
 
 function captionLinesOf(events: readonly RitualEvent[]): readonly string[] {
