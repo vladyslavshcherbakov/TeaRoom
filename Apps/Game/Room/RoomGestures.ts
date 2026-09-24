@@ -108,8 +108,7 @@ export class RoomGestures {
   private aimingFingerUp(finger: AimingFinger): void {
     this.aimingFinger = null
     if (finger.hasMoved) return this.play.pourFingerUp()
-    this.log('tap while aiming ends the pour')
-    this.play.pourDone()
+    this.play.aimingTapped(this.screen.tapTargetAt(finger.start))
   }
 }
 

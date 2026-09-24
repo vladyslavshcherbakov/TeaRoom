@@ -151,6 +151,13 @@ export class RoomPlay {
     this.aimedPour = null
   }
 
+  aimingTapped(target: RoomTapTarget): void {
+    this.pourDone()
+    if (target.kind !== 'surface') return this.log(`tap on ${describeTarget(target)} while aiming returns the vessel to its hand`)
+    this.log(`tap on the ${target.furnitureId} while aiming puts the vessel down there`)
+    this.putDownTheChosenItemAt(target.furnitureId, target.point)
+  }
+
   sipTapped(): void {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')

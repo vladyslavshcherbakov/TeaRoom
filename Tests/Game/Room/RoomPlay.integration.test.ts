@@ -209,6 +209,26 @@ test('tap_whenTappedAgainWhileRunning_closes', () => {
   assertNear(room.state.vessels['kettle']?.liquid.volumeMl ?? 0, 100)
 })
 
+test('kettle_whenASurfaceIsTappedWhileAiming_isPutDownThere', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheBowl()
+
+  room.play.aimingTapped({ kind: 'surface', furnitureId: 'counter', point: { x: -2, y: 0.9, z: -2.5 } })
+
+  assert.equal(room.play.aimedPourView, null)
+  assert.deepEqual(room.state.vessels['kettle']?.location, { kind: 'onSurface', spot: { placeId: 'counter', x: -2, y: 0.9, z: -2.5 } })
+})
+
+test('kettle_whenTheBowlIsTappedWhileAiming_returnsToItsHand', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheBowl()
+
+  room.play.aimingTapped({ kind: 'item', itemId: 'bowl1' })
+
+  assert.equal(room.play.aimedPourView, null)
+  assert.equal(room.state.keeper.hands[0], 'kettle')
+})
+
 test('bowl_whenTappedShortlyWithTheKettleInHand_isPickedUp', () => {
   const room = new RoomVisit()
   room.bringABowlToTheCounterAndTakeTheKettle()
