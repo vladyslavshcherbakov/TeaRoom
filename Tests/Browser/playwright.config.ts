@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${previewPort}/` },
   webServer: {
-    command: `npx vite preview Apps/Game --outDir ../../dist --port ${previewPort} --strictPort`,
+    command: `npx vite preview Apps/Game --outDir ../../dist --host 127.0.0.1 --port ${previewPort} --strictPort`,
     cwd: '../..',
     url: `http://127.0.0.1:${previewPort}/`,
     reuseExistingServer: false,
