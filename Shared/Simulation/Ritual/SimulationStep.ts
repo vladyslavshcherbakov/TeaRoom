@@ -7,9 +7,9 @@ import { fillFromTap } from '../Physics/TapWater.ts'
 import { wetMlAfterDrying } from '../Physics/Table.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
-import { chosenTea, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { chosenTea, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { isKeeperAt } from './Reach.ts'
-import { finishFilling, isClosedAgainstFilling } from './TapCommands.ts'
+import { finishFilling } from './TapCommands.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)

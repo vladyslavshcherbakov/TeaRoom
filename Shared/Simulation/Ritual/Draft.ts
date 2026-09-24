@@ -62,6 +62,10 @@ export function vesselDefinitionOf(draft: Draft, vessel: VesselState): VesselDef
   return definitionIn(draft.catalog, 'vessels', vessel.definitionId)
 }
 
+export function isClosedAgainstFilling(draft: Draft, vessel: VesselState): boolean {
+  return vesselDefinitionOf(draft, vessel).lid?.mustBeOpenToFill === true && !vessel.isLidOpen
+}
+
 export function chosenTea(draft: Draft): TeaDefinition | null {
   return draft.state.teaId === null ? null : definitionIn(draft.catalog, 'teas', draft.state.teaId)
 }

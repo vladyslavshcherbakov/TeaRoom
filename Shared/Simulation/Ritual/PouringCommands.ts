@@ -2,7 +2,7 @@ import { godsVerdictOnSpill } from '../Judgement/GodsMood.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { describeLiquid, letTheGodsJudge, note, noteDetail, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { describeLiquid, isClosedAgainstFilling, letTheGodsJudge, note, noteDetail, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { isWithinReach } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
@@ -72,6 +72,6 @@ function refusalToPour(draft: Draft, source: VesselState, target: VesselState | 
   if (isEmpty(source.liquid)) return 'sourceIsEmpty'
   if (vesselDefinitionOf(draft, source).lid?.mustBeOpenToPour === true && !source.isLidOpen) return 'lidClosed'
   if (target === null) return null
-  if (vesselDefinitionOf(draft, target).lid?.mustBeOpenToFill === true && !target.isLidOpen) return 'lidClosed'
+  if (isClosedAgainstFilling(draft, target)) return 'lidClosed'
   return null
 }

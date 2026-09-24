@@ -1,5 +1,5 @@
 import type { CommandOfType } from './Command.ts'
-import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { isClosedAgainstFilling, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { isWithinReach, whereIs } from './Reach.ts'
 
 export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void {
@@ -24,11 +24,8 @@ export function tipSpoonInto(draft: Draft, command: CommandOfType<'tipSpoonInto'
   if (draft.state.spoon.grams <= 0 || teaId === null) return refuse(draft, command, 'spoonIsEmpty')
   if (draft.state.spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(draft.state.spoon.location)}`)
   if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}`)
-  const definition = vesselDefinitionOf(draft, vessel)
-  if (!definition.canHoldLeaves) return refuse(draft, command, 'cannotHoldLeaves')
-  if (definition.lid?.mustBeOpenToFill === true && !vessel.isLidOpen) {
-    return refuse(draft, command, 'lidClosed', `spoon keeps ${draft.state.spoon.grams.toFixed(2)} g`)
-  }
+  if (!vesselDefinitionOf(draft, vessel).canHoldLeaves) return refuse(draft, command, 'cannotHoldLeaves')
+  if (isClosedAgainstFilling(draft, vessel)) return refuse(draft, command, 'lidClosed', `spoon keeps ${draft.state.spoon.grams.toFixed(2)} g`)
   const grams = draft.state.spoon.grams
   draft.state.spoon.grams = 0
   vessel.leaves =

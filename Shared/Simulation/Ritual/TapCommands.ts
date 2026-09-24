@@ -1,7 +1,6 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { CommandOfType } from './Command.ts'
-import { describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import type { VesselState } from '../State/SessionState.ts'
+import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
 import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { isKeeperAt, whereIs, whereTheKeeperStands } from './Reach.ts'
 
@@ -28,10 +27,6 @@ export function startFillingFromTap(draft: Draft, command: CommandOfType<'startF
 export function stopFillingFromTap(draft: Draft, command: CommandOfType<'stopFillingFromTap'>): void {
   if (draft.state.filling === null) return refuse(draft, command, 'notFilling')
   finishFilling(draft, 'the tap was closed')
-}
-
-export function isClosedAgainstFilling(draft: Draft, vessel: VesselState): boolean {
-  return vesselDefinitionOf(draft, vessel).lid?.mustBeOpenToFill === true && !vessel.isLidOpen
 }
 
 export function finishFilling(draft: Draft, reason: string): void {
