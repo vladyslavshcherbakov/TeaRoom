@@ -8,6 +8,11 @@ const overviewHeightMetres = 7
 const roomCentre: WorldPoint = { x: 0, y: 0.4, z: -0.3 }
 const followShareOfWalker = 0.6
 const settleSeconds = 0.35
+const nearestDistanceShare = 0.5
+const farthestDistanceShare = 1.6
+const wheelZoomPerPixel = 0.001
+
+export const unzoomedDistanceShare = 1
 
 export function overviewPose(walker: FloorPoint, aspect: number): CameraPose {
   const target = {
@@ -27,9 +32,33 @@ export function visibleWidthMetres(distance: number, aspect: number): number {
   return 2 * distance * halfHeightTangent() * aspect
 }
 
+export function zoomedPose(pose: CameraPose, distanceShare: number): CameraPose {
+  const { position, target } = pose
+  return {
+    position: {
+      x: target.x + (position.x - target.x) * distanceShare,
+      y: target.y + (position.y - target.y) * distanceShare,
+      z: target.z + (position.z - target.z) * distanceShare,
+    },
+    target,
+  }
+}
+
+export function distanceShareAfterPinch(shareAtStart: number, fingerGapAtStart: number, fingerGapNow: number): number {
+  return clampedDistanceShare((shareAtStart * fingerGapAtStart) / Math.max(fingerGapNow, 1))
+}
+
+export function distanceShareAfterWheel(share: number, wheelDeltaY: number): number {
+  return clampedDistanceShare(share * Math.exp(wheelDeltaY * wheelZoomPerPixel))
+}
+
 export function poseEasedTowards(current: CameraPose, goal: CameraPose, seconds: number): CameraPose {
   const share = 1 - Math.exp(-seconds / settleSeconds)
   return { position: pointBetween(current.position, goal.position, share), target: pointBetween(current.target, goal.target, share) }
+}
+
+function clampedDistanceShare(share: number): number {
+  return Math.min(farthestDistanceShare, Math.max(nearestDistanceShare, share))
 }
 
 function poseLookingAt(target: WorldPoint, direction: WorldPoint, distance: number): CameraPose {

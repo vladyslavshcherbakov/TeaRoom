@@ -5,7 +5,16 @@ import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSess
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { tableViewState } from '../Table/TablePresenter.ts'
 import { remarkText, tasteCardLines } from '../Table/TableTexts.ts'
-import { cameraFieldOfViewDegrees, closeUpPose, overviewPose, poseEasedTowards } from './Camera/CameraPoses.ts'
+import {
+  cameraFieldOfViewDegrees,
+  closeUpPose,
+  distanceShareAfterPinch,
+  distanceShareAfterWheel,
+  overviewPose,
+  poseEasedTowards,
+  unzoomedDistanceShare,
+  zoomedPose,
+} from './Camera/CameraPoses.ts'
 import { carriedItemShapes, furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
@@ -17,6 +26,16 @@ import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
 import { PourControls } from './Views/PourControls.ts'
 import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
+
+type ScreenPoint = {
+  readonly x: number
+  readonly y: number
+}
+
+type Pinch = {
+  readonly fingerGapAtStart: number
+  readonly distanceShareAtStart: number
+}
 
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
@@ -33,6 +52,7 @@ export class RoomScene {
   private readonly raycaster = newRaycasterSeeingEveryLayer()
   private readonly clock = new THREE.Clock()
   private readonly session: RitualSession
+  private readonly log: RoomLog
   private readonly catalog: Catalog
   private readonly play: RoomPlay
   private readonly room: RoomModel
@@ -44,6 +64,10 @@ export class RoomScene {
   private cameraPose: CameraPose
   private pressStart: { x: number; y: number } | null = null
   private aimingPointerId: number | null = null
+  private readonly fingersOnTheRoom = new Map<number, ScreenPoint>()
+  private pinch: Pinch | null = null
+  private distanceShare = unzoomedDistanceShare
+  private zoomedViewKey = ''
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog) {
     this.session = session
@@ -61,6 +85,7 @@ export class RoomScene {
       },
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
+    this.log = log
     this.play = new RoomPlay(ritual, catalog, log)
     const materials = new RoomMaterials()
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
@@ -107,7 +132,8 @@ export class RoomScene {
   }
 
   private moveCamera(seconds: number): void {
-    this.cameraPose = poseEasedTowards(this.cameraPose, this.cameraGoal(), seconds)
+    this.unzoomWhenTheViewChanges()
+    this.cameraPose = poseEasedTowards(this.cameraPose, zoomedPose(this.cameraGoal(), this.distanceShare), seconds)
     this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
     this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
     this.camera.updateMatrixWorld()
@@ -137,6 +163,16 @@ export class RoomScene {
     material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
   }
 
+  private unzoomWhenTheViewChanges(): void {
+    const view = this.play.view
+    const viewKey = view.kind === 'overview' ? view.kind : `${view.kind} ${view.furnitureId}`
+    if (viewKey === this.zoomedViewKey) return
+    this.zoomedViewKey = viewKey
+    if (this.distanceShare === unzoomedDistanceShare) return
+    this.distanceShare = unzoomedDistanceShare
+    this.log(`camera zoom reset for the ${viewKey} view`)
+  }
+
   private cameraGoal(): CameraPose {
     const view = this.play.view
     if (view.kind === 'closeUp') return closeUpPose(furnitureWithId(view.furnitureId).closeUp, this.camera.aspect)
@@ -147,11 +183,16 @@ export class RoomScene {
     const canvas = this.renderer.domElement
     canvas.addEventListener('pointerdown', (event) => {
       if (this.play.aimedPourView !== null) return this.aimingFingerDown(event)
+      this.fingersOnTheRoom.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (this.fingersOnTheRoom.size === 2) return this.startPinching()
+      if (this.fingersOnTheRoom.size > 2) return
       this.pressStart = { x: event.clientX, y: event.clientY }
       this.play.pressStarted(this.tapTargetAt(event.clientX, event.clientY))
     })
     canvas.addEventListener('pointermove', (event) => {
       if (event.pointerId === this.aimingPointerId) return this.play.pourFingerMoved(this.aimPlanePointAt(event.clientX, event.clientY))
+      if (this.fingersOnTheRoom.has(event.pointerId)) this.fingersOnTheRoom.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (this.pinch !== null) return this.keepPinching(this.pinch)
       const start = this.pressStart
       if (start === null || Math.hypot(event.clientX - start.x, event.clientY - start.y) <= tapSlopPixels) return
       this.play.pressMovedAway()
@@ -162,11 +203,37 @@ export class RoomScene {
         this.aimingPointerId = null
         return this.play.pourFingerUp()
       }
+      this.fingersOnTheRoom.delete(event.pointerId)
+      if (this.pinch !== null && this.fingersOnTheRoom.size < 2) this.stopPinching()
       this.pressStart = null
       this.play.pressEnded()
     }
     canvas.addEventListener('pointerup', pressEnded)
     canvas.addEventListener('pointercancel', pressEnded)
+    canvas.addEventListener('wheel', (event) => {
+      event.preventDefault()
+      this.distanceShare = distanceShareAfterWheel(this.distanceShare, event.deltaY)
+    }, { passive: false })
+    for (const safariGesture of ['gesturestart', 'gesturechange']) document.addEventListener(safariGesture, (event) => event.preventDefault())
+  }
+
+  private startPinching(): void {
+    this.pinch = { fingerGapAtStart: this.fingerGap(), distanceShareAtStart: this.distanceShare }
+    this.play.pressMovedAway()
+  }
+
+  private keepPinching(pinch: Pinch): void {
+    this.distanceShare = distanceShareAfterPinch(pinch.distanceShareAtStart, pinch.fingerGapAtStart, this.fingerGap())
+  }
+
+  private stopPinching(): void {
+    this.pinch = null
+    this.log(`pinched the camera to ${this.distanceShare.toFixed(2)} of its distance`)
+  }
+
+  private fingerGap(): number {
+    const [first, second] = [...this.fingersOnTheRoom.values()]
+    return first === undefined || second === undefined ? 1 : Math.hypot(first.x - second.x, first.y - second.y)
   }
 
   private aimingFingerDown(event: PointerEvent): void {

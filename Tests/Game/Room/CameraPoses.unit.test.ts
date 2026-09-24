@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { closeUpPose, visibleWidthMetres } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
+import { closeUpPose, distanceShareAfterPinch, visibleWidthMetres, zoomedPose } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
 import { furniture } from '../../../Apps/Game/Room/RoomLayout.ts'
 
 const iPhonePortraitAspect = 390 / 844
@@ -22,4 +22,30 @@ test('closeUp_ofTheTeaTable_looksDownFromAbove', () => {
 
   const downwardAngleDegrees = (Math.atan2(pose.position.y - pose.target.y, Math.hypot(pose.position.x - pose.target.x, pose.position.z - pose.target.z)) * 180) / Math.PI
   assert.ok(downwardAngleDegrees > 45, `the camera looks down at only ${downwardAngleDegrees.toFixed(0)}°`)
+})
+
+test('pinch_whenTheFingersSpreadToTwiceTheirGap_bringsTheCameraToHalfItsDistance', () => {
+  const distanceShare = distanceShareAfterPinch(1, 100, 200)
+
+  assert.equal(distanceShare, 0.5)
+})
+
+test('pinch_whenTheFingersSpreadFurtherThanTheNearestZoom_stopsAtHalfTheDistance', () => {
+  const distanceShare = distanceShareAfterPinch(1, 100, 400)
+
+  assert.equal(distanceShare, 0.5)
+})
+
+test('pinch_whenTheFingersCloseToAQuarterOfTheirGap_stopsAtTheFarthestZoom', () => {
+  const distanceShare = distanceShareAfterPinch(1, 400, 100)
+
+  assert.equal(distanceShare, 1.6)
+})
+
+test('zoomedPose_atHalfTheDistance_keepsTheTargetAndHalvesTheWayToIt', () => {
+  const pose = { position: { x: 4, y: 6, z: 8 }, target: { x: 0, y: 2, z: 0 } }
+
+  const zoomed = zoomedPose(pose, 0.5)
+
+  assert.deepEqual(zoomed, { position: { x: 2, y: 4, z: 4 }, target: { x: 0, y: 2, z: 0 } })
 })

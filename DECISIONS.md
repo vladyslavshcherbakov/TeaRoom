@@ -44,6 +44,8 @@
 
 **The room is real 3D in Three.js, seen from above at an angle, and controlled by taps.** A 3D room lets the camera change later, to first person or over the shoulder, by changing only the camera module and the tap rules. Seen from above, the whole small room fits a portrait phone, and one thumb is enough: a tap on the floor walks there, a tap on furniture walks to it and shows it close up. Rejected: isometric 2D sprites, because another camera would mean redrawing every picture. Rejected: first person as the start, because it needs looking around with a second gesture and a model of the hands.
 
+**Pinching zooms the camera, and a new view starts unzoomed.** The zoom only scales the camera's distance to what it looks at, so the view keeps its angle and its subject. Each new view resets it, because a close-up is framed to show the whole piece of furniture. Safari's own page zoom is turned off so the pinch reaches the game. Rejected: pinching while a pour is aimed, because the first finger already moves the vessel.
+
 **Surfaces are flat colours now and textures later, through one class.** `RoomMaterials` maps each surface name to a material. Generated textures replace a colour there without touching the models.
 
 **Room logic that does not need Three.js does not import it.** Paths, walking, camera poses and tap decisions are plain TypeScript, so tests run in Node without a browser.
