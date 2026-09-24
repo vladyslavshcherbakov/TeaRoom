@@ -54,8 +54,11 @@ const gaugeHeightMetres = 0.11
 const gaugeFaceMetres = 0.142
 const waterInGaugeColour = '#3f8fc4'
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
-const overflowShareOfTheRadius = 0.95
-const overflowStartShareOfTheRim = 0.6
+const overflowSideFromTheGaugeRadians = 0.7
+const overflowAboveTheSurfaceMetres = 0.005
+const overflowLeavesTheKettleAtRadians = 2.2
+const overflowPointsOnTheKettle = 12
+const overflowStreamRadiusMetres = 0.009
 const faucetSpoutAboveTheSinkMetres = 0.3
 const kettleBodyRadiusMetres = 0.14
 const kettleBodyCentreMetres = 0.11
@@ -118,6 +121,7 @@ export class CarriedItems {
   private readonly stream: THREE.Mesh
   private readonly tapStream: THREE.Mesh
   private readonly overflowStream: THREE.Mesh
+  private readonly overflowPathByShape = new Map<CarriedShape, THREE.BufferGeometry>()
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   private readonly chosenGlow = newChosenGlow()
   private readonly streamMaterial: THREE.MeshStandardMaterial
@@ -136,7 +140,7 @@ export class CarriedItems {
     this.stream.visible = false
     this.tapStream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.materials.unsharedMaterialFor('tapWater'))
     this.tapStream.visible = false
-    this.overflowStream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres * 1.4, streamRadiusMetres * 2.4, 1, 8), this.materials.unsharedMaterialFor('tapWater'))
+    this.overflowStream = new THREE.Mesh(new THREE.BufferGeometry(), this.materials.unsharedMaterialFor('tapWater'))
     this.overflowStream.visible = false
     this.root.add(this.stream, this.tapStream, this.overflowStream)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
@@ -285,8 +289,22 @@ export class CarriedItems {
     if (filled === undefined) return
     const bottomY = filled.root.position.y + filled.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
     placeStream(this.tapStream, faucetSpout, bottomY)
-    const overRim = filled.root.position.clone().add(new THREE.Vector3(0, filled.rimHeight * overflowStartShareOfTheRim, filled.footprintRadius * overflowShareOfTheRadius))
-    placeStream(this.overflowStream, overRim, faucetSpout.y - faucetSpoutAboveTheSinkMetres)
+    this.overflowStream.geometry = this.overflowPathOf(filled)
+    this.overflowStream.position.copy(filled.root.position)
+    this.overflowStream.quaternion.copy(filled.root.quaternion)
+  }
+
+  private overflowPathOf(model: CarriedModel): THREE.BufferGeometry {
+    const known = this.overflowPathByShape.get(model.shape)
+    if (known !== undefined) return known
+    const sinkBelowTheVessel = faucetSpout.y - faucetSpoutAboveTheSinkMetres - model.root.position.y
+    const side = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
+    const pointsOnTheSide = model.shape === 'kettle' ? pointsDownTheKettle() : pointsDownAStraightSide(model)
+    const lastOnTheSide = pointsOnTheSide[pointsOnTheSide.length - 1] ?? { distance: 0, height: 0 }
+    const points = [...pointsOnTheSide, { distance: lastOnTheSide.distance, height: sinkBelowTheVessel }].map(({ distance, height }) => side.clone().multiplyScalar(distance).setY(height))
+    const path = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, overflowStreamRadiusMetres, 6, false)
+    this.overflowPathByShape.set(model.shape, path)
+    return path
   }
 
   private retag(model: CarriedModel, tag: TapTargetTag): void {
@@ -467,6 +485,25 @@ function placeStream(stream: THREE.Mesh, top: { x: number; y: number; z: number 
   const length = Math.max(0.01, top.y - bottomY)
   stream.position.set(top.x, bottomY + length / 2, top.z)
   stream.scale.set(1, length, 1)
+}
+
+function pointsDownTheKettle(): { distance: number; height: number }[] {
+  return Array.from({ length: overflowPointsOnTheKettle + 1 }, (_, index) => {
+    const angleFromTheTop = kettleOpeningAngle + ((overflowLeavesTheKettleAtRadians - kettleOpeningAngle) * index) / overflowPointsOnTheKettle
+    return {
+      distance: (kettleBodyRadiusMetres + overflowAboveTheSurfaceMetres) * Math.sin(angleFromTheTop),
+      height: kettleBodyCentreMetres + (kettleBodyRadiusMetres * kettleBodySquash + overflowAboveTheSurfaceMetres) * Math.cos(angleFromTheTop),
+    }
+  })
+}
+
+function pointsDownAStraightSide(model: CarriedModel): { distance: number; height: number }[] {
+  const distance = model.footprintRadius + overflowAboveTheSurfaceMetres
+  return [
+    { distance, height: model.rimHeight },
+    { distance, height: model.rimHeight / 2 },
+    { distance, height: 0 },
+  ]
 }
 
 function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel): void {
