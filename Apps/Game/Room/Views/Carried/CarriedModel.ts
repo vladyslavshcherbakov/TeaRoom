@@ -45,6 +45,8 @@ export const mostSteamSources = 2
 export const mostPuffsFromOneSource = 3
 
 const lidTouchPadRadiusMetres = 0.095
+const touchPadShareOfTheFootprint = 1.5
+const touchPadAboveTheRimMetres = 0.05
 const bowlsWithACarp: ReadonlySet<string> = new Set(['bowl1'])
 const carpLengthMetres = 0.04
 const carpAboveTheBottomMetres = 0.0095
@@ -69,6 +71,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     liquid.rotation.x = -Math.PI / 2
     root.add(liquid)
   }
+  if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight, materials.touchPad))
   const gaugeWater = shape === 'kettle' ? addWaterGauge(root, materials.room) : null
   const leafHolder = leafHolderFor(shape)
   if (leafHolder !== null) root.add(leafHolder)
@@ -97,6 +100,14 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     isHeldInView: false,
     castsShadow: true,
   }
+}
+
+function forgivingTouchPad(shape: CarriedShape, rimHeight: number, touchPad: THREE.Material): THREE.Mesh {
+  const radius = footprintRadiusMetres[shape] * touchPadShareOfTheFootprint
+  const height = rimHeight + touchPadAboveTheRimMetres
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 16), touchPad)
+  pad.position.y = height / 2
+  return pad
 }
 
 function addKettleWater(root: THREE.Group, materials: RoomMaterials): THREE.Mesh {
