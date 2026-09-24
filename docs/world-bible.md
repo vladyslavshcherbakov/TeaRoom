@@ -230,6 +230,16 @@ In gongfu brewing, the same leaves are steeped many times. Real behaviour, and o
 - Each tea has its own curve. Pu-erh lasts many infusions, green tea few.
 - The player may pour any infusion away. The world does not care which one.
 
+### Cold water on the leaves
+
+- **Verb.** The player pours water that was never heated onto the leaves.
+- **Trace.** The water stays clear. The leaves lie in it and barely move. No steam rises.
+- **Cause.** Below about 40 °C leaves give almost nothing. The simulation already works this way.
+- **Memory.** None. The leaves are not spent and can still be brewed properly.
+- **Consequence.** The player can pour it away and boil the kettle, and the same leaves then brew as usual.
+- **Line.** The keeper tastes it and says: "Somehow the tea is cold. I wonder why."
+- **Never told.** That the kettle was never switched on.
+
 ### Teas that improve with age
 
 Only teas that really get better with age change over real time: pu-erh cakes, aged white tea, some roasted oolongs. A cake kept for weeks tastes deeper, and its liquor turns a shade darker. Nothing else goes stale.
@@ -379,6 +389,7 @@ Lines the game may show. Each one is small, dry and appears rarely.
 - "GAME OVER, COFFEE LOVER." Button: "We'll see about that."
 - "The fish ask to pass on that the tea was lovely."
 - "The bear says it only came to sit with you. But thank you for the tea."
+- "Somehow the tea is cold. I wonder why."
 
 ## Secrets and their conditions
 
