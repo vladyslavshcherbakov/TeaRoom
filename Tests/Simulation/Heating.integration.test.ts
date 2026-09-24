@@ -141,6 +141,17 @@ test('water_boilingOnAWorkingHeater_boilsAwayAtTheHeatersRate', () => {
   assertNear(ritual.vessel('kettle').liquid.volumeMl, volumeAtTheBoil - 100)
 })
 
+test('water_liftedOffTheHeaterAtTheBoil_stopsBoilingAway', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.wait(200)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  const volumeWhenLifted = ritual.vessel('kettle').liquid.volumeMl
+
+  ritual.wait(100)
+
+  assert.equal(ritual.vessel('kettle').liquid.volumeMl, volumeWhenLifted)
+})
+
 test('water_belowTheBoil_doesNotBoilAway', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
