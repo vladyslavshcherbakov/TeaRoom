@@ -426,6 +426,33 @@ Each row is one secret. The condition is hidden state. The trace is what the pla
 | The caged bird released | Weeks later it returns with a story, sometimes with friends. | It remembers who opened the cage. |
 | A bear given good tea | It returns on another rainy evening and leaves a honeycomb. | It liked the tea and the company. |
 | The previous owner's notebook read on several days | A page that was stuck together comes loose. | The paper dried out. Or not. |
+| The sparrow's seed planted and watered with cold tea | A tea bush grows, and its leaves brew a tea no caddy holds. | The bird brought it from somewhere it trusts. |
+| The notebook's recipe drunk in her bowl, at the cat's hour, with the cat | A carp's shadow swims across the walls and dissolves. | The previous owner's spirit came to visit. |
+| The frog's stone dropped into the aquarium with a fish in it | The fish becomes a butterfly and flies away. | The frog paid for the tea. |
+
+## Chains of secrets
+
+A chain is a secret whose result is the start of the next one. The player never sees the chain. They see one small thing, do something with it, and much later see what came of it. Each link leaves an object or a visitor that invites the next verb.
+
+### The seed
+
+1. The sparrow, after many offerings at the bird figurine, one day leaves a seed on the sill. It is easy to miss.
+2. The seed planted in a pot and watered with leftover cold tea grows into a small tea bush over several weeks.
+3. Its leaves, dried on a sunny sill, make "the tea of this room". No caddy holds it.
+4. This tea offered to the bird figurine brings the sparrow back with a mate. They nest on the veranda, and in spring there are chicks.
+
+### The notebook and the shadow of the carp
+
+1. A page of the previous owner's notebook that was stuck together comes loose. It holds a recipe with a strange condition: "in her bowl, at the hour the cat sits down to wait".
+2. Tea brewed and drunk that way, with the cat beside the keeper, makes the keeper say: "So that is who they were."
+3. Some evenings later, a spirit enters the room. It is seen only as a shadow on the wall: the shadow of a carp swims slowly across the walls of the room for a short while, then dissolves.
+
+### The frog's stone
+
+1. A haiku with a frog hangs on the wall, and a frog appears by the veranda step.
+2. The frog offered tea leaves a smooth stone.
+3. The stone dropped into the aquarium while a fish is there turns the fish into a butterfly. The butterfly flies out of the room.
+4. If there is no fish in the aquarium at that moment, nothing happens, and this chain is over for good.
 
 ## Ideas not yet placed
 
