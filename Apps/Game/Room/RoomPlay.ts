@@ -235,8 +235,6 @@ export class RoomPlay {
     const vesselId = this.selectedItemId()
     const vessel = vesselId === null ? undefined : this.ritual.state.vessels[vesselId]
     if (vessel === undefined) return this.log('tap on the tap ignored: no hand with a vessel is chosen')
-    const mustOpenTheLid = definitionIn(this.catalog, 'vessels', vessel.definitionId).lid?.mustBeOpenToFill === true && !vessel.isLidOpen
-    if (mustOpenTheLid) this.ritual.dispatch({ type: 'openVesselLid', vesselId: vessel.id })
     this.ritual.dispatch({ type: 'startFillingFromTap', vesselId: vessel.id })
   }
 
