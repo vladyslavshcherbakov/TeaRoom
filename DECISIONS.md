@@ -28,7 +28,9 @@
 
 **The spoon and the cloth are taken like a hand is chosen, and stay at the tea table.** The simulation keeps them at the ritual place, not in the hands. Taking one works like choosing a hand: then a tap on the open caddy scoops, a tap on a vessel tips, a stroke on the table wipes. One choice at a time keeps a tap's meaning clear. Walking away puts the tool back, because the simulation would refuse its use anywhere else.
 
-**Tasting is a Sip button next to the hands.** In a close-up the keeper is hidden, so there is no face to lift the bowl to. The button appears only while a hand with a tea bowl is chosen. The first sip scene of 0.6 replaces it.
+**In a close-up, what the keeper holds is drawn in the bottom corners of the view, and the items are the hands.** The player sees what they carry, so no label names it. A tap on an item chooses its hand, and an invisible area around it makes the tap forgiving. The held items are drawn in a second pass over the room, after its depth is cleared, so furniture near the camera never cuts through them. The scene therefore clears to a colour instead of drawing a background, since a background clears the screen on every pass. Rejected: buttons with the item's name, because the words stood in for what the room can show.
+
+**Tasting is a Sip button.** In a close-up the keeper is hidden, so there is no face to lift the bowl to. The button appears only while the chosen hand holds a tea bowl with tea in it. The first sip scene of 0.6 replaces it.
 
 **The heater's switch is its own target on the counter's front.** With the kettle on the plate, a tap on the plate lands on the kettle and lifts it. A separate switch keeps "take the kettle" and "switch the heater" apart, and gives the switch a touch target of its own.
 

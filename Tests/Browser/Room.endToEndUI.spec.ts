@@ -22,7 +22,7 @@ test('room_whenTheFloorInFrontOfTheWalkerIsTapped_answersTheTap', async ({ page 
   expect(log.errors).toEqual([])
 })
 
-test('room_whenOpened_beginsTheRitualWithBothHandsEmpty', async ({ page }) => {
+test('room_whenOpened_beginsTheRitualWithNothingToSip', async ({ page }) => {
   const ritualLines: string[] = []
   page.on('console', (message) => {
     if (message.text().includes('[ritual]')) ritualLines.push(message.text())
@@ -31,6 +31,5 @@ test('room_whenOpened_beginsTheRitualWithBothHandsEmpty', async ({ page }) => {
   await page.goto('./')
 
   await expect.poll(() => ritualLines.some((line) => line.includes('ritual began'))).toBe(true)
-  await expect(page.locator('button[data-hand="0"]')).toBeDisabled()
-  await expect(page.locator('button[data-hand="1"]')).toBeDisabled()
+  await expect(page.locator('button.sip')).toBeHidden()
 })

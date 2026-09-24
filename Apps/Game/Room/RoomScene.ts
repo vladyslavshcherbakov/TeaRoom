@@ -10,11 +10,11 @@ import { carriedItemShapes, furnitureWithId, type CameraPose } from './RoomLayou
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { offeringResponseText } from './RoomTexts.ts'
-import { CarriedItems } from './Views/CarriedItems.ts'
-import { HandButtons } from './Views/HandButtons.ts'
+import { CarriedItems, heldInViewLayer } from './Views/CarriedItems.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
+import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
 
 const backgroundColour = '#f6e9d6'
@@ -28,7 +28,7 @@ export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
   private readonly camera = new THREE.PerspectiveCamera(cameraFieldOfViewDegrees, 1, 0.1, 100)
-  private readonly raycaster = new THREE.Raycaster()
+  private readonly raycaster = newRaycasterSeeingEveryLayer()
   private readonly clock = new THREE.Clock()
   private readonly session: RitualSession
   private readonly catalog: Catalog
@@ -36,7 +36,7 @@ export class RoomScene {
   private readonly room: RoomModel
   private readonly walker: WalkerModel
   private readonly carried: CarriedItems
-  private readonly hands: HandButtons
+  private readonly sipButton: SipButton
   private readonly caption: RoomCaption
   private cameraPose: CameraPose
   private pressStart: { x: number; y: number } | null = null
@@ -48,6 +48,8 @@ export class RoomScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.autoClear = false
+    this.renderer.setClearColor(backgroundColour)
     container.append(this.renderer.domElement)
     const ritual: RitualPort = {
       get state() {
@@ -63,13 +65,8 @@ export class RoomScene {
     const carriedItemIds = [...roomDefinition.vessels.map((vessel) => vessel.id), caddyItemId]
     reportItemsWithoutAShape(carriedItemIds, log)
     this.carried = new CarriedItems(materials, carriedItemIds)
-    this.hands = new HandButtons(
-      container,
-      (handIndex) => this.play.handTapped(handIndex),
-      () => this.play.sipTapped(),
-    )
+    this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.caption = new RoomCaption(container)
-    this.scene.background = new THREE.Color(backgroundColour)
     this.scene.add(this.room.root, this.walker.root, this.carried.root, ...lights())
     this.fitToWindow()
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
@@ -86,17 +83,35 @@ export class RoomScene {
     const isWalkerShown = this.play.view.kind !== 'closeUp'
     this.walker.show(this.play.walk, this.clock.elapsedTime)
     this.walker.root.visible = isWalkerShown
+    this.moveCamera(seconds)
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
-    this.carried.show({ state, table, walk: this.play.walk, isWalkerShown, timeSeconds: this.clock.elapsedTime })
+    const heldInView = isWalkerShown ? null : { camera: this.camera, selectedHandIndex: this.play.selectedHandIndex }
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, timeSeconds: this.clock.elapsedTime })
     this.showHeater(table.heater.isOn)
     this.room.showRitualTools(table.spoonFillShare, this.play.chosenTool)
     this.room.showPuddle(table.puddleShare)
-    this.hands.show({ hands: state.keeper.hands, selectedHandIndex: this.play.selectedHandIndex, canSip: this.play.sippableCupId !== null })
+    this.sipButton.show(this.play.sippableCupId !== null)
+    this.render()
+  }
+
+  private moveCamera(seconds: number): void {
     this.cameraPose = poseEasedTowards(this.cameraPose, this.cameraGoal(), seconds)
     this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
     this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
+    this.camera.updateMatrixWorld()
+  }
+
+  private render(): void {
+    this.renderer.clear()
+    this.camera.layers.set(0)
     this.renderer.render(this.scene, this.camera)
+    this.renderer.clearDepth()
+    this.renderer.shadowMap.autoUpdate = false
+    this.camera.layers.set(heldInViewLayer)
+    this.renderer.render(this.scene, this.camera)
+    this.renderer.shadowMap.autoUpdate = true
+    this.camera.layers.set(0)
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
@@ -197,6 +212,12 @@ function isShown(object: THREE.Object3D): boolean {
   return true
 }
 
+function newRaycasterSeeingEveryLayer(): THREE.Raycaster {
+  const raycaster = new THREE.Raycaster()
+  raycaster.layers.enableAll()
+  return raycaster
+}
+
 function lights(): THREE.Light[] {
   const skyAndFloor = new THREE.HemisphereLight('#fff4e0', '#c9a27a', 1.6)
   const eveningSun = new THREE.DirectionalLight('#ffd9b0', 2.2)
@@ -210,5 +231,7 @@ function lights(): THREE.Light[] {
   eveningSun.shadow.bias = -0.0005
   const fill = new THREE.DirectionalLight('#dfe8ff', 0.6)
   fill.position.set(6, 4, 6)
-  return [skyAndFloor, eveningSun, fill]
+  const allLights = [skyAndFloor, eveningSun, fill]
+  for (const light of allLights) light.layers.enableAll()
+  return allLights
 }

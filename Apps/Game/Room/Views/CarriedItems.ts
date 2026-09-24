@@ -3,7 +3,7 @@ import { caddyItemId } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
-import { carriedItemShapes, type CarriedShape } from '../RoomLayout.ts'
+import { carriedItemShapes, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
@@ -18,6 +18,16 @@ const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const openLidSideMetres = 0.16
 const lidTouchPadRadiusMetres = 0.085
+const heldInViewDistanceMetres = 0.9
+const heldInViewShareOfScreenWidth = 0.24
+const heldInViewShareOfScreenHeightFromBottom = 0.07
+const chosenHeldLiftShareOfScreenHeight = 0.05
+const heldInViewTiltTowardsCameraRadians = 0.55
+const heldInViewInsetShareOfItemWidth = 0.8
+const handTouchAreaShareOfScreenWidth = 0.42
+const handTouchAreaShareOfScreenHeight = 0.2
+
+export const heldInViewLayer = 1
 
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: 3 }
 
@@ -25,8 +35,13 @@ export type CarriedItemsScene = {
   readonly state: DeepReadonly<SessionState>
   readonly table: TableViewState
   readonly walk: Walk
-  readonly isWalkerShown: boolean
+  readonly heldInView: HeldInView | null
   readonly timeSeconds: number
+}
+
+export type HeldInView = {
+  readonly camera: THREE.PerspectiveCamera
+  readonly selectedHandIndex: HandIndex | null
 }
 
 type CarriedModel = {
@@ -35,12 +50,14 @@ type CarriedModel = {
   readonly root: THREE.Group
   readonly spoutTip: THREE.Vector3
   readonly rimHeight: number
+  readonly footprintRadius: number
   readonly lid: THREE.Object3D | null
   readonly lidClosedPosition: THREE.Vector3
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
+  isHeldInView: boolean
 }
 
 export class CarriedItems {
@@ -52,6 +69,7 @@ export class CarriedItems {
   private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
   private readonly models: CarriedModel[]
   private readonly stream: THREE.Mesh
+  private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   private readonly streamMaterial: THREE.MeshStandardMaterial
 
   constructor(materials: RoomMaterials, itemIds: readonly string[]) {
@@ -67,30 +85,59 @@ export class CarriedItems {
     this.stream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.streamMaterial)
     this.stream.visible = false
     this.root.add(this.stream)
+    this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
   }
 
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) this.showContents(model, scene)
     this.showPour(scene)
+    this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
+  }
+
+  private handTouchArea(handIndex: HandIndex): THREE.Mesh {
+    const area = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.touchPadMaterial)
+    area.layers.set(heldInViewLayer)
+    area.visible = false
+    const tag: TapTargetTag = { handIndex }
+    area.userData = { tapTarget: tag }
+    this.root.add(area)
+    this.tappableMeshes.push(area)
+    return area
+  }
+
+  private placeHandTouchArea(area: THREE.Mesh, handIndex: HandIndex, scene: CarriedItemsScene): void {
+    const itemId = scene.state.keeper.hands[handIndex] ?? null
+    const isPouringFromIt = itemId !== null && scene.state.pour?.sourceId === itemId
+    area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt
+    if (!area.visible || scene.heldInView === null) return
+    const frame = heldInViewFrame(scene.heldInView, handIndex)
+    area.position.copy(scene.heldInView.camera.localToWorld(frame.centreInCamera))
+    area.quaternion.copy(scene.heldInView.camera.quaternion)
+    area.scale.set(frame.screenWidth * handTouchAreaShareOfScreenWidth, frame.screenHeight * handTouchAreaShareOfScreenHeight, 1)
   }
 
   private place(model: CarriedModel, scene: CarriedItemsScene): void {
     const location = locationOf(model.itemId, scene.state)
     if (location === undefined) return
     const pour = scene.state.pour
-    if (pour !== null && pour.sourceId === model.itemId && pour.targetId !== null) return this.tipOver(model, pour.targetId, pour.tiltDegrees)
+    const isPouringSource = pour !== null && pour.sourceId === model.itemId && pour.targetId !== null
+    const heldInView = location.kind === 'inHand' && !isPouringSource ? scene.heldInView : null
+    moveToLayer(model, heldInView !== null)
+    model.root.scale.setScalar(1)
+    if (isPouringSource && pour.targetId !== null) return this.tipOver(model, pour.targetId, pour.tiltDegrees)
     model.root.rotation.set(0, 0, 0)
     if (location.kind === 'onSurface') {
       model.root.visible = true
       model.root.position.set(location.spot.x, location.spot.y, location.spot.z)
       return this.retag(model, { itemId: model.itemId })
     }
-    model.root.visible = scene.isWalkerShown
+    model.root.visible = true
+    this.retag(model, { handIndex: location.handIndex })
+    if (heldInView !== null) return holdInView(model, location.handIndex, heldInView)
     const hand = handPosition(scene.walk, location.handIndex)
     model.root.position.copy(hand)
     model.root.rotation.y = scene.walk.headingRadians
-    this.retag(model, { handIndex: location.handIndex })
   }
 
   private tipOver(model: CarriedModel, targetId: string, tiltDegrees: number): void {
@@ -109,7 +156,7 @@ export class CarriedItems {
     const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
     if (model.lid !== null) model.lid.position.copy(model.lidClosedPosition).add(new THREE.Vector3(isOpen ? -openLidSideMetres : 0, 0, 0))
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
-    const puffCount = vessel === undefined || !model.root.visible ? 0 : puffsBySteam[vessel.steam]
+    const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
     model.puffs.forEach((puff, index) => {
       puff.visible = index < puffCount
       const rise = (scene.timeSeconds * steamRiseMetresPerSecond + index / model.puffs.length) % 1
@@ -165,12 +212,14 @@ export class CarriedItems {
       root,
       spoutTip: parts.spoutTip,
       rimHeight: parts.rimHeight,
+      footprintRadius: footprintRadiusMetres[shape],
       lid: parts.lid,
       lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
       liquid,
       liquidMaterial,
       puffs,
       tagKey: '',
+      isHeldInView: false,
     }
   }
 
@@ -244,6 +293,38 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
 
 function locationOf(itemId: string, state: DeepReadonly<SessionState>): DeepReadonly<ItemLocation> | undefined {
   return itemId === caddyItemId ? state.caddy.location : state.vessels[itemId]?.location
+}
+
+function moveToLayer(model: CarriedModel, isHeldInView: boolean): void {
+  if (model.isHeldInView === isHeldInView) return
+  model.isHeldInView = isHeldInView
+  model.root.traverse((part) => part.layers.set(isHeldInView ? heldInViewLayer : 0))
+}
+
+function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView): void {
+  const { camera } = heldInView
+  const frame = heldInViewFrame(heldInView, handIndex)
+  model.root.position.copy(camera.localToWorld(frame.baseInCamera))
+  model.root.quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), heldInViewTiltTowardsCameraRadians))
+  model.root.scale.setScalar(frame.itemWidth / (2 * model.footprintRadius))
+}
+
+function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex) {
+  const { camera, selectedHandIndex } = heldInView
+  const screenHeight = 2 * heldInViewDistanceMetres * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+  const screenWidth = screenHeight * camera.aspect
+  const itemWidth = screenWidth * heldInViewShareOfScreenWidth
+  const side = handIndex === 0 ? -1 : 1
+  const x = side * (screenWidth / 2 - itemWidth * heldInViewInsetShareOfItemWidth)
+  const lift = selectedHandIndex === handIndex ? screenHeight * chosenHeldLiftShareOfScreenHeight : 0
+  const bottom = -screenHeight / 2 + screenHeight * heldInViewShareOfScreenHeightFromBottom + lift
+  return {
+    screenWidth,
+    screenHeight,
+    itemWidth,
+    baseInCamera: new THREE.Vector3(x, bottom, -heldInViewDistanceMetres),
+    centreInCamera: new THREE.Vector3(x, bottom + screenHeight * handTouchAreaShareOfScreenHeight * 0.4, -heldInViewDistanceMetres),
+  }
 }
 
 function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {
