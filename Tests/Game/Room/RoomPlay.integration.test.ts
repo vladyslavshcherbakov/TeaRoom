@@ -357,6 +357,16 @@ test('figurine_whenTappedWithABowlOfTeaChosen_isOfferedIt', () => {
   assert.equal(room.state.figurines['dragon']?.wasOfferedTeaThisRitual, true)
 })
 
+test('figurine_whenTappedAwayFromTheTeaTable_leavesTheKeeperWhereTheyStand', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+
+  room.tap({ kind: 'figurine', figurineId: 'dragon' })
+  room.wait(2)
+
+  assert.deepEqual(room.play.view, { kind: 'closeUp', furnitureId: 'counter' })
+})
+
 test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAllOver', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()

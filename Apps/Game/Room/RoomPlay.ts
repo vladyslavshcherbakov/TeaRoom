@@ -181,6 +181,7 @@ export class RoomPlay {
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
+    if (target.kind === 'figurine' && closeUpFurnitureId !== this.ritualFurnitureId()) return this.log(`tap on ${target.figurineId} does nothing: it stands on the sill, and offerings are made from the close-up of the ritual place`)
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)
     this.actAtCloseUp(target)
