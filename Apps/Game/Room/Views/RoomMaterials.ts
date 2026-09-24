@@ -114,7 +114,7 @@ export class RoomMaterials {
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
     if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
     if (surface === 'flame' || surface === 'flameCore') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
-    if (surface === 'koiPainting') return koiPaintingMaterial()
+    if (surface === 'koiPainting') return paintingMaterial(paintKoi())
     if (surface === 'cloth') return wovenClothMaterial()
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
@@ -124,8 +124,8 @@ export class RoomMaterials {
   }
 }
 
-function koiPaintingMaterial(): THREE.MeshStandardMaterial {
-  const texture = new THREE.CanvasTexture(paintKoi())
+function paintingMaterial(painting: HTMLCanvasElement): THREE.MeshStandardMaterial {
+  const texture = new THREE.CanvasTexture(painting)
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = paintingSharpness
   texture.premultiplyAlpha = true
