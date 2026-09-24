@@ -362,6 +362,16 @@ test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
   assert.ok(room.state.cloth.wetMl > 0, 'the cloth stayed dry')
 })
 
+test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.takeAndChoose('cloth')
+
+  room.tap({ kind: 'item', itemId: 'bowl1' })
+
+  assert.deepEqual(room.state.keeper.hands, ['cloth', 'bowl1'])
+})
+
 test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()

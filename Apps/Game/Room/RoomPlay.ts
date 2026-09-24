@@ -212,9 +212,7 @@ export class RoomPlay {
   }
 
   private touchItem(itemId: string): void {
-    const itemInTheChosenHand = this.chosenItemId()
-    if (itemInTheChosenHand === spoonItemId) return this.useTheSpoonOn(itemId)
-    if (itemInTheChosenHand === clothItemId) return this.log(`tap on ${itemId} with the cloth ignored: the cloth wipes the table`)
+    if (this.chosenItemId() === spoonItemId) return this.useTheSpoonOn(itemId)
     if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
     this.pickUpAndChoose(itemId)
   }
