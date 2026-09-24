@@ -1,7 +1,7 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import { godsVerdictOnFirstSip, godsVerdictOnOffering } from '../Judgement/GodsMood.ts'
 import { judgeOffering } from '../Judgement/OfferingJudgement.ts'
-import { judgeTaste } from '../Judgement/TasteJudgement.ts'
+import { judgeTaste, type TasteVerdict } from '../Judgement/TasteJudgement.ts'
 import { isEmpty, splitLiquid } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
@@ -63,7 +63,7 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   letTheGodsJudge(draft, godsVerdictOnOffering(offering))
 }
 
-function letTheGodsJudgeTheFirstSip(draft: Draft, reaction: Parameters<typeof godsVerdictOnFirstSip>[0]): void {
+function letTheGodsJudgeTheFirstSip(draft: Draft, reaction: TasteVerdict['reaction']): void {
   if (draft.state.godsJudgementsMade.firstSip) return note(draft, 'the gods already judged a sip this ritual')
   const godsVerdict = godsVerdictOnFirstSip(reaction)
   if (godsVerdict === null) return note(draft, 'the sip was too hot to judge, the gods wait for the next one')

@@ -3,9 +3,9 @@ import type { HandIndex } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
 import { liftOffTheHeater } from './HeatingCommands.ts'
+import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { finishFilling } from './TapCommands.ts'
-import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {

@@ -4,6 +4,13 @@ import type { DeepReadonly } from '../State/DeepReadonly.ts'
 import type { ItemLocation, SessionState } from '../State/SessionState.ts'
 import type { Draft } from './Draft.ts'
 
+type ItemHolders<Holder> = {
+  readonly caddy: Holder
+  readonly spoon: Holder
+  readonly cloth: Holder
+  readonly vessels: Readonly<Record<string, Holder>>
+}
+
 export const caddyItemId = 'caddy'
 export const spoonItemId = 'spoon'
 export const clothItemId = 'cloth'
@@ -13,24 +20,15 @@ export function carriedItemIdsIn(state: DeepReadonly<SessionState>): readonly st
 }
 
 export function itemLocationIn(state: DeepReadonly<SessionState>, itemId: string): DeepReadonly<ItemLocation> | undefined {
-  switch (itemId) {
-    case caddyItemId:
-      return state.caddy.location
-    case spoonItemId:
-      return state.spoon.location
-    case clothItemId:
-      return state.cloth.location
-    default:
-      return state.vessels[itemId]?.location
-  }
+  return holderIn<{ readonly location: DeepReadonly<ItemLocation> }>(state, itemId)?.location
 }
 
 export function locationOfItem(draft: Draft, itemId: string): ItemLocation | undefined {
-  return holderOfItem(draft, itemId)?.location
+  return holderIn<{ location: ItemLocation }>(draft.state, itemId)?.location
 }
 
 export function moveItem(draft: Draft, itemId: string, location: ItemLocation): void {
-  const holder = holderOfItem(draft, itemId)
+  const holder = holderIn<{ location: ItemLocation }>(draft.state, itemId)
   if (holder !== undefined) holder.location = location
 }
 
@@ -57,19 +55,19 @@ export function whereIs(location: ItemLocation | undefined): string {
   return `on the ${location.spot.placeId}`
 }
 
-function holderOfItem(draft: Draft, itemId: string): { location: ItemLocation } | undefined {
-  switch (itemId) {
-    case caddyItemId:
-      return draft.state.caddy
-    case spoonItemId:
-      return draft.state.spoon
-    case clothItemId:
-      return draft.state.cloth
-    default:
-      return draft.state.vessels[itemId]
-  }
-}
-
 export function whereTheKeeperStands(draft: Draft): string {
   return draft.state.keeper.placeId === null ? 'the keeper is walking' : `the keeper is at the ${draft.state.keeper.placeId}`
+}
+
+function holderIn<Holder>(holders: ItemHolders<Holder>, itemId: string): Holder | undefined {
+  switch (itemId) {
+    case caddyItemId:
+      return holders.caddy
+    case spoonItemId:
+      return holders.spoon
+    case clothItemId:
+      return holders.cloth
+    default:
+      return holders.vessels[itemId]
+  }
 }
