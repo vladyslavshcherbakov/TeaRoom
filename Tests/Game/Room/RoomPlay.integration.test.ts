@@ -382,6 +382,20 @@ test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
   assert.ok(room.state.cloth.wetMl > 0, 'the cloth stayed dry')
 })
 
+test('table_whenStrokedWithTheClothAwayFromThePuddle_driesOnlyAsATableLeftAlone', () => {
+  const [stroked, leftAlone] = [new RoomVisit(), new RoomVisit()]
+  for (const room of [stroked, leftAlone]) {
+    room.setTheTeaTable()
+    room.ritual.pour('kettle', null, 2)
+    room.takeAndChoose('cloth')
+  }
+
+  stroked.strokeTheTeaTable([{ x: 1.3, z: -1.9 }, { x: 1.6, z: -1.9 }, { x: 1.3, z: -1.9 }], 10)
+  leftAlone.wait(10)
+
+  assert.ok(Math.abs(stroked.state.tableWetMl - leftAlone.state.tableWetMl) < 0.01, `${stroked.state.tableWetMl} ml against ${leftAlone.state.tableWetMl} ml`)
+})
+
 test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()

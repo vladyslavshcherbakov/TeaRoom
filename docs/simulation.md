@@ -94,7 +94,7 @@ No single moment costs more than 3 points, and the value stays between 0 and 100
 
 ## The table
 
-Spilled liquid makes the table wet. The wet area evaporates at 0.05 ml per second. A wipe over the whole table removes 80% of the wetness when the stroke is 15 cm/s or slower, 30% at 45 cm/s or faster, and a share in between for speeds in between. A wipe over a part of the table removes `1 − (1 − that share)^part`, so many short wipes remove as much as one long wipe over the same area. The cloth takes in the water it wipes up and dries at the same 0.05 ml per second.
+Spilled liquid makes the table wet. The wet area evaporates at 0.05 ml per second. A wipe over the whole table removes 80% of the wetness when the stroke is 50 cm/s or slower, 30% at 200 cm/s or faster, and a share in between for speeds in between. A wipe over a part of the table removes `1 − (1 − that share)^part`, so many short wipes remove as much as one long wipe over the same area. The cloth takes in the water it wipes up and dries at the same 0.05 ml per second.
 
 ## Phases
 

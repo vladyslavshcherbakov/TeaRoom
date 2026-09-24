@@ -1,6 +1,6 @@
 const evaporationMlPerSecond = 0.05
-const slowStrokeCmPerSecond = 15
-const fastStrokeCmPerSecond = 45
+const slowStrokeCmPerSecond = 50
+const fastStrokeCmPerSecond = 200
 const slowStrokeEfficiency = 0.8
 const fastStrokeEfficiency = 0.3
 

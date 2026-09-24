@@ -61,7 +61,7 @@ test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
   wipedFast.do({ type: 'pickUp', itemId: 'cloth' })
 
   wipedSlowly.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-  wipedFast.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 60, coveredFraction: 1 })
+  wipedFast.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 300, coveredFraction: 1 })
 
   assert.ok(wipedSlowly.state.tableWetMl < 6, `slow wipe left ${wipedSlowly.state.tableWetMl} ml`)
   assert.ok(wipedFast.state.tableWetMl > 15, `fast wipe left ${wipedFast.state.tableWetMl} ml`)

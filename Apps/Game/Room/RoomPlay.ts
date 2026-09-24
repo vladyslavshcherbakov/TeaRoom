@@ -35,6 +35,8 @@ export type RoomTapTarget =
 type WipeStroke = {
   lengthMetres: number
   unwipedMetres: number
+  unwipedMetresOverThePuddle: number
+  metresOverThePuddle: number
   lastPoint: WorldPoint
   heldSecondsAtLastWipe: number
 }
@@ -47,10 +49,10 @@ type Press = {
 }
 
 const fullSpoonDepth = 1
-const strokeCoveringTheWholeTableMetres = 1.5
+const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
-const shareOfTheTableUnderTheCloth = 0.15
+const shareOfThePuddleTheClothSoaks = 0.15
 
 export class RoomPlay {
   private readonly ritual: RitualPort
@@ -106,8 +108,13 @@ export class RoomPlay {
     const stroke = press?.stroke
     if (press === null || stroke === undefined || stroke === null || !this.isOnTheRitualSurface(target) || target.kind !== 'surface') return
     const segmentMetres = Math.hypot(target.point.x - stroke.lastPoint.x, target.point.z - stroke.lastPoint.z)
+    const middle = { x: (target.point.x + stroke.lastPoint.x) / 2, z: (target.point.z + stroke.lastPoint.z) / 2 }
     stroke.lengthMetres += segmentMetres
     stroke.unwipedMetres += segmentMetres
+    if (this.isTheClothOverThePuddleAt(middle)) {
+      stroke.unwipedMetresOverThePuddle += segmentMetres
+      stroke.metresOverThePuddle += segmentMetres
+    }
     stroke.lastPoint = target.point
     if (stroke.unwipedMetres >= wipeEveryMetres) this.wipeWhatTheStrokeCovered(stroke, press.heldSeconds)
   }
@@ -291,20 +298,32 @@ export class RoomPlay {
   private wipeWhatTheStrokeCovered(stroke: WipeStroke, heldSeconds: number): void {
     const seconds = Math.max(heldSeconds - stroke.heldSecondsAtLastWipe, Number.EPSILON)
     const strokeSpeedCmPerSecond = (stroke.unwipedMetres * 100) / seconds
-    const coveredFraction = Math.min(1, stroke.unwipedMetres / strokeCoveringTheWholeTableMetres)
+    const puddleArea = Math.PI * this.puddleRadius() ** 2
+    const overThePuddle = stroke.unwipedMetresOverThePuddle
     stroke.unwipedMetres = 0
+    stroke.unwipedMetresOverThePuddle = 0
     stroke.heldSecondsAtLastWipe = heldSeconds
+    if (overThePuddle === 0 || puddleArea === 0) return
+    const coveredFraction = Math.min(1, (overThePuddle * clothWipingWidthMetres) / puddleArea)
     this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond, coveredFraction })
+  }
+
+  private isTheClothOverThePuddleAt(point: FloorPoint): boolean {
+    return Math.hypot(point.x - puddleCentre.x, point.z - puddleCentre.z) < this.puddleRadius() + clothHalfWidthMetres
+  }
+
+  private puddleRadius(): number {
+    return puddleRadiusMetres(puddleShareOf(this.ritual.state.tableWetMl))
   }
 
   private finishTheStroke(stroke: WipeStroke, heldSeconds: number): void {
     if (stroke.unwipedMetres > 0) this.wipeWhatTheStrokeCovered(stroke, heldSeconds)
-    this.log(`stroke with the cloth ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, the table is ${this.ritual.state.tableWetMl.toFixed(1)} ml wet`)
+    this.log(`stroke with the cloth ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, ${stroke.metresOverThePuddle.toFixed(2)} m of it over the puddle, the table is ${this.ritual.state.tableWetMl.toFixed(1)} ml wet`)
   }
 
   private wipeStrokeStartingAt(target: RoomTapTarget): WipeStroke | null {
     if (this.chosenItemId() !== clothItemId || target.kind !== 'surface' || !this.isOnTheRitualSurface(target)) return null
-    return { lengthMetres: 0, unwipedMetres: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
+    return { lengthMetres: 0, unwipedMetres: 0, unwipedMetresOverThePuddle: 0, metresOverThePuddle: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
   }
 
   private isOnTheRitualSurface(target: RoomTapTarget): boolean {
@@ -330,12 +349,12 @@ export class RoomPlay {
   }
 
   private soakUpThePuddleIfTheClothLandsInIt(furnitureId: FurnitureId, point: WorldPoint): void {
-    const puddleRadius = puddleRadiusMetres(puddleShareOf(this.ritual.state.tableWetMl))
+    const puddleRadius = this.puddleRadius()
     const distanceToThePuddle = Math.hypot(point.x - puddleCentre.x, point.z - puddleCentre.z)
     const isInThePuddle = furnitureId === this.ritualFurnitureId() && puddleRadius > 0 && distanceToThePuddle < puddleRadius + clothHalfWidthMetres
     if (!isInThePuddle) return this.log(`the cloth goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddleRadius.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
     this.log(`the cloth goes down in the puddle and soaks some of it up`)
-    this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond: 0, coveredFraction: shareOfTheTableUnderTheCloth })
+    this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond: 0, coveredFraction: shareOfThePuddleTheClothSoaks })
   }
 
   private letGoOfTheChoiceUnlessRefused(events: readonly RitualEvent[]): void {
