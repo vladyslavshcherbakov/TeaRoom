@@ -3,6 +3,7 @@ import type { TeaDefinition } from '../../../Shared/Simulation/Definitions/TeaDe
 import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/VesselDefinition.ts'
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
+import { clothItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
@@ -35,12 +36,19 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
     clothTeaStain: state.cloth.teaStain,
+    clothCharring: state.cloth.charring,
+    clothHeating: clothHeatingOf(state),
     puddleShare: puddleShareOf(state.tableWetMl),
   }
 }
 
 export function puddleShareOf(tableWetMl: number): number {
   return share(tableWetMl, puddleFullAtMl)
+}
+
+function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.ClothHeating {
+  if (!state.heater.isOn || state.heater.itemIdOnTop !== clothItemId) return 'none'
+  return state.cloth.wetMl > 0 ? 'steaming' : 'smouldering'
 }
 
 function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null, isHeated: boolean): TableViewState.Vessel {

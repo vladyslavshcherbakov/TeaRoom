@@ -210,7 +210,7 @@ export class RoomPlay {
       case 'surface':
         return this.putDownTheChosenItemAt(target.furnitureId, target.point)
       case 'heater':
-        return this.putTheChosenVesselOnTheHeater()
+        return this.putTheChosenItemOnTheHeater()
       case 'heaterSwitch':
         this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
         return
@@ -360,10 +360,10 @@ export class RoomPlay {
     this.choice = null
   }
 
-  private putTheChosenVesselOnTheHeater(): void {
+  private putTheChosenItemOnTheHeater(): void {
     const itemId = this.chosenItemId()
     if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
-    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'placeOnHeater', itemId: itemId }))
+    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'placeOnHeater', itemId }))
   }
 
   private chosenItemId(): string | null {

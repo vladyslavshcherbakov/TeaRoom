@@ -14,6 +14,10 @@ export type Surface =
   | 'cloth'
   | 'wetCloth'
   | 'teaStainedCloth'
+  | 'charredCloth'
+  | 'smoke'
+  | 'flame'
+  | 'flameCore'
   | 'jade'
   | 'toadBrown'
   | 'heaterPlate'
@@ -51,6 +55,10 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   cloth: '#ffffff',
   wetCloth: '#8a7c68',
   teaStainedCloth: '#f2dc96',
+  charredCloth: '#2e2520',
+  smoke: '#5f5a57',
+  flame: '#ff8a2a',
+  flameCore: '#ffe07a',
   jade: '#6fb59a',
   toadBrown: '#b39a5c',
   heaterPlate: '#3d3733',
@@ -79,6 +87,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
+const smokeOpacity = 0.4
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
 const clothRoughness = 1
@@ -103,6 +112,8 @@ export class RoomMaterials {
   unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
     const color = surfaceColours[surface]
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
+    if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
+    if (surface === 'flame' || surface === 'flameCore') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
     if (surface === 'koiPainting') return koiPaintingMaterial()
     if (surface === 'cloth') return wovenClothMaterial()
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })

@@ -105,6 +105,52 @@ test('cup_whenPlacedOnTheHeater_isRefused', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'cannotSitOnHeater' }])
 })
 
+test('cloth_onAWorkingHeater_charsThroughInThirtySeconds', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  ritual.wait(15)
+
+  assertNear(ritual.state.cloth.charring, 0.5)
+})
+
+test('cloth_wetOnAWorkingHeater_steamsDryBeforeItChars', () => {
+  const ritual = TestRitual.begun()
+  ritual.pour('kettle', null, 2.5)
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  ritual.wait(1)
+
+  assert.equal(ritual.state.cloth.charring, 0)
+})
+
+test('cloth_onAHeaterThatIsOff_doesNotChar', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+
+  ritual.wait(30)
+
+  assert.equal(ritual.state.cloth.charring, 0)
+})
+
+test('cloth_charredThrough_whenWashedUnderTheTap_isAsGoodAsNew', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+  ritual.do({ type: 'switchHeaterOff' })
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+
+  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.wait(5)
+
+  assert.equal(ritual.state.cloth.charring, 0)
+})
+
 test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
   const catalog = testCatalog({ kettle: 0.01, cup: 0.02 })
   const at30 = ritualWithKettleOnWorkingHeater(TestRitual.begun(catalog))

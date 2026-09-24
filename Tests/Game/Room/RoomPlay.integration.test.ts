@@ -159,6 +159,18 @@ test('pourAim_whenDone_endsWithTheKettleStillInHand', () => {
   assert.equal(room.state.keeper.hands[0], 'kettle')
 })
 
+test('cloth_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
+  const room = new RoomVisit()
+  room.walkTo('teaTable')
+  room.takeAndChoose('cloth')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'heater' })
+
+  assert.equal(room.state.heater.itemIdOnTop, 'cloth')
+})
+
 test('kettle_whenTheSinkIsTappedWithItChosen_goesInTheSinkUnderTheRunningTap', () => {
   const room = new RoomVisit()
   room.walkTo('counter')

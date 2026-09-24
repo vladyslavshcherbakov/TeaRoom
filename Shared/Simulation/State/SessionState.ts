@@ -47,6 +47,7 @@ export type SpoonState = {
 export type ClothState = {
   wetMl: number
   teaStain: number
+  charring: number
   isSoakingThePuddle: boolean
   location: ItemLocation
 }

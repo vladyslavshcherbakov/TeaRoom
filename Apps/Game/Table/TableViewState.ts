@@ -5,12 +5,15 @@ export type TableViewState = {
   readonly spoonFillShare: number
   readonly clothWetShare: number
   readonly clothTeaStain: number
+  readonly clothCharring: number
+  readonly clothHeating: TableViewState.ClothHeating
   readonly puddleShare: number
 }
 
 export declare namespace TableViewState {
   type SteamLevel = 'none' | 'wisps' | 'visible' | 'billowing'
   type SurfaceMotion = 'still' | 'shimmering' | 'simmering' | 'boiling'
+  type ClothHeating = 'none' | 'steaming' | 'smouldering'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed'
 
   type Vessel = {

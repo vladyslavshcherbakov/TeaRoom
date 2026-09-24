@@ -5,7 +5,7 @@ import { coolingPerSecondOf, coolLiquid, heatLiquid, liquidBoiledAway } from '..
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap } from '../Physics/TapWater.ts'
-import { clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlUnderTheTap, mlSoakedUp, puddleStrengthAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
+import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp, puddleStrengthAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
 import type { RunningWaterState, SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
@@ -17,6 +17,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   if (state.phase === 'ended') return outcomeOf(draft)
   coolVessels(draft, seconds)
   heatVesselOnHeater(draft, seconds)
+  heatTheClothOnTheHeater(draft, seconds)
   continuePour(draft, seconds)
   runTheTap(draft, seconds)
   steepAllLeaves(draft, seconds)
@@ -37,6 +38,19 @@ function heatVesselOnHeater(draft: Draft, seconds: number): void {
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
   if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)
+}
+
+function heatTheClothOnTheHeater(draft: Draft, seconds: number): void {
+  const heater = draft.state.heater
+  const cloth = draft.state.cloth
+  if (!heater.isOn || heater.itemIdOnTop !== clothItemId || cloth.charring === 1) return
+  if (cloth.wetMl > 0) {
+    cloth.wetMl = clothWetMlOnAHotPlate(cloth.wetMl, seconds)
+    if (cloth.wetMl === 0) note(draft, 'the cloth on the heater has steamed dry and starts to char')
+    return
+  }
+  cloth.charring = clothCharringOnAHotPlate(cloth.charring, seconds)
+  if (cloth.charring === 1) note(draft, 'the cloth on the heater is charred through')
 }
 
 function noteBoilingAway(draft: Draft, vesselId: string, mlPerSecond: number, volumeMlLeft: number): void {
@@ -129,11 +143,14 @@ function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDef
   const cloth = draft.state.cloth
   const stainBefore = cloth.teaStain
   const wetMlBefore = cloth.wetMl
+  const charringBefore = cloth.charring
   cloth.teaStain = clothStainAfterWashing(cloth.teaStain, seconds)
+  cloth.charring = clothCharringAfterWashing(cloth.charring, seconds)
   cloth.wetMl = clothWetMlUnderTheTap(cloth.wetMl, tap.flowMlPerSecond, seconds)
   runningWater.filledMl += cloth.wetMl - wetMlBefore
   runningWater.drainedMl += tap.flowMlPerSecond * seconds - (cloth.wetMl - wetMlBefore)
-  if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the cloth is washed clean under the tap and holds ${cloth.wetMl.toFixed(1)} ml`)
+  if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the tea is washed out of the cloth, it holds ${cloth.wetMl.toFixed(1)} ml`)
+  if (charringBefore > 0 && cloth.charring === 0) note(draft, 'the charring is washed out of the cloth, it is as good as new')
 }
 
 function steepAllLeaves(draft: Draft, seconds: number): void {
