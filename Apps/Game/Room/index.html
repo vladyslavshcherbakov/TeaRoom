@@ -39,30 +39,34 @@
       .sip[hidden] {
         display: none;
       }
-      .tilt,
-      .done {
+      .tilt {
         position: fixed;
+        right: 24px;
         bottom: calc(24px + env(safe-area-inset-bottom));
+        width: 88px;
+        height: 88px;
         border-radius: 50%;
         border: 2px solid #8f5a3a;
         background: #fbf4e8;
-        color: #5a3a26;
+        font-size: 40px;
         touch-action: none;
       }
-      .tilt {
-        right: 24px;
-        width: 88px;
-        height: 88px;
-        font-size: 40px;
+      .tilt[hidden] {
+        display: none;
       }
-      .done {
-        left: 24px;
-        width: 56px;
-        height: 56px;
-        font-size: 26px;
+      .aim-hint {
+        position: fixed;
+        left: 16px;
+        right: 128px;
+        bottom: calc(24px + env(safe-area-inset-bottom));
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(251, 244, 232, 0.94);
+        color: #5a3a26;
+        font: 15px/1.4 system-ui, sans-serif;
+        pointer-events: none;
       }
-      .tilt[hidden],
-      .done[hidden] {
+      .aim-hint[hidden] {
         display: none;
       }
       .caption {

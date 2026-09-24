@@ -64,6 +64,8 @@ export class RoomScene {
   private cameraPose: CameraPose
   private pressStart: { x: number; y: number } | null = null
   private aimingPointerId: number | null = null
+  private aimingStart: ScreenPoint | null = null
+  private hasAimingFingerMoved = false
   private readonly fingersOnTheRoom = new Map<number, ScreenPoint>()
   private pinch: Pinch | null = null
   private readonly zoom = new CameraZoom()
@@ -97,7 +99,6 @@ export class RoomScene {
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),
       tiltReleased: () => this.play.tiltReleased(),
-      doneTapped: () => this.play.pourDone(),
     })
     this.caption = new RoomCaption(container)
     this.scene.add(this.room.root, this.walker.root, this.carried.root, ...lights())
@@ -178,7 +179,7 @@ export class RoomScene {
       this.play.pressStarted(this.tapTargetAt(event.clientX, event.clientY))
     })
     canvas.addEventListener('pointermove', (event) => {
-      if (event.pointerId === this.aimingPointerId) return this.play.pourFingerMoved(this.aimPlanePointAt(event.clientX, event.clientY))
+      if (event.pointerId === this.aimingPointerId) return this.aimingFingerMoved(event)
       if (this.fingersOnTheRoom.has(event.pointerId)) this.fingersOnTheRoom.set(event.pointerId, { x: event.clientX, y: event.clientY })
       if (this.pinch !== null) return this.keepPinching(this.pinch)
       const start = this.pressStart
@@ -187,10 +188,7 @@ export class RoomScene {
       this.play.pressMovedOver(this.tapTargetAt(event.clientX, event.clientY))
     })
     const pressEnded = (event: PointerEvent): void => {
-      if (event.pointerId === this.aimingPointerId) {
-        this.aimingPointerId = null
-        return this.play.pourFingerUp()
-      }
+      if (event.pointerId === this.aimingPointerId) return this.aimingFingerUp()
       this.fingersOnTheRoom.delete(event.pointerId)
       if (this.pinch !== null && this.fingersOnTheRoom.size < 2) this.stopPinching()
       this.pressStart = null
@@ -227,7 +225,23 @@ export class RoomScene {
   private aimingFingerDown(event: PointerEvent): void {
     if (this.aimingPointerId !== null) return
     this.aimingPointerId = event.pointerId
+    this.aimingStart = { x: event.clientX, y: event.clientY }
+    this.hasAimingFingerMoved = false
     this.play.pourFingerDown(this.aimPlanePointAt(event.clientX, event.clientY))
+  }
+
+  private aimingFingerMoved(event: PointerEvent): void {
+    const start = this.aimingStart
+    if (start !== null && Math.hypot(event.clientX - start.x, event.clientY - start.y) > tapSlopPixels) this.hasAimingFingerMoved = true
+    this.play.pourFingerMoved(this.aimPlanePointAt(event.clientX, event.clientY))
+  }
+
+  private aimingFingerUp(): void {
+    this.aimingPointerId = null
+    this.aimingStart = null
+    if (this.hasAimingFingerMoved) return this.play.pourFingerUp()
+    this.log('tap while aiming ends the pour')
+    this.play.pourDone()
   }
 
   private aimPlanePointAt(clientX: number, clientY: number): FloorPoint {
