@@ -15,14 +15,11 @@ const darkestShareOfOverbrewedColour = 0.5
 const steamWispsFromC = 60
 const steamVisibleFromC = 75
 const steamBillowingFromC = 85
-const humQuietBelowC = 60
 const shimmeringFromC = 40
 const simmeringFromC = 55
 const boilingFromC = 95
-const leavesFillingTheBottomGrams = 10
 const puddleFullAtMl = 30
 const clothSoakedAtMl = 20
-const godsPlaqueMarks = 5
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
@@ -33,12 +30,11 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
   }
   return {
     vessels,
-    heater: heaterView(state),
+    isHeaterOn: state.heater.isOn,
     caddy: { isOpen: state.caddy.isOpen, fillShare: share(state.caddy.grams, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
     puddleShare: puddleShareOf(state.tableWetMl),
-    godsPlaque: { litMarks: Math.round((state.godsSatisfaction / 100) * godsPlaqueMarks), totalMarks: godsPlaqueMarks },
   }
 }
 
@@ -56,7 +52,6 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
     surfaceMotion: isHeated && !isEmpty(vessel.liquid) ? surfaceMotionAt(vessel.liquid.temperatureC) : 'still',
     brewStage,
     isLidOpen: definition.lid === null ? null : vessel.isLidOpen,
-    leavesShare: share(vessel.leaves?.grams ?? 0, leavesFillingTheBottomGrams),
   }
 }
 
@@ -90,19 +85,6 @@ function surfaceMotionAt(temperatureC: number): TableViewState.SurfaceMotion {
   if (temperatureC >= simmeringFromC) return 'simmering'
   if (temperatureC >= shimmeringFromC) return 'shimmering'
   return 'still'
-}
-
-function heaterView(state: DeepReadonly<SessionState>): TableViewState.Heater {
-  const { isOn, vesselIdOnTop } = state.heater
-  const heatedVessel = vesselIdOnTop === null ? undefined : state.vessels[vesselIdOnTop]
-  return { isOn, vesselIdOnTop, hum: isOn && heatedVessel !== undefined ? humOf(heatedVessel.liquid.temperatureC) : 'silent' }
-}
-
-function humOf(temperatureC: number): TableViewState.Heater['hum'] {
-  if (temperatureC >= steamBillowingFromC) return 'rumbling'
-  if (temperatureC >= steamVisibleFromC) return 'active'
-  if (temperatureC >= humQuietBelowC) return 'rising'
-  return 'quiet'
 }
 
 function share(amount: number, whole: number): number {

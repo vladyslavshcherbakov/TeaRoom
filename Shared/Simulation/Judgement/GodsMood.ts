@@ -17,7 +17,7 @@ export type GodsVerdict = {
   readonly remark: GodsRemark
 }
 
-export const largestGodsLossAtOnce = 3
+const largestGodsLossAtOnce = 3
 const spillTheGodsNoticeMl = 5
 
 export function godsSatisfactionAfter(satisfaction: number, verdict: GodsVerdict): number {

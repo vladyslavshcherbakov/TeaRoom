@@ -6,7 +6,7 @@ export type Walk = {
   readonly waypoints: readonly FloorPoint[]
 }
 
-export const walkingSpeedMetresPerSecond = 1.6
+const walkingSpeedMetresPerSecond = 1.6
 
 export function standingAt(position: FloorPoint, headingRadians = 0): Walk {
   return { position, headingRadians, waypoints: [] }

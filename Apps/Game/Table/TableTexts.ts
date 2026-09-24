@@ -1,15 +1,6 @@
-import type { TimeOfDay } from '../../../Shared/Simulation/Definitions/Atmosphere.ts'
 import type { GodsRemark } from '../../../Shared/Simulation/Judgement/GodsMood.ts'
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
-import { text, textOrFallback, textWith } from '../Texts/Texts.ts'
-
-export function teaName(teaId: string): string {
-  return textOrFallback(`tea.${teaId}`, teaId)
-}
-
-export function timeOfDayName(timeOfDay: TimeOfDay): string {
-  return text(`timeOfDay.${timeOfDay}`)
-}
+import { text, textWith } from '../Texts/Texts.ts'
 
 export function remarkText(remark: GodsRemark): string {
   return text(`gods.${remark}`)

@@ -150,10 +150,6 @@ export class RoomPlay {
     this.aimedPour = null
   }
 
-  handTapped(handIndex: HandIndex): void {
-    this.toggleHand(handIndex)
-  }
-
   sipTapped(): void {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
@@ -167,7 +163,7 @@ export class RoomPlay {
   }
 
   private tapped(target: RoomTapTarget): void {
-    if (target.kind === 'hand') return this.handTapped(target.handIndex)
+    if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
     const targetFurnitureId = this.furnitureOf(target)

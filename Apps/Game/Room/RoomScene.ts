@@ -122,7 +122,7 @@ export class RoomScene {
     const table = tableViewState(state, this.catalog)
     const heldInView = isWalkerShown ? null : { camera: this.camera, selectedHandIndex: this.play.selectedHandIndex }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothOnTheTableAt: this.play.clothOnTheTableAt, timeSeconds: this.clock.elapsedTime })
-    this.showHeater(table.heater.isOn)
+    this.showHeater(table.isHeaterOn)
     this.room.showPuddle(table.puddleShare)
     const isAiming = this.play.aimedPourView !== null
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming)

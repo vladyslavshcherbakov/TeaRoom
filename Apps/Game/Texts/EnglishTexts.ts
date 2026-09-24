@@ -37,15 +37,4 @@ export const englishTexts = {
   'offering.barely': '{figurine} barely notices.',
   'figurine.dragon': 'The dragon',
   'figurine.toad': 'The toad',
-
-  'tea.sencha': 'Sencha',
-  'tea.oolong': 'Oolong',
-  'tea.shouPuerh': 'Shou puerh',
-
-  'timeOfDay.dawn': 'Dawn',
-  'timeOfDay.morning': 'Morning',
-  'timeOfDay.day': 'Day',
-  'timeOfDay.sunset': 'Sunset',
-  'timeOfDay.dusk': 'Dusk',
-  'timeOfDay.night': 'Night',
 } as const

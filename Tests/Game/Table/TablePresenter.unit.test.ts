@@ -70,31 +70,6 @@ test('waterSurface_offAWorkingHeater_isStillWhileTheSteamStays', () => {
   assert.equal(vesselView(liftedOff, 'kettle')?.steam, 'billowing')
 })
 
-test('kettleHum_whileHeating_growsWithTheTemperature', () => {
-  const rows = [
-    [50, 'quiet'],
-    [70, 'rising'],
-    [80, 'active'],
-    [90, 'rumbling'],
-  ] as const
-
-  for (const [temperatureC, hum] of rows) {
-    const state = stateWithLiquid('kettle', { temperatureC })
-    state.heater = { ...state.heater, isOn: true, vesselIdOnTop: 'kettle' }
-    assert.equal(tableViewState(state, catalog).heater.hum, hum, `${temperatureC} °C`)
-  }
-})
-
-test('kettleHum_whenTheHeaterIsOffOrEmpty_isSilent', () => {
-  const heaterOff = stateWithLiquid('kettle', { temperatureC: 90 })
-  heaterOff.heater = { ...heaterOff.heater, isOn: false, vesselIdOnTop: 'kettle' }
-  const heaterEmpty = stateWithLiquid('kettle', { temperatureC: 90 })
-  heaterEmpty.heater = { ...heaterEmpty.heater, isOn: true, vesselIdOnTop: null }
-
-  assert.equal(tableViewState(heaterOff, catalog).heater.hum, 'silent')
-  assert.equal(tableViewState(heaterEmpty, catalog).heater.hum, 'silent')
-})
-
 test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
   const rows = [
     [{ strength: 0, bitterness: 0 }, 'water'],
@@ -144,20 +119,5 @@ test('puddle_growsWithTheSpillUntilThirtyMillilitres', () => {
     const state = ritualState()
     state.tableWetMl = tableWetMl
     assert.equal(tableViewState(state, catalog).puddleShare, puddleShare, `${tableWetMl} ml`)
-  }
-})
-
-test('godsPlaque_lightsOneMarkPerFifthOfSatisfaction', () => {
-  const rows = [
-    [0, 0],
-    [49, 2],
-    [50, 3],
-    [100, 5],
-  ] as const
-
-  for (const [godsSatisfaction, litMarks] of rows) {
-    const state = ritualState()
-    state.godsSatisfaction = godsSatisfaction
-    assert.deepEqual(tableViewState(state, catalog).godsPlaque, { litMarks, totalMarks: 5 }, `${godsSatisfaction}`)
   }
 })

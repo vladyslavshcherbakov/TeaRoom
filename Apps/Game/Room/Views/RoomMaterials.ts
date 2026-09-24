@@ -3,7 +3,6 @@ import * as THREE from 'three'
 export type Surface =
   | 'floor'
   | 'wall'
-  | 'skirting'
   | 'wood'
   | 'darkWood'
   | 'clay'
@@ -36,7 +35,6 @@ export type Surface =
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
   wall: '#f4e7d2',
-  skirting: '#d9b98c',
   wood: '#c98e5a',
   darkWood: '#8f5a3a',
   clay: '#b8643c',
