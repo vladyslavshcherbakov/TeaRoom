@@ -34,7 +34,7 @@ export type Furniture = {
   readonly closeUp: CloseUp
 }
 
-export type ItemShape = 'spoon' | 'cloth' | 'figurine' | 'faucet'
+export type ItemShape = 'figurine' | 'faucet'
 
 export type ItemSpot = {
   readonly id: string
@@ -73,7 +73,7 @@ export const furniture: readonly Furniture[] = [
   },
 ]
 
-export type CarriedShape = 'kettle' | 'thermos' | 'caddy' | 'bowl'
+export type CarriedShape = 'kettle' | 'thermos' | 'caddy' | 'bowl' | 'spoon' | 'cloth'
 
 export const carriedItemShapes: Readonly<Record<string, CarriedShape>> = {
   kettle: 'kettle',
@@ -82,6 +82,8 @@ export const carriedItemShapes: Readonly<Record<string, CarriedShape>> = {
   bowl1: 'bowl',
   bowl2: 'bowl',
   bowl3: 'bowl',
+  spoon: 'spoon',
+  cloth: 'cloth',
 }
 
 export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {
@@ -89,6 +91,8 @@ export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {
   thermos: 0.08,
   caddy: 0.09,
   bowl: 0.09,
+  spoon: 0.12,
+  cloth: 0.14,
 }
 
 export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
@@ -96,6 +100,8 @@ export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
   thermos: 0.05,
   caddy: 0.07,
   bowl: 0.075,
+  spoon: 0,
+  cloth: 0,
 }
 
 export const heaterFootprintRadiusMetres = 0.18
@@ -104,8 +110,6 @@ export const faucetSpout: WorldPoint = { x: -1.45, y: 1.22, z: -2.72 }
 
 export const itemSpots: readonly ItemSpot[] = [
   { id: 'faucet', shape: 'faucet', position: { x: -1.45, y: 0.9, z: -2.9 } },
-  { id: 'spoon', shape: 'spoon', position: { x: 1.45, y: 0.42, z: -1.3 } },
-  { id: 'cloth', shape: 'cloth', position: { x: 0.5, y: 0.42, z: -1.25 } },
   { id: 'dragon', shape: 'figurine', position: { x: 0.45, y: 0.85, z: -2.88 } },
   { id: 'toad', shape: 'figurine', position: { x: 1.55, y: 0.85, z: -2.88 } },
 ]

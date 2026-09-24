@@ -13,13 +13,11 @@ import {
   type ItemSpot,
   type WorldPoint,
 } from '../RoomLayout.ts'
-import type { RitualTool } from '../RoomPlay.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 
 const wallHeight = 2.6
 const wallThickness = 0.12
 const reachOfFurnitureMetres = 0.35
-const chosenToolLiftMetres = 0.04
 const largestPuddleRadiusMetres = 0.25
 
 export type TapTargetTag =
@@ -31,7 +29,6 @@ export type TapTargetTag =
   | { readonly itemId: string }
   | { readonly handIndex: HandIndex }
   | { readonly lidOfItemId: string }
-  | { readonly tool: RitualTool }
   | { readonly figurineId: string }
 
 export class RoomModel {
@@ -39,9 +36,6 @@ export class RoomModel {
   readonly tappableMeshes: THREE.Object3D[] = []
   readonly heaterPlate: THREE.Mesh
   private readonly materials: RoomMaterials
-  private readonly toolsByName = new Map<RitualTool, THREE.Object3D>()
-  private readonly toolGlowsByName = new Map<RitualTool, THREE.Object3D>()
-  private readonly spoonLeaves: THREE.Mesh
   private readonly puddle: THREE.Mesh
 
   constructor(materials: RoomMaterials, heaterSpot: WorldPoint) {
@@ -52,15 +46,7 @@ export class RoomModel {
     for (const piece of furniture) this.addFurniture(piece)
     for (const spot of itemSpots) this.addItem(spot)
     this.heaterPlate = this.addHeater(heaterSpot)
-    this.spoonLeaves = this.addSpoonLeaves()
     this.puddle = this.addPuddle()
-  }
-
-  showRitualTools(spoonFillShare: number, chosenTool: RitualTool | null): void {
-    for (const [tool, mesh] of this.toolsByName) mesh.position.y = tool === chosenTool ? chosenToolLiftMetres : 0
-    for (const [tool, glow] of this.toolGlowsByName) glow.visible = tool === chosenTool
-    this.spoonLeaves.visible = spoonFillShare > 0
-    this.spoonLeaves.scale.set(0.4 + spoonFillShare * 0.6, 1, 0.4 + spoonFillShare * 0.6)
   }
 
   showPuddle(puddleShare: number): void {
@@ -135,38 +121,10 @@ export class RoomModel {
 
   private addItem(spot: ItemSpot): void {
     const mesh = this.itemMesh(spot)
-    if (spot.shape === 'spoon' || spot.shape === 'cloth') return this.addTool(spot.shape, mesh, spot.position)
     if (spot.shape === 'figurine') return this.tag(mesh, { figurineId: spot.id })
     if (spot.shape === 'faucet') return this.tag(mesh, { isFaucet: true })
     const furnitureId = furnitureWithinReachOf(spot)
     if (furnitureId !== null) this.tag(mesh, { furnitureId })
-  }
-
-  private addTool(tool: RitualTool, mesh: THREE.Object3D, position: WorldPoint): void {
-    const tool3D = new THREE.Group()
-    this.root.add(tool3D)
-    tool3D.add(mesh)
-    const touchPad = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.05, 0.22), this.invisibleMaterial())
-    touchPad.position.set(position.x, position.y + 0.02, position.z)
-    touchPad.castShadow = false
-    tool3D.add(touchPad)
-    this.tag(tool3D, { tool })
-    this.toolsByName.set(tool, tool3D)
-    const glow = new THREE.Mesh(new THREE.CircleGeometry(0.17, 24), this.materials.materialFor('chosenGlow'))
-    glow.rotation.x = -Math.PI / 2
-    glow.position.set(position.x, position.y + 0.003, position.z)
-    glow.visible = false
-    this.root.add(glow)
-    this.toolGlowsByName.set(tool, glow)
-  }
-
-  private addSpoonLeaves(): THREE.Mesh {
-    const spoonSpot = itemSpots.find((spot) => spot.shape === 'spoon')?.position ?? { x: 0, y: 0, z: 0 }
-    const leaves = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.015, 10), this.materials.materialFor('leaves'))
-    leaves.position.set(spoonSpot.x + 0.07, spoonSpot.y + 0.025, spoonSpot.z)
-    leaves.visible = false
-    this.toolsByName.get('spoon')?.add(leaves)
-    return leaves
   }
 
   private addPuddle(): THREE.Mesh {
@@ -202,10 +160,6 @@ export class RoomModel {
     switch (spot.shape) {
       case 'faucet':
         return this.faucet({ x, y, z })
-      case 'spoon':
-        return this.spoon({ x, y, z })
-      case 'cloth':
-        return this.box('cloth', 0.28, 0.02, 0.2, { x, y: y + 0.01, z })
       case 'figurine':
         return this.figurine(spot)
     }
@@ -225,18 +179,6 @@ export class RoomModel {
     arm.castShadow = true
     this.root.add(faucet)
     return faucet
-  }
-
-  private spoon(base: WorldPoint): THREE.Object3D {
-    const spoon = new THREE.Group()
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.015, 0.025), this.materials.materialFor('darkWood'))
-    handle.position.set(base.x - 0.04, base.y + 0.01, base.z)
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.02, 12), this.materials.materialFor('darkWood'))
-    bowl.position.set(base.x + 0.07, base.y + 0.012, base.z)
-    spoon.add(handle, bowl)
-    spoon.traverse((part) => (part.castShadow = true))
-    this.root.add(spoon)
-    return spoon
   }
 
   private figurine(spot: ItemSpot): THREE.Object3D {

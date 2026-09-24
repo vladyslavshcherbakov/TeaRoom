@@ -20,7 +20,6 @@ export type Surface =
   | 'cushion'
   | 'leaves'
   | 'puddle'
-  | 'chosenGlow'
   | 'gaugeGlass'
   | 'tapWater'
 
@@ -44,7 +43,6 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   cushion: '#d4735e',
   leaves: '#4f6b2f',
   puddle: '#9c6a44',
-  chosenGlow: '#fff1c2',
   gaugeGlass: '#f4f8f9',
   tapWater: '#a9d3ea',
 }

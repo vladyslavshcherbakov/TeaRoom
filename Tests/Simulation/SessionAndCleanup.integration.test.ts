@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 function ritualWithSpillOnTheTable(): TestRitual {
@@ -56,6 +56,8 @@ test('spill_whenLarge_theGodsPromiseToTellNoOne', () => {
 test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
   const wipedSlowly = ritualWithSpillOnTheTable()
   const wipedFast = ritualWithSpillOnTheTable()
+  wipedSlowly.do({ type: 'pickUp', itemId: 'cloth' })
+  wipedFast.do({ type: 'pickUp', itemId: 'cloth' })
 
   wipedSlowly.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
   wipedFast.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 60, coveredFraction: 1 })
@@ -163,4 +165,25 @@ test('room_whenLeftAfterResting_stopsTheWorld', () => {
 
   assert.equal(ritual.state.phase, 'ended')
   assert.deepEqual(ritual.state, stateWhenLeft)
+})
+
+test('table_withTheClothLyingOnIt_isNotWiped', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  const wetMlBeforeWiping = ritual.state.tableWetMl
+
+  const events = ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'notInHand' }])
+  assert.equal(ritual.state.tableWetMl, wetMlBeforeWiping)
+})
+
+test('cloth_whenUsedAwayFromTheTeaTable_isRefused', () => {
+  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  ritual.do({ type: 'standAt', placeId: 'table' })
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+
+  const events = ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'notAtThatPlace' }])
 })

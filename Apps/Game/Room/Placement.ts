@@ -1,7 +1,7 @@
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
-import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
-import type { ItemLocation, SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
+import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { carriedItemShapes, footprintRadiusMetres, furniture, heaterFootprintRadiusMetres } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
@@ -22,11 +22,10 @@ export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReado
 }
 
 function itemsOnSurfaces(state: DeepReadonly<SessionState>): { itemId: string; spot: Spot }[] {
-  const locations: [string, DeepReadonly<ItemLocation>][] = [
-    ...Object.values(state.vessels).map((vessel): [string, DeepReadonly<ItemLocation>] => [vessel.id, vessel.location]),
-    [caddyItemId, state.caddy.location],
-  ]
-  return locations.flatMap(([itemId, location]) => (location.kind === 'onSurface' ? [{ itemId, spot: location.spot }] : []))
+  return carriedItemIdsIn(state).flatMap((itemId) => {
+    const location = itemLocationIn(state, itemId)
+    return location?.kind === 'onSurface' ? [{ itemId, spot: location.spot }] : []
+  })
 }
 
 function isNear(spot: Spot, other: Spot, distance: number): boolean {

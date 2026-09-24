@@ -18,7 +18,7 @@ The keeper stands at one place, or at none while walking. An item is within reac
 - Putting down needs the item in a hand and the spot at the keeper's place.
 - The heater's switch and the heater plate need the keeper at the heater's place. Putting a vessel on the heater takes it from the hand or from the same surface.
 - Pouring needs the source and the target within reach. Walking away ends a pour.
-- Lids, tasting and scooping need the item within reach. The spoon, the cloth and the figurines stay at the ritual place, so scooping, tipping leaves, offering and wiping need the keeper there.
+- Lids, tasting and scooping need the item within reach. The spoon and the cloth are carried like any item: scooping and tipping leaves need the spoon in a hand, and wiping needs the cloth in a hand. The wet table and the figurines are at the ritual place, so wiping and offering need the keeper there.
 
 ## Heat
 

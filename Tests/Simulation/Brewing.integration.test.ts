@@ -95,6 +95,7 @@ test('tea_onceInTheCup_stopsGrowingStronger', () => {
 
 test('leaves_whenTheKettleLidIsClosed_areRefusedAndStayOnTheSpoon', () => {
   const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openCaddy' })
   ritual.do({ type: 'scoopTea', depth: 1 })
 
@@ -106,6 +107,7 @@ test('leaves_whenTheKettleLidIsClosed_areRefusedAndStayOnTheSpoon', () => {
 
 test('spoon_whenTheCaddyIsClosed_scoopsNothing', () => {
   const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
 
   const events = ritual.do({ type: 'scoopTea', depth: 1 })
 
@@ -115,6 +117,7 @@ test('spoon_whenTheCaddyIsClosed_scoopsNothing', () => {
 
 test('spoon_whenDippedHalfway_holdsHalfItsCapacity', () => {
   const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openCaddy' })
 
   ritual.do({ type: 'scoopTea', depth: 0.5 })
@@ -125,10 +128,21 @@ test('spoon_whenDippedHalfway_holdsHalfItsCapacity', () => {
 
 test('leaves_whenTippedIntoACup_areRefused', () => {
   const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openCaddy' })
   ritual.do({ type: 'scoopTea', depth: 1 })
 
   const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'cannotHoldLeaves' }])
+})
+
+test('spoon_lyingOnTheTable_scoopsNothingUntilItIsTaken', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'openCaddy' })
+
+  const events = ritual.do({ type: 'scoopTea', depth: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'notInHand' }])
+  assert.equal(ritual.state.caddy.grams, 50)
 })

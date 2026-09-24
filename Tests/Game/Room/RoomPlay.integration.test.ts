@@ -206,7 +206,7 @@ test('spoon_whenChosenAndTheOpenCaddyIsTapped_fillsWithLeaves', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
   room.session.dispatch({ type: 'openCaddy' })
-  room.tap({ kind: 'tool', tool: 'spoon' })
+  room.takeAndChoose('spoon')
 
   room.tap({ kind: 'item', itemId: 'caddy' })
 
@@ -219,8 +219,8 @@ test('spoon_whenFullAndTheOpenKettleIsTapped_tipsTheLeavesIntoIt', () => {
   room.setTheTeaTable()
   room.session.dispatch({ type: 'openCaddy' })
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+  room.takeAndChoose('spoon')
   room.session.dispatch({ type: 'scoopTea', depth: 1 })
-  room.tap({ kind: 'tool', tool: 'spoon' })
 
   room.tap({ kind: 'item', itemId: 'kettle' })
 
@@ -228,14 +228,23 @@ test('spoon_whenFullAndTheOpenKettleIsTapped_tipsTheLeavesIntoIt', () => {
   assert.equal(room.state.spoon.grams, 0)
 })
 
-test('spoon_whenTheKeeperWalksToTheCounter_staysOnTheTeaTable', () => {
+test('cloth_whenTappedWithTheSpoonChosen_isTakenIntoTheOtherHand', () => {
   const room = new RoomVisit()
   room.walkTo('teaTable')
-  room.tap({ kind: 'tool', tool: 'spoon' })
+  room.takeAndChoose('spoon')
 
-  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'cloth' })
 
-  assert.equal(room.play.chosenTool, null)
+  assert.deepEqual(room.state.keeper.hands, ['spoon', 'cloth'])
+})
+
+test('spoon_whenTappedAtTheTeaTable_goesIntoTheFirstFreeHand', () => {
+  const room = new RoomVisit()
+  room.walkTo('teaTable')
+
+  room.tap({ kind: 'item', itemId: 'spoon' })
+
+  assert.deepEqual(room.state.keeper.hands, ['spoon', null])
 })
 
 test('sipButton_whenTheChosenHandHoldsTheKettle_isNotOffered', () => {
@@ -286,7 +295,7 @@ test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAl
   const room = new RoomVisit()
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
-  room.tap({ kind: 'tool', tool: 'cloth' })
+  room.takeAndChoose('cloth')
 
   room.strokeTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }, { x: 0.5, z: -1.6 }], 10)
 
@@ -297,7 +306,7 @@ test('table_whenTappedWithTheCloth_isNotWiped', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
-  room.tap({ kind: 'tool', tool: 'cloth' })
+  room.takeAndChoose('cloth')
   const wetMlBeforeTheTap = room.state.tableWetMl
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
@@ -321,6 +330,13 @@ class RoomVisit {
   tap(target: RoomTapTarget): void {
     this.play.pressStarted(target)
     this.play.pressEnded()
+  }
+
+  takeAndChoose(itemId: string): void {
+    this.tap({ kind: 'item', itemId })
+    const handIndex = this.state.keeper.hands.indexOf(itemId)
+    if (handIndex !== 0 && handIndex !== 1) throw new Error(`${itemId} did not reach a hand`)
+    this.tap({ kind: 'hand', handIndex })
   }
 
   wait(seconds: number): void {

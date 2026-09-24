@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
-import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { tableViewState } from '../Table/TablePresenter.ts'
@@ -91,7 +91,7 @@ export class RoomScene {
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
-    const carriedItemIds = [...roomDefinition.vessels.map((vessel) => vessel.id), caddyItemId]
+    const carriedItemIds = carriedItemIdsIn(session.state)
     reportItemsWithoutAShape(carriedItemIds, log)
     this.carried = new CarriedItems(materials, carriedItemIds)
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
@@ -123,7 +123,6 @@ export class RoomScene {
     const heldInView = isWalkerShown ? null : { camera: this.camera, selectedHandIndex: this.play.selectedHandIndex }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, timeSeconds: this.clock.elapsedTime })
     this.showHeater(table.heater.isOn)
-    this.room.showRitualTools(table.spoonFillShare, this.play.chosenTool)
     this.room.showPuddle(table.puddleShare)
     const isAiming = this.play.aimedPourView !== null
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming)
@@ -273,7 +272,6 @@ export class RoomScene {
     if ('isFaucet' in tag) return { kind: 'faucet' }
     if ('isFloor' in tag) return { kind: 'floor', point: { x: nearest.point.x, z: nearest.point.z } }
     if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
-    if ('tool' in tag) return { kind: 'tool', tool: tag.tool }
     if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }
     const upwardNormal = nearest.face?.normal.clone().transformDirection(nearest.object.matrixWorld).y ?? 0
     if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }

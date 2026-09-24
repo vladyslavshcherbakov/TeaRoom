@@ -40,6 +40,11 @@ export type CaddyState = {
 export type SpoonState = {
   grams: number
   capacityGrams: number
+  location: ItemLocation
+}
+
+export type ClothState = {
+  location: ItemLocation
 }
 
 export type PourState = {
@@ -82,6 +87,7 @@ export type SessionState = {
   heater: HeaterState
   caddy: CaddyState
   spoon: SpoonState
+  cloth: ClothState
   pour: PourState | null
   filling: FillingState | null
   figurines: Record<string, FigurineState>

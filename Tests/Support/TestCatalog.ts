@@ -86,6 +86,8 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         caddyGrams: 50,
         caddyStartsAt: onTheTable(6),
         spoonCapacityGrams: 5,
+        spoonStartsAt: onTheTable(7),
+        clothStartsAt: onTheTable(8),
       },
     },
   }
@@ -117,6 +119,8 @@ export function testHouseCatalog(): Catalog {
           { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 2) },
         ],
         caddyStartsAt: at('shelf', 3),
+        spoonStartsAt: at('table', 7),
+        clothStartsAt: at('table', 8),
       },
     },
   }

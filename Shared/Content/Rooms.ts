@@ -22,4 +22,6 @@ export const quietRoom: RoomDefinition = {
   caddyGrams: 60,
   caddyStartsAt: { placeId: 'shelf', x: -2.75, y: 1.22, z: -0.1 },
   spoonCapacityGrams: 3,
+  spoonStartsAt: { placeId: 'teaTable', x: 1.45, y: 0.42, z: -1.3 },
+  clothStartsAt: { placeId: 'teaTable', x: 0.5, y: 0.42, z: -1.25 },
 }

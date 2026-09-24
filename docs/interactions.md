@@ -52,11 +52,11 @@ The simulation core receives one command per player decision and answers with ev
 | Fill from the tap | choose the kettle's hand, then tap the tap; tap it again to close it | `openVesselLid` when the lid is closed, `startFillingFromTap`, `stopFillingFromTap` | `fillingStarted`, `vesselOverflowed`, `fillingFinished` with filled and overflowed millilitres |
 | Heat | tap the switch on the counter's front | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `targetTemperatureReached`, `heaterSwitchedOff` with a water judgement |
 | Pour | choose the hand with the vessel, tap the target, then move the vessel with one finger and hold the tilt button with another | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
-| Scoop leaves | take the spoon, then tap the open caddy | `scoopTea` with a full spoon's depth | `teaScooped` |
-| Tip leaves | with the spoon taken, tap the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |
+| Scoop leaves | take the spoon, choose its hand, then tap the open caddy | `scoopTea` with a full spoon's depth | `teaScooped` |
+| Tip leaves | with the spoon's hand chosen, tap the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |
 | Taste | choose the hand with a tea bowl, then tap Sip | `tasteCup` | `teaTasted` with a verdict and a reaction |
 | Offer | choose the hand with a tea bowl, then tap a figurine | `offerCup` | `figurineAcceptedTea` with a response |
-| Wipe | take the cloth, then stroke the tea table with a finger | `wipeTable` with the stroke's speed and covered share | `tableWiped` |
+| Wipe | take the cloth, choose its hand, then stroke the tea table with a finger | `wipeTable` with the stroke's speed and covered share | `tableWiped` |
 | Finish | tap "Finish" | `finishRitual` | `ritualFinished` |
 | Leave | tap "Leave" while resting | `leaveRoom` | `roomLeft` |
 
@@ -80,12 +80,12 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap the heater with a hand chosen | The vessel in that hand goes on the heater. |
 | Tap the switch under the heater | The heater switches on or off. The plate glows while it is on. |
 | Tap the lid of a kettle, thermos or caddy that stands on a surface | The lid opens or closes. |
-| Tap the spoon or the cloth at the tea table | The keeper takes it, and a pale circle marks it. A second tap puts it back. Taking a tool lets go of a chosen hand, and choosing a hand puts the tool back. Walking away from the tea table puts it back too. |
-| Tap the open caddy with the spoon taken | A full spoon of leaves is scooped. |
-| Tap a vessel with the spoon taken | The spoon's leaves are tipped into it. |
+| Tap the spoon or the cloth | The keeper takes it into a free hand, like any item. It shows in a corner of the close-up and is put down like any item. |
+| Tap the open caddy with the spoon's hand chosen | A full spoon of leaves is scooped, and the leaves show on the spoon. |
+| Tap a vessel with the spoon's hand chosen | The spoon's leaves are tipped into it. Any other item is taken into the free hand. |
 | Tap Sip, shown while the chosen hand holds a tea bowl with tea in it | The keeper takes a sip. A caption shows the taste and the gods' remark for four seconds. |
 | Tap a figurine with a hand chosen | The tea bowl in that hand is offered to it. A caption shows the figurine's response. |
-| Stroke the tea table with the cloth taken | The table is wiped. The stroke's length over time is its speed, and a stroke of 1.5 m covers the whole table. A slow stroke dries more. A tap with the cloth does nothing. |
+| Stroke the tea table with the cloth's hand chosen | The table is wiped. The stroke's length over time is its speed, and a stroke of 1.5 m covers the whole table. A slow stroke dries more. A tap with the cloth does nothing. |
 | Tap the tap at the counter with a hand chosen | The keeper holds that hand's vessel under the tap, opening its lid first if the lid must be open to fill, and the water runs. The kettle's water gauge rises. A second tap on the tap closes it. |
 | Tap a vessel on a surface with the hand of another vessel chosen | The pour begins to be aimed: the chosen vessel hovers over the target with its spout 22 cm to the left, and two buttons appear, a round tilt button with a teapot and a small done button. |
 | Drag a finger anywhere while aiming | The vessel moves with the finger, keeping its height above the target. Only the change of the finger's position counts, so the finger never hides the vessel. |

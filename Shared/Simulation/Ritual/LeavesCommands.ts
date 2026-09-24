@@ -1,10 +1,10 @@
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { isKeeperAt, isWithinReach, ritualPlaceOf, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { isWithinReach, whereIs } from './Reach.ts'
 
 export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void {
   const { caddy, spoon } = draft.state
-  if (!isKeeperAt(draft, ritualPlaceOf(draft))) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the spoon is at the ${ritualPlaceOf(draft)}`)
+  if (spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(spoon.location)}`)
   if (!isWithinReach(draft, caddy.location)) return refuse(draft, command, 'outOfReach', `the caddy is ${whereIs(caddy.location)}`)
   if (!caddy.isOpen) return refuse(draft, command, 'lidClosed', 'caddy is closed')
   if (caddy.grams <= 0) return refuse(draft, command, 'caddyIsEmpty')
@@ -22,7 +22,7 @@ export function tipSpoonInto(draft: Draft, command: CommandOfType<'tipSpoonInto'
   const teaId = draft.state.caddy.teaId
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
   if (draft.state.spoon.grams <= 0 || teaId === null) return refuse(draft, command, 'spoonIsEmpty')
-  if (!isKeeperAt(draft, ritualPlaceOf(draft))) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the spoon is at the ${ritualPlaceOf(draft)}`)
+  if (draft.state.spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(draft.state.spoon.location)}`)
   if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}`)
   const definition = vesselDefinitionOf(draft, vessel)
   if (!definition.canHoldLeaves) return refuse(draft, command, 'cannotHoldLeaves')

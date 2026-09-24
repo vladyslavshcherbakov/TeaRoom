@@ -59,7 +59,7 @@ class RitualBench {
   }
 
   private keeperSection(): HTMLElement {
-    const itemIds = [...this.room.vessels.map((vessel) => vessel.id), 'caddy']
+    const itemIds = [...this.room.vessels.map((vessel) => vessel.id), 'caddy', 'spoon', 'cloth']
     return section(
       'Keeper',
       row(this.live(() => this.keeperSummary())),

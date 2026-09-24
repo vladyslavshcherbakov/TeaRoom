@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import { caddyItemId } from '../../../../Shared/Simulation/Ritual/Reach.ts'
+import { itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../../Shared/Simulation/State/DeepReadonly.ts'
-import type { HandIndex, ItemLocation, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
+import type { HandIndex, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
@@ -63,6 +63,7 @@ type CarriedModel = {
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
   readonly gaugeWater: THREE.Mesh | null
+  readonly spoonLeaves: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
   isHeldInView: boolean
@@ -130,7 +131,7 @@ export class CarriedItems {
   }
 
   private place(model: CarriedModel, scene: CarriedItemsScene): void {
-    const location = locationOf(model.itemId, scene.state)
+    const location = itemLocationIn(scene.state, model.itemId)
     if (location === undefined) return
     const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
     const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
@@ -170,6 +171,7 @@ export class CarriedItems {
     if (model.lid !== null) model.lid.position.copy(model.lidClosedPosition).add(new THREE.Vector3(isOpen ? -openLidSideMetres : 0, 0, 0))
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
     if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
+    if (model.spoonLeaves !== null) showLeavesOnTheSpoon(model.spoonLeaves, scene.table.spoonFillShare)
     const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
     model.puffs.forEach((puff, index) => {
       puff.visible = index < puffCount
@@ -226,6 +228,7 @@ export class CarriedItems {
       root.add(liquid)
     }
     const gaugeWater = shape === 'kettle' ? this.addWaterGauge(root) : null
+    const spoonLeaves = shape === 'spoon' ? this.addSpoonLeaves(root) : null
     root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
     const puffs = [0, 1, 2].map(() => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
     for (const puff of puffs) puff.castShadow = false
@@ -243,10 +246,19 @@ export class CarriedItems {
       liquid,
       liquidMaterial,
       gaugeWater,
+      spoonLeaves,
       puffs,
       tagKey: '',
       isHeldInView: false,
     }
+  }
+
+  private addSpoonLeaves(root: THREE.Group): THREE.Mesh {
+    const leaves = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.015, 10), this.materials.materialFor('leaves'))
+    leaves.position.set(0.07, 0.025, 0)
+    leaves.visible = false
+    root.add(leaves)
+    return leaves
   }
 
   private addWaterGauge(root: THREE.Group): THREE.Mesh {
@@ -268,6 +280,10 @@ export class CarriedItems {
         return this.caddyParts()
       case 'bowl':
         return this.bowlParts()
+      case 'spoon':
+        return this.spoonParts()
+      case 'cloth':
+        return this.clothParts()
     }
   }
 
@@ -302,6 +318,20 @@ export class CarriedItems {
     return { meshes: [body], lid, spoutTip: new THREE.Vector3(0.08, 0.16, 0), rimHeight: 0.19, liquidRadius: null }
   }
 
+  private spoonParts() {
+    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.015, 0.025), this.materials.materialFor('darkWood'))
+    handle.position.set(-0.04, 0.01, 0)
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.02, 12), this.materials.materialFor('darkWood'))
+    bowl.position.set(0.07, 0.012, 0)
+    return { meshes: [handle, bowl], lid: null, spoutTip: new THREE.Vector3(0.11, 0.02, 0), rimHeight: 0.025, liquidRadius: null }
+  }
+
+  private clothParts() {
+    const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.2), this.materials.materialFor('cloth'))
+    cloth.position.y = 0.01
+    return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(0.14, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
+  }
+
   private bowlParts() {
     const profile = [
       new THREE.Vector2(0, 0.008),
@@ -326,9 +356,6 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
   model.liquidMaterial.color.set(vessel.liquorColour)
 }
 
-function locationOf(itemId: string, state: DeepReadonly<SessionState>): DeepReadonly<ItemLocation> | undefined {
-  return itemId === caddyItemId ? state.caddy.location : state.vessels[itemId]?.location
-}
 
 function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel): void {
   const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres)
@@ -337,6 +364,11 @@ function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel)
   gaugeWater.position.y = gaugeBottomMetres + height / 2
   const material = gaugeWater.material
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInGaugeColour : vessel.liquorColour)
+}
+
+function showLeavesOnTheSpoon(leaves: THREE.Mesh, spoonFillShare: number): void {
+  leaves.visible = spoonFillShare > 0
+  leaves.scale.set(0.4 + spoonFillShare * 0.6, 1, 0.4 + spoonFillShare * 0.6)
 }
 
 function holdUnderTheFaucet(model: CarriedModel): void {

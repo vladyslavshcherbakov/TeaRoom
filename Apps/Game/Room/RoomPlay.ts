@@ -1,7 +1,7 @@
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
-import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { caddyItemId, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -26,13 +26,9 @@ export type RoomTapTarget =
   | { readonly kind: 'faucet' }
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
   | { readonly kind: 'lid'; readonly itemId: string }
-  | { readonly kind: 'tool'; readonly tool: RitualTool }
   | { readonly kind: 'figurine'; readonly figurineId: string }
   | { readonly kind: 'nothing' }
 
-export type RitualTool = 'spoon' | 'cloth'
-
-type Choice = { readonly kind: 'hand'; readonly handIndex: HandIndex } | { readonly kind: 'tool'; readonly tool: RitualTool }
 
 type WipeStroke = {
   lengthMetres: number
@@ -55,7 +51,7 @@ export class RoomPlay {
   private readonly catalog: Catalog
   private readonly log: RoomLog
   private readonly navigator: RoomNavigator
-  private choice: Choice | null = null
+  private chosenHandIndex: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
 
@@ -75,11 +71,7 @@ export class RoomPlay {
   }
 
   get selectedHandIndex(): HandIndex | null {
-    return this.choice?.kind === 'hand' ? this.choice.handIndex : null
-  }
-
-  get chosenTool(): RitualTool | null {
-    return this.choice?.kind === 'tool' ? this.choice.tool : null
+    return this.chosenHandIndex
   }
 
   get sippableCupId(): string | null {
@@ -180,12 +172,10 @@ export class RoomPlay {
         return this.touchItem(target.itemId)
       case 'lid':
         return this.toggleLidOf(target.itemId)
-      case 'tool':
-        return this.toggleTool(target.tool)
       case 'figurine':
         return this.offerTheChosenCupTo(target.figurineId)
       case 'surface':
-        if (this.chosenTool === 'cloth') return this.log(`tap on the ${target.furnitureId} with the cloth ignored: the cloth wipes with a stroke`)
+        if (this.selectedItemId() === clothItemId) return this.log(`tap on the ${target.furnitureId} with the cloth ignored: the cloth wipes with a stroke`)
         return this.putDownSelectedItemAt(target.furnitureId, target.point)
       case 'heater':
         return this.putSelectedVesselOnTheHeater()
@@ -202,22 +192,14 @@ export class RoomPlay {
   private keeperMovedTo(furnitureId: FurnitureId | null): void {
     if (this.aimedPour !== null) this.pourDone()
     this.ritual.dispatch({ type: 'standAt', placeId: furnitureId })
-    const tool = this.chosenTool
-    if (tool === null || furnitureId === this.ritualFurnitureId()) return
-    this.choice = null
-    this.log(`left the ${tool} at the ${this.ritualFurnitureId()}`)
   }
 
   private touchItem(itemId: string): void {
-    switch (this.chosenTool) {
-      case 'spoon':
-        return this.useTheSpoonOn(itemId)
-      case 'cloth':
-        return this.log(`tap on ${itemId} with the cloth ignored: the cloth wipes the table`)
-      case null:
-        if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
-        this.ritual.dispatch({ type: 'pickUp', itemId })
-    }
+    const chosenItemId = this.selectedItemId()
+    if (chosenItemId === spoonItemId) return this.useTheSpoonOn(itemId)
+    if (chosenItemId === clothItemId) return this.log(`tap on ${itemId} with the cloth ignored: the cloth wipes the table`)
+    if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
+    this.ritual.dispatch({ type: 'pickUp', itemId })
   }
 
   private canAimAPourAt(targetId: string): boolean {
@@ -252,6 +234,10 @@ export class RoomPlay {
       this.ritual.dispatch({ type: 'scoopTea', depth: fullSpoonDepth })
       return
     }
+    if (this.ritual.state.vessels[itemId] === undefined) {
+      this.ritual.dispatch({ type: 'pickUp', itemId })
+      return
+    }
     this.ritual.dispatch({ type: 'tipSpoonInto', vesselId: itemId })
   }
 
@@ -279,7 +265,7 @@ export class RoomPlay {
   }
 
   private wipeStrokeStartingAt(target: RoomTapTarget): WipeStroke | null {
-    if (this.chosenTool !== 'cloth' || target.kind !== 'surface' || !this.isOnTheRitualSurface(target)) return null
+    if (this.selectedItemId() !== clothItemId || target.kind !== 'surface' || !this.isOnTheRitualSurface(target)) return null
     return { lengthMetres: 0, lastPoint: target.point }
   }
 
@@ -290,13 +276,8 @@ export class RoomPlay {
   private toggleHand(handIndex: HandIndex): void {
     const itemId = this.ritual.state.keeper.hands[handIndex]
     const isAlreadyChosen = this.selectedHandIndex === handIndex
-    this.choice = itemId === null || isAlreadyChosen ? null : { kind: 'hand', handIndex }
-    this.log(this.choice === null ? `hand ${handIndex} let go of the choice` : `chose ${itemId} in hand ${handIndex}`)
-  }
-
-  private toggleTool(tool: RitualTool): void {
-    this.choice = this.chosenTool === tool ? null : { kind: 'tool', tool }
-    this.log(this.choice === null ? `put the ${tool} back` : `took the ${tool}`)
+    this.chosenHandIndex = itemId === null || isAlreadyChosen ? null : handIndex
+    this.log(this.chosenHandIndex === null ? `hand ${handIndex} let go of the choice` : `chose ${itemId} in hand ${handIndex}`)
   }
 
   private putDownSelectedItemAt(furnitureId: FurnitureId, point: WorldPoint): void {
@@ -310,7 +291,7 @@ export class RoomPlay {
 
   private letGoOfTheChoiceUnlessRefused(events: readonly RitualEvent[]): void {
     if (events.some((event) => event.type === 'actionRefused')) return this.log(`hand ${this.selectedHandIndex} stays chosen after the refusal`)
-    this.choice = null
+    this.chosenHandIndex = null
   }
 
   private putSelectedVesselOnTheHeater(): void {
@@ -337,7 +318,6 @@ export class RoomPlay {
       case 'item':
       case 'lid':
         return furnitureWithPlace(placeOf(this.locationOfItem(target.itemId)))
-      case 'tool':
       case 'figurine':
         return this.ritualFurnitureId()
       default:
@@ -350,7 +330,7 @@ export class RoomPlay {
   }
 
   private locationOfItem(itemId: string): DeepReadonly<ItemLocation> | undefined {
-    return itemId === caddyItemId ? this.ritual.state.caddy.location : this.ritual.state.vessels[itemId]?.location
+    return itemLocationIn(this.ritual.state, itemId)
   }
 
   private heaterSpot(): Spot {
@@ -364,8 +344,6 @@ function describeTarget(target: RoomTapTarget): string {
       return target.itemId
     case 'lid':
       return `the lid of ${target.itemId}`
-    case 'tool':
-      return `the ${target.tool}`
     case 'figurine':
       return target.figurineId
     case 'hand':

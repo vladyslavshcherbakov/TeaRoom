@@ -36,4 +36,6 @@ export type RoomDefinition = {
   readonly caddyGrams: number
   readonly caddyStartsAt: Spot
   readonly spoonCapacityGrams: number
+  readonly spoonStartsAt: Spot
+  readonly clothStartsAt: Spot
 }
