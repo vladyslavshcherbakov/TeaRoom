@@ -133,6 +133,24 @@ Where the player sits changes the camera for the ritual, the sounds and what the
 - **Candle or incense.** It burns down in real time and can serve as a steeping timer without numbers.
 - **Wind chime** on the veranda. Its sound tells the wind.
 
+### Poems in the room
+
+- **A book of haiku on the table.** The player opens it with a swipe and turns pages. Each page is one poem. Some pages have a pressed flower or a note in the previous owner's hand.
+- **A poem on the wall.** A poster or a scroll with one haiku. The poem changes with the season, the weather or the time of day, and nobody is seen changing it.
+- **The poem leaks into the room.** One detail of the poem on the wall appears in the room while it hangs there: a frog by the veranda step, a crow on the branch outside, a single fallen leaf on the sill, the moon in the bowl. The detail is never pointed at. The player notices it or does not.
+- **Writing one's own.** Later, the player may compose a haiku from words found around the room and hang it. The room then answers it the same way.
+- **Where the poems come from.** Classic haiku in the public domain in the original, with translations written for the game, and poems written for the game. A translation by someone else is used only with a licence.
+
+In the form for new ideas:
+
+- **Verb.** Open the book, turn a page, look at the wall.
+- **Trace.** A new poem on the wall, and one of its details somewhere in the room.
+- **Cause.** The season, the weather, the time of day, or a page the player left open.
+- **Memory.** Which poems the player has read, and which one hangs on the wall.
+- **Consequence.** A detail that arrived with a poem can stay a little after the poem changes, so the room remembers it.
+- **Line.** None. The poem is the line.
+- **Never told.** That the frog came because of the poem.
+
 ### Music in the room
 
 - A gramophone, a vinyl player, a cassette deck or a CD player. Each has its own gesture: wind the crank, drop the needle, press play with a clunk, close the CD tray.
