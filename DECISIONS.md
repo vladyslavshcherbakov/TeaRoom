@@ -24,6 +24,8 @@
 
 **Pouring is a press from above.** One finger has to both carry the vessel and tilt it. Over a target the vessel stops at a hover line, and pressing further down tilts it. A pour only starts when the vessel reached the target from above, so carrying a bowl past the kettle on the way to the viewer pours nothing. Rejected: a separate tilt control, because it breaks the one-hand, one-object feel the GDD asks for.
 
+**UI tests run on WebKit and read the ritual log.** WebKit is the engine of iOS Safari, the game's main target. The tests read the `[ritual]` lines from the browser console instead of calling into the game, so the product carries no test hooks. `@playwright/test` is pinned to the version whose Chromium is preinstalled in the agent environment, so the same tests run there and in CI.
+
 **A refused command is an event, not an exception.** A player trying to pour from a closed thermos is part of play, and the presentation answers it materially with a spring-back. Rejected: throwing, because a gesture would need a try block and a missed catch would stop the game.
 
 **The gods judge the water when it meets the leaves, and the first drinkable sip, once per ritual.** Judging each heater switch-off would reward switching the heater on and off. The water that meets the leaves is the water the tea is made with. A sip that is too hot to drink is not judged, because the player is supposed to wait.

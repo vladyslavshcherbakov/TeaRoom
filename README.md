@@ -32,6 +32,12 @@ npm install
 
 `test.sh` type-checks everything and runs every test with Node's built-in test runner.
 
+```sh
+./test-ui.sh
+```
+
+`test-ui.sh` builds the site and plays it in a browser with Playwright, on iPhone WebKit and Android Chromium. The browsers are installed once with `npx playwright install webkit chromium`.
+
 ## Run locally
 
 ```sh
@@ -51,6 +57,6 @@ Each command prints an address that a phone on the same network can open.
 
 ## Deploy
 
-GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `./test.sh`, `./build.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages.
+GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `./test.sh`, `./test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages.
 
 Pages must be enabled once in the repository settings: Settings → Pages → Build and deployment → Source: GitHub Actions.

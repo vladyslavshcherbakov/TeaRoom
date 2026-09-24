@@ -63,7 +63,7 @@ External dependencies: Phaser for the game, pinned in `package.json`. Vite, Type
 
 ## Tests
 
-Gesture tests in `Tests/Game/Room/` drive `TableTouches` with a `Finger` over a real session.
+End-to-end UI tests in `Tests/Browser/` play the built site with Playwright and read the ritual log from the console, so the game needs no test hooks. Gesture tests in `Tests/Game/Room/` drive `TableTouches` with a `Finger` over a real session.
 
 Integration tests run the real `RitualSession` over `Tests/Support/TestCatalog.ts`, whose round numbers make expected values checkable by hand. Its vessels do not cool unless a test asks for cooling. Content tests run the real catalog. Unit tests are written only for a decision table that has stopped moving.
 
