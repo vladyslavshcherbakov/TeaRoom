@@ -556,7 +556,7 @@ function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vec
 }
 
 function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
-  water.visible = vessel.fillShare > 0
+  water.visible = vessel.fillShare > 0 && vessel.isLidOpen === true
   const bodyHalfHeight = kettleBodyRadiusMetres * kettleBodySquash
   const openingHeight = kettleBodyCentreMetres + bodyHalfHeight * Math.cos(kettleOpeningAngle)
   const surfaceHeight = kettleBottomInsideMetres + vessel.fillShare * (openingHeight - kettleWaterBelowTheOpeningMetres - kettleBottomInsideMetres)
