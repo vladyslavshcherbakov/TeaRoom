@@ -1,4 +1,4 @@
-import { wetMlAfterWiping } from '../Physics/Table.ts'
+import { clothStainAfterTakingIn, wetMlAfterWiping } from '../Physics/Table.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, noteDetail, refuse, type Draft } from './Draft.ts'
 import { isKeeperAt, isWithinReach, ritualPlaceOf, whereIs, whereTheKeeperStands } from './Reach.ts'
@@ -8,12 +8,11 @@ export function wipeTable(draft: Draft, command: CommandOfType<'wipeTable'>): vo
   if (cloth.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the cloth is ${whereIs(cloth.location)}`)
   if (!isKeeperAt(draft, ritualPlaceOf(draft))) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the wet table is at the ${ritualPlaceOf(draft)}`)
   const wetMlBefore = draft.state.tableWetMl
-  draft.state.tableWetMl = wetMlAfterWiping(wetMlBefore, command.strokeSpeedCmPerSecond, command.coveredFraction)
-  cloth.wetMl += wetMlBefore - draft.state.tableWetMl
+  takeIntoTheCloth(draft, wetMlBefore - wetMlAfterWiping(wetMlBefore, command.strokeSpeedCmPerSecond, command.coveredFraction))
   noteDetail(
     draft,
     `table wiped at ${command.strokeSpeedCmPerSecond.toFixed(0)} cm/s over ${(command.coveredFraction * 100).toFixed(1)}%: ` +
-      `${wetMlBefore.toFixed(2)} → ${draft.state.tableWetMl.toFixed(2)} ml wet, the cloth holds ${cloth.wetMl.toFixed(2)} ml`,
+      `${wetMlBefore.toFixed(2)} → ${draft.state.tableWetMl.toFixed(2)} ml wet at strength ${draft.state.puddleStrength.toFixed(1)}, the cloth holds ${cloth.wetMl.toFixed(2)} ml with a tea stain of ${(cloth.teaStain * 100).toFixed(0)}%`,
   )
   draft.events.push({ type: 'tableWiped', wetMlLeft: draft.state.tableWetMl })
 }
@@ -36,4 +35,11 @@ export function liftTheClothOutOfThePuddle(draft: Draft): void {
   if (!cloth.isSoakingThePuddle) return
   cloth.isSoakingThePuddle = false
   note(draft, `the cloth is lifted out of the puddle holding ${cloth.wetMl.toFixed(2)} ml, the table is ${draft.state.tableWetMl.toFixed(2)} ml wet`)
+}
+
+export function takeIntoTheCloth(draft: Draft, takenMl: number): void {
+  const cloth = draft.state.cloth
+  draft.state.tableWetMl -= takenMl
+  cloth.wetMl += takenMl
+  cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, takenMl, draft.state.puddleStrength)
 }

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { Spot } from '../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { clothItemId, itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
+import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import type { ShapedItem, WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
@@ -50,10 +51,16 @@ export class CarriedItems {
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) showContentsOf(model, scene)
-    this.clothMaterial.color.copy(this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), scene.table.clothWetShare))
+    this.clothMaterial.color.copy(this.clothColourFor(scene.table))
     this.waterStreams.show(scene, this.models)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
     this.chosenGlow.show(scene, this.models)
+  }
+
+  private clothColourFor(table: TableViewState): THREE.Color {
+    const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), table.clothTeaStain)
+    const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), table.clothWetShare)
+    return dryColour.multiply(wetDarkening)
   }
 
   private place(model: CarriedModel, scene: CarriedItemsScene): void {

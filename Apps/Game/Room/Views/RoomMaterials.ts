@@ -13,6 +13,7 @@ export type Surface =
   | 'caddyGreen'
   | 'cloth'
   | 'wetCloth'
+  | 'teaStainedCloth'
   | 'jade'
   | 'toadBrown'
   | 'heaterPlate'
@@ -49,6 +50,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   caddyGreen: '#5f9a7c',
   cloth: '#ffffff',
   wetCloth: '#8a7c68',
+  teaStainedCloth: '#f2dc96',
   jade: '#6fb59a',
   toadBrown: '#b39a5c',
   heaterPlate: '#3d3733',

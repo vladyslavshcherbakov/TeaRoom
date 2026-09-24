@@ -18,11 +18,12 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     heater: { definitionId: room.heaterId, isOn: false, itemIdOnTop: null, hasAnnouncedTargetTemperature: false, hasAnnouncedBoilingAway: false },
     caddy: { teaId: null, grams: room.caddyGrams, isOpen: false, location: { kind: 'onSurface', spot: room.caddyStartsAt } },
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
-    cloth: { wetMl: 0, isSoakingThePuddle: false, location: { kind: 'onSurface', spot: room.clothStartsAt } },
+    cloth: { wetMl: 0, teaStain: 0, isSoakingThePuddle: false, location: { kind: 'onSurface', spot: room.clothStartsAt } },
     pour: null,
     sink: { itemIdInside: null, runningWater: null },
     figurines: figurinesOnTheShelf(room),
     tableWetMl: 0,
+    puddleStrength: 0,
     godsSatisfaction: initialGodsSatisfaction,
     godsJudgementsMade: { water: false, firstSip: false },
   }

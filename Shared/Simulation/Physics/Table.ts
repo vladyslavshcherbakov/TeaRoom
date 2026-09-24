@@ -4,10 +4,29 @@ const fastStrokeCmPerSecond = 200
 const slowStrokeEfficiency = 0.8
 const fastStrokeEfficiency = 0.3
 const soakingMlPerSecond = 0.5
+const cleanClothDryingMlPerSecond = 0.1
+const stainedClothDryingMlPerSecond = 0.03
+const strongTeaMlThatStainsTheClothFully = 20
+const strongestTea = 100
 const clothHoldsMl = 40
 
 export function wetMlAfterDrying(wetMl: number, seconds: number): number {
   return Math.max(0, wetMl - evaporationMlPerSecond * seconds)
+}
+
+export function puddleStrengthAfterSpill(wetMl: number, strength: number, spilledMl: number, spilledStrength: number): number {
+  const wetMlAfterSpill = wetMl + spilledMl
+  if (wetMlAfterSpill === 0) return 0
+  return (wetMl * strength + spilledMl * spilledStrength) / wetMlAfterSpill
+}
+
+export function clothStainAfterTakingIn(stain: number, takenMl: number, strength: number): number {
+  return Math.min(1, stain + (takenMl * (strength / strongestTea)) / strongTeaMlThatStainsTheClothFully)
+}
+
+export function clothWetMlAfterDrying(wetMl: number, stain: number, seconds: number): number {
+  const dryingMlPerSecond = cleanClothDryingMlPerSecond + (stainedClothDryingMlPerSecond - cleanClothDryingMlPerSecond) * stain
+  return Math.max(0, wetMl - dryingMlPerSecond * seconds)
 }
 
 export function mlSoakedUp(tableWetMl: number, clothWetMl: number, seconds: number): number {

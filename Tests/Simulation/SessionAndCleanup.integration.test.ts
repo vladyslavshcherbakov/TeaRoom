@@ -10,6 +10,15 @@ function ritualWithSpillOnTheTable(): TestRitual {
   return ritual
 }
 
+function ritualWithTeaSpilledOnTheTable(): TestRitual {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(5)
+  ritual.wait(60)
+  ritual.pour('kettle', null, 2.5)
+  return ritual
+}
+
 test('room_beforeTheRitualBegins_refusesTouchingTheKettle', () => {
   const ritual = new TestRitual()
 
@@ -209,7 +218,7 @@ test('cloth_whileLyingInThePuddle_soaksUpHalfAMillilitreASecond', () => {
   ritual.wait(10)
 
   assertNear(ritual.state.tableWetMl, wetMlBeforeSoaking - 5 - 0.5)
-  assertNear(ritual.state.cloth.wetMl, 5 - 0.5)
+  assertNear(ritual.state.cloth.wetMl, 5 - 1)
 })
 
 test('cloth_whenTheWholePuddleIsSoakedUp_stopsSoaking', () => {
@@ -232,6 +241,46 @@ test('cloth_whenLiftedOutOfThePuddle_stopsSoakingIt', () => {
   ritual.wait(10)
 
   assertNear(ritual.state.tableWetMl, wetMlWhenLifted - 0.5)
+})
+
+test('cloth_whenItSoaksUpSpilledTea_isStained', () => {
+  const ritual = ritualWithTeaSpilledOnTheTable()
+  ritual.do({ type: 'soakUpThePuddle' })
+
+  ritual.wait(10)
+
+  assert.ok(ritual.state.cloth.teaStain > 0, `stain ${ritual.state.cloth.teaStain}`)
+})
+
+test('cloth_whenItSoaksUpSpilledWater_staysUnstained', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'soakUpThePuddle' })
+
+  ritual.wait(10)
+
+  assert.equal(ritual.state.cloth.teaStain, 0)
+})
+
+test('cloth_whenClean_driesATenthOfAMillilitreASecond', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  const wetMlAfterWiping = ritual.state.cloth.wetMl
+
+  ritual.wait(10)
+
+  assertNear(ritual.state.cloth.wetMl, wetMlAfterWiping - 1)
+})
+
+test('cloth_whenStainedWithTea_driesSlowerThanAClean', () => {
+  const ritual = ritualWithTeaSpilledOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  const wetMlAfterWiping = ritual.state.cloth.wetMl
+
+  ritual.wait(10)
+
+  assert.ok(wetMlAfterWiping - ritual.state.cloth.wetMl < 0.9, `${wetMlAfterWiping} → ${ritual.state.cloth.wetMl} ml, stain ${ritual.state.cloth.teaStain}`)
 })
 
 test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {

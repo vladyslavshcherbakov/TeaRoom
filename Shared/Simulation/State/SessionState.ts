@@ -46,6 +46,7 @@ export type SpoonState = {
 
 export type ClothState = {
   wetMl: number
+  teaStain: number
   isSoakingThePuddle: boolean
   location: ItemLocation
 }
@@ -100,6 +101,7 @@ export type SessionState = {
   sink: SinkState
   figurines: Record<string, FigurineState>
   tableWetMl: number
+  puddleStrength: number
   godsSatisfaction: number
   godsJudgementsMade: GodsJudgementsMade
 }

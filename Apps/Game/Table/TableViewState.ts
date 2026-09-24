@@ -4,6 +4,7 @@ export type TableViewState = {
   readonly caddy: TableViewState.Caddy
   readonly spoonFillShare: number
   readonly clothWetShare: number
+  readonly clothTeaStain: number
   readonly puddleShare: number
 }
 

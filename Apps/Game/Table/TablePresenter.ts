@@ -34,6 +34,7 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     caddy: { isOpen: state.caddy.isOpen, fillShare: share(state.caddy.grams, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
+    clothTeaStain: state.cloth.teaStain,
     puddleShare: puddleShareOf(state.tableWetMl),
   }
 }
