@@ -1,5 +1,21 @@
+import type { TimeOfDay } from '../../../Shared/Simulation/Definitions/Atmosphere.ts'
 import type { GodsRemark } from '../../../Shared/Simulation/Judgement/GodsMood.ts'
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
+
+const teaNames: Readonly<Record<string, string>> = {
+  sencha: 'Sencha',
+  oolong: 'Oolong',
+  shouPuerh: 'Shou puerh',
+}
+
+const timeOfDayNames: Readonly<Record<TimeOfDay, string>> = {
+  dawn: 'Dawn',
+  morning: 'Morning',
+  day: 'Day',
+  sunset: 'Sunset',
+  dusk: 'Dusk',
+  night: 'Night',
+}
 
 const remarkTexts: Readonly<Record<GodsRemark, string>> = {
   temperatureIsPerfect: 'The temperature is perfect. The gods are content.',
@@ -31,6 +47,14 @@ const bitternessWords: Readonly<Record<TasteVerdict['bitterness'], string>> = {
   noticeable: 'noticeable',
   high: 'above normal',
   overbrewed: 'very high',
+}
+
+export function teaName(teaId: string): string {
+  return teaNames[teaId] ?? teaId
+}
+
+export function timeOfDayName(timeOfDay: TimeOfDay): string {
+  return timeOfDayNames[timeOfDay]
 }
 
 export function remarkText(remark: GodsRemark): string {

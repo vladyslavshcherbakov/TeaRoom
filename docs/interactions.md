@@ -58,6 +58,25 @@ The simulation core receives one command per player decision and answers with ev
 
 Every change to the gods' plaque arrives as `godsMoodChanged` with a remark. The presentation turns the remark into a short line of text.
 
+## Gestures in the game
+
+A touch that moves less than 8 px is a tap. Anything longer picks the object up, and it follows the finger at the point where it was grabbed.
+
+| Gesture | What it does |
+|---|---|
+| Tap the kettle or the thermos | Opens or closes its lid. |
+| Tap the caddy | Opens or closes it. |
+| Tap the heater switch | Switches the heater on or off. |
+| Drag the kettle onto the heater plate | Puts it on the heater. Picking it up again takes it off. |
+| Carry a vessel over another from above, then press down | Pours. The vessel stops at the hover line above the target, and every pixel the finger goes further down tilts it more: 120 px is 60°. Moving sideways aims the stream. Lifting the finger or leaving the target stops the pour. A vessel carried into the target from below or from the side does not pour. |
+| Dip the spoon into the open caddy from above | Scoops. The depth reached inside the caddy's mouth decides how much. Passing through the caddy from below scoops nothing. |
+| Release the spoon over the open kettle | Tips the leaves in. |
+| Release a bowl in front of a figurine | Offers the tea. |
+| Raise a bowl into the top of the screen | Takes a sip. |
+| Draw the cloth across the puddle | Wipes. The stroke's speed inside the puddle and the share of the puddle it crossed decide how much dries. |
+
+Every object returns to its place when released, except the kettle placed on the heater. Free placement on the table arrives in 0.3.
+
 The pour gesture maps tilt to flow: below 10° nothing pours, the flow grows linearly to full at 45°, and above 80% of full flow a tenth of the stream splashes. The presentation reports which share of the stream lands inside the target opening, because only the presentation knows the geometry.
 
 ## Protocols still to be written in full
