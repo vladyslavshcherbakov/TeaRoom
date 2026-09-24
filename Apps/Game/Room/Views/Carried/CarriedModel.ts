@@ -46,8 +46,8 @@ export const mostPuffsFromOneSource = 3
 
 const lidTouchPadRadiusMetres = 0.095
 const bowlsWithACarp: ReadonlySet<string> = new Set(['bowl1'])
-const carpLengthMetres = 0.034
-const carpAboveTheBottomMetres = 0.0085
+const carpLengthMetres = 0.04
+const carpAboveTheBottomMetres = 0.0095
 const carpTurnRadians = 0.6
 const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
@@ -228,6 +228,7 @@ function carpOnTheBottom(materials: RoomMaterials): THREE.Mesh {
   outline.lineTo(-half * 0.35, -half * 0.16)
   outline.quadraticCurveTo(half * 0.55, -half * 0.42, half, 0)
   const carp = new THREE.Mesh(new THREE.ShapeGeometry(outline, 8), materials.materialFor('koi'))
+  carp.renderOrder = 1
   carp.rotation.set(-Math.PI / 2, 0, carpTurnRadians)
   carp.position.y = carpAboveTheBottomMetres
   return carp
