@@ -6,6 +6,7 @@ import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
+import { LeafPile, leafLookFor, type LeafPileSize } from './LeafPile.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
@@ -40,6 +41,8 @@ const kettleOpeningAngle = Math.asin(kettleOpeningRadiusMetres / kettleBodyRadiu
 const kettleBottomInsideMetres = 0.004
 const kettleWaterBelowTheOpeningMetres = 0.012
 const waterInsideTheKettleColour = '#5f93b5'
+const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14 }
+const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01 }
 
 export const heldInViewLayer = 1
 
@@ -71,7 +74,8 @@ type CarriedModel = {
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
   readonly gaugeWater: THREE.Mesh | null
-  readonly spoonLeaves: THREE.Mesh | null
+  readonly leafHolder: THREE.Group | null
+  leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
   readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
@@ -188,7 +192,7 @@ export class CarriedItems {
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
     if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
     if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel)
-    if (model.spoonLeaves !== null) showLeavesOnTheSpoon(model.spoonLeaves, scene.table.spoonFillShare)
+    if (model.leafHolder !== null) this.showLeaves(model, model.leafHolder, scene)
     const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
     model.puffs.forEach((puff, index) => {
       puff.visible = index < puffCount
@@ -211,6 +215,17 @@ export class CarriedItems {
     this.stream.position.set(top.x, bottomY + length / 2, top.z)
     this.stream.scale.set(1, length, 1)
     this.streamMaterial.color.set(scene.table.vessels[source.itemId]?.liquorColour ?? '#dfe7ea')
+  }
+
+  private showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
+    const teaId = scene.state.caddy.teaId
+    if (model.leaves === null || model.leaves.teaId !== teaId) {
+      if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
+      const pile = new LeafPile(leafLookFor(teaId), model.shape === 'spoon' ? leavesOnTheSpoon : leavesInTheCaddy)
+      holder.add(pile.mesh)
+      model.leaves = { pile, teaId }
+    }
+    model.leaves.pile.showFill(model.shape === 'spoon' ? scene.table.spoonFillShare : scene.table.caddy.fillShare)
   }
 
   private showTapWater(scene: CarriedItemsScene): void {
@@ -245,7 +260,8 @@ export class CarriedItems {
       root.add(liquid)
     }
     const gaugeWater = shape === 'kettle' ? this.addWaterGauge(root) : null
-    const spoonLeaves = shape === 'spoon' ? this.addSpoonLeaves(root) : null
+    const leafHolder = leafHolderFor(shape)
+    if (leafHolder !== null) root.add(leafHolder)
     const kettleWater = shape === 'kettle' ? this.addKettleWater(root) : null
     root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
     const puffs = [0, 1, 2].map(() => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
@@ -264,7 +280,8 @@ export class CarriedItems {
       liquid,
       liquidMaterial,
       gaugeWater,
-      spoonLeaves,
+      leafHolder,
+      leaves: null,
       kettleWater,
       puffs,
       tagKey: '',
@@ -280,13 +297,6 @@ export class CarriedItems {
     return water
   }
 
-  private addSpoonLeaves(root: THREE.Group): THREE.Mesh {
-    const leaves = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.015, 10), this.materials.materialFor('leaves'))
-    leaves.position.set(0.07, 0.025, 0)
-    leaves.visible = false
-    root.add(leaves)
-    return leaves
-  }
 
   private addWaterGauge(root: THREE.Group): THREE.Mesh {
     const glass = new THREE.Mesh(new THREE.BoxGeometry(0.048, gaugeHeightMetres + 0.014, 0.006), this.materials.materialFor('gaugeGlass'))
@@ -339,11 +349,25 @@ export class CarriedItems {
   }
 
   private caddyParts() {
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 14), this.materials.materialFor('caddyGreen'))
+    const tin = this.materials.unsharedMaterialFor('caddyGreen')
+    tin.side = THREE.DoubleSide
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 28, 1, true), tin)
     body.position.y = 0.08
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.03, 14), this.materials.materialFor('darkWood'))
-    lid.position.y = 0.175
-    return { meshes: [body], lid, spoutTip: new THREE.Vector3(0.08, 0.16, 0), rimHeight: 0.19, liquidRadius: null }
+    const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.08, 28), this.materials.materialFor('caddyInside'))
+    bottom.rotation.x = -Math.PI / 2
+    bottom.position.y = 0.002
+    const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0808, 0.0808, 0.055, 28, 1, true), this.materials.materialFor('caddyLabel'))
+    label.position.y = 0.075
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.004, 6, 28), this.materials.materialFor('caddyRim'))
+    rim.rotation.x = Math.PI / 2
+    rim.position.y = 0.16
+    const lid = new THREE.Group()
+    const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.028, 28), this.materials.materialFor('caddyGreen'))
+    const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.018, 12), this.materials.materialFor('caddyRim'))
+    knob.position.y = 0.023
+    lid.add(lidTop, knob)
+    lid.position.y = 0.174
+    return { meshes: [body, bottom, label, rim], lid, spoutTip: new THREE.Vector3(0.08, 0.16, 0), rimHeight: 0.19, liquidRadius: null }
   }
 
   private spoonParts() {
@@ -406,9 +430,11 @@ function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vess
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInsideTheKettleColour : vessel.liquorColour)
 }
 
-function showLeavesOnTheSpoon(leaves: THREE.Mesh, spoonFillShare: number): void {
-  leaves.visible = spoonFillShare > 0
-  leaves.scale.set(0.4 + spoonFillShare * 0.6, 1, 0.4 + spoonFillShare * 0.6)
+function leafHolderFor(shape: CarriedShape): THREE.Group | null {
+  if (shape !== 'caddy' && shape !== 'spoon') return null
+  const holder = new THREE.Group()
+  holder.position.set(shape === 'spoon' ? 0.07 : 0, shape === 'spoon' ? 0.02 : 0.004, 0)
+  return holder
 }
 
 function holdUnderTheFaucet(model: CarriedModel): void {

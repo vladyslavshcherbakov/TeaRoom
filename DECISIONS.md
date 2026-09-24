@@ -38,6 +38,8 @@
 
 **An item taken by a tap is chosen at once.** Taking something is nearly always followed by using it or putting it back, so the next tap already acts with it. A chosen vessel aims a pour only when it holds something, because otherwise a tap on the next bowl would aim a pour from an empty bowl instead of taking it.
 
+**Tea leaves are drawn as many small leaves, shaped by the tea.** A flat disc said nothing about what was in the caddy. `LeafPile.ts` heaps hundreds of small pieces with a fixed seed, so the same heap appears every time, and shows fewer of them as the caddy empties. Each tea's look lives in the presentation, like its name.
+
 **The sink is the tap's touch area.** The tap itself is thin, and a tap beside it landed on the counter top, where it put the chosen kettle down. The sink under the tap catches those taps instead, and while the water runs the vessel under the tap belongs to the tap too, so the next tap closes it.
 
 **The heater's switch is its own target on the counter's front.** With the kettle on the plate, a tap on the plate lands on the kettle and lifts it. A separate switch keeps "take the kettle" and "switch the heater" apart, and gives the switch a touch target of its own.
