@@ -19,7 +19,7 @@ import { carriedItemShapes, furnitureWithId, type CameraPose, type FloorPoint } 
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { offeringResponseText } from './RoomTexts.ts'
-import { CarriedItems, heldInViewLayer } from './Views/CarriedItems.ts'
+import { CarriedItems, heldInViewLayer, untappableRoomLayer } from './Views/CarriedItems.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
@@ -121,7 +121,7 @@ export class RoomScene {
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
     const heldInView = isWalkerShown ? null : { camera: this.camera, selectedHandIndex: this.play.selectedHandIndex }
-    this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, timeSeconds: this.clock.elapsedTime })
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothOnTheTableAt: this.play.clothOnTheTableAt, timeSeconds: this.clock.elapsedTime })
     this.showHeater(table.heater.isOn)
     this.room.showPuddle(table.puddleShare)
     const isAiming = this.play.aimedPourView !== null
@@ -141,6 +141,7 @@ export class RoomScene {
   private render(): void {
     this.renderer.clear()
     this.camera.layers.set(0)
+    this.camera.layers.enable(untappableRoomLayer)
     this.renderer.render(this.scene, this.camera)
     this.renderer.clearDepth()
     this.renderer.shadowMap.autoUpdate = false
@@ -328,6 +329,7 @@ function isShown(object: THREE.Object3D): boolean {
 function newRaycasterSeeingEveryLayer(): THREE.Raycaster {
   const raycaster = new THREE.Raycaster()
   raycaster.layers.enableAll()
+  raycaster.layers.disable(untappableRoomLayer)
   return raycaster
 }
 

@@ -11,6 +11,7 @@ export type Surface =
   | 'steel'
   | 'caddyGreen'
   | 'cloth'
+  | 'wetCloth'
   | 'jade'
   | 'toadBrown'
   | 'heaterPlate'
@@ -43,6 +44,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   steel: '#7d97a3',
   caddyGreen: '#5f9a7c',
   cloth: '#e7dcc4',
+  wetCloth: '#9f917a',
   jade: '#6fb59a',
   toadBrown: '#b39a5c',
   heaterPlate: '#3d3733',
@@ -78,6 +80,10 @@ export class RoomMaterials {
     const material = this.unsharedMaterialFor(surface)
     this.materialsBySurface.set(surface, material)
     return material
+  }
+
+  colourOf(surface: Surface): THREE.Color {
+    return new THREE.Color(surfaceColours[surface])
   }
 
   unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {

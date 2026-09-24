@@ -3,6 +3,7 @@ export type TableViewState = {
   readonly heater: TableViewState.Heater
   readonly caddy: TableViewState.Caddy
   readonly spoonFillShare: number
+  readonly clothWetShare: number
   readonly puddleShare: number
   readonly godsPlaque: TableViewState.GodsPlaque
 }

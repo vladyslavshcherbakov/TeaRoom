@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
@@ -64,6 +65,39 @@ test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
 
   assert.ok(wipedSlowly.state.tableWetMl < 6, `slow wipe left ${wipedSlowly.state.tableWetMl} ml`)
   assert.ok(wipedFast.state.tableWetMl > 15, `fast wipe left ${wipedFast.state.tableWetMl} ml`)
+})
+
+test('table_whenWipedInTwoHalves_driesAsMuchAsInOneStroke', () => {
+  const wipedOnce = ritualWithSpillOnTheTable()
+  const wipedInHalves = ritualWithSpillOnTheTable()
+  wipedOnce.do({ type: 'pickUp', itemId: 'cloth' })
+  wipedInHalves.do({ type: 'pickUp', itemId: 'cloth' })
+
+  wipedOnce.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  wipedInHalves.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 0.5 })
+  wipedInHalves.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 0.5 })
+
+  assertNear(wipedInHalves.state.tableWetMl, wipedOnce.state.tableWetMl)
+})
+
+test('cloth_whenItWipesTheTable_takesInTheWaterItWipedUp', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  const wetMlBeforeWiping = ritual.state.tableWetMl
+
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assertNear(ritual.state.cloth.wetMl, wetMlBeforeWiping * 0.8)
+})
+
+test('cloth_whenLeftWet_driesByItself', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  ritual.wait(600)
+
+  assert.equal(ritual.state.cloth.wetMl, 0)
 })
 
 test('table_whenLeftAlone_driesByItself', () => {

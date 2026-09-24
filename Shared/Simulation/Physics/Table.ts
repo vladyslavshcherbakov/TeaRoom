@@ -10,7 +10,7 @@ export function wetMlAfterDrying(wetMl: number, seconds: number): number {
 
 export function wetMlAfterWiping(wetMl: number, strokeSpeedCmPerSecond: number, coveredFraction: number): number {
   const coverage = Math.min(1, Math.max(0, coveredFraction))
-  return wetMl * (1 - coverage * strokeEfficiency(strokeSpeedCmPerSecond))
+  return wetMl * (1 - strokeEfficiency(strokeSpeedCmPerSecond)) ** coverage
 }
 
 function strokeEfficiency(strokeSpeedCmPerSecond: number): number {

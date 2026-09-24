@@ -18,6 +18,7 @@ const steamBillowingFromC = 85
 const humQuietBelowC = 60
 const leavesFillingTheBottomGrams = 10
 const puddleFullAtMl = 30
+const clothSoakedAtMl = 20
 const godsPlaqueMarks = 5
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
@@ -29,6 +30,7 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     heater: heaterView(state),
     caddy: { isOpen: state.caddy.isOpen, fillShare: share(state.caddy.grams, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
+    clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
     puddleShare: share(state.tableWetMl, puddleFullAtMl),
     godsPlaque: { litMarks: Math.round((state.godsSatisfaction / 100) * godsPlaqueMarks), totalMarks: godsPlaqueMarks },
   }

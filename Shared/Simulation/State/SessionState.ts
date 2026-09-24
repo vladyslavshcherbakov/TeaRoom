@@ -45,6 +45,7 @@ export type SpoonState = {
 }
 
 export type ClothState = {
+  wetMl: number
   location: ItemLocation
 }
 

@@ -33,7 +33,9 @@ export type RoomTapTarget =
 
 type WipeStroke = {
   lengthMetres: number
+  unwipedMetres: number
   lastPoint: WorldPoint
+  heldSecondsAtLastWipe: number
 }
 
 type Press = {
@@ -45,7 +47,7 @@ type Press = {
 
 const fullSpoonDepth = 1
 const strokeCoveringTheWholeTableMetres = 1.5
-const shortestWipeMetres = 0.05
+const wipeEveryMetres = 0.02
 
 export class RoomPlay {
   private readonly ritual: RitualPort
@@ -86,16 +88,24 @@ export class RoomPlay {
     return this.aimedPour?.view ?? null
   }
 
+  get clothOnTheTableAt(): WorldPoint | null {
+    return this.press?.stroke?.lastPoint ?? null
+  }
+
   pressStarted(target: RoomTapTarget): void {
     if (this.aimedPour !== null) return this.log(`press on ${describeTarget(target)} ignored while aiming a pour`)
     this.press = { target, heldSeconds: 0, hasMovedAway: false, stroke: this.wipeStrokeStartingAt(target) }
   }
 
   pressMovedOver(target: RoomTapTarget): void {
-    const stroke = this.press?.stroke
-    if (stroke === undefined || stroke === null || !this.isOnTheRitualSurface(target) || target.kind !== 'surface') return
-    stroke.lengthMetres += Math.hypot(target.point.x - stroke.lastPoint.x, target.point.z - stroke.lastPoint.z)
+    const press = this.press
+    const stroke = press?.stroke
+    if (press === null || stroke === undefined || stroke === null || !this.isOnTheRitualSurface(target) || target.kind !== 'surface') return
+    const segmentMetres = Math.hypot(target.point.x - stroke.lastPoint.x, target.point.z - stroke.lastPoint.z)
+    stroke.lengthMetres += segmentMetres
+    stroke.unwipedMetres += segmentMetres
     stroke.lastPoint = target.point
+    if (stroke.unwipedMetres >= wipeEveryMetres) this.wipeWhatTheStrokeCovered(stroke, press.heldSeconds)
   }
 
   pressMovedAway(): void {
@@ -108,7 +118,7 @@ export class RoomPlay {
     const press = this.press
     this.press = null
     if (press === null) return
-    if (press.stroke !== null && press.hasMovedAway) return this.wipeWith(press.stroke, press.heldSeconds)
+    if (press.stroke !== null && press.hasMovedAway) return this.finishTheStroke(press.stroke, press.heldSeconds)
     if (!press.hasMovedAway) this.tapped(press.target)
   }
 
@@ -274,16 +284,23 @@ export class RoomPlay {
     this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'offerCup', cupId, figurineId }))
   }
 
-  private wipeWith(stroke: WipeStroke, seconds: number): void {
-    if (stroke.lengthMetres < shortestWipeMetres) return this.log(`wipe ignored: the stroke was only ${stroke.lengthMetres.toFixed(2)} m`)
-    const strokeSpeedCmPerSecond = (stroke.lengthMetres * 100) / Math.max(seconds, Number.EPSILON)
-    const coveredFraction = Math.min(1, stroke.lengthMetres / strokeCoveringTheWholeTableMetres)
+  private wipeWhatTheStrokeCovered(stroke: WipeStroke, heldSeconds: number): void {
+    const seconds = Math.max(heldSeconds - stroke.heldSecondsAtLastWipe, Number.EPSILON)
+    const strokeSpeedCmPerSecond = (stroke.unwipedMetres * 100) / seconds
+    const coveredFraction = Math.min(1, stroke.unwipedMetres / strokeCoveringTheWholeTableMetres)
+    stroke.unwipedMetres = 0
+    stroke.heldSecondsAtLastWipe = heldSeconds
     this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond, coveredFraction })
+  }
+
+  private finishTheStroke(stroke: WipeStroke, heldSeconds: number): void {
+    if (stroke.unwipedMetres > 0) this.wipeWhatTheStrokeCovered(stroke, heldSeconds)
+    this.log(`stroke with the cloth ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, the table is ${this.ritual.state.tableWetMl.toFixed(1)} ml wet`)
   }
 
   private wipeStrokeStartingAt(target: RoomTapTarget): WipeStroke | null {
     if (this.selectedItemId() !== clothItemId || target.kind !== 'surface' || !this.isOnTheRitualSurface(target)) return null
-    return { lengthMetres: 0, lastPoint: target.point }
+    return { lengthMetres: 0, unwipedMetres: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
   }
 
   private isOnTheRitualSurface(target: RoomTapTarget): boolean {

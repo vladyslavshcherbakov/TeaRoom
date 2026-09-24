@@ -56,7 +56,7 @@ The simulation core receives one command per player decision and answers with ev
 | Tip leaves | with the spoon's hand chosen, tap the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |
 | Taste | choose the hand with a tea bowl, then tap Sip | `tasteCup` | `teaTasted` with a verdict and a reaction |
 | Offer | choose the hand with a tea bowl, then tap a figurine | `offerCup` | `figurineAcceptedTea` with a response |
-| Wipe | take the cloth, choose its hand, then stroke the tea table with a finger | `wipeTable` with the stroke's speed and covered share | `tableWiped` |
+| Wipe | take the cloth, choose its hand, then stroke the tea table with a finger | `wipeTable` for every 2 cm of the stroke, with that piece's speed and covered share | `tableWiped` |
 | Finish | tap "Finish" | `finishRitual` | `ritualFinished` |
 | Leave | tap "Leave" while resting | `leaveRoom` | `roomLeft` |
 
@@ -85,7 +85,7 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap a vessel with the spoon's hand chosen | The spoon's leaves are tipped into it. With an empty spoon there is nothing to tip, so the vessel is taken into the free hand, as is any other item. |
 | Tap Sip, shown while the chosen hand holds a tea bowl with tea in it | The keeper takes a sip. A caption shows the taste for four seconds. |
 | Tap a figurine with a hand chosen | The tea bowl in that hand is offered to it. A caption shows the figurine's response and the gods' remark. This is the only moment the game names the gods: everywhere else their mood changes in silence, and the player discovers them. |
-| Stroke the tea table with the cloth's hand chosen | The table is wiped. The stroke's length over time is its speed, and a stroke of 1.5 m covers the whole table. A slow stroke dries more. A tap with the cloth does nothing. |
+| Stroke the tea table with the cloth's hand chosen | The cloth moves under the finger, and the table is wiped as it goes, so the puddle shrinks while the finger moves. Each 2 cm piece of the stroke is wiped at its own speed, and 1.5 m of strokes cover the whole table. A slow stroke dries more. The cloth darkens as it takes in water and dries again by itself. A tap with the cloth does nothing. |
 | Tap the tap or the sink under it with a hand chosen | The keeper holds that hand's vessel under the tap, and the water runs. With the vessel's lid closed it runs over the lid into the sink, and the player opens the lid under the tap, by tapping it, to let the water in. The kettle's water gauge rises. A second tap on the tap, the sink or the vessel under the tap closes it, and the vessel comes back into the hand with its lid closed. A tap on its lid under the tap opens or closes the lid. |
 | Tap a vessel on a surface with the hand of another vessel chosen, when the chosen vessel holds something | The pour begins to be aimed: the chosen vessel hovers over the target, 22 cm to its left on the screen with its spout turned towards it, so it is never hidden behind the furniture, and a round tilt button with a teapot appears. The first time, a short note explains the gesture: drag to move, hold the teapot button to tilt, tap anywhere to stop. It is not shown again on that device. |
 | Drag a finger anywhere while aiming | The vessel moves with the finger, keeping its height above the target. Only the change of the finger's position counts, so the finger never hides the vessel. |

@@ -20,6 +20,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   continueFilling(draft, seconds)
   steepAllLeaves(draft, seconds)
   draft.state.tableWetMl = wetMlAfterDrying(draft.state.tableWetMl, seconds)
+  draft.state.cloth.wetMl = wetMlAfterDrying(draft.state.cloth.wetMl, seconds)
   startOrEndBrews(draft)
   draft.state.elapsedSeconds += seconds
   return outcomeOf(draft)

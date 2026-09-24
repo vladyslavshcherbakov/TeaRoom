@@ -1,10 +1,10 @@
 import * as THREE from 'three'
-import { itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
+import { clothItemId, itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
-import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
+import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { LeafPile, leafLookFor, type LeafPileSize } from './LeafPile.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
@@ -71,6 +71,7 @@ const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, he
 const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01 }
 
 export const heldInViewLayer = 1
+export const untappableRoomLayer = 2
 
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: 3 }
 
@@ -80,6 +81,7 @@ export type CarriedItemsScene = {
   readonly walk: Walk
   readonly heldInView: HeldInView | null
   readonly aimedPour: AimedPourView | null
+  readonly clothOnTheTableAt: WorldPoint | null
   readonly timeSeconds: number
 }
 
@@ -105,6 +107,7 @@ type CarriedModel = {
   readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
+  layer: number
   isHeldInView: boolean
   castsShadow: boolean
 }
@@ -124,9 +127,11 @@ export class CarriedItems {
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   private readonly chosenGlow = newChosenGlow()
   private readonly streamMaterial: THREE.MeshStandardMaterial
+  private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
 
   constructor(materials: RoomMaterials, itemIds: readonly string[]) {
     this.materials = materials
+    this.clothMaterial = materials.unsharedMaterialFor('cloth')
     const clay = materials.unsharedMaterialFor('clay')
     clay.side = THREE.DoubleSide
     this.claySeenFromInside = clay
@@ -190,7 +195,8 @@ export class CarriedItems {
   private placeHandTouchArea(area: THREE.Mesh, handIndex: HandIndex, scene: CarriedItemsScene): void {
     const itemId = scene.state.keeper.hands[handIndex] ?? null
     const isPouringFromIt = itemId !== null && scene.state.pour?.sourceId === itemId
-    area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt
+    const isWipingWithIt = itemId === clothItemId && scene.clothOnTheTableAt !== null
+    area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt && !isWipingWithIt
     if (!area.visible || scene.heldInView === null) return
     const frame = heldInViewFrame(scene.heldInView, handIndex)
     area.position.copy(scene.heldInView.camera.localToWorld(frame.centreInCamera))
@@ -203,11 +209,13 @@ export class CarriedItems {
     if (location === undefined) return
     const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
     const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
-    const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet ? scene.heldInView : null
-    moveToLayer(model, heldInView !== null)
-    this.castShadowUnlessStanding(model, location.kind !== 'onSurface')
+    const wipingAt = model.itemId === clothItemId ? scene.clothOnTheTableAt : null
+    const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet && wipingAt === null ? scene.heldInView : null
+    moveToLayer(model, heldInView !== null ? heldInViewLayer : wipingAt !== null ? untappableRoomLayer : 0)
+    this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
     model.root.scale.setScalar(1)
     if (aim !== null) return this.aimOver(model, aim)
+    if (wipingAt !== null) return wipeAt(model, wipingAt)
     if (isUnderTheFaucet) {
       this.retag(model, { isFaucet: true })
       return holdUnderTheFaucet(model)
@@ -246,6 +254,7 @@ export class CarriedItems {
     if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
     if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel)
     if (model.leafHolder !== null) this.showLeaves(model, model.leafHolder, scene)
+    if (model.itemId === clothItemId) this.clothMaterial.color.copy(this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), scene.table.clothWetShare))
     const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
     model.puffs.forEach((puff, index) => {
       puff.visible = index < puffCount
@@ -353,6 +362,7 @@ export class CarriedItems {
       kettleWater,
       puffs,
       tagKey: '',
+      layer: 0,
       isHeldInView: false,
       castsShadow: true,
     }
@@ -448,7 +458,7 @@ export class CarriedItems {
   }
 
   private clothParts() {
-    const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.2), this.materials.materialFor('cloth'))
+    const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.2), this.clothMaterial)
     cloth.position.y = 0.01
     return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(0.14, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
   }
@@ -532,6 +542,12 @@ function leafHolderFor(shape: CarriedShape): THREE.Group | null {
   return holder
 }
 
+function wipeAt(model: CarriedModel, point: WorldPoint): void {
+  model.root.visible = true
+  model.root.rotation.set(0, 0, 0)
+  model.root.position.set(point.x, point.y, point.z)
+}
+
 function holdUnderTheFaucet(model: CarriedModel): void {
   model.root.visible = true
   model.root.quaternion.identity()
@@ -552,10 +568,11 @@ function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, isS
   lid.rotation.z = ajarLidTiltRadians
 }
 
-function moveToLayer(model: CarriedModel, isHeldInView: boolean): void {
-  if (model.isHeldInView === isHeldInView) return
-  model.isHeldInView = isHeldInView
-  model.root.traverse((part) => part.layers.set(isHeldInView ? heldInViewLayer : 0))
+function moveToLayer(model: CarriedModel, layer: number): void {
+  if (model.layer === layer) return
+  model.layer = layer
+  model.isHeldInView = layer === heldInViewLayer
+  model.root.traverse((part) => part.layers.set(layer))
 }
 
 function newChosenGlow(): THREE.Mesh {

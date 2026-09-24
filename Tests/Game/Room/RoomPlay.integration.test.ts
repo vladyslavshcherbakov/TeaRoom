@@ -342,10 +342,34 @@ test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAl
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
   room.takeAndChoose('cloth')
+  const wetMlBeforeTheStroke = room.state.tableWetMl
 
   room.strokeTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }, { x: 0.5, z: -1.6 }], 10)
 
-  assert.ok(room.ritual.log.messagesAt('info').some((line) => line.includes('table wiped at 15 cm/s over 100%')), room.ritual.log.messagesAt('info').join('\n'))
+  assert.ok(room.state.tableWetMl <= wetMlBeforeTheStroke * 0.2, `${room.state.tableWetMl} ml of ${wetMlBeforeTheStroke} ml left`)
+})
+
+test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.ritual.pour('kettle', null, 2)
+  room.takeAndChoose('cloth')
+  const wetMlBeforeTheStroke = room.state.tableWetMl
+
+  room.moveTheClothOverTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }], 5)
+
+  assert.ok(room.state.tableWetMl < wetMlBeforeTheStroke * 0.5, `${room.state.tableWetMl} ml of ${wetMlBeforeTheStroke} ml left`)
+  assert.ok(room.state.cloth.wetMl > 0, 'the cloth stayed dry')
+})
+
+test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.takeAndChoose('cloth')
+
+  room.moveTheClothOverTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 0.9, z: -1.4 }], 1)
+
+  assert.deepEqual(room.play.clothOnTheTableAt, { x: 0.9, y: onTheTeaTable.y, z: -1.4 })
 })
 
 test('table_whenTappedWithTheCloth_isNotWiped', () => {
@@ -487,6 +511,11 @@ class RoomVisit {
   }
 
   strokeTheTeaTable(corners: readonly FloorPoint[], seconds: number): void {
+    this.moveTheClothOverTheTeaTable(corners, seconds)
+    this.play.pressEnded()
+  }
+
+  moveTheClothOverTheTeaTable(corners: readonly FloorPoint[], seconds: number): void {
     const [start, ...rest] = corners
     if (start === undefined) return
     this.play.pressStarted(surfaceOfTheTeaTableAt(start))
@@ -500,7 +529,6 @@ class RoomVisit {
       }
       from = to
     }
-    this.play.pressEnded()
   }
 
   fillTheKettleInHand(): void {
