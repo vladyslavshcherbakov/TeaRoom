@@ -14,6 +14,8 @@ The README has the commands. CI runs the same two scripts.
 
 Layers: `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
+Apps: `Apps/Game` is the Phaser game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. In the game, `Room/RoomPresenter.ts` is the only place that turns state into what is drawn, and the scene reads its `RoomViewState` every frame.
+
 Inside the simulation:
 
 - `Definitions/` are the content types and the `Catalog`. Look definitions up with `definitionIn`.
@@ -40,7 +42,7 @@ Adding a mechanic:
 
 Reference mechanic: pouring (`Physics/Pouring.ts`, `Ritual/PouringCommands.ts`, `SimulationStep.continuePour`, `Tests/Simulation/Pouring.integration.test.ts`).
 
-External dependencies: none at run time. TypeScript and `@types/node` for development.
+External dependencies: Phaser for the game, pinned in `package.json`. Vite, TypeScript and `@types/node` for development. The simulation imports none of them.
 
 ## Rules nothing checks
 

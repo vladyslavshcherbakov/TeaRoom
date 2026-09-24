@@ -6,7 +6,7 @@ The design is in [docs/game-design.md](docs/game-design.md). The plan up to 1.0 
 
 ## Status
 
-Version 0.1: the simulation core and a debug page, the ritual bench, that drives it. There is no art or sound yet.
+Version 0.2 in progress: the Phaser scene over the simulation core. Version 0.1, the simulation and the ritual bench, is done.
 
 ## Project layout
 
@@ -14,6 +14,7 @@ Version 0.1: the simulation core and a debug page, the ritual bench, that drives
 |---|---|
 | `Shared/Simulation/` | The rules of the world: definitions, state, physics, judgements, commands and events. Imports nothing outside itself. |
 | `Shared/Content/` | Teas, vessels, heaters, figurines and rooms as data. |
+| `Apps/Game/` | The game: a Phaser scene, the presenter that turns state into what is drawn, and the gestures. |
 | `Apps/Bench/` | The ritual bench: a debug page over the simulation. |
 | `Tests/` | Integration and unit tests, mirroring `Shared/`. |
 | `docs/` | How the game behaves. |
@@ -31,17 +32,25 @@ npm install
 
 `test.sh` type-checks everything and runs every test with Node's built-in test runner.
 
-## Build and run locally
+## Run locally
+
+```sh
+npx vite Apps/Game --host
+npx vite Apps/Bench --host
+```
+
+Each command prints an address that a phone on the same network can open.
+
+## Build
 
 ```sh
 ./build.sh
-npx http-server dist
 ```
 
-`build.sh` compiles the bench and the simulation into `dist/`. Open the printed address on a phone on the same network to try it.
+`build.sh` builds the game into `dist/` and the bench into `dist/bench/`.
 
 ## Deploy
 
-GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: install, `./test.sh`, `./build.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages.
+GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `./test.sh`, `./build.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages.
 
 Pages must be enabled once in the repository settings: Settings → Pages → Build and deployment → Source: GitHub Actions.

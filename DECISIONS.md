@@ -28,10 +28,12 @@
 
 **Tests run on Node's built-in runner, with TypeScript run directly by Node.** The core needs no packages at all, and Node 22.18 strips types on its own. The only development packages are TypeScript for type-checking and `@types/node`. Rejected: Vitest, because it adds a toolchain for what `node --test` already does. It can come in with Vite in 0.2 if the presentation tests need it.
 
-**The ritual bench is built with the TypeScript compiler alone.** It exists so 0.1 has something to open on a phone and a working Pages pipeline before Phaser arrives. `rewriteRelativeImportExtensions` turns the `.ts` imports into `.js` in the output. Rejected: waiting for 0.2 to set up hosting, because the pipeline would then be debugged together with the first renderer.
+**The ritual bench stays next to the game.** It drives the simulation with plain controls and shows the log on the page, which is the quickest way to check a rule on a phone without playing through the scene.
 
 **GitHub Actions tests every push and deploys to Pages from the default branch.** The workflow reads the default branch from the event instead of naming `main`, so it keeps working if the default branch is renamed. Action versions are the Node 24 majors (`checkout@v5`, `setup-node@v5`, `upload-pages-artifact@v5`, `deploy-pages@v5`), because GitHub is removing the Node 20 runtime from its runners in September 2026.
 
-**No lockfile yet.** The environment that created the repository could not reach the npm registry. CI uses `npm install` until a lockfile is committed, then switches to `npm ci`.
+**Phaser and Vite are pinned to exact versions, and CI installs from the lockfile.** A game's feel depends on the renderer's timing and input handling, so an update is a deliberate change with its own commit, not a side effect of a fresh install. Phaser is 4.x, the current major, whose API is close to 3.x and whose types ship in the package.
+
+**Both pages are built by Vite.** The game at the root of the site and the bench under `/bench/` are two Vite builds from `build.sh`, with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build. Rejected: building the bench with the TypeScript compiler alone, because two build tools for two pages would be two pipelines to keep working.
 
 **No haptics on iPhone.** iOS Safari does not implement the Vibration API, and the checkbox-switch workaround is reported to stop working from iOS 26.5. Haptics stay a progressive enhancement for browsers that have the API.

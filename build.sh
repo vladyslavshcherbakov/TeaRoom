@@ -3,10 +3,13 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
-echo "Compiling the ritual bench into dist/"
 rm -rf dist
-npx --no-install tsc -p Apps/Bench/tsconfig.json
-cp Apps/Bench/index.html dist/index.html
-touch dist/.nojekyll
 
-echo "Built dist/ with $(find dist -name '*.js' | wc -l | tr -d ' ') scripts"
+echo "Building the game into dist/"
+npx --no-install vite build Apps/Game --base ./ --outDir ../../dist --emptyOutDir --logLevel warn
+
+echo "Building the ritual bench into dist/bench/"
+npx --no-install vite build Apps/Bench --base ./ --outDir ../../dist/bench --emptyOutDir --logLevel warn
+
+touch dist/.nojekyll
+echo "Built dist/: $(find dist -type f | wc -l | tr -d ' ') files"

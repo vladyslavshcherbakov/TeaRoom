@@ -20,8 +20,8 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
-      - name: Install development tools
-        run: npm install --no-audit --no-fund
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
       - name: Type-check and run the tests
         run: ./test.sh
       - name: Build the site
