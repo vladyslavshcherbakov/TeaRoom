@@ -95,5 +95,6 @@ export type RitualEvent =
     }
   | { readonly type: 'tableWiped'; readonly wetMlLeft: number }
   | { readonly type: 'clothLaidInThePuddle' }
+  | { readonly type: 'burntClothWashedBackToNew' }
   | { readonly type: 'ritualFinished' }
   | { readonly type: 'roomLeft' }

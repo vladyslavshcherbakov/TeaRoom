@@ -20,3 +20,17 @@ test('caption_ofASipThatMovesTheGods_leavesTheGodsUnnamed', () => {
   assert.equal(lines.length, 1)
   assert.ok(!lines.some((line) => line.includes('gods')), lines.join(' / '))
 })
+
+test('caption_ofABurntClothWashedBackToNew_marvelsAtTheWorld', () => {
+  const lines = captionLinesFor([{ type: 'burntClothWashedBackToNew' }], 7)
+
+  assert.equal(lines.length, 1)
+  assert.ok(burntClothLines.includes(lines[0] ?? ''), lines.join(' / '))
+})
+
+const burntClothLines = [
+  "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
+  'Not a trace of the fire. This world forgives things. I could live here.',
+  "Scorched a minute ago, good as new now. I'm not leaving this place.",
+  'Burnt, rinsed, reborn. What a kind little world.',
+]

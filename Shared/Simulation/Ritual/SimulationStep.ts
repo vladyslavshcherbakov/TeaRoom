@@ -150,7 +150,9 @@ function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDef
   runningWater.filledMl += cloth.wetMl - wetMlBefore
   runningWater.drainedMl += tap.flowMlPerSecond * seconds - (cloth.wetMl - wetMlBefore)
   if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the tea is washed out of the cloth, it holds ${cloth.wetMl.toFixed(1)} ml`)
-  if (charringBefore > 0 && cloth.charring === 0) note(draft, 'the charring is washed out of the cloth, it is as good as new')
+  if (charringBefore === 0 || cloth.charring > 0) return
+  cloth.wasBurntBeforeWashing = true
+  note(draft, 'the charring is washed out of the cloth, it is as good as new')
 }
 
 function steepAllLeaves(draft: Draft, seconds: number): void {

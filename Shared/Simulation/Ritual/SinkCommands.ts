@@ -79,4 +79,8 @@ function wringOutTheCloth(draft: Draft): void {
   const wetMlBefore = cloth.wetMl
   cloth.wetMl = clothWetMlAfterWringing(cloth.wetMl)
   note(draft, `the cloth is wrung out as it leaves the sink: ${wetMlBefore.toFixed(1)} → ${cloth.wetMl.toFixed(1)} ml`)
+  if (!cloth.wasBurntBeforeWashing) return
+  cloth.wasBurntBeforeWashing = false
+  note(draft, 'the cloth came out of the sink as new, though it was burnt when it went in')
+  draft.events.push({ type: 'burntClothWashedBackToNew' })
 }

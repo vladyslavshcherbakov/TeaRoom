@@ -53,6 +53,11 @@ export const englishTexts = {
   'spill.3': 'A little went astray.',
   'spill.4': 'Careful hands, wet table.',
 
+  'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
+  'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',
+  'burntClothWashed.3': "Scorched a minute ago, good as new now. I'm not leaving this place.",
+  'burntClothWashed.4': 'Burnt, rinsed, reborn. What a kind little world.',
+
   'gods.temperatureIsPerfect': 'The temperature is perfect. The gods are content.',
   'gods.pretendNotToNotice': 'The gods pretend not to notice.',
   'gods.understandProbably': 'The gods understand. Probably.',

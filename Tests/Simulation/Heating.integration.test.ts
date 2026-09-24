@@ -151,6 +151,32 @@ test('cloth_charredThrough_whenWashedUnderTheTap_isAsGoodAsNew', () => {
   assert.equal(ritual.state.cloth.charring, 0)
 })
 
+test('cloth_burntAndWashed_whenTakenOutOfTheSink_isNoticedAsNew', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(10)
+  ritual.do({ type: 'switchHeaterOff' })
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.wait(5)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
+
+  assert.deepEqual(eventsOfType(events, 'burntClothWashedBackToNew'), [{ type: 'burntClothWashedBackToNew' }])
+})
+
+test('cloth_neverBurnt_whenTakenOutOfTheSink_isNotRemarkedOn', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.wait(5)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
+
+  assert.deepEqual(eventsOfType(events, 'burntClothWashedBackToNew'), [])
+})
+
 test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
   const catalog = testCatalog({ kettle: 0.01, cup: 0.02 })
   const at30 = ritualWithKettleOnWorkingHeater(TestRitual.begun(catalog))

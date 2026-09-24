@@ -48,6 +48,7 @@ export type ClothState = {
   wetMl: number
   teaStain: number
   charring: number
+  wasBurntBeforeWashing: boolean
   isSoakingThePuddle: boolean
   location: ItemLocation
 }
