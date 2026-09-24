@@ -247,6 +247,17 @@ test('cloth_whenTappedWithTheSpoonChosen_isTakenIntoTheOtherHand', () => {
   assert.deepEqual(room.state.keeper.hands, ['spoon', 'cloth'])
 })
 
+test('kettle_whenTappedWithAnEmptySpoonChosen_isTakenIntoTheOtherHand', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.takeAndChoose('spoon')
+
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  assert.deepEqual(room.state.keeper.hands, ['spoon', 'kettle'])
+  assert.equal(room.state.vessels['kettle']?.leaves, null)
+})
+
 test('spoon_whenTappedAtTheTeaTable_goesIntoTheFirstFreeHand', () => {
   const room = new RoomVisit()
   room.walkTo('teaTable')

@@ -2,7 +2,7 @@
 
 Each version ends with something that can be opened on an iPhone from GitHub Pages and with integration tests for every rule it adds. A version adds one layer. The layers follow the order in which the game becomes playable, then tactile, then alive, then personal.
 
-1.0 is the MVP of the GDD: one room, one window, three times of day, rain, a cat, one kettle, an electric heater, a thermos, a caddy and spoon, three bowls, three teas, a cloth and two figurines, with heating, temperature, pouring, brewing, bitterness, the first sip, the gods' plaque and the option to simply stay.
+1.0 is the MVP of the GDD: one room, one window, three times of day, rain, a cat, one kettle, an electric heater, a thermos, a caddy and spoon, six tea bowls in different glazes, three teas, a cloth and two figurines, with heating, temperature, pouring, brewing, bitterness, the first sip, the gods' plaque and the option to simply stay.
 
 ## 0.1 — Simulation core (this version)
 
@@ -76,7 +76,7 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 
 ## 0.10 — Polish
 
-- The art pass: the illustrated diorama, three teas' liquor colours, three bowls, the optional thermometer as an object.
+- The art pass: the illustrated diorama, three teas' liquor colours, the six bowls, the optional thermometer as an object.
 - Performance on older iPhones, safe areas, reduced motion, a landscape hint.
 - A balance pass from playtests.
 

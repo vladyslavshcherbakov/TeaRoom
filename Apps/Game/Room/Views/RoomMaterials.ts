@@ -25,6 +25,12 @@ export type Surface =
   | 'caddyInside'
   | 'caddyLabel'
   | 'caddyRim'
+  | 'whiteGlaze'
+  | 'pearlGlaze'
+  | 'skyBlueGlaze'
+  | 'blueGlaze'
+  | 'yellowGlaze'
+  | 'emeraldGlaze'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -51,9 +57,17 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   caddyInside: '#2f3d33',
   caddyLabel: '#efe2c4',
   caddyRim: '#c9a45c',
+  whiteGlaze: '#fbfaf6',
+  pearlGlaze: '#f2ece6',
+  skyBlueGlaze: '#9fd0ea',
+  blueGlaze: '#2f5ea8',
+  yellowGlaze: '#f1cd55',
+  emeraldGlaze: '#1f8a68',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
+const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'blueGlaze', 'yellowGlaze', 'emeraldGlaze'])
+const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
 
 export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
@@ -67,8 +81,10 @@ export class RoomMaterials {
   }
 
   unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
-    return unlitSurfaces.has(surface)
-      ? new THREE.MeshBasicMaterial({ color: surfaceColours[surface] })
-      : new THREE.MeshStandardMaterial({ color: surfaceColours[surface], roughness: 0.92, metalness: 0, flatShading: true })
+    const color = surfaceColours[surface]
+    if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
+    if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
+    if (glazedSurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
+    return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
   }
 }

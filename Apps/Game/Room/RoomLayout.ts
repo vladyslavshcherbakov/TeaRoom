@@ -82,6 +82,9 @@ export const carriedItemShapes: Readonly<Record<string, CarriedShape>> = {
   bowl1: 'bowl',
   bowl2: 'bowl',
   bowl3: 'bowl',
+  bowl4: 'bowl',
+  bowl5: 'bowl',
+  bowl6: 'bowl',
   spoon: 'spoon',
   cloth: 'cloth',
 }

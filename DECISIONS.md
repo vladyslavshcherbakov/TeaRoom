@@ -36,6 +36,12 @@
 
 **The kettle's water comes from the tap at the counter, and the kettle starts empty.** Filling the kettle is the first step of a ritual. The keeper holds the kettle under the tap, so the vessel must be in a hand at the tap's place. Water that overflows runs into the sink and does not wet the table, because the table is where the ritual's spills count.
 
+**A warm glow marks the chosen item.** Raising the chosen item a little was not enough to tell "held" from "held and ready to use", and a tap then did something the player did not expect. A soft glow pulses behind the chosen item in its corner. An empty spoon has nothing to tip, so a tap on a vessel takes it, as an empty vessel does not aim a pour.
+
+**Six tea bowls in six glazes: white, pearl, sky blue, blue, yellow and emerald.** The player chooses a bowl by its look. Three of them wait on the shelf's lowest board. The glazes are presentation, looked up by the bowl's id.
+
+**Items standing on furniture cast no shadows.** Their shadows on the tea table and the shelves read as clutter at this size.
+
 **An item taken by a tap is chosen at once.** Taking something is nearly always followed by using it or putting it back, so the next tap already acts with it. A chosen vessel aims a pour only when it holds something, because otherwise a tap on the next bowl would aim a pour from an empty bowl instead of taking it.
 
 **Tea leaves are drawn as many small leaves, shaped by the tea.** A flat disc said nothing about what was in the caddy. `LeafPile.ts` heaps hundreds of small pieces with a fixed seed, so the same heap appears every time, and shows fewer of them as the caddy empties. Each tea's look lives in the presentation, like its name.

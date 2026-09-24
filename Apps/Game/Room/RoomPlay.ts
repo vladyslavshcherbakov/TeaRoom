@@ -244,7 +244,8 @@ export class RoomPlay {
       this.ritual.dispatch({ type: 'scoopTea', depth: fullSpoonDepth })
       return
     }
-    if (this.ritual.state.vessels[itemId] === undefined) return this.pickUpAndChoose(itemId)
+    const isSomethingToTip = this.ritual.state.spoon.grams > 0 && this.ritual.state.vessels[itemId] !== undefined
+    if (!isSomethingToTip) return this.pickUpAndChoose(itemId)
     this.ritual.dispatch({ type: 'tipSpoonInto', vesselId: itemId })
   }
 

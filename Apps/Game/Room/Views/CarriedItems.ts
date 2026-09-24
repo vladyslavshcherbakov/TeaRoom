@@ -7,7 +7,7 @@ import type { AimedPourView } from '../AimedPour.ts'
 import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { LeafPile, leafLookFor, type LeafPileSize } from './LeafPile.ts'
-import type { RoomMaterials } from './RoomMaterials.ts'
+import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
 const handHeightMetres = 0.55
@@ -28,6 +28,20 @@ const heldInViewTiltTowardsCameraRadians = 0.55
 const heldInViewInsetShareOfItemWidth = 0.8
 const handTouchAreaShareOfScreenWidth = 0.42
 const handTouchAreaShareOfScreenHeight = 0.2
+const chosenGlowShareOfItemWidth = 1.5
+const chosenGlowBehindMetres = 0.08
+const chosenGlowAboveTheBaseShareOfItemWidth = 0.2
+const chosenGlowPulsesPerSecond = 0.8
+const chosenGlowPulseShare = 0.06
+const chosenGlowColour = '255, 236, 170'
+const glazeByBowlId: Readonly<Record<string, Surface>> = {
+  bowl1: 'whiteGlaze',
+  bowl2: 'pearlGlaze',
+  bowl3: 'skyBlueGlaze',
+  bowl4: 'blueGlaze',
+  bowl5: 'yellowGlaze',
+  bowl6: 'emeraldGlaze',
+}
 const gaugeBottomMetres = 0.055
 const gaugeHeightMetres = 0.11
 const gaugeFaceMetres = 0.142
@@ -80,13 +94,13 @@ type CarriedModel = {
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
   isHeldInView: boolean
+  castsShadow: boolean
 }
 
 export class CarriedItems {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
   private readonly materials: RoomMaterials
-  private readonly insideVisibleMaterial: THREE.Material
   private readonly claySeenFromInside: THREE.Material
   private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
@@ -94,13 +108,11 @@ export class CarriedItems {
   private readonly stream: THREE.Mesh
   private readonly tapStream: THREE.Mesh
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
+  private readonly chosenGlow = newChosenGlow()
   private readonly streamMaterial: THREE.MeshStandardMaterial
 
   constructor(materials: RoomMaterials, itemIds: readonly string[]) {
     this.materials = materials
-    const porcelain = materials.unsharedMaterialFor('porcelain')
-    porcelain.side = THREE.DoubleSide
-    this.insideVisibleMaterial = porcelain
     const clay = materials.unsharedMaterialFor('clay')
     clay.side = THREE.DoubleSide
     this.claySeenFromInside = clay
@@ -115,6 +127,7 @@ export class CarriedItems {
     this.tapStream.visible = false
     this.root.add(this.stream, this.tapStream)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
+    this.root.add(this.chosenGlow)
   }
 
   show(scene: CarriedItemsScene): void {
@@ -123,6 +136,28 @@ export class CarriedItems {
     this.showPour(scene)
     this.showTapWater(scene)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
+    this.showChosenGlow(scene)
+  }
+
+  private showChosenGlow(scene: CarriedItemsScene): void {
+    const heldInView = scene.heldInView
+    const handIndex = heldInView?.selectedHandIndex ?? null
+    const itemId = handIndex === null ? null : (scene.state.keeper.hands[handIndex] ?? null)
+    const chosen = this.models.find((model) => model.itemId === itemId)
+    this.chosenGlow.visible = heldInView !== null && handIndex !== null && chosen?.isHeldInView === true
+    if (!this.chosenGlow.visible || heldInView === null || handIndex === null) return
+    const frame = heldInViewFrame(heldInView, handIndex)
+    const pulse = 1 + Math.sin(scene.timeSeconds * chosenGlowPulsesPerSecond * Math.PI * 2) * chosenGlowPulseShare
+    const behindTheItem = frame.baseInCamera.clone().add(new THREE.Vector3(0, frame.itemWidth * chosenGlowAboveTheBaseShareOfItemWidth, -chosenGlowBehindMetres))
+    this.chosenGlow.position.copy(heldInView.camera.localToWorld(behindTheItem))
+    this.chosenGlow.quaternion.copy(heldInView.camera.quaternion)
+    this.chosenGlow.scale.setScalar(frame.itemWidth * chosenGlowShareOfItemWidth * pulse)
+  }
+
+  private castShadowUnlessStanding(model: CarriedModel, shouldCast: boolean): void {
+    if (model.castsShadow === shouldCast) return
+    model.castsShadow = shouldCast
+    model.root.traverse((part) => (part.castShadow = shouldCast && !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
   }
 
   private handTouchArea(handIndex: HandIndex): THREE.Mesh {
@@ -154,6 +189,7 @@ export class CarriedItems {
     const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
     const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet ? scene.heldInView : null
     moveToLayer(model, heldInView !== null)
+    this.castShadowUnlessStanding(model, location.kind !== 'onSurface')
     model.root.scale.setScalar(1)
     if (aim !== null) return this.aimOver(model, aim)
     if (isUnderTheFaucet) {
@@ -250,7 +286,7 @@ export class CarriedItems {
 
   private modelOf(itemId: string, shape: CarriedShape): CarriedModel {
     const root = new THREE.Group()
-    const parts = this.partsOf(shape)
+    const parts = this.partsOf(shape, itemId)
     root.add(...parts.meshes)
     if (parts.lid !== null) root.add(parts.lid)
     const liquidMaterial = parts.liquidRadius === null ? null : (this.materials.unsharedMaterialFor('porcelain') as THREE.MeshStandardMaterial)
@@ -286,6 +322,7 @@ export class CarriedItems {
       puffs,
       tagKey: '',
       isHeldInView: false,
+      castsShadow: true,
     }
   }
 
@@ -307,7 +344,7 @@ export class CarriedItems {
     return water
   }
 
-  private partsOf(shape: CarriedShape): { meshes: THREE.Object3D[]; lid: THREE.Object3D | null; spoutTip: THREE.Vector3; rimHeight: number; liquidRadius: number | null } {
+  private partsOf(shape: CarriedShape, itemId: string): { meshes: THREE.Object3D[]; lid: THREE.Object3D | null; spoutTip: THREE.Vector3; rimHeight: number; liquidRadius: number | null } {
     switch (shape) {
       case 'kettle':
         return this.kettleParts()
@@ -316,7 +353,7 @@ export class CarriedItems {
       case 'caddy':
         return this.caddyParts()
       case 'bowl':
-        return this.bowlParts()
+        return this.bowlParts(glazeByBowlId[itemId] ?? 'porcelain')
       case 'spoon':
         return this.spoonParts()
       case 'cloth':
@@ -384,7 +421,7 @@ export class CarriedItems {
     return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(0.14, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
   }
 
-  private bowlParts() {
+  private bowlParts(glaze: Surface) {
     const profile = [
       new THREE.Vector2(0, 0.008),
       new THREE.Vector2(0.04, 0.004),
@@ -393,7 +430,9 @@ export class CarriedItems {
       new THREE.Vector2(0.078, 0.036),
       new THREE.Vector2(0.083, 0.062),
     ]
-    const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 20), this.insideVisibleMaterial)
+    const glazed = this.materials.unsharedMaterialFor(glaze)
+    glazed.side = THREE.DoubleSide
+    const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 24), glazed)
     return { meshes: [body], lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
   }
 }
@@ -447,6 +486,26 @@ function moveToLayer(model: CarriedModel, isHeldInView: boolean): void {
   if (model.isHeldInView === isHeldInView) return
   model.isHeldInView = isHeldInView
   model.root.traverse((part) => part.layers.set(isHeldInView ? heldInViewLayer : 0))
+}
+
+function newChosenGlow(): THREE.Mesh {
+  const canvas = document.createElement('canvas')
+  canvas.width = 128
+  canvas.height = 128
+  const context = canvas.getContext('2d')
+  if (context !== null) {
+    const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64)
+    gradient.addColorStop(0, `rgba(${chosenGlowColour}, 0.95)`)
+    gradient.addColorStop(0.55, `rgba(${chosenGlowColour}, 0.55)`)
+    gradient.addColorStop(1, `rgba(${chosenGlowColour}, 0)`)
+    context.fillStyle = gradient
+    context.fillRect(0, 0, 128, 128)
+  }
+  const material = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthWrite: false })
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material)
+  glow.layers.set(heldInViewLayer)
+  glow.visible = false
+  return glow
 }
 
 function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView): void {
