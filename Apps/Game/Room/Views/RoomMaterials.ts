@@ -34,6 +34,7 @@ export type Surface =
   | 'blueGlaze'
   | 'yellowGlaze'
   | 'emeraldGlaze'
+  | 'koi'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -69,6 +70,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   blueGlaze: '#2f5ea8',
   yellowGlaze: '#f1cd55',
   emeraldGlaze: '#1f8a68',
+  koi: '#e4622e',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
