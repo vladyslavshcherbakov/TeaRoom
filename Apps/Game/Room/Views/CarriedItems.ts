@@ -285,7 +285,7 @@ export class CarriedItems {
     const filled = this.models.find((model) => model.itemId === scene.state.filling?.vesselId)
     this.tapStream.visible = filled !== undefined
     const isRunningOverTheLid = scene.state.filling?.isRunningOverTheLid === true
-    this.overflowStream.visible = filled !== undefined && (scene.state.filling?.hasOverflowed === true || isRunningOverTheLid)
+    this.overflowStream.visible = filled !== undefined && scene.state.filling?.hasOverflowed === true && !isRunningOverTheLid
     if (filled === undefined) return
     const bottomY = filled.root.position.y + filled.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
     placeStream(this.tapStream, faucetSpout, bottomY)
