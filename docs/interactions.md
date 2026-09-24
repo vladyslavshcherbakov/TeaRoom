@@ -73,7 +73,7 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap the floor | The keeper walks there, around the furniture. |
 | Tap a piece of furniture, or anything on it | The keeper walks to it, and the camera shows it close up. |
 | Tap the floor or empty space in a close-up | The camera returns to the room. |
-| Pinch with two fingers, or turn the mouse wheel | The camera moves closer or farther along its line of sight, from half to 1.6 times its usual distance. The first finger's press does not count as a tap. A new view, walking to furniture or back to the room, starts at the usual distance. There is no pinch while a pour is being aimed. |
+| Pinch with two fingers, or turn the mouse wheel | The camera moves closer or farther along its line of sight, from half to 1.6 times its usual distance. The first finger's press does not count as a tap. The room keeps its zoom while the keeper walks to furniture, and gets it back after the close-up. Each close-up starts at its usual distance, and its own zoom is forgotten when the player leaves it. There is no pinch while a pour is being aimed. |
 | Tap an item in a close-up | The keeper takes it into the first free hand. |
 | Tap an item the keeper holds: in a bottom corner of a close-up, or in the keeper's hands in the room | That hand is chosen, and in a close-up its item rises a little. A second tap lets go of the choice. |
 | Tap a surface in a close-up with a hand chosen | The item goes down exactly where the finger touched, if it fits. It does not fit over the edge, on the heater or on another item, and then it stays in the hand, still chosen. |

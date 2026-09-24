@@ -12,9 +12,9 @@ import {
   distanceShareAfterWheel,
   overviewPose,
   poseEasedTowards,
-  unzoomedDistanceShare,
   zoomedPose,
 } from './Camera/CameraPoses.ts'
+import { CameraZoom } from './Camera/CameraZoom.ts'
 import { carriedItemShapes, furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
@@ -66,8 +66,7 @@ export class RoomScene {
   private aimingPointerId: number | null = null
   private readonly fingersOnTheRoom = new Map<number, ScreenPoint>()
   private pinch: Pinch | null = null
-  private distanceShare = unzoomedDistanceShare
-  private zoomedViewKey = ''
+  private readonly zoom = new CameraZoom()
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog) {
     this.session = session
@@ -131,8 +130,8 @@ export class RoomScene {
   }
 
   private moveCamera(seconds: number): void {
-    this.unzoomWhenTheViewChanges()
-    this.cameraPose = poseEasedTowards(this.cameraPose, zoomedPose(this.cameraGoal(), this.distanceShare), seconds)
+    this.zoom.viewShown(this.play.view)
+    this.cameraPose = poseEasedTowards(this.cameraPose, zoomedPose(this.cameraGoal(), this.zoom.distanceShare), seconds)
     this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
     this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
     this.camera.updateMatrixWorld()
@@ -160,16 +159,6 @@ export class RoomScene {
     if (!(material instanceof THREE.MeshStandardMaterial)) return
     material.emissive.copy(isOn ? heaterGlowColour : new THREE.Color(0x000000))
     material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
-  }
-
-  private unzoomWhenTheViewChanges(): void {
-    const view = this.play.view
-    const viewKey = view.kind === 'overview' ? view.kind : `${view.kind} ${view.furnitureId}`
-    if (viewKey === this.zoomedViewKey) return
-    this.zoomedViewKey = viewKey
-    if (this.distanceShare === unzoomedDistanceShare) return
-    this.distanceShare = unzoomedDistanceShare
-    this.log(`camera zoom reset for the ${viewKey} view`)
   }
 
   private cameraGoal(): CameraPose {
@@ -211,23 +200,23 @@ export class RoomScene {
     canvas.addEventListener('pointercancel', pressEnded)
     canvas.addEventListener('wheel', (event) => {
       event.preventDefault()
-      this.distanceShare = distanceShareAfterWheel(this.distanceShare, event.deltaY)
+      this.zoom.zoomTo(distanceShareAfterWheel(this.zoom.distanceShare, event.deltaY))
     }, { passive: false })
     for (const safariGesture of ['gesturestart', 'gesturechange']) document.addEventListener(safariGesture, (event) => event.preventDefault())
   }
 
   private startPinching(): void {
-    this.pinch = { fingerGapAtStart: this.fingerGap(), distanceShareAtStart: this.distanceShare }
+    this.pinch = { fingerGapAtStart: this.fingerGap(), distanceShareAtStart: this.zoom.distanceShare }
     this.play.pressMovedAway()
   }
 
   private keepPinching(pinch: Pinch): void {
-    this.distanceShare = distanceShareAfterPinch(pinch.distanceShareAtStart, pinch.fingerGapAtStart, this.fingerGap())
+    this.zoom.zoomTo(distanceShareAfterPinch(pinch.distanceShareAtStart, pinch.fingerGapAtStart, this.fingerGap()))
   }
 
   private stopPinching(): void {
     this.pinch = null
-    this.log(`pinched the camera to ${this.distanceShare.toFixed(2)} of its distance`)
+    this.log(`pinched the camera to ${this.zoom.distanceShare.toFixed(2)} of its distance in the ${this.play.view.kind} view`)
   }
 
   private fingerGap(): number {
