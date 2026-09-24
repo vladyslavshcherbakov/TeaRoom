@@ -9,7 +9,7 @@ Rules that are already built live in [game-design.md](game-design.md), [interact
 Pick an idea. Before building it, answer five questions:
 
 1. What does the player do with their hands? Every idea needs a tactile verb.
-2. What does the player see? Every idea leaves a visible trace in the room.
+2. What does the player see or hear? Every idea leaves a trace in the room.
 3. What caused it? Write the hidden cause here, even if the player never learns it.
 4. What does the world remember? Every idea can change a long-lived value.
 5. What follows from it later? A good idea is the cause of another idea.
@@ -41,7 +41,7 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 **Design causes, not content.** A new tea is content. A figurine that slowly starts to prefer the tea you brew most is a cause. Causes multiply, content only adds.
 
-**The hidden 70%.** Every noticeable detail may have a reason the player never learns. The team writes that reason down here. The player sees only the consequence.
+**The hidden 70%.** Every noticeable detail may have a reason the player never learns. The reason is written down in this book. The player sees only the consequence.
 
 **Not everything is a mystery.** Ninety percent of the room is ordinary. A kettle is a kettle. A rare oddity only has weight against that background.
 
@@ -57,45 +57,56 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 **Everything is touched.** If an idea can be done with a button, find the gesture instead.
 
-## The lore the team knows
+## Why people come back
 
-The player is never told any of this directly. It exists so that every detail has a reason.
+Nobody has to come back. There are no streaks, no daily rewards and no losses for staying away. People return because the room feels alive and they are curious what it did without them.
 
-### The house
+- **The world answers late.** An act today shows its answer tomorrow or next week: the bird on the sill, the figurine's darker glaze, a gift at the door. The player returns to hear the answer.
+- **Light consequences, never punishment.** Staying away for long makes the plant droop and the cat cool towards the keeper for a day. Both recover as soon as the player cares for them again.
+- **Hints of life.** Small things happen that the player only half sees: a shadow crossing the window, a moth at the lamp, a sound behind the wall, a figurine turned a little.
+- **What happened while you were away.** On return, one or two short lines tell what the room did: "It rained all night. The toad looks satisfied." "A letter came. It is on the table." In the story mode, new objects appear.
+- **Ending the day.** A button ends the day on purpose. The record plays to its end, the candle burns down, the lamp goes out, and the night's events happen before the next morning. It moves the world forward without waiting for the real clock.
 
-The tea room is part of an old house on a hill above a small town by the sea. The town is visible only as lights at night and a church bell on some mornings. The player is its new keeper. Nobody says so.
+## When the player only watches
 
-The previous keeper was an old woman who brewed tea every evening for forty years. She is never named. She left traces:
+Sitting still must never be boring, even when nothing is touched.
 
-- One bowl is slightly chipped. It was her favourite. Guests who knew her notice it.
-- There is a faint ring on the tea table where she always put her kettle. It never fully wipes away.
-- A drawer holds a notebook with tasting notes in her handwriting. Some pages are torn out.
-- The closed door at the back of the room was her workshop. It is never opened. Sometimes water runs behind it in the morning. Sometimes the strip of light under it changes.
-- On the windowsill there is a pale square where a pot once stood.
+- Music from the record player or the radio, until the record ends.
+- Rain, wind, the kettle cooling with small ticks, frogs, cicadas, an owl.
+- Birds flying past the window, one landing on the sill, one rarely flying in.
+- The cat changing its spot, stretching, washing, falling asleep at the keeper's feet.
+- Light moving slowly across the floor as the hour changes.
+- The candle or the incense burning down.
+- Steam rising from the bowl for a while, then stopping.
 
-The team's answer to the closed door: it is the previous keeper's pottery workshop, and the house keeps it the way she left it. The water is the old pipes. The light is the moon through a skylight. Or it is not. The team keeps two other answers in reserve and never chooses in public.
+## Stories: a new game is a new keeper in someone else's room
 
-### The household gods
+Each new game is a new story. The room belonged to a previous owner, and the player is the new keeper. Nobody says so. The player finds it out from what was left behind.
 
-The figurines are small household gods. They are not powerful. They are fond of things. Each one has a domain, a taste and a temper.
+Each story generates its previous owner from a set of traces:
+
+- **Their things.** A poster, a letter, a notebook, a musical instrument, a photo turned face down, a jar of buttons, a pair of old slippers by the door.
+- **Their bowl.** One bowl differs from the others: chipped, repaired, unusually large or tiny. It was their favourite. A guest who knew them notices it.
+- **Their figurines.** Each story starts with a different set of household gods on the sill. One story has the dragon and the toad, another has the fox and the carp.
+- **Their marks.** A ring on the table where they always put the kettle, a worn spot on the cushion, a pale square on the sill where a pot once stood.
+- **Their habits.** The cat, if there is one, still waits at the hour the previous owner made tea.
+
+The traces are found one at a time, over days. Some are only noticed on a second look. The previous owner is never named, and the player assembles who they were.
+
+## The household gods
+
+The figurines are small household gods. They are not powerful. They are fond of things. Each one has a domain, a taste and a temper. A story starts with some of them, and others may arrive later.
 
 | Figurine | Domain | Likes | Dislikes | Sign of favour |
 |---|---|---|---|---|
 | Dragon | Fire and the heater | Oolong, water just below boiling | Lukewarm offerings | The heater clicks once, softly, when switched on. |
-| Toad | Rain and the garden | Pu-erh, rainy evenings | A dry, dusty table | Frogs croak outside after its offering. On rainy nights it may appear on the player's shoulder. |
-| Monk (future) | Patience and time | Long, unhurried rituals | Rushing, oversteeping out of haste | Clocks seem to tick slower. The gods' plaque dims gently instead of dropping. |
-| Crane or little bird (future) | Birds, wind and the window | Green tea, an open window | A closed window at dawn | Birds visit the sill. A bird may fly in and land on the player's shoulder. |
-| Fox (future) | Guests and luck | Sharing tea with a guest | Drinking alone for many days | Unexpected guests. A small gift left on the doorstep. |
-| Carp (future) | Water and washing | Clean bowls, fresh water | Dirty bowls, stale water | The tap water runs clearer. The sink seems to have room for one more bowl. |
+| Toad | Rain and the garden | Pu-erh, rainy evenings | A table that has not seen tea for days | Frogs croak outside after its offering. On rainy nights it may appear on the keeper's head. |
+| Monk | Patience and time | Long, unhurried rituals | Rushing, oversteeping out of haste | The gods' plaque dims gently instead of dropping. |
+| Little bird | Birds, wind and the window | Green tea, an open window | A closed window at dawn | Birds visit the sill. A bird may fly in and land on the keeper's shoulder. |
+| Fox | Guests and luck | Sharing tea with a guest | Drinking alone for many days | Unexpected guests. A small gift at the door. |
+| Carp | Water and washing | Clean bowls | Dirty bowls | The sink seems to have room for one more bowl. |
 
-Tea pets in real life change colour as tea is poured over them for years. Ours do too. A figurine that is offered tea often slowly darkens and gains a patina. The player sees their own history on the figure.
-
-### The town and the neighbours
-
-- A light in a window across the valley comes on at dusk. After many evenings, it starts to blink twice when the player lights their own lamp.
-- A neighbour's cat walks along the garden wall on sunny afternoons. It never comes in. One day it does.
-- A church bell rings on Sunday mornings in the player's real calendar.
-- A delivery of tea sometimes arrives at the door with no sender. The team knows it is from a guest the player once served well.
+Real tea pets change colour as tea is poured over them for years. Ours do too. A figurine that is offered tea often slowly darkens and gains a glossy patina. The player sees their own history on it.
 
 ## The room and the house
 
@@ -112,29 +123,27 @@ Where the player sits changes the camera for the ritual, the sounds and what the
 
 - A window with a sill for figurines, plants and visiting birds.
 - A sliding door to a veranda instead of a window. Wind moves the curtain. Rain can blow in and wet the edge of the floor.
-- Later, a round moon window in a second room.
 
 ### Decoration that is placed by hand
 
 - **Rugs.** The player unrolls a rug with a swipe. If it is laid crooked, it stays crooked until they straighten it. The cat prefers crooked rugs.
-- **Ikebana.** A mini-game of placing three stems in a vase: heaven, earth and person. Flowers wilt over real days and need replacing. The flowers come from the garden and follow the season.
-- **Plants.** A plant on the sill that the player waters with leftover cold tea, which is a real habit. It grows over weeks. Too much tea and it sulks.
-- **Scrolls and pictures.** A scroll with a single word. It changes with the season if the player remembers to change it.
-- **Incense.** A stick burns down in real time. It can serve as a steeping timer without numbers.
+- **Ikebana.** A mini-game of placing three stems in a vase: heaven, earth and person. Flowers wilt over days and need replacing. The flowers follow the season.
+- **Plants.** A plant on the sill that the player waters with leftover cold tea, which is a real habit. It grows over weeks. Too much tea and it sulks. Long neglect makes it droop, and care brings it back.
+- **Scrolls and pictures.** A scroll with a single word. It can be changed with the season.
+- **Candle or incense.** It burns down in real time and can serve as a steeping timer without numbers.
 - **Wind chime** on the veranda. Its sound tells the wind.
 
 ### Music in the room
 
 - A gramophone, a vinyl player, a cassette deck or a CD player. Each has its own gesture: wind the crank, drop the needle, press play with a clunk, close the CD tray.
-- Records are found over time, never bought in a shop.
+- Records are found over time, never bought in a shop. Some belonged to the previous owner.
 - A shakuhachi or a small guitar on the wall that can be played badly, and plays slightly better after many evenings.
-- The music is diegetic. It comes from the object, gets quieter when the player walks away, and stops when the record ends.
+- The music is diegetic. It comes from the object, gets quieter when the keeper walks away, and stops when the record ends.
 
 ## The keeper
 
 - Body type, height and skin tone chosen freely, with no gender locked to clothes.
 - Clothes: a house robe, a kimono, a knitted cardigan, a raincoat for the veranda in the rain.
-- Clothes react to the world. A robe sleeve can dip into the tea if the player reaches too far, leaving a small stain until washed.
 - The keeper's hands show what they carry, one item per hand.
 - Animals can settle on the keeper: a bird on the shoulder, the toad on the head in the rain, the cat around the neck like a scarf. It only happens after much friendship, and never when asked.
 
@@ -147,7 +156,7 @@ Clear, cloudy, light rain, heavy rain, drizzle, fog, snow, sleet, wind, a storm 
 Each weather has its own sounds, light and side effects:
 
 - Rain wets the veranda edge and the plants outside. Leaves drip after the rain stops.
-- Fog hides the town lights.
+- Fog hides the far view.
 - Snow muffles every sound, and the kettle sounds louder in comparison.
 - Wind moves the curtain, the chime and the trees.
 
@@ -158,15 +167,14 @@ Each weather has its own sounds, light and side effects:
 - Stars on clear nights, a meteor shower on the real dates of the Perseids and the Geminids.
 - A rainbow after a sun shower.
 - Aurora once in a very long while, with no explanation.
-- A kite over the town on windy spring days.
 
 ### Seasons
 
 The seasons follow the player's real calendar, or a chosen one.
 
-- **Spring.** Blossom outside, petals blow onto the sill. The first harvest: a new green tea appears in the caddy with a note in unknown handwriting.
-- **Summer.** Cicadas, fireflies at dusk, frogs after rain, cold-brewed tea in a glass jar on the veranda.
-- **Autumn.** Leaves turn and fall, one lands in the tea bowl. Roasted teas taste better. Persimmons dry on a string.
+- **Spring.** Blossom outside, petals blow onto the sill. A new green tea appears in the caddy.
+- **Summer.** Cicadas, fireflies at dusk, frogs after rain.
+- **Autumn.** Leaves turn and fall, one lands in the tea bowl. Roasted teas taste better.
 - **Winter.** Snow, a kotatsu with a blanket, the cat never leaves it. Steam is thicker and lingers.
 
 ## Outside the window
@@ -175,7 +183,7 @@ The seasons follow the player's real calendar, or a chosen one.
 - Flowers in the garden that stand, bend in the wind, get wet, open and close with the day.
 - Birds: sparrows, a crow, a kingfisher at the pond, an owl at night.
 - Frogs croaking after rain, more loudly when the toad figurine is pleased.
-- A neighbour's cat on the wall.
+- A neighbour's cat on the garden wall.
 - A person passing with an umbrella, the same person on the same day each week.
 - A street lamp that comes on at dusk.
 
@@ -198,7 +206,7 @@ The player never sees these steps listed. They only notice the bird getting bold
 
 - Rolled pearls that unfurl in hot water, like some oolongs.
 - Pressed cakes that must be broken with a pick, like pu-erh.
-- Long twisted leaves, needles, broken fannings.
+- Long twisted leaves, needles, broken leaves.
 - Leaves that open and swell in the pot. The player can look into the pot and see how open they are.
 - Liquor colours from pale jade to amber to dark red-brown.
 
@@ -220,30 +228,30 @@ In gongfu brewing, the same leaves are steeped many times. Real behaviour, and o
 - The first infusion is light. The second and third are the strongest and darkest.
 - Later infusions get lighter again, until the leaves are spent.
 - Each tea has its own curve. Pu-erh lasts many infusions, green tea few.
-- A rinse before the first infusion wakes the leaves. Skipping it is allowed, and the first cup is a little dusty.
+- The player may pour any infusion away. The world does not care which one.
+
+### Teas that improve with age
+
+Only teas that really get better with age change over real time: pu-erh cakes, aged white tea, some roasted oolongs. A cake kept for weeks tastes deeper, and its liquor turns a shade darker. Nothing else goes stale.
 
 ### Kettles and heat
 
 The kettle is a character. Each kind has its own gestures, sounds and temper:
 
-- **Electric kettle.** A switch that clicks off by itself at the boil. Easy, reliable, a little soulless. It can be set to stop earlier on later models.
+- **Electric kettle.** A switch that clicks off by itself at the boil. Easy, reliable, a little soulless.
 - **Stovetop kettle with a whistle.** It whistles when it boils, so the player learns to take it off before the whistle for green tea. The whistle rises slowly, and a good ear hears it coming.
 - **Clay kettle on a small burner.** An alcohol or gas burner with a flame the player turns up and down. It needs attention and rewards it.
-- **Cast-iron tetsubin on charcoal.** Slow to heat, holds heat for a long time, and makes the water softer. The charcoal has to be lit and tended. Old tetsubin water tastes slightly of iron, and some guests love that.
+- **Cast-iron tetsubin on charcoal.** Slow to heat, holds heat for a long time. The charcoal has to be lit and tended. Some guests love its water.
 
-Each kettle keeps its own history: the limescale inside, the darkened handle, the dent from the day it fell.
+Each kettle keeps its own history: limescale inside, the darkened handle, the dent from the day it fell.
 
-### Water
+### The clay pot that gets used to a tea
 
-- Tap water, rainwater collected in a barrel on the veranda, spring water brought by a guest.
-- Water quality is a hidden value. It changes the taste slightly.
-- Water left in the thermos overnight tastes flat the next day.
+A clay pot that brews the same tea for weeks slowly improves that tea. The player learns it through three traces, never through a number:
 
-### Tea that changes over real time
-
-- Pu-erh cakes age. A cake kept for weeks of real time tastes deeper.
-- Green tea loses freshness if the caddy is left open.
-- A clay pot seasons with the tea brewed in it most often and slowly improves that tea.
+- **Sight.** The inside of the pot darkens to the colour of that tea, and the outside gains a soft sheen where the hand holds it.
+- **Taste.** The taste card for that tea in that pot says "rounder" or "deeper" where it used to say nothing.
+- **Guests.** A guest who knows tea says: "This pot has been loved."
 
 ## Care of the vessels
 
@@ -267,11 +275,11 @@ The game hints with dry text during the sip:
 
 - A bowl dropped or knocked by the cat can break.
 - The shards can be swept up and put in a bin. The bin keeps them. The player can look inside and see the broken bowl.
-- Much later, a jar of kintsugi lacquer appears. Maybe a guest brings it. Maybe it was always in the drawer.
-- Applying the lacquer to the shards starts a slow repair: a mini-game of placing the pieces and tracing the gold seams.
+- Much later, a jar of kintsugi lacquer appears. Maybe a guest brings it. Maybe it was always in a drawer of the previous owner.
+- Applying the lacquer to the shards starts a slow repair: a mini-game of placing the pieces and tracing the gold seams. It can also start when the player simply brings the jar to the shards.
 - The repaired bowl is more beautiful than before and becomes a favourite of one particular guest.
 
-### Stains and wear
+### Marks of use
 
 - The cloth gathers tea stains and needs washing.
 - The table gains faint rings where vessels always stand.
@@ -279,16 +287,16 @@ The game hints with dry text during the sip:
 
 ## Pets and companions
 
-- **Cat.** Sleeps where it is warm: the heater after it cools, the sunny patch, the crooked rug. Walks between bowls. Sits on the towel, and the towel now belongs to the cat. After much friendship, lies around the keeper's neck.
+- **Cat.** Sleeps where it is warm: the heater after it cools, the sunny patch, the crooked rug. Walks between bowls. Sits on the towel, and the towel now belongs to the cat. After much friendship, lies around the keeper's neck. After a long absence, it ignores the keeper for a day.
 - **Dog.** Calm, watches, sighs, thumps its tail when the kettle clicks.
-- **Visiting animals.** The sparrow, the toad from the garden in the rain, a moth to the lamp at night.
-- Pets remember habits: where the player sits, when the ritual happens, who was petted last.
+- **Visiting animals.** The sparrow, the toad from the garden in the rain, a moth at the lamp at night.
+- Pets remember habits: where the keeper sits, when the ritual happens, who was petted last.
 
 ## Guests
 
 - A small cast of guests, each with a memory of their visits.
 - A guest who got bitter tea says "An interesting taste" and, next time, looks at the kettle first.
-- A guest who got the chipped bowl pauses and says nothing. They knew the previous keeper.
+- A guest who got the previous owner's bowl pauses and says nothing. They knew them.
 - A guest sometimes brings a gift: a new tea, a record, a cutting for the plant, the kintsugi lacquer.
 - Lines are short and dry: "A good evening." "I would have another." "Why is the figurine looking at me?"
 
@@ -296,24 +304,31 @@ The game hints with dry text during the sip:
 
 Priority, from the GDD: water, ceramic, kettle, cloth, surroundings. Also:
 
-- The kettle's voice changes as the water heats: silence, tiny ticks, a rising hiss, a rumble, the roll of a boil.
+- The kettle's voice changes as the water heats: silence, tiny ticks, a rising hiss, a rumble, the roll of a boil, or the whistle.
 - Leaves rustle dry and sigh when wet.
 - Every material has its own family of sounds: clay, porcelain, iron, wood, cloth, paper.
 - Rain on glass, rain on the veranda roof, rain on leaves are three different sounds.
-- Frogs, cicadas, crickets, an owl, a distant train, the town bell.
-- Music from the player's gramophone that fades with distance.
+- Frogs, cicadas, crickets, an owl, a distant train.
+- Music from the record player that fades with distance.
 - Sounds are short, soft and never repeat exactly.
+
+## The photo journal
+
+- A photo mode stops time. The player moves the camera, changes the angle, the height, the focus and the light, and takes a picture.
+- A photo can carry a caption or a short note.
+- The photos form a journal of the room: the first cup, the bird on the shoulder, the repaired bowl, the first snow.
+- A photo can be sent as a postcard to a guest. Sometimes a postcard comes back.
 
 ## The coffee shelf
 
-A tea game has one shelf that is not about tea. On it stands a coffee jar. Tapping it gives one of several outcomes, chosen at random with a cooldown:
+A tea game has one shelf that is not about tea. On it stands a coffee jar. Tapping it gives one of several outcomes, chosen at random, and the same outcome does not repeat at once:
 
 - The jar is empty. "Of course he knew this was a tea game. He looked anyway."
 - The jar holds a forgotten tea. "Of course he knew this was a tea game. He looked anyway, and found the tea he lost last spring." The tea goes into the caddy.
 - A full-screen card: "GAME OVER, COFFEE LOVER." One button: "We'll see about that." The jar goes back on the shelf, and the room carries on as if nothing happened.
 - Much later, a guest brings actual coffee. The keeper can brew it with the same ritual, badly. The gods say nothing, pointedly.
 
-The jokes use the keeper's pronoun from the character's settings, so the lines follow the player's choice.
+The lines use the keeper's pronoun from the character settings.
 
 ## Humour bank
 
@@ -337,32 +352,27 @@ Lines the game may show. Each one is small, dry and appears rarely.
 
 ## Secrets and their conditions
 
-Each row is one secret. The condition is hidden state. The trace is what the player sees. The cause is written for the team only.
+Each row is one secret. The condition is hidden state. The trace is what the player sees. The cause is never shown to the player.
 
 | Condition | Visible trace | Hidden cause |
 |---|---|---|
-| Ten evening rituals | The cat takes its place before the player sits. | The cat has learned the routine. |
+| Ten evening rituals | The cat takes its place before the keeper sits. | The cat has learned the routine. |
 | Many offerings to one figurine | Its glaze darkens with patina. | Tea pets change with the tea poured over them. |
 | Bird figurine favoured and the window open at dawn | The sparrow grows bolder, then lands on the shoulder. | The bird god's favour. |
 | Toad figurine favoured and rain | Frogs croak louder. The toad sits on the keeper's head. | The rain god is pleased. |
-| A guest served the chipped bowl | The guest pauses and says nothing. | The guest knew the previous keeper. |
-| Many dusks with the lamp on | The neighbour's light blinks twice. | Someone across the valley is doing the same ritual. |
-| The notebook read many times | A new page appears in another hand. | Unknown. The team has three answers. |
-| A long absence from the room | Dust on the sill, the plant drooping, the cat cool towards the player for a day. | The house noticed. |
-| The same tea brewed for weeks | The clay pot makes that tea slightly better. | The pot is seasoned. |
+| A guest served the previous owner's bowl | The guest pauses and says nothing. | The guest knew the previous owner. |
+| A long absence from the room | The plant droops, the cat is cool towards the keeper for a day. | The house noticed. |
+| The same tea brewed in one clay pot for weeks | The pot darkens inside, and that tea tastes rounder. | The pot is seasoned. |
 | A bowl broken and kept in the bin | Weeks later, the kintsugi jar is in the drawer. | A guest left it after seeing the shards. |
+| The previous owner's notebook read on several days | A page that was stuck together comes loose. | The paper dried out. Or not. |
 
-## Ideas from the team, not yet placed
+## Ideas not yet placed
 
-- **A tasting journal.** The player can jot a word about each tea. Years later, the journal is a record of their own habits.
-- **Real-time sync.** The room's time and season can follow the player's clock and calendar.
-- **Photo mode.** A still camera for the diorama, with no filters, only light.
-- **Incense as a clock.** A stick burns while the tea steeps. The player learns steeping times by ash length.
-- **Cold brew.** A jar left on the veranda overnight becomes cold tea by morning.
-- **A letter slot.** Occasional postcards from guests who have not visited in a while.
-- **The kettle's memory.** A ring of limescale grows inside the kettle with tap water, not with rainwater.
+- **Real-time sync.** The room's time and season can follow the player's clock and calendar, with the end-of-day button to move ahead.
+- **Candle as a clock.** A candle or incense burns while the tea steeps. The player learns steeping times by how far it burned.
+- **The kettle's memory.** A ring of limescale grows inside the kettle with every week of use.
 - **Fireflies in the tea.** On summer nights, the light of a firefly reflects in the bowl.
-- **Shadows as a clock.** The window's shadow crosses the floor through the day and lands on the table at a certain hour. Something happens only when it touches the chipped bowl.
+- **Shadows as a clock.** The window's shadow crosses the floor through the day and lands on the table at a certain hour. Something happens only when it touches the previous owner's bowl.
 
 ## Adding a new idea
 
@@ -370,7 +380,7 @@ Write it in this form before building it:
 
 - **Verb.** What the hands do.
 - **Trace.** What the player sees or hears.
-- **Cause.** Why it happens, for the team only.
+- **Cause.** Why it happens, never shown to the player.
 - **Memory.** Which long-lived value changes.
 - **Consequence.** What it makes possible later.
 - **Line.** One dry sentence the game might show, if any.

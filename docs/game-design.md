@@ -47,7 +47,7 @@ Temperature, strength, bitterness, the gods' satisfaction and cleanliness are re
 
 ### The hidden 70%
 
-The player sees traces of systems, not the systems. Every noticeable detail may have a hidden cause the player never learns directly: a figurine that is slightly turned one morning, a light in the neighbour's window, the cat that started sleeping next to one particular figurine. The team knows the cause. The game does not explain it.
+The player sees traces of systems, not the systems. Every noticeable detail may have a hidden cause the player never learns directly: a figurine that is slightly turned one morning, a light in the neighbour's window, the cat that started sleeping next to one particular figurine. The world bible holds the cause. The game does not explain it.
 
 Ninety percent of things stay ordinary: a kettle is a kettle, rain is rain. A rare oddity carries weight only against that ordinary background. A mystery is something to notice, never a quest, a marker or a log entry.
 

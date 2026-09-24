@@ -35,15 +35,15 @@ Rules only fire while the player is not looking at the affected object, and neve
 
 ## Unanswered questions
 
-Every deliberate mystery gets an entry in the team's notes, never in the game:
+Every deliberate mystery gets an entry in [world-bible.md](world-bible.md), never in the game:
 
 - Question: why does the figurine sometimes change position?
 - Known facts: it never moves while the player is present.
 - Observed consequences: after some rituals its position differs.
 - Official explanation: none.
-- Possible explanations: several, known to the team.
+- Possible explanations: written in the bible.
 - Player-facing information: only the observed consequence.
 
-The team knows the answer even when the player never will.
+The bible holds the answer even when the player never learns it.
 
 Not everything strange is a mystery. Ninety percent of the room stays ordinary, so the rare oddity has weight.
