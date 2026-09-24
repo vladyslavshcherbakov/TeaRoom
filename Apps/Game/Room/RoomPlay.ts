@@ -92,7 +92,8 @@ export class RoomPlay {
   }
 
   get clothOnTheTableAt(): WorldPoint | null {
-    return this.press?.stroke?.lastPoint ?? null
+    const press = this.press
+    return press !== null && press.hasMovedAway ? (press.stroke?.lastPoint ?? null) : null
   }
 
   pressStarted(target: RoomTapTarget): void {

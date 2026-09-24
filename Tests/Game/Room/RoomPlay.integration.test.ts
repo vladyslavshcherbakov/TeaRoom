@@ -372,6 +372,16 @@ test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {
   assert.deepEqual(room.state.keeper.hands, ['cloth', 'bowl1'])
 })
 
+test('cloth_whileTheTableIsPressedWithoutMoving_staysInTheHand', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.takeAndChoose('cloth')
+
+  room.play.pressStarted({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+
+  assert.equal(room.play.clothOnTheTableAt, null)
+})
+
 test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
