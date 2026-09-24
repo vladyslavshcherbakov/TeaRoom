@@ -46,6 +46,10 @@ export type RefusalReason =
   | 'handsFull'
   | 'notInHand'
   | 'alreadyInHand'
+  | 'noTapInThisRoom'
+  | 'alreadyFilling'
+  | 'notFilling'
+  | 'vesselIsBeingFilled'
 
 export type RitualEvent =
   | { readonly type: 'ritualBegan'; readonly teaId: string }
@@ -72,6 +76,8 @@ export type RitualEvent =
       readonly pouredMl: number
       readonly spilledMl: number
     }
+  | { readonly type: 'fillingStarted'; readonly vesselId: string }
+  | { readonly type: 'fillingFinished'; readonly vesselId: string; readonly filledMl: number; readonly overflowedMl: number }
   | { readonly type: 'teaScooped'; readonly grams: number }
   | { readonly type: 'leavesAdded'; readonly vesselId: string; readonly grams: number }
   | { readonly type: 'brewStarted'; readonly vesselId: string; readonly waterJudgement: WaterJudgement }

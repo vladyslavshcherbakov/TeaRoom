@@ -38,6 +38,7 @@ function problemsWithPlaces(room: RoomDefinition): string[] {
     { what: 'the keeper starts at', placeId: room.keeperStartsAt },
     { what: 'the ritual happens at', placeId: room.ritualPlaceId },
     { what: 'the heater stands at', placeId: room.heaterSpot.placeId },
+    { what: 'the tap is at', placeId: room.tap?.placeId ?? null },
     { what: 'the caddy starts at', placeId: room.caddyStartsAt.placeId },
     ...room.vessels.map((vessel) => ({ what: `"${vessel.id}" starts at`, placeId: vessel.startsAt.placeId })),
   ]

@@ -301,6 +301,7 @@ class RoomVisit {
     this.walkTo('counter')
     this.putDown(0, onTheCounter)
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.fillTheKettleInHand()
   }
 
   setTheTeaTable(): void {
@@ -310,6 +311,7 @@ class RoomVisit {
     this.putDown(1, { x: 1.2, y: 0.42, z: -1.5 })
     this.walkTo('counter')
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.fillTheKettleInHand()
     this.walkTo('teaTable')
     this.putDown(0, { x: 1, y: 0.42, z: -1.8 })
   }
@@ -329,6 +331,13 @@ class RoomVisit {
       from = to
     }
     this.play.pressEnded()
+  }
+
+  fillTheKettleInHand(): void {
+    this.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+    this.session.dispatch({ type: 'startFillingFromTap', vesselId: 'kettle' })
+    this.advance(10)
+    this.session.dispatch({ type: 'stopFillingFromTap' })
   }
 
   private advance(seconds: number): void {

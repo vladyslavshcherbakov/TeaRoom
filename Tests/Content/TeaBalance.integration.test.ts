@@ -15,8 +15,12 @@ function bringTheBowlAndTheCaddyToTheTeaTable(ritual: TestRitual): void {
   ritual.do({ type: 'putDown', itemId: 'caddy', spot: onTheTeaTable(1.4) })
 }
 
-function boilTheKettleAndBringItToTheTeaTable(ritual: TestRitual, temperatureC: number): void {
+function fillBoilAndBringTheKettleToTheTeaTable(ritual: TestRitual, temperatureC: number): void {
   ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+  ritual.fillFromTap('kettle', 10)
+  ritual.do({ type: 'closeVesselLid', vesselId: 'kettle' })
   ritual.heatKettleTo(temperatureC)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'standAt', placeId: 'teaTable' })
@@ -27,7 +31,7 @@ for (const tea of Object.values(defaultCatalog.teas)) {
   test(`${tea.id}_whenBrewedByTheBookInTheQuietRoom_tastesBalancedAndSoft`, () => {
     const ritual = TestRitual.begun(defaultCatalog, tea.id, 'quietRoom')
     bringTheBowlAndTheCaddyToTheTeaTable(ritual)
-    boilTheKettleAndBringItToTheTeaTable(ritual, tea.water.idealC)
+    fillBoilAndBringTheKettleToTheTeaTable(ritual, tea.water.idealC)
     ritual.addLeavesToKettle((tea.steeping.idealGramsPer100Ml * ritual.vessel('kettle').liquid.volumeMl) / 100)
     ritual.wait(tea.steeping.idealSeconds)
     ritual.pour('kettle', 'bowl1', 8)

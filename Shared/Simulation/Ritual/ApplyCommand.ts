@@ -11,6 +11,7 @@ import { moveCaddyLid, moveVesselLid } from './LidCommands.ts'
 import { refusalInPhase } from './PhaseRules.ts'
 import { adjustPour, startPouring, stopPouring } from './PouringCommands.ts'
 import { offerCup, tasteCup } from './ServingCommands.ts'
+import { startFillingFromTap, stopFillingFromTap } from './TapCommands.ts'
 import { beginRitual, chooseAtmosphere, finishRitual, leaveRoom } from './SessionCommands.ts'
 
 export function applyCommand(state: SessionState, command: Command, catalog: Catalog): Outcome {
@@ -58,6 +59,10 @@ function carryOut(draft: Draft, command: Command): void {
       return adjustPour(draft, command)
     case 'stopPouring':
       return stopPouring(draft, command)
+    case 'startFillingFromTap':
+      return startFillingFromTap(draft, command)
+    case 'stopFillingFromTap':
+      return stopFillingFromTap(draft, command)
     case 'scoopTea':
       return scoopTea(draft, command)
     case 'tipSpoonInto':

@@ -19,6 +19,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     caddy: { teaId: null, grams: room.caddyGrams, isOpen: false, location: { kind: 'onSurface', spot: room.caddyStartsAt } },
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams },
     pour: null,
+    filling: null,
     figurines: figurinesOnTheShelf(room),
     tableWetMl: 0,
     godsSatisfaction: initialGodsSatisfaction,

@@ -3,10 +3,13 @@ import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, heatLiquid } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
+import { fillFromTap } from '../Physics/TapWater.ts'
 import { wetMlAfterDrying } from '../Physics/Table.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { isKeeperAt } from './Reach.ts'
+import { finishFilling } from './TapCommands.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
@@ -14,6 +17,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   coolVessels(draft, seconds)
   heatVesselOnHeater(draft, seconds)
   continuePour(draft, seconds)
+  continueFilling(draft, seconds)
   steepAllLeaves(draft, seconds)
   draft.state.tableWetMl = wetMlAfterDrying(draft.state.tableWetMl, seconds)
   startOrEndBrews(draft)
@@ -72,6 +76,25 @@ function continuePour(draft: Draft, seconds: number): void {
   if (isEmpty(source.liquid) && !pour.hasRunDry) {
     pour.hasRunDry = true
     note(draft, `${source.id} ran dry while pouring into ${pour.targetId ?? 'the table'}`)
+  }
+}
+
+function continueFilling(draft: Draft, seconds: number): void {
+  const filling = draft.state.filling
+  if (filling === null) return
+  const tap = definitionIn(draft.catalog, 'rooms', draft.state.roomId).tap
+  const vessel = draft.state.vessels[filling.vesselId]
+  if (tap === null || vessel === undefined) return finishFilling(draft, 'there is no tap or vessel')
+  if (vessel.location.kind !== 'inHand') return finishFilling(draft, `${vessel.id} left the hand`)
+  if (!isKeeperAt(draft, tap.placeId)) return finishFilling(draft, `the keeper left the ${tap.placeId}`)
+  const fill = fillFromTap(vessel.liquid, vesselDefinitionOf(draft, vessel).capacityMl, tap, seconds)
+  vessel.liquid = fill.liquid
+  filling.filledMl += fill.filledMl
+  filling.overflowedMl += fill.overflowedMl
+  if (fill.overflowedMl > 0 && !filling.hasOverflowed) {
+    filling.hasOverflowed = true
+    note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the sink`)
+    draft.events.push({ type: 'vesselOverflowed', vesselId: vessel.id })
   }
 }
 

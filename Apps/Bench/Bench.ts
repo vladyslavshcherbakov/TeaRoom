@@ -117,6 +117,10 @@ class RitualBench {
         button('Heater: switch off', () => this.send({ type: 'switchHeaterOff' })),
       ),
       row(...this.lidButtons('kettle')),
+      row(
+        button('Tap: fill kettle in hand', () => this.send({ type: 'startFillingFromTap', vesselId: 'kettle' })),
+        button('Tap: close', () => this.send({ type: 'stopFillingFromTap' })),
+      ),
       row(this.live(() => `thermos: ${this.vesselSummary('thermos')}`)),
       row(...this.lidButtons('thermos')),
     )

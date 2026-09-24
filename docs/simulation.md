@@ -38,6 +38,12 @@ Flow follows tilt: nothing below 10°, a linear rise to the vessel's `maxPourMlP
 
 A vessel cannot be poured while it stands on the heater. A vessel whose lid must be open to pour or to be filled refuses while that lid is closed.
 
+## Tap water
+
+A room may have a tap at one of its places, with the temperature of its water and its flow in ml per second. The quiet room's tap is at the counter, 18 °C and 50 ml/s, and its kettle starts empty.
+
+A vessel fills from the tap while the keeper holds it in a hand at the tap's place and its lid is open, if its lid must be open to be filled. The tap water mixes by volume with what the vessel holds. Once the vessel is full, the rest runs over the rim into the sink: the core reports the first overflow, and the table stays dry. The filling stops when the tap is closed, when the keeper walks away, and at the next step after the vessel leaves the hand. Only one vessel fills at a time, and a vessel that is filling cannot be poured.
+
 ## Leaves and brewing
 
 The caddy opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open.

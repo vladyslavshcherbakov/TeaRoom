@@ -14,6 +14,12 @@ export type TableVessel = {
   readonly startsAt: Spot
 }
 
+export type TapDefinition = {
+  readonly placeId: string
+  readonly waterTemperatureC: number
+  readonly flowMlPerSecond: number
+}
+
 export type RoomDefinition = {
   readonly id: string
   readonly ambientTemperatureC: number
@@ -24,6 +30,7 @@ export type RoomDefinition = {
   readonly ritualPlaceId: string
   readonly heaterId: string
   readonly heaterSpot: Spot
+  readonly tap: TapDefinition | null
   readonly vessels: readonly TableVessel[]
   readonly figurineIds: readonly string[]
   readonly caddyGrams: number

@@ -18,6 +18,8 @@ export type Command =
   | { readonly type: 'startPouring'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'adjustPour'; readonly tiltDegrees: number; readonly streamOnTargetFraction: number }
   | { readonly type: 'stopPouring' }
+  | { readonly type: 'startFillingFromTap'; readonly vesselId: string }
+  | { readonly type: 'stopFillingFromTap' }
   | { readonly type: 'scoopTea'; readonly depth: number }
   | { readonly type: 'tipSpoonInto'; readonly vesselId: string }
   | { readonly type: 'tasteCup'; readonly cupId: string }

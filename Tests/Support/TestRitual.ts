@@ -54,6 +54,14 @@ export class TestRitual {
     return events
   }
 
+  fillFromTap(vesselId: string, seconds: number): readonly RitualEvent[] {
+    return [
+      ...this.do({ type: 'startFillingFromTap', vesselId }),
+      ...this.wait(seconds),
+      ...this.do({ type: 'stopFillingFromTap' }),
+    ]
+  }
+
   addLeavesToKettle(grams: number): readonly RitualEvent[] {
     const events = [...this.do({ type: 'openVesselLid', vesselId: 'kettle' }), ...this.do({ type: 'openCaddy' })]
     let gramsLeftToAdd = grams

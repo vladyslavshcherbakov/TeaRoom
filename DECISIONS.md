@@ -32,6 +32,8 @@
 
 **Tasting is a Sip button.** In a close-up the keeper is hidden, so there is no face to lift the bowl to. The button appears only while the chosen hand holds a tea bowl with tea in it. The first sip scene of 0.6 replaces it.
 
+**The kettle's water comes from the tap at the counter, and the kettle starts empty.** Filling the kettle is the first step of a ritual. The keeper holds the kettle under the tap, so the vessel must be in a hand at the tap's place. Water that overflows runs into the sink and does not wet the table, because the table is where the ritual's spills count.
+
 **The heater's switch is its own target on the counter's front.** With the kettle on the plate, a tap on the plate lands on the kettle and lifts it. A separate switch keeps "take the kettle" and "switch the heater" apart, and gives the switch a touch target of its own.
 
 **The room begins the ritual with the first tea of the catalog.** Carrying needs the ritual phase, and the room has no tea choice yet. The room logs which tea it chose. It stays so until the room offers a choice of tea.

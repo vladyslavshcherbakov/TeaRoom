@@ -4,6 +4,7 @@ import type { HandIndex } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
 import { finishPour } from './PouringCommands.ts'
+import { finishFilling } from './TapCommands.ts'
 import { isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
@@ -12,6 +13,7 @@ export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
     return refuse(draft, command, 'unknownPlace', `places: ${room.places.join(', ')}`)
   }
   if (draft.state.pour !== null) finishPour(draft)
+  if (draft.state.filling !== null) finishFilling(draft, 'the keeper walked away')
   draft.state.keeper.placeId = command.placeId
   note(draft, command.placeId === null ? 'the keeper walks away' : `the keeper stands at the ${command.placeId}`)
   draft.events.push({ type: 'keeperMoved', placeId: command.placeId })

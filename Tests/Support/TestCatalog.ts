@@ -74,6 +74,7 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         ritualPlaceId: 'table',
         heaterId: 'testHeater',
         heaterSpot: onTheTable(0),
+        tap: { placeId: 'table', waterTemperatureC: 20, flowMlPerSecond: 100 },
         vessels: [
           { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: onTheTable(1) },
           { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0, startsAt: onTheTable(2) },
@@ -109,6 +110,7 @@ export function testHouseCatalog(): Catalog {
         keeperStartsAt: null,
         ritualPlaceId: 'table',
         heaterSpot: at('counter', 0),
+        tap: { placeId: 'counter', waterTemperatureC: 20, flowMlPerSecond: 100 },
         vessels: [
           { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: at('counter', 1) },
           { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 1) },
