@@ -79,3 +79,5 @@ CI runs `./test.sh` on every push and pull request.
 - Whether a separate teapot joins the MVP, or the kettle stays the brewing vessel. Owner: the user.
 - Where the kettle's water comes from. In 0.1 it starts filled. Owner: the user.
 - Whether the bench stays published after 1.0. Owner: the user.
+- Whether the room's look, camera and furniture layout at `/room/` are approved. The next step, hands and places in the simulation, waits for it. Owner: the user.
+- Whether the site's root shows the room before the table ritual moves into it. Owner: the user.
