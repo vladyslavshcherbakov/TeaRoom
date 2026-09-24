@@ -6,7 +6,6 @@ import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { tableViewState } from '../Table/TablePresenter.ts'
-import { remarkText, tasteCardLines } from '../Table/TableTexts.ts'
 import {
   cameraFieldOfViewDegrees,
   closeUpPose,
@@ -20,7 +19,7 @@ import { CameraZoom } from './Camera/CameraZoom.ts'
 import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type ShapedItem } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
-import { offeringResponseText } from './RoomTexts.ts'
+import { captionLinesFor } from './RoomTexts.ts'
 import { CarriedItems, heldInViewLayer, untappableRoomLayer } from './Views/CarriedItems.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
@@ -152,7 +151,7 @@ export class RoomScene {
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
-    this.caption.show(captionLinesOf(events))
+    this.caption.show(captionLinesFor(events))
     return events
   }
 
@@ -303,24 +302,6 @@ function shapedItemsIn(state: DeepReadonly<SessionState>, log: RoomLog): ShapedI
     const shape = carriedShapeOf(state, itemId)
     return shape === undefined ? [] : [{ itemId, shape }]
   })
-}
-
-function captionLinesOf(events: readonly RitualEvent[]): readonly string[] {
-  const isAnOffering = events.some((event) => event.type === 'figurineAcceptedTea')
-  return events.flatMap((event) => (event.type === 'godsMoodChanged' && !isAnOffering ? [] : captionLinesOfOne(event)))
-}
-
-function captionLinesOfOne(event: RitualEvent): readonly string[] {
-  switch (event.type) {
-    case 'teaTasted':
-      return tasteCardLines(event.verdict)
-    case 'figurineAcceptedTea':
-      return [offeringResponseText(event.figurineId, event.response)]
-    case 'godsMoodChanged':
-      return [remarkText(event.remark)]
-    default:
-      return []
-  }
 }
 
 function tapTargetTagOf(object: THREE.Object3D): TapTargetTag | undefined {
