@@ -13,6 +13,7 @@ const pulsesPerSecond = 0.2
 const pulseShareOfTheSize = 0.03
 const dimmingAtThePulseLow = 0.2
 const glowColour = [255, 236, 170] as const
+const falloffSteepness = 2.5
 
 export class ChosenGlow {
   private readonly material: THREE.MeshBasicMaterial
@@ -54,7 +55,7 @@ function glowPixels(): Uint8Array {
   for (let row = 0; row < textureSize; row += 1) {
     for (let column = 0; column < textureSize; column += 1) {
       const shareOfTheRadius = Math.min(1, Math.hypot(column + 0.5 - centre, row + 0.5 - centre) / centre)
-      const softFalloff = Math.exp(-2.5 * shareOfTheRadius * shareOfTheRadius) * (1 - shareOfTheRadius)
+      const softFalloff = Math.exp(-falloffSteepness * shareOfTheRadius * shareOfTheRadius) * (1 - shareOfTheRadius)
       const index = (row * textureSize + column) * 4
       pixels.set([red, green, blue, Math.round(255 * peakOpacity * softFalloff)], index)
     }

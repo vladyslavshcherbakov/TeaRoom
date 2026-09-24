@@ -20,6 +20,7 @@ const heldInViewShareOfScreenHeightFromBottom = 0.07
 const chosenHeldLiftShareOfScreenHeight = 0.05
 const heldInViewTiltTowardsCameraRadians = 0.55
 const heldInViewInsetShareOfItemWidth = 0.8
+const touchAreaCentreShareOfItsHeight = 0.4
 
 export function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView): void {
   const { camera } = heldInView
@@ -43,6 +44,6 @@ export function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex): H
     screenHeight,
     itemWidth,
     baseInCamera: new THREE.Vector3(x, bottom, -heldInViewDistanceMetres),
-    centreInCamera: new THREE.Vector3(x, bottom + screenHeight * handTouchAreaShareOfScreenHeight * 0.4, -heldInViewDistanceMetres),
+    centreInCamera: new THREE.Vector3(x, bottom + screenHeight * handTouchAreaShareOfScreenHeight * touchAreaCentreShareOfItsHeight, -heldInViewDistanceMetres),
   }
 }

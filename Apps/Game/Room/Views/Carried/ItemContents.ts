@@ -22,6 +22,9 @@ const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const steamStartsAboveTheOpeningMetres = 0.04
 const steamStartsAboveTheSpoutMetres = 0.02
+const smallestPuffScale = 0.6
+const tiltAcrossPaceShareOfTheRise = 0.8
+const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
 const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14 }
 const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01 }
@@ -54,7 +57,7 @@ function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], 
     if (!puff.visible || source === undefined) return
     const rise = (timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
     puff.position.set(source.x, source.y + rise * steamColumnMetres, source.z)
-    puff.scale.setScalar(0.6 + rise)
+    puff.scale.setScalar(smallestPuffScale + rise)
   })
 }
 
@@ -86,8 +89,8 @@ function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave
   const phase = timeSeconds * wavesPerSecond * Math.PI * 2
   return {
     riseMetres: Math.sin(phase) * heightMetres,
-    tiltXRadians: Math.sin(phase * 0.8) * tiltRadians,
-    tiltZRadians: Math.cos(phase * 1.3) * tiltRadians,
+    tiltXRadians: Math.sin(phase * tiltAcrossPaceShareOfTheRise) * tiltRadians,
+    tiltZRadians: Math.cos(phase * tiltAlongPaceShareOfTheRise) * tiltRadians,
   }
 }
 
