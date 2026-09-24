@@ -7,6 +7,7 @@ import type { AimedPourView } from '../AimedPour.ts'
 import { faucetSpout, footprintRadiusMetres, type CarriedShape, type ShapedItem, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { teaLookFor } from '../../Table/TeaLooks.ts'
+import { FallingStream } from './FallingStream.ts'
 import { LeafPile, type LeafPileSize } from './LeafPile.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
@@ -17,6 +18,7 @@ const handForwardMetres = 0.14
 const spoutAboveTargetRimMetres = 0.1
 const smallestVisibleTiltDegrees = 10
 const streamRadiusMetres = 0.007
+const pourStreamEndsAboveTheTargetMetres = 0.01
 const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const openLidSideMetres = 0.16
@@ -134,8 +136,8 @@ export class CarriedItems {
   private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
   private readonly models: CarriedModel[]
-  private readonly stream: THREE.Mesh
-  private readonly tapStream: THREE.Mesh
+  private readonly pourStream: FallingStream
+  private readonly tapStream: FallingStream
   private readonly overflowStream: THREE.Mesh
   private readonly overflowPathByShape = new Map<CarriedShape, THREE.BufferGeometry>()
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
@@ -151,13 +153,11 @@ export class CarriedItems {
     this.claySeenFromInside = clay
     this.models = items.map(({ itemId, shape }) => this.modelOf(itemId, shape))
     this.streamMaterial = new THREE.MeshStandardMaterial({ color: '#dfe7ea', transparent: true, opacity: 0.85 })
-    this.stream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.streamMaterial)
-    this.stream.visible = false
-    this.tapStream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.materials.unsharedMaterialFor('tapWater'))
-    this.tapStream.visible = false
+    this.pourStream = new FallingStream(streamRadiusMetres, this.streamMaterial)
+    this.tapStream = new FallingStream(streamRadiusMetres, this.materials.unsharedMaterialFor('tapWater'))
     this.overflowStream = new THREE.Mesh(new THREE.BufferGeometry(), this.materials.unsharedMaterialFor('tapWater'))
     this.overflowStream.visible = false
-    this.root.add(this.stream, this.tapStream, this.overflowStream)
+    this.root.add(this.pourStream.mesh, this.tapStream.mesh, this.overflowStream)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
     this.root.add(this.chosenGlow)
   }
@@ -283,14 +283,10 @@ export class CarriedItems {
     const pour = scene.state.pour
     const source = this.models.find((model) => model.itemId === pour?.sourceId)
     const target = this.models.find((model) => model.itemId === pour?.targetId)
-    const isStreamShown = pour !== null && pour.tiltDegrees >= smallestVisibleTiltDegrees
-    this.stream.visible = isStreamShown && source !== undefined && target !== undefined
-    if (!this.stream.visible || source === undefined || target === undefined) return
+    const isStreamShown = pour !== null && pour.tiltDegrees >= smallestVisibleTiltDegrees && source !== undefined && target !== undefined
+    if (!isStreamShown || source === undefined || target === undefined) return this.pourStream.show(null, scene.timeSeconds)
     const top = source.root.localToWorld(source.spoutTip.clone())
-    const bottomY = target.root.position.y + 0.01
-    const length = Math.max(0.01, top.y - bottomY)
-    this.stream.position.set(top.x, bottomY + length / 2, top.z)
-    this.stream.scale.set(1, length, 1)
+    this.pourStream.show({ top, bottomY: target.root.position.y + pourStreamEndsAboveTheTargetMetres }, scene.timeSeconds)
     const pouredColour = scene.table.vessels[source.itemId]?.liquorColour
     if (pouredColour !== undefined) this.streamMaterial.color.set(pouredColour)
   }
@@ -310,12 +306,11 @@ export class CarriedItems {
 
   private showTapWater(scene: CarriedItemsScene): void {
     const filled = this.models.find((model) => model.itemId === scene.state.filling?.vesselId)
-    this.tapStream.visible = filled !== undefined
     const isRunningOverTheLid = scene.state.filling?.isRunningOverTheLid === true
     this.overflowStream.visible = filled !== undefined && scene.state.filling?.hasOverflowed === true && !isRunningOverTheLid
-    if (filled === undefined) return
+    if (filled === undefined) return this.tapStream.show(null, scene.timeSeconds)
     const bottomY = filled.root.position.y + filled.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
-    placeStream(this.tapStream, faucetSpout, bottomY)
+    this.tapStream.show({ top: new THREE.Vector3(faucetSpout.x, faucetSpout.y, faucetSpout.z), bottomY }, scene.timeSeconds)
     this.overflowStream.geometry = this.overflowPathOf(filled)
     this.overflowStream.position.copy(filled.root.position)
     this.overflowStream.quaternion.copy(filled.root.quaternion)
@@ -507,12 +502,6 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
   model.liquidMaterial.color.set(vessel.liquorColour)
 }
 
-
-function placeStream(stream: THREE.Mesh, top: { x: number; y: number; z: number }, bottomY: number): void {
-  const length = Math.max(0.01, top.y - bottomY)
-  stream.position.set(top.x, bottomY + length / 2, top.z)
-  stream.scale.set(1, length, 1)
-}
 
 function pointsDownTheKettle(): { distance: number; height: number }[] {
   return Array.from({ length: overflowPointsOnTheKettle + 1 }, (_, index) => {
