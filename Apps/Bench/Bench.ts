@@ -2,6 +2,7 @@ import { defaultCatalog } from '../../Shared/Content/DefaultCatalog.ts'
 import type { TimeOfDay, Weather } from '../../Shared/Simulation/Definitions/Atmosphere.ts'
 import { definitionIn } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Command } from '../../Shared/Simulation/Ritual/Command.ts'
+import { carriedItemIdsIn } from '../../Shared/Simulation/Ritual/Reach.ts'
 import type { LogLevel } from '../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { BenchLog } from './BenchLog.ts'
@@ -59,7 +60,7 @@ class RitualBench {
   }
 
   private keeperSection(): HTMLElement {
-    const itemIds = [...this.room.vessels.map((vessel) => vessel.id), 'caddy', 'spoon', 'cloth']
+    const itemIds = carriedItemIdsIn(this.session.state)
     return section(
       'Keeper',
       row(this.live(() => this.keeperSummary())),
