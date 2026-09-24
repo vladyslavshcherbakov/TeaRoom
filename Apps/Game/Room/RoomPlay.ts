@@ -1,5 +1,6 @@
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
 import { caddyItemId, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
@@ -82,7 +83,7 @@ export class RoomPlay {
   get sippableCupId(): string | null {
     const itemId = this.chosenItemId()
     const vessel = itemId === null ? undefined : this.ritual.state.vessels[itemId]
-    if (vessel === undefined || vessel.liquid.volumeMl <= 0) return null
+    if (vessel === undefined || isEmpty(vessel.liquid)) return null
     return definitionIn(this.catalog, 'vessels', vessel.definitionId).isDrinkable ? vessel.id : null
   }
 
@@ -229,7 +230,7 @@ export class RoomPlay {
     const sourceId = this.chosenItemId()
     const target = this.ritual.state.vessels[targetId]
     const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
-    const hasSomethingToPour = source !== undefined && source.liquid.volumeMl > 0
+    const hasSomethingToPour = source !== undefined && !isEmpty(source.liquid)
     return hasSomethingToPour && sourceId !== targetId && target?.location.kind === 'onSurface'
   }
 
