@@ -1,0 +1,64 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
+import { problemsOpeningRoom } from '../../Shared/Simulation/Definitions/CatalogProblems.ts'
+import { testCatalog } from '../Support/TestCatalog.ts'
+
+function catalogWithRoomChanges(changes: Partial<Catalog['rooms'][string]>): Catalog {
+  const catalog = testCatalog()
+  const room = catalog.rooms.testRoom
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  return { ...catalog, rooms: { testRoom: { ...room, ...changes } } }
+}
+
+test('contentProblems_whenTheRoomIsMissing_nameTheRoom', () => {
+  assert.deepEqual(problemsOpeningRoom(testCatalog(), 'attic'), ['room "attic" is not in the catalog'])
+})
+
+test('contentProblems_whenTheRoomNamesAnUnknownHeater_nameTheHeater', () => {
+  const catalog = catalogWithRoomChanges({ heaterId: 'campfire' })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" uses unknown heater "campfire"'])
+})
+
+test('contentProblems_whenTheRoomOffersNoWeather_sayWhatIsMissing', () => {
+  const catalog = catalogWithRoomChanges({ weathers: [] })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" offers no weather'])
+})
+
+test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
+  const catalog = catalogWithRoomChanges({
+    vessels: [
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
+    ],
+  })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" repeats vessel id "cup1"'])
+})
+
+test('contentProblems_whenAFigurineLikesAnUnknownTea_nameTheFigurineAndTea', () => {
+  const catalog = testCatalog()
+  const brokenCatalog: Catalog = {
+    ...catalog,
+    figurines: { ...catalog.figurines, monk: { id: 'monk', affinityByTeaId: { matcha: 2 }, preferredStrength: { lowest: 40, highest: 60 } } },
+  }
+
+  assert.deepEqual(problemsOpeningRoom(brokenCatalog, 'testRoom'), ['figurine "monk" likes unknown tea "matcha"'])
+})
+
+test('contentProblems_whenATeasGoodRangeLeavesItsAcceptableRange_nameTheTea', () => {
+  const catalog = testCatalog()
+  const tea = catalog.teas.testGreen
+  if (tea === undefined) throw new Error('the test catalog lost its tea')
+  const brokenCatalog: Catalog = {
+    ...catalog,
+    teas: { testGreen: { ...tea, water: { ...tea.water, good: { lowestC: 65, highestC: 85 } } } },
+  }
+
+  assert.deepEqual(problemsOpeningRoom(brokenCatalog, 'testRoom'), [
+    'tea "testGreen" water ranges are not nested around its ideal 80 °C',
+  ])
+})

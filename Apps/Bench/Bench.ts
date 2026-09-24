@@ -17,7 +17,7 @@ class RitualBench {
   private readonly room = definitionIn(defaultCatalog, 'rooms', roomId)
   private readonly liveReadouts = new Map<HTMLElement, Readout>()
   private readonly log = new BenchLog(visibleLogLines)
-  private session = new RitualSession(defaultCatalog, roomId, this.log)
+  private session = this.openRoom()
   private timeScale = 1
   private lastFrameMs: number | null = null
   private teaId = Object.keys(defaultCatalog.teas)[0] ?? ''
@@ -203,7 +203,13 @@ class RitualBench {
 
   private restart(): void {
     this.log.clear()
-    this.session = new RitualSession(defaultCatalog, roomId, this.log)
+    this.session = this.openRoom()
+  }
+
+  private openRoom(): RitualSession {
+    const opening = RitualSession.open(defaultCatalog, roomId, this.log, true)
+    if (opening.kind !== 'opened') throw new Error(`the bench room is unavailable: ${opening.problems.join('; ')}`)
+    return opening.session
   }
 
   private sessionSummary(): string {

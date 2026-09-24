@@ -1,4 +1,4 @@
-export type LogLevel = 'debug' | 'info'
+export type LogLevel = 'debug' | 'info' | 'error'
 
 export type LogLine = {
   readonly level: LogLevel

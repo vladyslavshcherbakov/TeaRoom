@@ -15,7 +15,9 @@ export class TestRitual {
   readonly session: RitualSession
 
   constructor(catalog: Catalog = testCatalog(), roomId = 'testRoom') {
-    this.session = new RitualSession(catalog, roomId, this.log)
+    const opening = RitualSession.open(catalog, roomId, this.log, true)
+    if (opening.kind !== 'opened') throw new Error(`test room "${roomId}" is unavailable: ${opening.problems.join('; ')}`)
+    this.session = opening.session
   }
 
   static begun(catalog: Catalog = testCatalog(), teaId = 'testGreen', roomId = 'testRoom'): TestRitual {
