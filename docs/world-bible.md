@@ -258,6 +258,16 @@ In gongfu brewing, the same leaves are steeped many times. Real behaviour, and o
 - **Line.** The keeper tastes it and says: "Somehow the tea is cold. I wonder why."
 - **Never told.** That the kettle was never switched on.
 
+### Tea forgotten for a week
+
+- **Verb.** The player leaves leaves steeping in the kettle and does not come back to the room for days.
+- **Trace.** On return, the liquor in the kettle is almost black.
+- **Cause.** The leaves kept steeping in real time while the player was away. The idea is borrowed from the old sniper in Metal Gear Solid 3, who dies of old age if the player saves during the fight and comes back a week later.
+- **Memory.** The time the player left, and what was steeping.
+- **Consequence.** None beyond the bowl of black tea. The kettle is poured out and washed like any other.
+- **Line.** The keeper tastes it: "This tea waited a week for me. It shows."
+- **Never told.** That the room kept time while the player was gone.
+
 ### Teas that improve with age
 
 Only teas that really get better with age change over real time: pu-erh cakes, aged white tea, some roasted oolongs. A cake kept for weeks tastes deeper, and its liquor turns a shade darker. Nothing else goes stale.
@@ -306,6 +316,8 @@ The game hints with dry text during the sip:
 - Much later, a jar of kintsugi lacquer appears. Maybe a guest brings it. Maybe it was always in a drawer of the previous owner.
 - Applying the lacquer to the shards starts a slow repair: a mini-game of placing the pieces and tracing the gold seams. It can also start when the player simply brings the jar to the shards.
 - The repaired bowl is more beautiful than before and becomes a favourite of one particular guest.
+- A repaired bowl can break again. It does not have to break along the old gold seams. Each time it breaks into more shards than before, and each repair takes longer and leaves more gold.
+- After many breaks, the next one is the last. The shards can no longer be joined, and the game says: "This bowl has been broken too many times. Chōjirō made it more than four hundred years ago. There will never be another one like it."
 
 ### Marks of use
 
