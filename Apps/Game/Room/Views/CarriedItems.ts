@@ -32,11 +32,14 @@ const heldInViewTiltTowardsCameraRadians = 0.55
 const heldInViewInsetShareOfItemWidth = 0.8
 const handTouchAreaShareOfScreenWidth = 0.42
 const handTouchAreaShareOfScreenHeight = 0.2
-const chosenGlowShareOfItemWidth = 1.5
+const chosenGlowShareOfItemWidth = 1.35
+const chosenGlowTextureSize = 256
+const chosenGlowPeakOpacity = 0.7
+const chosenGlowGradientStops = 24
 const chosenGlowBehindMetres = 0.08
 const chosenGlowAboveTheBaseShareOfItemWidth = 0.2
-const chosenGlowPulsesPerSecond = 0.8
-const chosenGlowPulseShare = 0.06
+const chosenGlowPulsesPerSecond = 0.5
+const chosenGlowPulseShare = 0.025
 const chosenGlowColour = '255, 236, 170'
 const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
@@ -508,18 +511,23 @@ function moveToLayer(model: CarriedModel, isHeldInView: boolean): void {
 
 function newChosenGlow(): THREE.Mesh {
   const canvas = document.createElement('canvas')
-  canvas.width = 128
-  canvas.height = 128
+  canvas.width = chosenGlowTextureSize
+  canvas.height = chosenGlowTextureSize
   const context = canvas.getContext('2d')
+  const centre = chosenGlowTextureSize / 2
   if (context !== null) {
-    const gradient = context.createRadialGradient(64, 64, 0, 64, 64, 64)
-    gradient.addColorStop(0, `rgba(${chosenGlowColour}, 0.95)`)
-    gradient.addColorStop(0.55, `rgba(${chosenGlowColour}, 0.55)`)
-    gradient.addColorStop(1, `rgba(${chosenGlowColour}, 0)`)
+    const gradient = context.createRadialGradient(centre, centre, 0, centre, centre, centre)
+    for (let stop = 0; stop <= chosenGlowGradientStops; stop += 1) {
+      const share = stop / chosenGlowGradientStops
+      const softFalloff = Math.exp(-2.5 * share * share) * (1 - share)
+      gradient.addColorStop(share, `rgba(${chosenGlowColour}, ${(chosenGlowPeakOpacity * softFalloff).toFixed(3)})`)
+    }
     context.fillStyle = gradient
-    context.fillRect(0, 0, 128, 128)
+    context.fillRect(0, 0, chosenGlowTextureSize, chosenGlowTextureSize)
   }
-  const material = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true, depthWrite: false })
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false })
   const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material)
   glow.layers.set(heldInViewLayer)
   glow.visible = false
