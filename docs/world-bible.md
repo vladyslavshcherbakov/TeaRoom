@@ -292,6 +292,34 @@ The game hints with dry text during the sip:
 - **Visiting animals.** The sparrow, the toad from the garden in the rain, a moth at the lamp at night.
 - Pets remember habits: where the keeper sits, when the ritual happens, who was petted last.
 
+### The aquarium
+
+- A small aquarium with a few fish. They drift, gather at the glass when the keeper comes close, and scatter at a tap on the glass.
+- The keeper can try to pour tea into it. The fish do not drink it, but a line reports their opinion, read from the same taste verdict as the keeper's sip:
+  - "The fish ask to pass on that the tea was lovely."
+  - "The fish say it is a little bitter. They are polite about it."
+  - "The fish say it was far too hot. They have moved to the other side."
+  - "The fish say the tea went cold. They expected more of you."
+- The water turns faintly amber for a day and clears again. Nothing else happens. The fish are fine.
+
+### The bird who lived in a cage
+
+- A story may start with a small bird in a cage, left by the previous owner. It sings in the morning.
+- The keeper can open the cage and let it go, for good. There is no way to call it back.
+- Sometimes, days or weeks later, it returns to the sill and tells, in one or two lines, where it has been: "It has seen the sea turn green at dawn." "It spent the winter somewhere with oranges." "It met a heron who does not like tea."
+- Sometimes it brings friends: a pair of swallows, a jay, once a very confused parrot. They sit on the sill for a while and leave.
+- If the cage is kept closed, the bird stays, sings and is content. Neither choice is wrong. They are two different stories.
+
+### Animals at the door
+
+- Now and then a larger animal comes to the house: a bear at the edge of the veranda, a deer in the garden at dusk, a fox on the step.
+- The keeper can offer it tea in a bowl. Then one of three things happens:
+  - It drinks and leaves. "The bear finished the tea and went back to the woods. It seemed grateful."
+  - It drinks and stays. "The bear says it only came to sit with you. But thank you for the tea." It sits on the veranda until the end of the ritual.
+  - It does not drink. "The bear did not want tea. It says it came just because." It stays a moment and goes.
+- Animals are never a danger. Offering tea is never required, and ignoring them is also a story: the bear looks in the window once and leaves.
+- The animals remember. A bear that got good tea comes back on another rainy evening, and one day leaves a honeycomb on the step.
+
 ## Guests
 
 - A small cast of guests, each with a memory of their visits.
@@ -349,6 +377,8 @@ Lines the game may show. Each one is small, dry and appears rarely.
 - "It is snowing. The tea tastes warmer."
 - "Of course he knew this was a tea game. He looked anyway."
 - "GAME OVER, COFFEE LOVER." Button: "We'll see about that."
+- "The fish ask to pass on that the tea was lovely."
+- "The bear says it only came to sit with you. But thank you for the tea."
 
 ## Secrets and their conditions
 
@@ -364,6 +394,8 @@ Each row is one secret. The condition is hidden state. The trace is what the pla
 | A long absence from the room | The plant droops, the cat is cool towards the keeper for a day. | The house noticed. |
 | The same tea brewed in one clay pot for weeks | The pot darkens inside, and that tea tastes rounder. | The pot is seasoned. |
 | A bowl broken and kept in the bin | Weeks later, the kintsugi jar is in the drawer. | A guest left it after seeing the shards. |
+| The caged bird released | Weeks later it returns with a story, sometimes with friends. | It remembers who opened the cage. |
+| A bear given good tea | It returns on another rainy evening and leaves a honeycomb. | It liked the tea and the company. |
 | The previous owner's notebook read on several days | A page that was stuck together comes loose. | The paper dried out. Or not. |
 
 ## Ideas not yet placed
