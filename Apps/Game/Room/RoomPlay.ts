@@ -53,19 +53,24 @@ const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
 
+export type RoomRemark = { readonly kind: 'sillIsTheRoomsOwn'; readonly timesTapped: number }
+
 export class RoomPlay {
   private readonly ritual: RitualPort
   private readonly catalog: Catalog
   private readonly log: RoomLog
+  private readonly remark: (remark: RoomRemark) => void
   private readonly navigator: RoomNavigator
   private choice: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
+  private sillTapsFromAfar = 0
 
-  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog) {
+  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, remark: (remark: RoomRemark) => void) {
     this.ritual = ritual
     this.catalog = catalog
     this.log = log
+    this.remark = remark
     this.navigator = new RoomNavigator(log, (furnitureId) => this.keeperMovedTo(furnitureId))
   }
 
@@ -180,10 +185,16 @@ export class RoomPlay {
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
-    if (target.kind === 'figurine' && closeUpFurnitureId !== this.ritualFurnitureId()) return this.log(`tap on ${target.figurineId} does nothing: it stands on the sill, and offerings are made from the close-up of the ritual place`)
+    if (target.kind === 'figurine' && closeUpFurnitureId !== this.ritualFurnitureId()) return this.keepTheSillForTheRoom(target.figurineId)
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)
     this.actAtCloseUp(target)
+  }
+
+  private keepTheSillForTheRoom(figurineId: string): void {
+    this.sillTapsFromAfar += 1
+    this.log(`tap on ${figurineId} from afar leaves the keeper in place: it stands on the sill, tapped from afar ${this.sillTapsFromAfar} times`)
+    this.remark({ kind: 'sillIsTheRoomsOwn', timesTapped: this.sillTapsFromAfar })
   }
 
   private navigate(target: RoomTapTarget, targetFurnitureId: FurnitureId | null): void {

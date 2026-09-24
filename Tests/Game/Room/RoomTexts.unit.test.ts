@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { captionLinesFor } from '../../../Apps/Game/Room/RoomTexts.ts'
+import { captionLinesFor, roomRemarkLine } from '../../../Apps/Game/Room/RoomTexts.ts'
 
 test('caption_ofAnOffering_namesTheFigurineAndThenTheGods', () => {
   const lines = captionLinesFor([
@@ -26,6 +26,14 @@ test('caption_ofABurntClothWashedBackToNew_marvelsAtTheWorld', () => {
 
   assert.equal(lines.length, 1)
   assert.ok(burntClothLines.includes(lines[0] ?? ''), lines.join(' / '))
+})
+
+test('remark_ofTheSillTappedTwice_changesItsLine', () => {
+  const firstLine = roomRemarkLine({ kind: 'sillIsTheRoomsOwn', timesTapped: 1 }, 7)
+
+  const secondLine = roomRemarkLine({ kind: 'sillIsTheRoomsOwn', timesTapped: 2 }, 7)
+
+  assert.notEqual(secondLine, firstLine)
 })
 
 const burntClothLines = [

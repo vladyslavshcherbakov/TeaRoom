@@ -18,7 +18,7 @@ import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type ShapedItem } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
-import { captionLinesFor } from './RoomTexts.ts'
+import { captionLinesFor, roomRemarkLine } from './RoomTexts.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
@@ -70,7 +70,7 @@ export class RoomScene {
       },
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
-    this.play = new RoomPlay(ritual, catalog, log)
+    this.play = new RoomPlay(ritual, catalog, log, (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]))
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials()
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)

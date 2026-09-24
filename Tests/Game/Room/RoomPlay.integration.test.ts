@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FloorPoint, FurnitureId, WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
-import { RoomPlay, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
+import { RoomPlay, type RoomRemark, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { assertNear } from '../../Support/Assertions.ts'
@@ -377,6 +377,19 @@ test('figurine_whenTappedAwayFromTheTeaTable_leavesTheKeeperWhereTheyStand', () 
   assert.deepEqual(room.play.view, { kind: 'closeUp', furnitureId: 'counter' })
 })
 
+test('sill_whenItsFigurinesAreTappedFromAfar_isKeptByTheRoomWithADifferentLineEachTime', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+
+  room.tap({ kind: 'figurine', figurineId: 'dragon' })
+  room.tap({ kind: 'figurine', figurineId: 'toad' })
+
+  assert.deepEqual(room.remarks, [
+    { kind: 'sillIsTheRoomsOwn', timesTapped: 1 },
+    { kind: 'sillIsTheRoomsOwn', timesTapped: 2 },
+  ])
+})
+
 test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAllOver', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
@@ -522,7 +535,8 @@ test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable',
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message))
+  readonly remarks: RoomRemark[] = []
+  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), (remark) => this.remarks.push(remark))
 
   get session() {
     return this.ritual.session

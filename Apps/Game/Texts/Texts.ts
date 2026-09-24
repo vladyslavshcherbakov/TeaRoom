@@ -24,6 +24,10 @@ export function phraseVariantFor(phrase: string, voiceSeed: number): PhraseVaria
   return ((((hash >>> 0) % phraseVariants) + 1) as PhraseVariant)
 }
 
+export function phraseVariantAtTurn(phrase: string, voiceSeed: number, turn: number): PhraseVariant {
+  return ((((phraseVariantFor(phrase, voiceSeed) - 1 + turn - 1) % phraseVariants) + 1) as PhraseVariant)
+}
+
 function isTextKey(key: string): key is TextKey {
   return key in englishTexts
 }
