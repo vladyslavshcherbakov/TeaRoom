@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
@@ -32,6 +33,7 @@ const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
 const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
+const reflectionsBlurSigma = 0.04
 
 export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
@@ -72,7 +74,7 @@ export class RoomScene {
     }
     this.play = new RoomPlay(ritual, catalog, log, (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]))
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
-    const materials = new RoomMaterials()
+    const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer))
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
@@ -241,6 +243,13 @@ function newRaycasterSeeingEveryLayer(): THREE.Raycaster {
   raycaster.layers.enableAll()
   raycaster.layers.disable(roomLayers.untappableRoom)
   return raycaster
+}
+
+function reflectionsOfTheRoom(renderer: THREE.WebGLRenderer): THREE.Texture {
+  const generator = new THREE.PMREMGenerator(renderer)
+  const reflections = generator.fromScene(new RoomEnvironment(), reflectionsBlurSigma).texture
+  generator.dispose()
+  return reflections
 }
 
 function lights(): THREE.Light[] {

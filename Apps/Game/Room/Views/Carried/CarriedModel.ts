@@ -61,6 +61,12 @@ const paintingAboveTheGlazeMetres = 0.0004
 const paintingSegmentsAlong = 48
 const fewestPaintingSegmentsAcross = 8
 const bowlSegmentsAround = 64
+const flutedBowlSegmentsAround = 160
+const flutesAround = 16
+const fluteDepthShare = 0.025
+const flutesStartAboveTheFootMetres = 0.008
+const flutesFullAboveTheFootMetres = 0.02
+const flutedBowls: ReadonlySet<string> = new Set(['bowl5'])
 const bowlWallProfilePoints = 32
 const bowlInsideProfile = new THREE.SplineCurve([
   new THREE.Vector2(0, 0.009),
@@ -93,8 +99,8 @@ const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
   bowl2: 'pearlGlaze',
   bowl3: 'skyBlueGlaze',
-  bowl4: 'blueGlaze',
-  bowl5: 'yellowGlaze',
+  bowl4: 'temperGlaze',
+  bowl5: 'flutedGlass',
   bowl6: 'emeraldGlaze',
 }
 
@@ -182,7 +188,7 @@ function partsOf(shape: CarriedShape, itemId: string, materials: CarriedModelMat
     case 'caddy':
       return caddyParts(materials.room)
     case 'bowl':
-      return bowlParts(materials.room, glazeByBowlId[itemId] ?? 'porcelain', paintingOnTheBottomByBowlId[itemId])
+      return bowlParts(materials.room, glazeByBowlId[itemId] ?? 'porcelain', paintingOnTheBottomByBowlId[itemId], flutedBowls.has(itemId))
     case 'spoon':
       return spoonParts(materials.room)
     case 'cloth':
@@ -250,13 +256,30 @@ function clothParts(clothMaterial: THREE.Material): ItemParts {
   return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(clothLengthMetres / 2, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
 }
 
-function bowlParts(materials: RoomMaterials, glaze: Surface, painting: BottomPainting | undefined): ItemParts {
+function bowlParts(materials: RoomMaterials, glaze: Surface, painting: BottomPainting | undefined, isFluted: boolean): ItemParts {
   const glazed = materials.unsharedMaterialFor(glaze)
   glazed.side = THREE.DoubleSide
-  const body = new THREE.Mesh(new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround), glazed)
+  const body = new THREE.Mesh(isFluted ? flutedBowlGeometry() : new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround), glazed)
   const meshes: THREE.Object3D[] = [body]
   if (painting !== undefined) meshes.push(paintedOnTheBottom(materials, painting))
   return { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
+}
+
+function flutedBowlGeometry(): THREE.BufferGeometry {
+  const geometry = new THREE.LatheGeometry(bowlProfile, flutedBowlSegmentsAround)
+  const position = geometry.getAttribute('position')
+  for (let index = 0; index < position.count; index += 1) {
+    const x = position.getX(index)
+    const z = position.getZ(index)
+    const flute = 1 + fluteDepthShare * Math.cos(flutesAround * Math.atan2(z, x)) * fluteShareAt(position.getY(index))
+    position.setXYZ(index, x * flute, position.getY(index), z * flute)
+  }
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+function fluteShareAt(height: number): number {
+  return THREE.MathUtils.smoothstep(height, flutesStartAboveTheFootMetres, flutesFullAboveTheFootMetres)
 }
 
 function paintedOnTheBottom(materials: RoomMaterials, painting: BottomPainting): THREE.Mesh {

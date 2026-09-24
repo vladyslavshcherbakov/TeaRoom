@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { weaveCloth } from './ClothWeave.ts'
 import { paintKoi } from './KoiPainting.ts'
 import { paintLotus } from './LotusPainting.ts'
+import { paintTemperBands } from './TemperBands.ts'
 
 export type Surface =
   | 'floor'
@@ -42,6 +43,8 @@ export type Surface =
   | 'blueGlaze'
   | 'yellowGlaze'
   | 'emeraldGlaze'
+  | 'temperGlaze'
+  | 'flutedGlass'
   | 'koiPainting'
   | 'lotusPainting'
 
@@ -84,6 +87,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   blueGlaze: '#2f5ea8',
   yellowGlaze: '#f1cd55',
   emeraldGlaze: '#1f8a68',
+  temperGlaze: '#7a6650',
+  flutedGlass: '#ffffff',
   koiPainting: '#ffffff',
   lotusPainting: '#ffffff',
 }
@@ -99,6 +104,11 @@ const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
 
 export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
+  private readonly reflections: THREE.Texture | null
+
+  constructor(reflections: THREE.Texture | null) {
+    this.reflections = reflections
+  }
 
   materialFor(surface: Surface): THREE.Material {
     const existing = this.materialsBySurface.get(surface)
@@ -117,6 +127,8 @@ export class RoomMaterials {
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
     if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
     if (surface === 'flame' || surface === 'flameCore') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+    if (surface === 'temperGlaze') return this.temperGlazeMaterial(color)
+    if (surface === 'flutedGlass') return this.glassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'cloth') return wovenClothMaterial()
@@ -125,6 +137,38 @@ export class RoomMaterials {
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
     if (glazedSurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
     return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+  }
+
+  private temperGlazeMaterial(color: string): THREE.MeshPhysicalMaterial {
+    const thicknessMap = new THREE.CanvasTexture(paintTemperBands())
+    return new THREE.MeshPhysicalMaterial({
+      color,
+      metalness: 0.85,
+      roughness: 0.2,
+      clearcoat: 0.6,
+      iridescence: 1,
+      iridescenceIOR: 1.9,
+      iridescenceThicknessRange: [140, 780],
+      iridescenceThicknessMap: thicknessMap,
+      envMap: this.reflections,
+      envMapIntensity: 1.3,
+    })
+  }
+
+  private glassMaterial(color: string): THREE.MeshPhysicalMaterial {
+    return new THREE.MeshPhysicalMaterial({
+      color,
+      metalness: 0,
+      roughness: 0.04,
+      transmission: 1,
+      ior: 1.5,
+      thickness: 0.004,
+      attenuationColor: '#e4f3ea',
+      attenuationDistance: 0.25,
+      specularIntensity: 1,
+      envMap: this.reflections,
+      envMapIntensity: 1,
+    })
   }
 }
 
