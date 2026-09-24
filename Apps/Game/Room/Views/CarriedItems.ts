@@ -56,10 +56,9 @@ const waterInGaugeColour = '#3f8fc4'
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
 const overflowSideFromTheGaugeRadians = 0.7
 const overflowAboveTheSurfaceMetres = 0.005
-const overflowLeavesTheKettleAtRadians = 2.2
+const overflowLeavesTheKettleAtRadians = 2.4
 const overflowPointsOnTheKettle = 12
 const overflowStreamRadiusMetres = 0.009
-const faucetSpoutAboveTheSinkMetres = 0.3
 const kettleBodyRadiusMetres = 0.14
 const kettleBodyCentreMetres = 0.11
 const kettleBodySquash = 0.8
@@ -297,11 +296,10 @@ export class CarriedItems {
   private overflowPathOf(model: CarriedModel): THREE.BufferGeometry {
     const known = this.overflowPathByShape.get(model.shape)
     if (known !== undefined) return known
-    const sinkBelowTheVessel = faucetSpout.y - faucetSpoutAboveTheSinkMetres - model.root.position.y
     const side = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
     const pointsOnTheSide = model.shape === 'kettle' ? pointsDownTheKettle() : pointsDownAStraightSide(model)
     const lastOnTheSide = pointsOnTheSide[pointsOnTheSide.length - 1] ?? { distance: 0, height: 0 }
-    const points = [...pointsOnTheSide, { distance: lastOnTheSide.distance, height: sinkBelowTheVessel }].map(({ distance, height }) => side.clone().multiplyScalar(distance).setY(height))
+    const points = [...pointsOnTheSide, { distance: lastOnTheSide.distance, height: 0 }].map(({ distance, height }) => side.clone().multiplyScalar(distance).setY(height))
     const path = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, overflowStreamRadiusMetres, 6, false)
     this.overflowPathByShape.set(model.shape, path)
     return path
@@ -502,7 +500,6 @@ function pointsDownAStraightSide(model: CarriedModel): { distance: number; heigh
   return [
     { distance, height: model.rimHeight },
     { distance, height: model.rimHeight / 2 },
-    { distance, height: 0 },
   ]
 }
 
