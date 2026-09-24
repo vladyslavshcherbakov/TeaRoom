@@ -105,7 +105,7 @@ function addKettleWater(root: THREE.Group, materials: RoomMaterials): THREE.Mesh
 
 function addWaterGauge(root: THREE.Group, materials: RoomMaterials): THREE.Mesh {
   const { gaugeBottomMetres, gaugeHeightMetres, gaugeFaceMetres } = kettleShape
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(0.048, gaugeHeightMetres + 0.014, 0.006), materials.materialFor('gaugeGlass'))
+  const glass = new THREE.Mesh(new THREE.BoxGeometry(0.048, gaugeHeightMetres + 0.014, 0.006), materials.materialFor('gaugeTube'))
   glass.position.set(0, gaugeBottomMetres + gaugeHeightMetres / 2, gaugeFaceMetres)
   const water = new THREE.Mesh(new THREE.BoxGeometry(0.034, 1, 0.008), materials.unsharedMaterialFor('gaugeGlass'))
   water.position.set(0, gaugeBottomMetres, gaugeFaceMetres + 0.001)

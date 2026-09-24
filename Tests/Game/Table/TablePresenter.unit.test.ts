@@ -86,10 +86,10 @@ test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
   }
 })
 
-test('senchaColour_blendsFromBlueWaterToTheTeaAndDarkensWhenBitter', () => {
+test('senchaColour_blendsFromClearWaterToTheTeaAndDarkensWhenBitter', () => {
   const rows = [
-    [{ strength: 0, bitterness: 0 }, '#5f93b5'],
-    [{ strength: 50, bitterness: 0 }, '#8cac90'],
+    [{ strength: 0, bitterness: 0 }, '#c9e3f0'],
+    [{ strength: 50, bitterness: 0 }, '#c1d4ad'],
     [{ strength: 100, bitterness: 0 }, '#b8c46a'],
     [{ strength: 100, bitterness: 100 }, '#726f3d'],
   ] as const

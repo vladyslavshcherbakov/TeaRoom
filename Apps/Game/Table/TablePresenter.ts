@@ -8,7 +8,7 @@ import type { SessionState, VesselState } from '../../../Shared/Simulation/State
 import type { TableViewState } from './TableViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
 
-const waterColour = '#5f93b5'
+const waterColour = '#c9e3f0'
 const overbrewedColour = '#2b1a10'
 const strengthBelowWhichTeaLooksLikeWater = 5
 const bitternessWhereDarkeningStarts = 45

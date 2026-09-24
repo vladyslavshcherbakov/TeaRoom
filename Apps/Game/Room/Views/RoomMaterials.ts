@@ -20,6 +20,7 @@ export type Surface =
   | 'cushion'
   | 'puddle'
   | 'gaugeGlass'
+  | 'gaugeTube'
   | 'tapWater'
   | 'pouredLiquid'
   | 'steam'
@@ -54,8 +55,9 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   cushion: '#d4735e',
   puddle: '#9c6a44',
   gaugeGlass: '#f4f8f9',
+  gaugeTube: '#4d5a60',
   tapWater: '#a9d3ea',
-  pouredLiquid: '#5f93b5',
+  pouredLiquid: '#c9e3f0',
   steam: '#ffffff',
   sinkHollow: '#4f5f66',
   caddyInside: '#2f3d33',
