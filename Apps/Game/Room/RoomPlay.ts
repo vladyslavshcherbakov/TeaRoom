@@ -199,13 +199,23 @@ export class RoomPlay {
     if (chosenItemId === spoonItemId) return this.useTheSpoonOn(itemId)
     if (chosenItemId === clothItemId) return this.log(`tap on ${itemId} with the cloth ignored: the cloth wipes the table`)
     if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
-    this.ritual.dispatch({ type: 'pickUp', itemId })
+    this.pickUpAndChoose(itemId)
+  }
+
+  private pickUpAndChoose(itemId: string): void {
+    const events = this.ritual.dispatch({ type: 'pickUp', itemId })
+    const pickedUp = events.find((event) => event.type === 'pickedUp')
+    if (pickedUp === undefined) return
+    this.chosenHandIndex = pickedUp.handIndex
+    this.log(`chose ${itemId} in hand ${pickedUp.handIndex} as it was picked up`)
   }
 
   private canAimAPourAt(targetId: string): boolean {
     const sourceId = this.selectedItemId()
     const target = this.ritual.state.vessels[targetId]
-    return sourceId !== null && sourceId !== targetId && this.ritual.state.vessels[sourceId] !== undefined && target?.location.kind === 'onSurface'
+    const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
+    const hasSomethingToPour = source !== undefined && source.liquid.volumeMl > 0
+    return hasSomethingToPour && sourceId !== targetId && target?.location.kind === 'onSurface'
   }
 
   private startAimingAt(targetId: string): void {
@@ -234,10 +244,7 @@ export class RoomPlay {
       this.ritual.dispatch({ type: 'scoopTea', depth: fullSpoonDepth })
       return
     }
-    if (this.ritual.state.vessels[itemId] === undefined) {
-      this.ritual.dispatch({ type: 'pickUp', itemId })
-      return
-    }
+    if (this.ritual.state.vessels[itemId] === undefined) return this.pickUpAndChoose(itemId)
     this.ritual.dispatch({ type: 'tipSpoonInto', vesselId: itemId })
   }
 

@@ -74,7 +74,7 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap a piece of furniture, or anything on it | The keeper walks to it, and the camera shows it close up. |
 | Tap the floor or empty space in a close-up | The camera returns to the room. |
 | Pinch with two fingers, or turn the mouse wheel | The camera moves closer or farther along its line of sight, from half to 1.6 times its usual distance. The first finger's press does not count as a tap. The room keeps its zoom while the keeper walks to furniture, and gets it back after the close-up. Each close-up starts at its usual distance, and its own zoom is forgotten when the player leaves it. There is no pinch while a pour is being aimed. |
-| Tap an item in a close-up | The keeper takes it into the first free hand. |
+| Tap an item in a close-up | The keeper takes it into the first free hand, and that hand is chosen at once, so the item can be used or put back with the next tap. |
 | Tap an item the keeper holds: in a bottom corner of a close-up, or in the keeper's hands in the room | That hand is chosen, and in a close-up its item rises a little. A second tap lets go of the choice. |
 | Tap a surface in a close-up with a hand chosen | The item goes down exactly where the finger touched, if it fits. It does not fit over the edge, on the heater or on another item, and then it stays in the hand, still chosen. |
 | Tap the heater with a hand chosen | The vessel in that hand goes on the heater. |
@@ -87,7 +87,7 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap a figurine with a hand chosen | The tea bowl in that hand is offered to it. A caption shows the figurine's response. |
 | Stroke the tea table with the cloth's hand chosen | The table is wiped. The stroke's length over time is its speed, and a stroke of 1.5 m covers the whole table. A slow stroke dries more. A tap with the cloth does nothing. |
 | Tap the tap at the counter with a hand chosen | The keeper holds that hand's vessel under the tap, opening its lid first if the lid must be open to fill, and the water runs. The kettle's water gauge rises. A second tap on the tap closes it. |
-| Tap a vessel on a surface with the hand of another vessel chosen | The pour begins to be aimed: the chosen vessel hovers over the target with its spout 22 cm to the left, and two buttons appear, a round tilt button with a teapot and a small done button. |
+| Tap a vessel on a surface with the hand of another vessel chosen, when the chosen vessel holds something | The pour begins to be aimed: the chosen vessel hovers over the target with its spout 22 cm to the left, and two buttons appear, a round tilt button with a teapot and a small done button. |
 | Drag a finger anywhere while aiming | The vessel moves with the finger, keeping its height above the target. Only the change of the finger's position counts, so the finger never hides the vessel. |
 | Hold the tilt button while aiming | The vessel tilts by 30° a second up to 55°. Past 10° it pours, and past about 38° a tenth of the stream splashes. The share of the stream that lands inside the target's opening goes in, the rest falls on the table. Releasing the button tilts the vessel back by 70° a second, and the pour stops when it is upright. |
 | Tap done while aiming | The aiming ends, and the vessel returns to its hand. |

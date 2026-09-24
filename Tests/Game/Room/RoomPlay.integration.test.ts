@@ -21,6 +21,17 @@ test('bowl_whenTappedInTheShelfCloseUp_goesIntoTheFirstFreeHand', () => {
   assert.deepEqual(room.state.keeper.hands, ['bowl1', null])
 })
 
+test('bowl_whenPickedUpByATap_isChosenAtOnce', () => {
+  const room = new RoomVisit()
+  room.walkTo('shelf')
+  room.tap({ kind: 'item', itemId: 'bowl1' })
+
+  room.tap({ kind: 'item', itemId: 'bowl2' })
+
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'bowl2'])
+  assert.equal(room.play.selectedHandIndex, 1)
+})
+
 test('bowl_whenItsHandIsChosenAndTheTeaTableIsTapped_standsWhereTheTableWasTapped', () => {
   const room = new RoomVisit()
   room.carryFromTheShelf('bowl1')
@@ -62,7 +73,6 @@ test('kettle_whenItsHandIsChosenAndTheHeaterIsTapped_sitsOnTheHeater', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'heater' })
 
@@ -83,6 +93,7 @@ test('heaterTap_withNoHandChosen_leavesTheHeaterEmpty', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'heater' })
 
@@ -152,7 +163,6 @@ test('kettle_whenChosenAndTheTapIsTapped_getsItsLidOpenedAndFillsFromTheTap', ()
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'faucet' })
 
@@ -164,7 +174,6 @@ test('tap_whenTappedAgainWhileRunning_closes', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'faucet' })
   room.wait(2)
 
@@ -247,13 +256,13 @@ test('spoon_whenTappedAtTheTeaTable_goesIntoTheFirstFreeHand', () => {
   assert.deepEqual(room.state.keeper.hands, ['spoon', null])
 })
 
-test('sipButton_whenTheChosenHandHoldsTheKettle_isNotOffered', () => {
+test('sipButton_whenTheKettleIsPickedUp_isNotOffered', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
+
   room.tap({ kind: 'item', itemId: 'kettle' })
 
-  room.tap({ kind: 'hand', handIndex: 0 })
-
+  assert.equal(room.play.selectedHandIndex, 0)
   assert.equal(room.play.sippableCupId, null)
 })
 
@@ -335,8 +344,7 @@ class RoomVisit {
   takeAndChoose(itemId: string): void {
     this.tap({ kind: 'item', itemId })
     const handIndex = this.state.keeper.hands.indexOf(itemId)
-    if (handIndex !== 0 && handIndex !== 1) throw new Error(`${itemId} did not reach a hand`)
-    this.tap({ kind: 'hand', handIndex })
+    if (this.play.selectedHandIndex !== handIndex) throw new Error(`${itemId} did not reach a chosen hand`)
   }
 
   wait(seconds: number): void {
