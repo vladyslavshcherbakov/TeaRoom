@@ -70,6 +70,8 @@
 
 **No single moment costs the gods more than 3 points.** The GDD requires that mistakes lower the mood slightly and never reset it.
 
+**Every text the player reads is one key and one value in one file.** `Apps/Game/Texts/EnglishTexts.ts` lists them all, so the whole of the game's wording can be reviewed in one place, and a second language is a second file with the same keys. The keys are typed, so a missing text for a remark or a verdict fails the type-check. Placeholders such as `{figurine}` are filled by `textWith`.
+
 **Tests run on Node's built-in runner, with TypeScript run directly by Node.** The core needs no packages at all, and Node 22.18 strips types on its own. The only development packages are TypeScript for type-checking and `@types/node`. Rejected: Vitest, because it adds a toolchain for what `node --test` already does. It can come in with Vite in 0.2 if the presentation tests need it.
 
 **The ritual bench stays next to the game.** It drives the simulation with plain controls and shows the log on the page, which is the quickest way to check a rule on a phone without playing through the scene.

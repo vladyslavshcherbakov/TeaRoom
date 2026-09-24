@@ -1,9 +1,12 @@
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
+import { text } from '../Texts/Texts.ts'
 import { RoomScene } from './RoomScene.ts'
 
 const roomId = 'quietRoom'
+
+document.title = text('page.title')
 
 const container = document.getElementById('room')
 if (container === null) throw new Error('the page has no #room element to draw into')
@@ -22,7 +25,7 @@ const opening = RitualSession.open(defaultCatalog, roomId, ritualLog, import.met
 if (opening.kind === 'unavailable') {
   const quiet = document.createElement('div')
   quiet.className = 'quiet'
-  quiet.textContent = 'The room is resting. Come back a little later.'
+  quiet.textContent = text('room.unavailable')
   container.append(quiet)
 } else {
   const teaId = Object.keys(defaultCatalog.teas)[0] ?? ''

@@ -1,4 +1,4 @@
-import { aimHintText, tiltText } from '../RoomTexts.ts'
+import { text } from '../../Texts/Texts.ts'
 
 export type PourControlsListener = {
   readonly tiltPressed: () => void
@@ -16,7 +16,7 @@ export class PourControls {
     this.tiltButton = document.createElement('button')
     this.tiltButton.type = 'button'
     this.tiltButton.className = 'tilt'
-    this.tiltButton.textContent = tiltText
+    this.tiltButton.textContent = text('aim.tiltButton')
     this.tiltButton.hidden = true
     this.tiltButton.addEventListener('pointerdown', (event) => {
       this.tiltButton.setPointerCapture(event.pointerId)
@@ -25,7 +25,7 @@ export class PourControls {
     for (const ending of ['pointerup', 'pointercancel', 'lostpointercapture'] as const) this.tiltButton.addEventListener(ending, () => listener.tiltReleased())
     this.hint = document.createElement('div')
     this.hint.className = 'aim-hint'
-    this.hint.textContent = aimHintText
+    this.hint.textContent = text('aim.hint')
     this.hint.hidden = true
     container.append(this.tiltButton, this.hint)
   }

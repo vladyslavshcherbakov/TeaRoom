@@ -1,0 +1,51 @@
+export const englishTexts = {
+  'page.title': 'Tea Room — the room',
+  'room.unavailable': 'The room is resting. Come back a little later.',
+
+  'hand.sip': 'Sip',
+
+  'aim.tiltButton': '🫖',
+  'aim.hint': 'Drag to move what you pour from. Hold 🫖 with another finger to tilt it. Tap anywhere to stop.',
+
+  'taste.temperature': 'Temperature  {value}',
+  'taste.temperature.tooHot': 'too hot',
+  'taste.temperature.pleasant': 'good',
+  'taste.temperature.lukewarm': 'lukewarm',
+  'taste.temperature.cold': 'cold',
+  'taste.strength': 'Strength  {value}',
+  'taste.strength.weak': 'weak',
+  'taste.strength.balanced': 'balanced',
+  'taste.strength.rich': 'rich',
+  'taste.strength.heavy': 'heavy',
+  'taste.bitterness': 'Bitterness  {value}',
+  'taste.bitterness.soft': 'soft',
+  'taste.bitterness.noticeable': 'noticeable',
+  'taste.bitterness.high': 'above normal',
+  'taste.bitterness.overbrewed': 'very high',
+
+  'gods.temperatureIsPerfect': 'The temperature is perfect. The gods are content.',
+  'gods.pretendNotToNotice': 'The gods pretend not to notice.',
+  'gods.understandProbably': 'The gods understand. Probably.',
+  'gods.pleasedWithTheTea': 'The gods are pleased.',
+  'gods.veryOverbrewed': 'Oversteeped. Very oversteeped.',
+  'gods.weWillTellNoOne': 'We will tell no one.',
+  'gods.acceptTheOffering': 'The offering is accepted.',
+  'gods.appreciateTheCalm': 'The gods appreciate the calm.',
+
+  'offering.glow': '{figurine} glows softly.',
+  'offering.subtle': '{figurine} seems pleased.',
+  'offering.barely': '{figurine} barely notices.',
+  'figurine.dragon': 'The dragon',
+  'figurine.toad': 'The toad',
+
+  'tea.sencha': 'Sencha',
+  'tea.oolong': 'Oolong',
+  'tea.shouPuerh': 'Shou puerh',
+
+  'timeOfDay.dawn': 'Dawn',
+  'timeOfDay.morning': 'Morning',
+  'timeOfDay.day': 'Day',
+  'timeOfDay.sunset': 'Sunset',
+  'timeOfDay.dusk': 'Dusk',
+  'timeOfDay.night': 'Night',
+} as const

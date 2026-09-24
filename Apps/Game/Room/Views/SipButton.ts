@@ -1,4 +1,4 @@
-import { sipText } from '../RoomTexts.ts'
+import { text } from '../../Texts/Texts.ts'
 
 export class SipButton {
   private readonly button: HTMLButtonElement
@@ -7,7 +7,7 @@ export class SipButton {
     this.button = document.createElement('button')
     this.button.type = 'button'
     this.button.className = 'sip'
-    this.button.textContent = sipText
+    this.button.textContent = text('hand.sip')
     this.button.hidden = true
     this.button.addEventListener('click', sipTapped)
     container.append(this.button)
