@@ -54,6 +54,9 @@ const gaugeHeightMetres = 0.11
 const gaugeFaceMetres = 0.142
 const waterInGaugeColour = '#3f8fc4'
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
+const overflowShareOfTheRadius = 0.95
+const overflowStartShareOfTheRim = 0.6
+const faucetSpoutAboveTheSinkMetres = 0.3
 const kettleBodyRadiusMetres = 0.14
 const kettleBodyCentreMetres = 0.11
 const kettleBodySquash = 0.8
@@ -114,6 +117,7 @@ export class CarriedItems {
   private readonly models: CarriedModel[]
   private readonly stream: THREE.Mesh
   private readonly tapStream: THREE.Mesh
+  private readonly overflowStream: THREE.Mesh
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   private readonly chosenGlow = newChosenGlow()
   private readonly streamMaterial: THREE.MeshStandardMaterial
@@ -132,7 +136,9 @@ export class CarriedItems {
     this.stream.visible = false
     this.tapStream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.materials.unsharedMaterialFor('tapWater'))
     this.tapStream.visible = false
-    this.root.add(this.stream, this.tapStream)
+    this.overflowStream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres * 1.4, streamRadiusMetres * 2.4, 1, 8), this.materials.unsharedMaterialFor('tapWater'))
+    this.overflowStream.visible = false
+    this.root.add(this.stream, this.tapStream, this.overflowStream)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
     this.root.add(this.chosenGlow)
   }
@@ -274,11 +280,12 @@ export class CarriedItems {
   private showTapWater(scene: CarriedItemsScene): void {
     const filled = this.models.find((model) => model.itemId === scene.state.filling?.vesselId)
     this.tapStream.visible = filled !== undefined
+    this.overflowStream.visible = filled !== undefined && scene.state.filling?.hasOverflowed === true
     if (filled === undefined) return
     const bottomY = filled.root.position.y + filled.rimHeight * 0.5
-    const length = Math.max(0.01, faucetSpout.y - bottomY)
-    this.tapStream.position.set(faucetSpout.x, bottomY + length / 2, faucetSpout.z)
-    this.tapStream.scale.set(1, length, 1)
+    placeStream(this.tapStream, faucetSpout, bottomY)
+    const overRim = filled.root.position.clone().add(new THREE.Vector3(0, filled.rimHeight * overflowStartShareOfTheRim, filled.footprintRadius * overflowShareOfTheRadius))
+    placeStream(this.overflowStream, overRim, faucetSpout.y - faucetSpoutAboveTheSinkMetres)
   }
 
   private retag(model: CarriedModel, tag: TapTargetTag): void {
@@ -454,6 +461,12 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
   model.liquidMaterial.color.set(vessel.liquorColour)
 }
 
+
+function placeStream(stream: THREE.Mesh, top: { x: number; y: number; z: number }, bottomY: number): void {
+  const length = Math.max(0.01, top.y - bottomY)
+  stream.position.set(top.x, bottomY + length / 2, top.z)
+  stream.scale.set(1, length, 1)
+}
 
 function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel): void {
   const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres)
