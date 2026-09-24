@@ -1,5 +1,5 @@
 import type { FigurineDefinition } from '../Definitions/FigurineDefinition.ts'
-import type { Liquid } from '../Physics/Liquid.ts'
+import { isPlainWater, type Liquid } from '../Physics/Liquid.ts'
 
 export type OfferingResponse = 'glow' | 'subtle' | 'barely'
 
@@ -8,7 +8,6 @@ export type OfferingJudgement = {
   readonly response: OfferingResponse
 }
 
-const plainWaterBelowStrength = 5
 const pointsForAnyTea = 4
 const pointsPerAffinity = 4
 const pointsForPreferredStrength = 4
@@ -23,7 +22,7 @@ export function judgeOffering(offered: Liquid, teaId: string, figurine: Figurine
 }
 
 function satisfactionFrom(offered: Liquid, teaId: string, figurine: FigurineDefinition): number {
-  if (offered.strength < plainWaterBelowStrength) return 1
+  if (isPlainWater(offered)) return 1
   const affinity = figurine.affinityByTeaId[teaId] ?? 0
   const isPreferredStrength =
     offered.strength >= figurine.preferredStrength.lowest && offered.strength <= figurine.preferredStrength.highest

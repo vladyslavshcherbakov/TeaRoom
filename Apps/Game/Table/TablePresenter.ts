@@ -2,7 +2,7 @@ import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitio
 import type { TeaDefinition } from '../../../Shared/Simulation/Definitions/TeaDefinition.ts'
 import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/VesselDefinition.ts'
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
-import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
+import { isEmpty, isPlainWater, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
@@ -10,7 +10,6 @@ import { teaLookFor } from './TeaLooks.ts'
 
 const waterColour = '#c9e3f0'
 const overbrewedColour = '#2b1a10'
-const strengthBelowWhichTeaLooksLikeWater = 5
 const bitternessWhereDarkeningStarts = 45
 const darkestShareOfOverbrewedColour = 0.5
 const steamWispsFromC = 60
@@ -57,7 +56,7 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
 }
 
 function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.BrewStage {
-  if (tea === null || isEmpty(liquid) || liquid.strength < strengthBelowWhichTeaLooksLikeWater) return 'water'
+  if (tea === null || isEmpty(liquid) || isPlainWater(liquid)) return 'water'
   const verdict = judgeTaste(liquid, tea)
   if (verdict.bitterness === 'overbrewed') return 'overbrewed'
   if (verdict.strength === 'weak') return 'pale'

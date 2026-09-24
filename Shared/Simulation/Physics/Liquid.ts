@@ -6,6 +6,7 @@ export type Liquid = {
 }
 
 const smallestMeaningfulVolumeMl = 0.01
+const strengthBelowWhichItIsPlainWater = 5
 
 export function water(volumeMl: number, temperatureC: number): Liquid {
   return { volumeMl, temperatureC, strength: 0, bitterness: 0 }
@@ -13,6 +14,10 @@ export function water(volumeMl: number, temperatureC: number): Liquid {
 
 export function isEmpty(liquid: Liquid): boolean {
   return liquid.volumeMl < smallestMeaningfulVolumeMl
+}
+
+export function isPlainWater(liquid: Liquid): boolean {
+  return liquid.strength < strengthBelowWhichItIsPlainWater
 }
 
 export function mixLiquids(existing: Liquid, added: Liquid): Liquid {
