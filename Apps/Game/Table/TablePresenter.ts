@@ -19,7 +19,7 @@ const shimmeringFromC = 40
 const simmeringFromC = 55
 const boilingFromC = 95
 const puddleFullAtMl = 30
-const clothSoakedAtMl = 20
+const clothSoakedAtMl = 15
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)

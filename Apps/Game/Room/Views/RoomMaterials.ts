@@ -48,7 +48,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   steel: '#7d97a3',
   caddyGreen: '#5f9a7c',
   cloth: '#ffffff',
-  wetCloth: '#a89c8a',
+  wetCloth: '#8a7c68',
   jade: '#6fb59a',
   toadBrown: '#b39a5c',
   heaterPlate: '#3d3733',
