@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 import { footprintRadiusMetres, type CarriedShape } from '../../RoomLayout.ts'
+import { koiPaintingAspect } from '../KoiPainting.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
 import { kettleShape } from './KettleShape.ts'
-import { newKoiCarp } from './KoiCarp.ts'
 import type { LeafPile } from './LeafPile.ts'
 
 export type CarriedModel = {
@@ -50,6 +50,10 @@ const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
 const bowlsWithACarp: ReadonlySet<string> = new Set(['bowl1'])
 const carpTurnRadians = 0.6
+const koiPaintingLengthMetres = 0.07
+const koiAboveTheGlazeMetres = 0.0004
+const koiPaintingSegmentsAlong = 48
+const koiPaintingSegmentsAcross = 18
 const bowlSegmentsAround = 64
 const bowlProfilePoints = 40
 const bowlProfile = new THREE.SplineCurve([
@@ -227,12 +231,24 @@ function bowlParts(materials: RoomMaterials, glaze: Surface, hasACarp: boolean):
   glazed.side = THREE.DoubleSide
   const body = new THREE.Mesh(new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround), glazed)
   const meshes: THREE.Object3D[] = [body]
-  if (hasACarp) {
-    const carp = newKoiCarp(materials, bowlBottomHeightAt)
-    carp.rotation.y = carpTurnRadians
-    meshes.push(carp)
-  }
+  if (hasACarp) meshes.push(koiPaintedOnTheBottom(materials))
   return { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
+}
+
+function koiPaintedOnTheBottom(materials: RoomMaterials): THREE.Mesh {
+  const geometry = new THREE.PlaneGeometry(koiPaintingLengthMetres, koiPaintingLengthMetres / koiPaintingAspect, koiPaintingSegmentsAlong, koiPaintingSegmentsAcross)
+  const position = geometry.getAttribute('position')
+  for (let index = 0; index < position.count; index += 1) {
+    const along = position.getX(index)
+    const across = position.getY(index)
+    position.setXYZ(index, along, bowlBottomHeightAt(Math.hypot(along, across)) + koiAboveTheGlazeMetres, -across)
+  }
+  geometry.computeVertexNormals()
+  const koi = new THREE.Mesh(geometry, materials.materialFor('koiPainting'))
+  koi.rotation.y = carpTurnRadians
+  koi.renderOrder = 1
+  koi.castShadow = false
+  return koi
 }
 
 function bowlBottomHeightAt(distanceFromTheCentre: number): number {

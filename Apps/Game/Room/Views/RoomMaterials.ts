@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { paintKoi } from './KoiPainting.ts'
 
 export type Surface =
   | 'floor'
@@ -34,9 +35,7 @@ export type Surface =
   | 'blueGlaze'
   | 'yellowGlaze'
   | 'emeraldGlaze'
-  | 'koiSkin'
-  | 'koiFin'
-  | 'koiEye'
+  | 'koiPainting'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -72,15 +71,13 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   blueGlaze: '#2f5ea8',
   yellowGlaze: '#f1cd55',
   emeraldGlaze: '#1f8a68',
-  koiSkin: '#ffffff',
-  koiFin: '#f4c29b',
-  koiEye: '#1b1410',
+  koiPainting: '#ffffff',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const pouredLiquidOpacity = 0.85
-const koiFinOpacity = 0.8
+const paintingSharpness = 8
 const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'blueGlaze', 'yellowGlaze', 'emeraldGlaze'])
 const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
 
@@ -102,12 +99,28 @@ export class RoomMaterials {
   unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
     const color = surfaceColours[surface]
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
-    if (surface === 'koiSkin') return new THREE.MeshPhysicalMaterial({ color, vertexColors: true, roughness: 0.3, clearcoat: 0.7 })
-    if (surface === 'koiFin') return new THREE.MeshStandardMaterial({ color, roughness: 0.4, transparent: true, opacity: koiFinOpacity, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 })
+    if (surface === 'koiPainting') return koiPaintingMaterial()
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
     if (glazedSurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
     return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
   }
+}
+
+function koiPaintingMaterial(): THREE.MeshStandardMaterial {
+  const texture = new THREE.CanvasTexture(paintKoi())
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = paintingSharpness
+  texture.premultiplyAlpha = true
+  return new THREE.MeshStandardMaterial({
+    map: texture,
+    transparent: true,
+    premultipliedAlpha: true,
+    depthWrite: false,
+    roughness: 0.45,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -8,
+  })
 }
