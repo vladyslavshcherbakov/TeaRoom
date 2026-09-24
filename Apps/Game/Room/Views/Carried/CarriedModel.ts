@@ -56,15 +56,30 @@ const koiAboveTheGlazeMetres = 0.0004
 const koiPaintingSegmentsAlong = 48
 const koiPaintingSegmentsAcross = 18
 const bowlSegmentsAround = 64
-const bowlProfilePoints = 40
-const bowlProfile = new THREE.SplineCurve([
-  new THREE.Vector2(0, 0.008),
-  new THREE.Vector2(0.04, 0.004),
-  new THREE.Vector2(0.05, 0),
+const bowlWallProfilePoints = 32
+const bowlInsideProfile = new THREE.SplineCurve([
+  new THREE.Vector2(0, 0.009),
+  new THREE.Vector2(0.03, 0.0085),
+  new THREE.Vector2(0.045, 0.0095),
+  new THREE.Vector2(0.06, 0.017),
+  new THREE.Vector2(0.072, 0.034),
+  new THREE.Vector2(0.08, 0.062),
+]).getPoints(bowlWallProfilePoints)
+const bowlOutsideWall = new THREE.SplineCurve([
+  new THREE.Vector2(0.048, 0.003),
+  new THREE.Vector2(0.054, 0.0055),
   new THREE.Vector2(0.066, 0.014),
   new THREE.Vector2(0.078, 0.036),
   new THREE.Vector2(0.083, 0.062),
-]).getPoints(bowlProfilePoints)
+]).getPoints(bowlWallProfilePoints)
+const bowlUndersideAndFoot = [
+  new THREE.Vector2(0, 0.004),
+  new THREE.Vector2(0.039, 0.003),
+  new THREE.Vector2(0.04, 0),
+  new THREE.Vector2(0.047, 0),
+]
+const bowlRimTop = new THREE.Vector2(0.0815, 0.0635)
+const bowlProfile = [...bowlUndersideAndFoot, ...bowlOutsideWall, bowlRimTop, ...[...bowlInsideProfile].reverse()]
 const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
   bowl2: 'pearlGlaze',
@@ -252,10 +267,10 @@ function koiPaintedOnTheBottom(materials: RoomMaterials): THREE.Mesh {
 }
 
 function bowlBottomHeightAt(distanceFromTheCentre: number): number {
-  const outer = bowlProfile.findIndex((point) => point.x >= distanceFromTheCentre)
-  const after = bowlProfile[outer]
-  const before = bowlProfile[outer - 1]
-  if (after === undefined) return bowlProfile.at(-1)?.y ?? 0
+  const outer = bowlInsideProfile.findIndex((point) => point.x >= distanceFromTheCentre)
+  const after = bowlInsideProfile[outer]
+  const before = bowlInsideProfile[outer - 1]
+  if (after === undefined) return bowlInsideProfile.at(-1)?.y ?? 0
   if (before === undefined) return after.y
   const share = (distanceFromTheCentre - before.x) / (after.x - before.x)
   return before.y + (after.y - before.y) * share
