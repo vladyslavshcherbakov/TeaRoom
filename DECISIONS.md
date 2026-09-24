@@ -26,6 +26,10 @@
 
 **Pouring is a held finger on the target.** Holding for 0.3 s on a vessel pours from the vessel in hand, the tilt grows on its own, and lifting the finger stops it. The tilt stops at 36°, below the 80 % flow where a tenth of the stream splashes, so holding patiently never spills. One thumb is enough, and the pour has a clear start and end. Rejected for now: a vertical drag for the tilt, which comes back when the feel of 0.4 needs finer control.
 
+**The spoon and the cloth are taken like a hand is chosen, and stay at the tea table.** The simulation keeps them at the ritual place, not in the hands. Taking one works like choosing a hand: then a tap on the open caddy scoops, a tap on a vessel tips, a stroke on the table wipes. One choice at a time keeps a tap's meaning clear. Walking away puts the tool back, because the simulation would refuse its use anywhere else.
+
+**Tasting is a Sip button next to the hands.** In a close-up the keeper is hidden, so there is no face to lift the bowl to. The button appears only while a hand with a tea bowl is chosen. The first sip scene of 0.6 replaces it.
+
 **The heater's switch is its own target on the counter's front.** With the kettle on the plate, a tap on the plate lands on the kettle and lifts it. A separate switch keeps "take the kettle" and "switch the heater" apart, and gives the switch a touch target of its own.
 
 **The room begins the ritual with the first tea of the catalog.** Carrying needs the ritual phase, and the room has no tea choice yet. The room logs which tea it chose. It stays so until the room offers a choice of tea.

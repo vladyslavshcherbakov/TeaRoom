@@ -17,6 +17,7 @@ const streamRadiusMetres = 0.007
 const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const openLidSideMetres = 0.16
+const lidTouchPadRadiusMetres = 0.085
 
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: 3 }
 
@@ -47,6 +48,7 @@ export class CarriedItems {
   readonly tappableMeshes: THREE.Object3D[] = []
   private readonly materials: RoomMaterials
   private readonly insideVisibleMaterial: THREE.Material
+  private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
   private readonly models: CarriedModel[]
   private readonly stream: THREE.Mesh
@@ -136,6 +138,9 @@ export class CarriedItems {
     if (model.tagKey === tagKey) return
     model.tagKey = tagKey
     model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
+    if (model.lid === null || !('itemId' in tag)) return
+    const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
+    model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
   }
 
   private modelOf(itemId: string, shape: CarriedShape): CarriedModel {
@@ -149,7 +154,7 @@ export class CarriedItems {
       liquid.rotation.x = -Math.PI / 2
       root.add(liquid)
     }
-    root.traverse((part) => (part.castShadow = true))
+    root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
     const puffs = [0, 1, 2].map(() => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
     for (const puff of puffs) puff.castShadow = false
     this.root.add(root, ...puffs)
@@ -189,7 +194,10 @@ export class CarriedItems {
     const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.14, 8), this.materials.materialFor('clay'))
     spout.position.set(0.15, 0.14, 0)
     spout.rotation.z = -0.9
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.03, 12), this.materials.materialFor('darkWood'))
+    const lid = new THREE.Group()
+    const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.03, 12), this.materials.materialFor('darkWood'))
+    const lidTouchPad = new THREE.Mesh(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, 0.04, 12), this.touchPadMaterial)
+    lid.add(lidTop, lidTouchPad)
     lid.position.y = 0.215
     return { meshes: [body, spout], lid, spoutTip: new THREE.Vector3(0.205, 0.183, 0), rimHeight: 0.23, liquidRadius: null }
   }

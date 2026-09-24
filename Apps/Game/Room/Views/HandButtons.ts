@@ -1,20 +1,27 @@
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
-import { emptyHandText, itemName } from '../RoomTexts.ts'
+import { emptyHandText, itemName, sipText } from '../RoomTexts.ts'
 
 export type HandsShown = {
   readonly hands: readonly (string | null)[]
   readonly selectedHandIndex: HandIndex | null
+  readonly canSip: boolean
 }
 
 export class HandButtons {
   private readonly buttons: readonly [HTMLButtonElement, HTMLButtonElement]
+  private readonly sipButton: HTMLButtonElement
   private shownKey = ''
 
-  constructor(container: HTMLElement, handTapped: (handIndex: HandIndex) => void) {
+  constructor(container: HTMLElement, handTapped: (handIndex: HandIndex) => void, sipTapped: () => void) {
     const bar = document.createElement('div')
     bar.className = 'hands'
     this.buttons = [this.button(0, handTapped), this.button(1, handTapped)]
-    bar.append(...this.buttons)
+    this.sipButton = document.createElement('button')
+    this.sipButton.type = 'button'
+    this.sipButton.className = 'sip'
+    this.sipButton.textContent = sipText
+    this.sipButton.addEventListener('click', sipTapped)
+    bar.append(this.buttons[0], this.sipButton, this.buttons[1])
     container.append(bar)
   }
 
@@ -28,6 +35,7 @@ export class HandButtons {
       button.disabled = itemId === null
       button.classList.toggle('chosen', shown.selectedHandIndex === index)
     })
+    this.sipButton.hidden = !shown.canSip
   }
 
   private button(handIndex: HandIndex, handTapped: (handIndex: HandIndex) => void): HTMLButtonElement {

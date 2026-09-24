@@ -18,6 +18,9 @@ export type Surface =
   | 'walkerCoat'
   | 'walkerSkin'
   | 'cushion'
+  | 'leaves'
+  | 'puddle'
+  | 'chosenGlow'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -37,6 +40,9 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   walkerCoat: '#3f7f8f',
   walkerSkin: '#f1c9a5',
   cushion: '#d4735e',
+  leaves: '#4f6b2f',
+  puddle: '#9c6a44',
+  chosenGlow: '#fff1c2',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])

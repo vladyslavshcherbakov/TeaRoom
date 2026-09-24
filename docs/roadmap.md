@@ -22,7 +22,7 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - The game at the root of the site, the bench under `/bench/`.
 - A browser smoke test in CI that loads the game and completes one ritual.
 
-## 0.3 — The room
+## 0.3 — The room (done)
 
 - A small 3D room in Three.js, seen from above at an angle: floor, two walls cut away like a dollhouse, the window, the counter with the heater and the tap, the shelf with the caddy and the bowls, the low table with the cushion, the figurines on the windowsill, and a walker.
 - A tap on the floor walks there around the furniture. A tap on a piece of furniture walks to it and shows it close up. A tap elsewhere returns to the room.

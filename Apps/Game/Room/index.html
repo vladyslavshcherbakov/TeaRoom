@@ -43,6 +43,32 @@
         color: #5a3a26;
         font: 600 16px/1 system-ui, sans-serif;
       }
+      .hands button.sip {
+        min-width: 72px;
+        background: #5f9a7c;
+        border-color: #3f6f57;
+        color: #fbf4e8;
+      }
+      .hands button[hidden] {
+        display: none;
+      }
+      .caption {
+        position: fixed;
+        bottom: calc(80px + env(safe-area-inset-bottom));
+        left: 16px;
+        right: 16px;
+        padding: 12px 16px;
+        border-radius: 16px;
+        background: rgba(251, 244, 232, 0.92);
+        color: #5a3a26;
+        font: 15px/1.4 system-ui, sans-serif;
+        white-space: pre-line;
+        text-align: center;
+        pointer-events: none;
+      }
+      .caption[hidden] {
+        display: none;
+      }
       .hands button:disabled {
         opacity: 0.5;
         border-style: dashed;

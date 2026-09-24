@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { FurnitureId, WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
+import type { FloorPoint, FurnitureId, WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { RoomPlay, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
 
 const frameSeconds = 1 / 60
@@ -133,6 +134,118 @@ test('bowl_whenTappedShortlyWithTheKettleInHand_isPickedUp', () => {
   assert.equal(room.state.pour, null)
 })
 
+test('kettleLid_whenTapped_opens', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+
+  room.tap({ kind: 'lid', itemId: 'kettle' })
+
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, true)
+})
+
+test('caddyLid_whenTappedOnTheTeaTable_opens', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+
+  room.tap({ kind: 'lid', itemId: 'caddy' })
+
+  assert.equal(room.state.caddy.isOpen, true)
+})
+
+test('spoon_whenChosenAndTheOpenCaddyIsTapped_fillsWithLeaves', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.session.dispatch({ type: 'openCaddy' })
+  room.tap({ kind: 'tool', tool: 'spoon' })
+
+  room.tap({ kind: 'item', itemId: 'caddy' })
+
+  assert.equal(room.state.spoon.grams, 3)
+  assert.equal(room.state.caddy.location.kind, 'onSurface')
+})
+
+test('spoon_whenFullAndTheOpenKettleIsTapped_tipsTheLeavesIntoIt', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.session.dispatch({ type: 'openCaddy' })
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+  room.session.dispatch({ type: 'scoopTea', depth: 1 })
+  room.tap({ kind: 'tool', tool: 'spoon' })
+
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  assert.equal(room.state.vessels['kettle']?.leaves?.grams, 3)
+  assert.equal(room.state.spoon.grams, 0)
+})
+
+test('spoon_whenTheKeeperWalksToTheCounter_staysOnTheTeaTable', () => {
+  const room = new RoomVisit()
+  room.walkTo('teaTable')
+  room.tap({ kind: 'tool', tool: 'spoon' })
+
+  room.walkTo('counter')
+
+  assert.equal(room.play.chosenTool, null)
+})
+
+test('sipButton_whenTheChosenHandHoldsTheKettle_isNotOffered', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.equal(room.play.sippableCupId, null)
+})
+
+test('sip_fromTheChosenBowlOfTea_takesTwentyMillilitres', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.ritual.pour('kettle', 'bowl1', 4)
+  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+  const volumeBeforeTheSip = room.state.vessels['bowl1']?.liquid.volumeMl ?? 0
+
+  room.play.sipTapped()
+
+  assertNear(room.state.vessels['bowl1']?.liquid.volumeMl ?? 0, volumeBeforeTheSip - 20)
+})
+
+test('figurine_whenTappedWithABowlOfTeaChosen_isOfferedIt', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.ritual.pour('kettle', 'bowl1', 4)
+  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'figurine', figurineId: 'dragon' })
+
+  assert.equal(room.state.figurines['dragon']?.wasOfferedTeaThisRitual, true)
+})
+
+test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAllOver', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.ritual.pour('kettle', null, 2)
+  room.tap({ kind: 'tool', tool: 'cloth' })
+
+  room.strokeTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }, { x: 0.5, z: -1.6 }], 10)
+
+  assert.ok(room.ritual.log.messagesAt('info').some((line) => line.includes('table wiped at 15 cm/s over 100%')), room.ritual.log.messagesAt('info').join('\n'))
+})
+
+test('table_whenTappedWithTheCloth_isNotWiped', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.ritual.pour('kettle', null, 2)
+  room.tap({ kind: 'tool', tool: 'cloth' })
+  const wetMlBeforeTheTap = room.state.tableWetMl
+
+  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+
+  assert.equal(room.state.tableWetMl, wetMlBeforeTheTap)
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
@@ -181,12 +294,44 @@ class RoomVisit {
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
   }
 
+  setTheTeaTable(): void {
+    this.carryFromTheShelf('bowl1', 'caddy')
+    this.walkTo('teaTable')
+    this.putDown(0, { x: 0.8, y: 0.42, z: -1.5 })
+    this.putDown(1, { x: 1.2, y: 0.42, z: -1.5 })
+    this.walkTo('counter')
+    this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.walkTo('teaTable')
+    this.putDown(0, { x: 1, y: 0.42, z: -1.8 })
+  }
+
+  strokeTheTeaTable(corners: readonly FloorPoint[], seconds: number): void {
+    const [start, ...rest] = corners
+    if (start === undefined) return
+    this.play.pressStarted(surfaceOfTheTeaTableAt(start))
+    const framesPerLeg = Math.round(seconds / frameSeconds / rest.length)
+    let from = start
+    for (const to of rest) {
+      for (let frame = 1; frame <= framesPerLeg; frame += 1) {
+        this.advance(frameSeconds)
+        this.play.pressMovedAway()
+        this.play.pressMovedOver(surfaceOfTheTeaTableAt({ x: from.x + ((to.x - from.x) * frame) / framesPerLeg, z: from.z + ((to.z - from.z) * frame) / framesPerLeg }))
+      }
+      from = to
+    }
+    this.play.pressEnded()
+  }
+
   private advance(seconds: number): void {
     for (let elapsed = 0; elapsed < seconds - 1e-9; elapsed += frameSeconds) {
       this.play.advance(frameSeconds)
       this.session.advance(frameSeconds)
     }
   }
+}
+
+function surfaceOfTheTeaTableAt(point: FloorPoint): RoomTapTarget {
+  return { kind: 'surface', furnitureId: 'teaTable', point: { x: point.x, y: onTheTeaTable.y, z: point.z } }
 }
 
 function spotOn(placeId: string, point: WorldPoint): Spot {
