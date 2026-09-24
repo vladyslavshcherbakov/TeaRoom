@@ -20,7 +20,8 @@ import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { captionLinesFor } from './RoomTexts.ts'
-import { CarriedItems, heldInViewLayer, untappableRoomLayer } from './Views/CarriedItems.ts'
+import { CarriedItems } from './Views/CarriedItems.ts'
+import { roomLayers } from './Views/RoomLayers.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
@@ -137,15 +138,15 @@ export class RoomScene {
 
   private render(): void {
     this.renderer.clear()
-    this.camera.layers.set(0)
-    this.camera.layers.enable(untappableRoomLayer)
+    this.camera.layers.set(roomLayers.room)
+    this.camera.layers.enable(roomLayers.untappableRoom)
     this.renderer.render(this.scene, this.camera)
     this.renderer.clearDepth()
     this.renderer.shadowMap.autoUpdate = false
-    this.camera.layers.set(heldInViewLayer)
+    this.camera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, this.camera)
     this.renderer.shadowMap.autoUpdate = true
-    this.camera.layers.set(0)
+    this.camera.layers.set(roomLayers.room)
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
@@ -317,7 +318,7 @@ function isShown(object: THREE.Object3D): boolean {
 function newRaycasterSeeingEveryLayer(): THREE.Raycaster {
   const raycaster = new THREE.Raycaster()
   raycaster.layers.enableAll()
-  raycaster.layers.disable(untappableRoomLayer)
+  raycaster.layers.disable(roomLayers.untappableRoom)
   return raycaster
 }
 

@@ -1,195 +1,110 @@
 import * as THREE from 'three'
 import { clothItemId, itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
-import type { DeepReadonly } from '../../../../Shared/Simulation/State/DeepReadonly.ts'
-import type { HandIndex, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
-import type { TableViewState } from '../../Table/TableViewState.ts'
+import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
-import { faucetSpout, footprintRadiusMetres, type CarriedShape, type ShapedItem, type WorldPoint } from '../RoomLayout.ts'
+import { faucetSpout, type ShapedItem, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
-import { teaLookFor } from '../../Table/TeaLooks.ts'
-import { CreepingStream } from './CreepingStream.ts'
-import { FallingStream } from './FallingStream.ts'
-import { LeafPile, type LeafPileSize } from './LeafPile.ts'
-import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
+import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
+import { ChosenGlow } from './Carried/ChosenGlow.ts'
+import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidth, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
+import { showContentsOf } from './Carried/ItemContents.ts'
+import { WaterStreams } from './Carried/WaterStreams.ts'
+import { roomLayers } from './RoomLayers.ts'
+import type { RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
 const handHeightMetres = 0.55
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
 const spoutAboveTargetRimMetres = 0.1
-const smallestVisibleTiltDegrees = 10
-const streamRadiusMetres = 0.007
-const pourStreamEndsAboveTheTargetMetres = 0.01
-const steamRiseMetresPerSecond = 0.12
-const steamColumnMetres = 0.18
-const openLidSideMetres = 0.16
-const lidTouchPadRadiusMetres = 0.095
-const lidLyingOnTheSurfaceMetres = 0.015
-const ajarLidSideMetres = 0.045
-const ajarLidRiseMetres = 0.02
-const ajarLidTiltRadians = 0.5
-const heldInViewDistanceMetres = 0.9
-const heldInViewShareOfScreenWidth = 0.24
-const heldInViewShareOfScreenHeightFromBottom = 0.07
-const chosenHeldLiftShareOfScreenHeight = 0.05
-const heldInViewTiltTowardsCameraRadians = 0.55
-const heldInViewInsetShareOfItemWidth = 0.8
-const handTouchAreaShareOfScreenWidth = 0.42
-const handTouchAreaShareOfScreenHeight = 0.2
-const chosenGlowShareOfItemWidth = 2
-const chosenGlowTextureSize = 256
-const chosenGlowPeakOpacity = 0.7
-const chosenGlowBehindMetres = 0.08
-const chosenGlowAboveTheBaseShareOfItemWidth = 0.2
-const chosenGlowPulsesPerSecond = 0.2
-const chosenGlowPulseShare = 0.03
-const chosenGlowDimmingAtThePulseLow = 0.2
-const chosenGlowColour = [255, 236, 170] as const
-const glazeByBowlId: Readonly<Record<string, Surface>> = {
-  bowl1: 'whiteGlaze',
-  bowl2: 'pearlGlaze',
-  bowl3: 'skyBlueGlaze',
-  bowl4: 'blueGlaze',
-  bowl5: 'yellowGlaze',
-  bowl6: 'emeraldGlaze',
-}
-const gaugeBottomMetres = 0.055
-const gaugeHeightMetres = 0.11
-const gaugeFaceMetres = 0.142
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
-const overflowSideFromTheGaugeRadians = 0.7
-const overflowAboveTheSurfaceMetres = 0.005
-const overflowLeavesTheKettleAtRadians = 2.4
-const overflowPointsOnTheKettle = 12
-const overflowStreamRadiusMetres = 0.009
-const kettleBodyRadiusMetres = 0.14
-const kettleBodyCentreMetres = 0.11
-const kettleBodySquash = 0.8
-const kettleOpeningRadiusMetres = 0.075
-const kettleOpeningAngle = Math.asin(kettleOpeningRadiusMetres / kettleBodyRadiusMetres)
-const kettleBottomInsideMetres = 0.004
-const kettleWaterBelowTheOpeningMetres = 0.012
-const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14 }
-const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01 }
-
-export const heldInViewLayer = 1
-export const untappableRoomLayer = 2
-
-const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: 3 }
-const mostPuffsFromOneSource = puffsBySteam.billowing
-const mostSteamSources = 2
-const steamStartsAboveTheOpeningMetres = 0.04
-const steamStartsAboveTheSpoutMetres = 0.02
-
-type Wave = {
-  readonly riseMetres: number
-  readonly tiltXRadians: number
-  readonly tiltZRadians: number
-}
-
-const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
-
-const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
-  still: { heightMetres: 0, tiltRadians: 0, wavesPerSecond: 0 },
-  shimmering: { heightMetres: 0.0008, tiltRadians: 0.02, wavesPerSecond: 1.5 },
-  simmering: { heightMetres: 0.002, tiltRadians: 0.05, wavesPerSecond: 2.5 },
-  boiling: { heightMetres: 0.004, tiltRadians: 0.09, wavesPerSecond: 4 },
-}
-
-export type CarriedItemsScene = {
-  readonly state: DeepReadonly<SessionState>
-  readonly table: TableViewState
-  readonly walk: Walk
-  readonly heldInView: HeldInView | null
-  readonly aimedPour: AimedPourView | null
-  readonly clothOnTheTableAt: WorldPoint | null
-  readonly timeSeconds: number
-}
-
-export type HeldInView = {
-  readonly camera: THREE.PerspectiveCamera
-  readonly chosenHandIndex: HandIndex | null
-}
-
-type CarriedModel = {
-  readonly itemId: string
-  readonly shape: CarriedShape
-  readonly root: THREE.Group
-  readonly spoutTip: THREE.Vector3
-  readonly rimHeight: number
-  readonly footprintRadius: number
-  readonly lid: THREE.Object3D | null
-  readonly lidClosedPosition: THREE.Vector3
-  readonly liquid: THREE.Mesh | null
-  readonly liquidMaterial: THREE.MeshStandardMaterial | null
-  readonly gaugeWater: THREE.Mesh | null
-  readonly leafHolder: THREE.Group | null
-  leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
-  readonly kettleWater: THREE.Mesh | null
-  readonly puffs: readonly THREE.Mesh[]
-  tagKey: string
-  layer: number
-  isHeldInView: boolean
-  castsShadow: boolean
-}
 
 export class CarriedItems {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
   private readonly materials: RoomMaterials
-  private readonly claySeenFromInside: THREE.Material
   private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
-  private readonly models: CarriedModel[]
-  private readonly pourStream: FallingStream
-  private readonly tapStream: FallingStream
-  private readonly overflowStream: CreepingStream
-  private readonly overflowPathByShape = new Map<CarriedShape, THREE.TubeGeometry>()
-  private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
-  private readonly chosenGlow = newChosenGlow()
-  private readonly streamMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
   private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
+  private readonly models: CarriedModel[]
+  private readonly waterStreams: WaterStreams
+  private readonly chosenGlow = new ChosenGlow()
+  private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
 
   constructor(materials: RoomMaterials, items: readonly ShapedItem[]) {
     this.materials = materials
     this.clothMaterial = materials.unsharedMaterialFor('cloth')
-    const clay = materials.unsharedMaterialFor('clay')
-    clay.side = THREE.DoubleSide
-    this.claySeenFromInside = clay
-    this.models = items.map(({ itemId, shape }) => this.modelOf(itemId, shape))
-    this.streamMaterial = materials.unsharedMaterialFor('pouredLiquid')
-    this.pourStream = new FallingStream(streamRadiusMetres, this.streamMaterial)
-    this.tapStream = new FallingStream(streamRadiusMetres, this.materials.unsharedMaterialFor('tapWater'))
-    this.overflowStream = new CreepingStream(this.materials.unsharedMaterialFor('tapWater'))
-    this.root.add(this.pourStream.mesh, this.tapStream.mesh, this.overflowStream.mesh)
+    const claySeenFromInside = materials.unsharedMaterialFor('clay')
+    claySeenFromInside.side = THREE.DoubleSide
+    const modelMaterials = { room: materials, claySeenFromInside, touchPad: this.touchPadMaterial, cloth: this.clothMaterial }
+    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, modelMaterials))
+    for (const model of this.models) {
+      this.root.add(model.root, ...model.puffs)
+      this.tappableMeshes.push(model.root)
+    }
+    this.waterStreams = new WaterStreams(materials)
+    this.root.add(...this.waterStreams.meshes, this.chosenGlow.mesh)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
-    this.root.add(this.chosenGlow)
   }
 
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
-    for (const model of this.models) this.showContents(model, scene)
-    this.showPour(scene)
-    this.showTapWater(scene)
+    for (const model of this.models) showContentsOf(model, scene)
+    this.clothMaterial.color.copy(this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), scene.table.clothWetShare))
+    this.waterStreams.show(scene, this.models)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
-    this.showChosenGlow(scene)
+    this.chosenGlow.show(scene, this.models)
   }
 
-  private showChosenGlow(scene: CarriedItemsScene): void {
-    const heldInView = scene.heldInView
-    const handIndex = heldInView?.chosenHandIndex ?? null
-    const itemId = handIndex === null ? null : (scene.state.keeper.hands[handIndex] ?? null)
-    const chosen = this.models.find((model) => model.itemId === itemId)
-    this.chosenGlow.visible = heldInView !== null && handIndex !== null && chosen?.isHeldInView === true
-    if (!this.chosenGlow.visible || heldInView === null || handIndex === null) return
-    const frame = heldInViewFrame(heldInView, handIndex)
-    const pulsePhase = Math.sin(scene.timeSeconds * chosenGlowPulsesPerSecond * Math.PI * 2)
-    const pulse = 1 + pulsePhase * chosenGlowPulseShare
-    const material = this.chosenGlow.material
-    if (material instanceof THREE.MeshBasicMaterial) material.opacity = 1 - chosenGlowDimmingAtThePulseLow * (1 - pulsePhase) / 2
-    const behindTheItem = frame.baseInCamera.clone().add(new THREE.Vector3(0, frame.itemWidth * chosenGlowAboveTheBaseShareOfItemWidth, -chosenGlowBehindMetres))
-    this.chosenGlow.position.copy(heldInView.camera.localToWorld(behindTheItem))
-    this.chosenGlow.quaternion.copy(heldInView.camera.quaternion)
-    this.chosenGlow.scale.setScalar(frame.itemWidth * chosenGlowShareOfItemWidth * pulse)
+  private place(model: CarriedModel, scene: CarriedItemsScene): void {
+    const location = itemLocationIn(scene.state, model.itemId)
+    if (location === undefined) return
+    const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
+    const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
+    const wipingAt = model.itemId === clothItemId ? scene.clothOnTheTableAt : null
+    const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet && wipingAt === null ? scene.heldInView : null
+    moveToLayer(model, heldInView !== null ? roomLayers.heldInView : wipingAt !== null ? roomLayers.untappableRoom : roomLayers.room)
+    this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
+    model.root.scale.setScalar(1)
+    if (aim !== null) return this.aimOver(model, aim)
+    if (wipingAt !== null) return wipeAt(model, wipingAt)
+    if (isUnderTheFaucet) {
+      this.retag(model, { isFaucet: true })
+      return holdUnderTheFaucet(model)
+    }
+    model.root.rotation.set(0, 0, 0)
+    if (location.kind === 'onSurface') {
+      model.root.visible = true
+      model.root.position.set(location.spot.x, location.spot.y, location.spot.z)
+      return this.retag(model, { itemId: model.itemId })
+    }
+    model.root.visible = true
+    this.retag(model, { handIndex: location.handIndex })
+    if (heldInView !== null) return holdInView(model, location.handIndex, heldInView)
+    model.root.position.copy(handPosition(scene.walk, location.handIndex))
+    model.root.rotation.y = scene.walk.headingRadians
+  }
+
+  private aimOver(model: CarriedModel, aim: AimedPourView): void {
+    const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
+    if (target === undefined) return
+    const tiltRadians = -THREE.MathUtils.degToRad(Math.max(0, aim.tiltDegrees))
+    const turnRadians = Math.atan2(-aim.spoutDirection.z, aim.spoutDirection.x)
+    const tipAfterTilt = model.spoutTip.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), tiltRadians).applyAxisAngle(new THREE.Vector3(0, 1, 0), turnRadians)
+    const tipGoal = new THREE.Vector3(aim.spout.x, target.root.position.y + target.rimHeight + spoutAboveTargetRimMetres, aim.spout.z)
+    model.root.visible = true
+    model.root.rotation.set(0, turnRadians, tiltRadians)
+    model.root.position.copy(tipGoal.sub(tipAfterTilt))
+  }
+
+  private retag(model: CarriedModel, tag: TapTargetTag): void {
+    const tagKey = JSON.stringify(tag)
+    if (model.tagKey === tagKey) return
+    model.tagKey = tagKey
+    model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
+    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag || 'isFaucet' in tag)) return
+    const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
+    model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
   }
 
   private castShadowUnlessStanding(model: CarriedModel, shouldCast: boolean): void {
@@ -200,7 +115,7 @@ export class CarriedItems {
 
   private handTouchArea(handIndex: HandIndex): THREE.Mesh {
     const area = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.touchPadMaterial)
-    area.layers.set(heldInViewLayer)
+    area.layers.set(roomLayers.heldInView)
     area.visible = false
     const tag: TapTargetTag = { handIndex }
     area.userData = { tapTarget: tag }
@@ -220,356 +135,6 @@ export class CarriedItems {
     area.quaternion.copy(scene.heldInView.camera.quaternion)
     area.scale.set(frame.screenWidth * handTouchAreaShareOfScreenWidth, frame.screenHeight * handTouchAreaShareOfScreenHeight, 1)
   }
-
-  private place(model: CarriedModel, scene: CarriedItemsScene): void {
-    const location = itemLocationIn(scene.state, model.itemId)
-    if (location === undefined) return
-    const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
-    const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
-    const wipingAt = model.itemId === clothItemId ? scene.clothOnTheTableAt : null
-    const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet && wipingAt === null ? scene.heldInView : null
-    moveToLayer(model, heldInView !== null ? heldInViewLayer : wipingAt !== null ? untappableRoomLayer : 0)
-    this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
-    model.root.scale.setScalar(1)
-    if (aim !== null) return this.aimOver(model, aim)
-    if (wipingAt !== null) return wipeAt(model, wipingAt)
-    if (isUnderTheFaucet) {
-      this.retag(model, { isFaucet: true })
-      return holdUnderTheFaucet(model)
-    }
-    model.root.rotation.set(0, 0, 0)
-    if (location.kind === 'onSurface') {
-      model.root.visible = true
-      model.root.position.set(location.spot.x, location.spot.y, location.spot.z)
-      return this.retag(model, { itemId: model.itemId })
-    }
-    model.root.visible = true
-    this.retag(model, { handIndex: location.handIndex })
-    if (heldInView !== null) return holdInView(model, location.handIndex, heldInView)
-    const hand = handPosition(scene.walk, location.handIndex)
-    model.root.position.copy(hand)
-    model.root.rotation.y = scene.walk.headingRadians
-  }
-
-  private aimOver(model: CarriedModel, aim: AimedPourView): void {
-    const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
-    if (target === undefined) return
-    const tiltRadians = -THREE.MathUtils.degToRad(Math.max(0, aim.tiltDegrees))
-    const turnRadians = Math.atan2(-aim.spoutDirection.z, aim.spoutDirection.x)
-    const tipAfterTilt = model.spoutTip.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), tiltRadians).applyAxisAngle(new THREE.Vector3(0, 1, 0), turnRadians)
-    const tipGoal = new THREE.Vector3(aim.spout.x, target.root.position.y + target.rimHeight + spoutAboveTargetRimMetres, aim.spout.z)
-    model.root.visible = true
-    model.root.rotation.set(0, turnRadians, tiltRadians)
-    model.root.position.copy(tipGoal.sub(tipAfterTilt))
-  }
-
-  private showContents(model: CarriedModel, scene: CarriedItemsScene): void {
-    const vessel = scene.table.vessels[model.itemId]
-    const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
-    if (model.lid !== null) placeLid(model, model.lid, isOpen, itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface')
-    if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
-    const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
-    if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)
-    if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
-    if (model.leafHolder !== null) this.showLeaves(model, model.leafHolder, scene)
-    if (model.itemId === clothItemId) this.clothMaterial.color.copy(this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), scene.table.clothWetShare))
-    const puffsPerSource = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
-    const steamSources = steamSourcesOf(model, model.lid === null || isOpen)
-    model.puffs.forEach((puff, index) => {
-      const source = steamSources[index % steamSources.length]
-      const puffAtItsSource = Math.floor(index / steamSources.length)
-      puff.visible = source !== undefined && puffAtItsSource < puffsPerSource
-      if (!puff.visible || source === undefined) return
-      const rise = (scene.timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
-      puff.position.set(source.x, source.y + rise * steamColumnMetres, source.z)
-      puff.scale.setScalar(0.6 + rise)
-    })
-  }
-
-  private showPour(scene: CarriedItemsScene): void {
-    const pour = scene.state.pour
-    const source = this.models.find((model) => model.itemId === pour?.sourceId)
-    const target = this.models.find((model) => model.itemId === pour?.targetId)
-    const isStreamShown = pour !== null && pour.tiltDegrees >= smallestVisibleTiltDegrees && source !== undefined && target !== undefined
-    if (!isStreamShown || source === undefined || target === undefined) return this.pourStream.show(null, scene.timeSeconds)
-    const top = source.root.localToWorld(source.spoutTip.clone())
-    this.pourStream.show({ top, bottomY: target.root.position.y + pourStreamEndsAboveTheTargetMetres }, scene.timeSeconds)
-    const pouredColour = scene.table.vessels[source.itemId]?.liquorColour
-    if (pouredColour !== undefined) this.streamMaterial.color.set(pouredColour)
-  }
-
-  private showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
-    const teaId = scene.state.caddy.teaId
-    if (model.leaves === null || model.leaves.teaId !== teaId) {
-      if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
-      const pile = new LeafPile(teaLookFor(teaId), model.shape === 'spoon' ? leavesOnTheSpoon : leavesInTheCaddy)
-      pile.mesh.layers.set(model.layer)
-      pile.mesh.userData = { ...holder.userData }
-      holder.add(pile.mesh)
-      model.leaves = { pile, teaId }
-    }
-    model.leaves.pile.showFill(model.shape === 'spoon' ? scene.table.spoonFillShare : scene.table.caddy.fillShare)
-  }
-
-  private showTapWater(scene: CarriedItemsScene): void {
-    const filled = this.models.find((model) => model.itemId === scene.state.filling?.vesselId)
-    const isRunningOverTheLid = scene.state.filling?.isRunningOverTheLid === true
-    const isOverflowing = filled !== undefined && scene.state.filling?.hasOverflowed === true && !isRunningOverTheLid
-    this.overflowStream.show(isOverflowing ? { path: this.overflowPathOf(filled), position: filled.root.position, quaternion: filled.root.quaternion } : null, scene.timeSeconds)
-    if (filled === undefined) return this.tapStream.show(null, scene.timeSeconds)
-    const bottomY = filled.root.position.y + filled.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
-    this.tapStream.show({ top: new THREE.Vector3(faucetSpout.x, faucetSpout.y, faucetSpout.z), bottomY }, scene.timeSeconds)
-  }
-
-  private overflowPathOf(model: CarriedModel): THREE.TubeGeometry {
-    const known = this.overflowPathByShape.get(model.shape)
-    if (known !== undefined) return known
-    const side = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
-    const pointsOnTheSide = model.shape === 'kettle' ? pointsDownTheKettle() : pointsDownAStraightSide(model)
-    const lastOnTheSide = pointsOnTheSide[pointsOnTheSide.length - 1] ?? { distance: 0, height: 0 }
-    const points = [...pointsOnTheSide, { distance: lastOnTheSide.distance, height: 0 }].map(({ distance, height }) => side.clone().multiplyScalar(distance).setY(height))
-    const path = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, overflowStreamRadiusMetres, 6, false)
-    this.overflowPathByShape.set(model.shape, path)
-    return path
-  }
-
-  private retag(model: CarriedModel, tag: TapTargetTag): void {
-    const tagKey = JSON.stringify(tag)
-    if (model.tagKey === tagKey) return
-    model.tagKey = tagKey
-    model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
-    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag || 'isFaucet' in tag)) return
-    const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
-    model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
-  }
-
-  private modelOf(itemId: string, shape: CarriedShape): CarriedModel {
-    const root = new THREE.Group()
-    const parts = this.partsOf(shape, itemId)
-    root.add(...parts.meshes)
-    if (parts.lid !== null) root.add(parts.lid)
-    const liquidMaterial = parts.liquidRadius === null ? null : (this.materials.unsharedMaterialFor('porcelain') as THREE.MeshStandardMaterial)
-    const liquid = liquidMaterial === null ? null : new THREE.Mesh(new THREE.CircleGeometry(1, 20), liquidMaterial)
-    if (liquid !== null) {
-      liquid.rotation.x = -Math.PI / 2
-      root.add(liquid)
-    }
-    const gaugeWater = shape === 'kettle' ? this.addWaterGauge(root) : null
-    const leafHolder = leafHolderFor(shape)
-    if (leafHolder !== null) root.add(leafHolder)
-    const kettleWater = shape === 'kettle' ? this.addKettleWater(root) : null
-    root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
-    const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.materials.materialFor('steam')))
-    for (const puff of puffs) puff.castShadow = false
-    this.root.add(root, ...puffs)
-    this.tappableMeshes.push(root)
-    return {
-      itemId,
-      shape,
-      root,
-      spoutTip: parts.spoutTip,
-      rimHeight: parts.rimHeight,
-      footprintRadius: footprintRadiusMetres[shape],
-      lid: parts.lid,
-      lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
-      liquid,
-      liquidMaterial,
-      gaugeWater,
-      leafHolder,
-      leaves: null,
-      kettleWater,
-      puffs,
-      tagKey: '',
-      layer: 0,
-      isHeldInView: false,
-      castsShadow: true,
-    }
-  }
-
-  private addKettleWater(root: THREE.Group): THREE.Mesh {
-    const water = new THREE.Mesh(new THREE.CircleGeometry(1, 24), this.materials.unsharedMaterialFor('gaugeGlass'))
-    water.rotation.x = -Math.PI / 2
-    water.visible = false
-    root.add(water)
-    return water
-  }
-
-
-  private addWaterGauge(root: THREE.Group): THREE.Mesh {
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.048, gaugeHeightMetres + 0.014, 0.006), this.materials.materialFor('gaugeGlass'))
-    glass.position.set(0, gaugeBottomMetres + gaugeHeightMetres / 2, gaugeFaceMetres)
-    const water = new THREE.Mesh(new THREE.BoxGeometry(0.034, 1, 0.008), this.materials.unsharedMaterialFor('gaugeGlass'))
-    water.position.set(0, gaugeBottomMetres, gaugeFaceMetres + 0.001)
-    root.add(glass, water)
-    return water
-  }
-
-  private partsOf(shape: CarriedShape, itemId: string): { meshes: THREE.Object3D[]; lid: THREE.Object3D | null; spoutTip: THREE.Vector3; rimHeight: number; liquidRadius: number | null } {
-    switch (shape) {
-      case 'kettle':
-        return this.kettleParts()
-      case 'thermos':
-        return this.thermosParts()
-      case 'caddy':
-        return this.caddyParts()
-      case 'bowl':
-        return this.bowlParts(glazeByBowlId[itemId] ?? 'porcelain')
-      case 'spoon':
-        return this.spoonParts()
-      case 'cloth':
-        return this.clothParts()
-    }
-  }
-
-  private kettleParts() {
-    const bodyWithAnOpening = new THREE.SphereGeometry(kettleBodyRadiusMetres, 20, 14, 0, Math.PI * 2, kettleOpeningAngle, Math.PI - kettleOpeningAngle)
-    const body = new THREE.Mesh(bodyWithAnOpening, this.claySeenFromInside)
-    body.scale.set(1, kettleBodySquash, 1)
-    body.position.y = kettleBodyCentreMetres
-    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.14, 8), this.materials.materialFor('clay'))
-    spout.position.set(0.15, 0.14, 0)
-    spout.rotation.z = -0.9
-    const lid = new THREE.Group()
-    const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 14), this.materials.materialFor('darkWood'))
-    const lidTouchPad = new THREE.Mesh(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, 0.04, 12), this.touchPadMaterial)
-    lid.add(lidTop, lidTouchPad)
-    lid.position.y = 0.215
-    return { meshes: [body, spout], lid, spoutTip: new THREE.Vector3(0.205, 0.183, 0), rimHeight: 0.23, liquidRadius: null }
-  }
-
-  private thermosParts() {
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.3, 14), this.materials.materialFor('steel'))
-    body.position.y = 0.15
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.06, 0.05, 12), this.materials.materialFor('darkWood'))
-    lid.position.y = 0.325
-    return { meshes: [body], lid, spoutTip: new THREE.Vector3(0.06, 0.3, 0), rimHeight: 0.3, liquidRadius: null }
-  }
-
-  private caddyParts() {
-    const tin = this.materials.unsharedMaterialFor('caddyGreen')
-    tin.side = THREE.DoubleSide
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 28, 1, true), tin)
-    body.position.y = 0.08
-    const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.08, 28), this.materials.materialFor('caddyInside'))
-    bottom.rotation.x = -Math.PI / 2
-    bottom.position.y = 0.002
-    const label = new THREE.Mesh(new THREE.CylinderGeometry(0.0808, 0.0808, 0.055, 28, 1, true), this.materials.materialFor('caddyLabel'))
-    label.position.y = 0.075
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.08, 0.004, 6, 28), this.materials.materialFor('caddyRim'))
-    rim.rotation.x = Math.PI / 2
-    rim.position.y = 0.16
-    const lid = new THREE.Group()
-    const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.028, 28), this.materials.materialFor('caddyGreen'))
-    const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.018, 12), this.materials.materialFor('caddyRim'))
-    knob.position.y = 0.023
-    lid.add(lidTop, knob)
-    lid.position.y = 0.174
-    return { meshes: [body, bottom, label, rim], lid, spoutTip: new THREE.Vector3(0.08, 0.16, 0), rimHeight: 0.19, liquidRadius: null }
-  }
-
-  private spoonParts() {
-    const handle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.015, 0.025), this.materials.materialFor('darkWood'))
-    handle.position.set(-0.04, 0.01, 0)
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.02, 12), this.materials.materialFor('darkWood'))
-    bowl.position.set(0.07, 0.012, 0)
-    return { meshes: [handle, bowl], lid: null, spoutTip: new THREE.Vector3(0.11, 0.02, 0), rimHeight: 0.025, liquidRadius: null }
-  }
-
-  private clothParts() {
-    const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.2), this.clothMaterial)
-    cloth.position.y = 0.01
-    return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(0.14, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
-  }
-
-  private bowlParts(glaze: Surface) {
-    const profile = [
-      new THREE.Vector2(0, 0.008),
-      new THREE.Vector2(0.04, 0.004),
-      new THREE.Vector2(0.05, 0),
-      new THREE.Vector2(0.066, 0.014),
-      new THREE.Vector2(0.078, 0.036),
-      new THREE.Vector2(0.083, 0.062),
-    ]
-    const glazed = this.materials.unsharedMaterialFor(glaze)
-    glazed.side = THREE.DoubleSide
-    const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 24), glazed)
-    return { meshes: [body], lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
-  }
-}
-
-function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
-  if (model.liquid === null || model.liquidMaterial === null) return
-  model.liquid.visible = vessel.fillShare > 0
-  const surfaceHeight = 0.008 + vessel.fillShare * (model.rimHeight - 0.014)
-  const radius = 0.042 + (surfaceHeight / model.rimHeight) * 0.038
-  model.liquid.position.y = surfaceHeight
-  model.liquid.scale.setScalar(radius)
-  model.liquidMaterial.color.set(vessel.liquorColour)
-}
-
-
-function pointsDownTheKettle(): { distance: number; height: number }[] {
-  return Array.from({ length: overflowPointsOnTheKettle + 1 }, (_, index) => {
-    const angleFromTheTop = kettleOpeningAngle + ((overflowLeavesTheKettleAtRadians - kettleOpeningAngle) * index) / overflowPointsOnTheKettle
-    return {
-      distance: (kettleBodyRadiusMetres + overflowAboveTheSurfaceMetres) * Math.sin(angleFromTheTop),
-      height: kettleBodyCentreMetres + (kettleBodyRadiusMetres * kettleBodySquash + overflowAboveTheSurfaceMetres) * Math.cos(angleFromTheTop),
-    }
-  })
-}
-
-function pointsDownAStraightSide(model: CarriedModel): { distance: number; height: number }[] {
-  const distance = model.footprintRadius + overflowAboveTheSurfaceMetres
-  return [
-    { distance, height: model.rimHeight },
-    { distance, height: model.rimHeight / 2 },
-  ]
-}
-
-function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave {
-  const { heightMetres, tiltRadians, wavesPerSecond } = wavesByMotion[motion]
-  const phase = timeSeconds * wavesPerSecond * Math.PI * 2
-  return {
-    riseMetres: Math.sin(phase) * heightMetres,
-    tiltXRadians: Math.sin(phase * 0.8) * tiltRadians,
-    tiltZRadians: Math.cos(phase * 1.3) * tiltRadians,
-  }
-}
-
-function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
-  const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres + (vessel.fillShare > 0 ? wave.riseMetres : 0))
-  gaugeWater.visible = vessel.fillShare > 0
-  gaugeWater.scale.y = height
-  gaugeWater.position.y = gaugeBottomMetres + height / 2
-  const material = gaugeWater.material
-  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
-}
-
-function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vector3[] {
-  const aboveTheOpening = model.root.position.clone().add(new THREE.Vector3(0, model.rimHeight + steamStartsAboveTheOpeningMetres, 0))
-  const aboveTheSpout = model.root.localToWorld(model.spoutTip.clone()).add(new THREE.Vector3(0, steamStartsAboveTheSpoutMetres, 0))
-  if (model.shape !== 'kettle') return isOpenToTheAir ? [aboveTheOpening] : []
-  return isOpenToTheAir ? [aboveTheSpout, aboveTheOpening] : [aboveTheSpout]
-}
-
-function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
-  water.visible = vessel.fillShare > 0 && vessel.isLidOpen === true
-  const bodyHalfHeight = kettleBodyRadiusMetres * kettleBodySquash
-  const openingHeight = kettleBodyCentreMetres + bodyHalfHeight * Math.cos(kettleOpeningAngle)
-  const surfaceHeight = kettleBottomInsideMetres + vessel.fillShare * (openingHeight - kettleWaterBelowTheOpeningMetres - kettleBottomInsideMetres)
-  const heightFromCentre = (surfaceHeight - kettleBodyCentreMetres) / bodyHalfHeight
-  water.position.y = surfaceHeight + wave.riseMetres
-  water.rotation.set(-Math.PI / 2 + wave.tiltXRadians, 0, wave.tiltZRadians)
-  water.scale.setScalar(Math.max(0.001, kettleBodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre)) - 0.003))
-  const material = water.material
-  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
-}
-
-function leafHolderFor(shape: CarriedShape): THREE.Group | null {
-  if (shape !== 'caddy' && shape !== 'spoon') return null
-  const holder = new THREE.Group()
-  holder.position.set(shape === 'spoon' ? 0.07 : 0, shape === 'spoon' ? 0.02 : 0.004, 0)
-  return holder
 }
 
 function wipeAt(model: CarriedModel, point: WorldPoint): void {
@@ -584,79 +149,11 @@ function holdUnderTheFaucet(model: CarriedModel): void {
   model.root.position.set(faucetSpout.x, faucetSpout.y - heldUnderTheFaucetBelowSpoutMetres - model.rimHeight, faucetSpout.z)
 }
 
-function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, isStanding: boolean): void {
-  lid.position.copy(model.lidClosedPosition)
-  lid.rotation.set(0, 0, 0)
-  if (!isOpen) return
-  if (isStanding) {
-    lid.position.x -= openLidSideMetres
-    lid.position.y = lidLyingOnTheSurfaceMetres
-    return
-  }
-  lid.position.x -= ajarLidSideMetres
-  lid.position.y += ajarLidRiseMetres
-  lid.rotation.z = ajarLidTiltRadians
-}
-
 function moveToLayer(model: CarriedModel, layer: number): void {
   if (model.layer === layer) return
   model.layer = layer
-  model.isHeldInView = layer === heldInViewLayer
+  model.isHeldInView = layer === roomLayers.heldInView
   model.root.traverse((part) => part.layers.set(layer))
-}
-
-function newChosenGlow(): THREE.Mesh {
-  const texture = new THREE.DataTexture(chosenGlowPixels(), chosenGlowTextureSize, chosenGlowTextureSize)
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.magFilter = THREE.LinearFilter
-  texture.minFilter = THREE.LinearFilter
-  texture.needsUpdate = true
-  const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false })
-  const glow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material)
-  glow.layers.set(heldInViewLayer)
-  glow.visible = false
-  return glow
-}
-
-function chosenGlowPixels(): Uint8Array {
-  const pixels = new Uint8Array(chosenGlowTextureSize * chosenGlowTextureSize * 4)
-  const centre = chosenGlowTextureSize / 2
-  const [red, green, blue] = chosenGlowColour
-  for (let row = 0; row < chosenGlowTextureSize; row += 1) {
-    for (let column = 0; column < chosenGlowTextureSize; column += 1) {
-      const shareOfTheRadius = Math.min(1, Math.hypot(column + 0.5 - centre, row + 0.5 - centre) / centre)
-      const softFalloff = Math.exp(-2.5 * shareOfTheRadius * shareOfTheRadius) * (1 - shareOfTheRadius)
-      const index = (row * chosenGlowTextureSize + column) * 4
-      pixels.set([red, green, blue, Math.round(255 * chosenGlowPeakOpacity * softFalloff)], index)
-    }
-  }
-  return pixels
-}
-
-function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView): void {
-  const { camera } = heldInView
-  const frame = heldInViewFrame(heldInView, handIndex)
-  model.root.position.copy(camera.localToWorld(frame.baseInCamera))
-  model.root.quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), heldInViewTiltTowardsCameraRadians))
-  model.root.scale.setScalar(frame.itemWidth / (2 * model.footprintRadius))
-}
-
-function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex) {
-  const { camera, chosenHandIndex } = heldInView
-  const screenHeight = 2 * heldInViewDistanceMetres * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
-  const screenWidth = screenHeight * camera.aspect
-  const itemWidth = screenWidth * heldInViewShareOfScreenWidth
-  const side = handIndex === 0 ? -1 : 1
-  const x = side * (screenWidth / 2 - itemWidth * heldInViewInsetShareOfItemWidth)
-  const lift = chosenHandIndex === handIndex ? screenHeight * chosenHeldLiftShareOfScreenHeight : 0
-  const bottom = -screenHeight / 2 + screenHeight * heldInViewShareOfScreenHeightFromBottom + lift
-  return {
-    screenWidth,
-    screenHeight,
-    itemWidth,
-    baseInCamera: new THREE.Vector3(x, bottom, -heldInViewDistanceMetres),
-    centreInCamera: new THREE.Vector3(x, bottom + screenHeight * handTouchAreaShareOfScreenHeight * 0.4, -heldInViewDistanceMetres),
-  }
 }
 
 function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {

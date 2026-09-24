@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { LeafShape, TeaLook } from '../../Table/TeaLooks.ts'
+import type { LeafShape, TeaLook } from '../../../Table/TeaLooks.ts'
 
 export type LeafPileSize = {
   readonly leafCount: number
