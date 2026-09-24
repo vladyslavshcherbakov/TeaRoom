@@ -75,6 +75,10 @@ export const heldInViewLayer = 1
 export const untappableRoomLayer = 2
 
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: 3 }
+const mostPuffsFromOneSource = puffsBySteam.billowing
+const mostSteamSources = 2
+const steamStartsAboveTheOpeningMetres = 0.04
+const steamStartsAboveTheSpoutMetres = 0.02
 
 type Wave = {
   readonly riseMetres: number
@@ -270,11 +274,15 @@ export class CarriedItems {
     if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
     if (model.leafHolder !== null) this.showLeaves(model, model.leafHolder, scene)
     if (model.itemId === clothItemId) this.clothMaterial.color.copy(this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), scene.table.clothWetShare))
-    const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
+    const puffsPerSource = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
+    const steamSources = steamSourcesOf(model, model.lid === null || isOpen)
     model.puffs.forEach((puff, index) => {
-      puff.visible = index < puffCount
-      const rise = (scene.timeSeconds * steamRiseMetresPerSecond + index / model.puffs.length) % 1
-      puff.position.set(model.root.position.x, model.root.position.y + model.rimHeight + 0.04 + rise * steamColumnMetres, model.root.position.z)
+      const source = steamSources[index % steamSources.length]
+      const puffAtItsSource = Math.floor(index / steamSources.length)
+      puff.visible = source !== undefined && puffAtItsSource < puffsPerSource
+      if (!puff.visible || source === undefined) return
+      const rise = (scene.timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
+      puff.position.set(source.x, source.y + rise * steamColumnMetres, source.z)
       puff.scale.setScalar(0.6 + rise)
     })
   }
@@ -354,7 +362,7 @@ export class CarriedItems {
     if (leafHolder !== null) root.add(leafHolder)
     const kettleWater = shape === 'kettle' ? this.addKettleWater(root) : null
     root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
-    const puffs = [0, 1, 2].map(() => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
+    const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
     for (const puff of puffs) puff.castShadow = false
     this.root.add(root, ...puffs)
     this.tappableMeshes.push(root)
@@ -538,6 +546,13 @@ function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel,
   gaugeWater.position.y = gaugeBottomMetres + height / 2
   const material = gaugeWater.material
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
+}
+
+function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vector3[] {
+  const aboveTheOpening = model.root.position.clone().add(new THREE.Vector3(0, model.rimHeight + steamStartsAboveTheOpeningMetres, 0))
+  const aboveTheSpout = model.root.localToWorld(model.spoutTip.clone()).add(new THREE.Vector3(0, steamStartsAboveTheSpoutMetres, 0))
+  if (model.shape !== 'kettle') return isOpenToTheAir ? [aboveTheOpening] : []
+  return isOpenToTheAir ? [aboveTheSpout, aboveTheOpening] : [aboveTheSpout]
 }
 
 function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
