@@ -198,6 +198,15 @@ test('sipButton_whenTheChosenHandHoldsTheKettle_isNotOffered', () => {
   assert.equal(room.play.sippableCupId, null)
 })
 
+test('sipButton_whenTheChosenBowlIsEmpty_isNotOffered', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1')
+
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.equal(room.play.sippableCupId, null)
+})
+
 test('sip_fromTheChosenBowlOfTea_takesTwentyMillilitres', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()

@@ -100,7 +100,7 @@ export class RoomPlay {
   get sippableCupId(): string | null {
     const itemId = this.selectedItemId()
     const vessel = itemId === null ? undefined : this.ritual.state.vessels[itemId]
-    if (vessel === undefined) return null
+    if (vessel === undefined || vessel.liquid.volumeMl <= 0) return null
     return definitionIn(this.catalog, 'vessels', vessel.definitionId).isDrinkable ? vessel.id : null
   }
 
