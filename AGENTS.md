@@ -46,6 +46,8 @@ Reference mechanic: pouring (`Physics/Pouring.ts`, `Ritual/PouringCommands.ts`, 
 
 External dependencies: Phaser for the table and Three.js for the room, pinned in `package.json`. Vite, TypeScript and `@types/node` for development. The simulation imports none of them.
 
+Before designing a new feature, read `docs/world-bible.md`. It holds the lore, the living systems and the secrets the game grows from.
+
 ## Rules nothing checks
 
 - The simulation never reads the clock, randomness, the DOM or any browser API. Time arrives through `advance`. Randomness, when it comes, is a seeded source passed in.
