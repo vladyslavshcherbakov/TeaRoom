@@ -39,6 +39,32 @@
       .sip[hidden] {
         display: none;
       }
+      .tilt,
+      .done {
+        position: fixed;
+        bottom: calc(24px + env(safe-area-inset-bottom));
+        border-radius: 50%;
+        border: 2px solid #8f5a3a;
+        background: #fbf4e8;
+        color: #5a3a26;
+        touch-action: none;
+      }
+      .tilt {
+        right: 24px;
+        width: 88px;
+        height: 88px;
+        font-size: 40px;
+      }
+      .done {
+        left: 24px;
+        width: 56px;
+        height: 56px;
+        font-size: 26px;
+      }
+      .tilt[hidden],
+      .done[hidden] {
+        display: none;
+      }
       .caption {
         position: fixed;
         bottom: calc(28vh + env(safe-area-inset-bottom));

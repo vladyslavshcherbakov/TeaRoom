@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
+  faucetSpout,
   furniture,
   furnitureWithId,
   itemSpots,
@@ -26,6 +27,7 @@ export type TapTargetTag =
   | { readonly isFloor: true }
   | { readonly isHeater: true }
   | { readonly isHeaterSwitch: true }
+  | { readonly isFaucet: true }
   | { readonly itemId: string }
   | { readonly handIndex: HandIndex }
   | { readonly lidOfItemId: string }
@@ -135,6 +137,7 @@ export class RoomModel {
     const mesh = this.itemMesh(spot)
     if (spot.shape === 'spoon' || spot.shape === 'cloth') return this.addTool(spot.shape, mesh, spot.position)
     if (spot.shape === 'figurine') return this.tag(mesh, { figurineId: spot.id })
+    if (spot.shape === 'faucet') return this.tag(mesh, { isFaucet: true })
     const furnitureId = furnitureWithinReachOf(spot)
     if (furnitureId !== null) this.tag(mesh, { furnitureId })
   }
@@ -198,7 +201,7 @@ export class RoomModel {
     const { x, y, z } = spot.position
     switch (spot.shape) {
       case 'faucet':
-        return this.box('steel', 0.05, 0.35, 0.05, { x, y: y + 0.17, z })
+        return this.faucet({ x, y, z })
       case 'spoon':
         return this.spoon({ x, y, z })
       case 'cloth':
@@ -206,6 +209,22 @@ export class RoomModel {
       case 'figurine':
         return this.figurine(spot)
     }
+  }
+
+  private faucet(base: WorldPoint): THREE.Object3D {
+    const faucet = new THREE.Group()
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.05), this.materials.materialFor('steel'))
+    post.position.set(base.x, base.y + 0.18, base.z)
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, faucetSpout.z - base.z + 0.02), this.materials.materialFor('steel'))
+    arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
+    const touchPad = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.4, 0.3), this.invisibleMaterial())
+    touchPad.position.set(base.x, base.y + 0.2, (base.z + faucetSpout.z) / 2)
+    touchPad.castShadow = false
+    faucet.add(post, arm, touchPad)
+    post.castShadow = true
+    arm.castShadow = true
+    this.root.add(faucet)
+    return faucet
   }
 
   private spoon(base: WorldPoint): THREE.Object3D {

@@ -91,7 +91,16 @@ export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {
   bowl: 0.09,
 }
 
+export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
+  kettle: 0.06,
+  thermos: 0.05,
+  caddy: 0.07,
+  bowl: 0.075,
+}
+
 export const heaterFootprintRadiusMetres = 0.18
+
+export const faucetSpout: WorldPoint = { x: -1.45, y: 1.22, z: -2.72 }
 
 export const itemSpots: readonly ItemSpot[] = [
   { id: 'faucet', shape: 'faucet', position: { x: -1.45, y: 0.9, z: -2.9 } },

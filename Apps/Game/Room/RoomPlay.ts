@@ -5,8 +5,9 @@ import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
+import { AimedPour, type AimedPourView } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
-import { furniture, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { carriedItemShapes, furniture, openingRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
 
@@ -22,6 +23,7 @@ export type RoomTapTarget =
   | { readonly kind: 'item'; readonly itemId: string }
   | { readonly kind: 'heater' }
   | { readonly kind: 'heaterSwitch' }
+  | { readonly kind: 'faucet' }
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
   | { readonly kind: 'lid'; readonly itemId: string }
   | { readonly kind: 'tool'; readonly tool: RitualTool }
@@ -37,31 +39,13 @@ type WipeStroke = {
   lastPoint: WorldPoint
 }
 
-type Pour = {
-  readonly sourceId: string
-  readonly targetId: string
-  readonly tiltDegrees: number
-}
-
-type Hold =
-  | { readonly kind: 'notHeldYet' }
-  | { readonly kind: 'nothingToPour' }
-  | { readonly kind: 'pourRefused' }
-  | { readonly kind: 'pouring'; readonly pour: Pour }
-  | { readonly kind: 'pourEnded' }
-
 type Press = {
   readonly target: RoomTapTarget
   heldSeconds: number
   hasMovedAway: boolean
-  hold: Hold
   readonly stroke: WipeStroke | null
 }
 
-const holdBeforePouringSeconds = 0.3
-const firstTiltDegrees = 14
-const tiltGrowthDegreesPerSecond = 20
-const steepestTiltDegrees = 36
 const fullSpoonDepth = 1
 const strokeCoveringTheWholeTableMetres = 1.5
 const shortestWipeMetres = 0.05
@@ -73,6 +57,7 @@ export class RoomPlay {
   private readonly navigator: RoomNavigator
   private choice: Choice | null = null
   private press: Press | null = null
+  private aimedPour: AimedPour | null = null
 
   constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog) {
     this.ritual = ritual
@@ -104,8 +89,13 @@ export class RoomPlay {
     return definitionIn(this.catalog, 'vessels', vessel.definitionId).isDrinkable ? vessel.id : null
   }
 
+  get aimedPourView(): AimedPourView | null {
+    return this.aimedPour?.view ?? null
+  }
+
   pressStarted(target: RoomTapTarget): void {
-    this.press = { target, heldSeconds: 0, hasMovedAway: false, hold: { kind: 'notHeldYet' }, stroke: this.wipeStrokeStartingAt(target) }
+    if (this.aimedPour !== null) return this.log(`press on ${describeTarget(target)} ignored while aiming a pour`)
+    this.press = { target, heldSeconds: 0, hasMovedAway: false, stroke: this.wipeStrokeStartingAt(target) }
   }
 
   pressMovedOver(target: RoomTapTarget): void {
@@ -118,7 +108,7 @@ export class RoomPlay {
   pressMovedAway(): void {
     if (this.press === null || this.press.hasMovedAway) return
     this.press.hasMovedAway = true
-    if (this.press.hold.kind !== 'pouring' && this.press.stroke === null) this.log(`press on ${describeTarget(this.press.target)} moved away, not a tap`)
+    if (this.press.stroke === null) this.log(`press on ${describeTarget(this.press.target)} moved away, not a tap`)
   }
 
   pressEnded(): void {
@@ -126,17 +116,32 @@ export class RoomPlay {
     this.press = null
     if (press === null) return
     if (press.stroke !== null && press.hasMovedAway) return this.wipeWith(press.stroke, press.heldSeconds)
-    switch (press.hold.kind) {
-      case 'pouring':
-        this.ritual.dispatch({ type: 'stopPouring' })
-        return
-      case 'pourRefused':
-      case 'pourEnded':
-        return this.log(`press on ${describeTarget(press.target)} released after a pour attempt, not a tap`)
-      case 'notHeldYet':
-      case 'nothingToPour':
-        if (!press.hasMovedAway) this.tapped(press.target)
-    }
+    if (!press.hasMovedAway) this.tapped(press.target)
+  }
+
+  pourFingerDown(point: FloorPoint): void {
+    this.aimedPour?.fingerDown(point)
+  }
+
+  pourFingerMoved(point: FloorPoint): void {
+    this.aimedPour?.fingerMoved(point)
+  }
+
+  pourFingerUp(): void {
+    this.aimedPour?.fingerUp()
+  }
+
+  tiltPressed(): void {
+    this.aimedPour?.tiltPressed()
+  }
+
+  tiltReleased(): void {
+    this.aimedPour?.tiltReleased()
+  }
+
+  pourDone(): void {
+    this.aimedPour?.finish()
+    this.aimedPour = null
   }
 
   handTapped(handIndex: HandIndex): void {
@@ -151,12 +156,8 @@ export class RoomPlay {
 
   advance(seconds: number): void {
     this.navigator.advance(seconds)
-    const press = this.press
-    if (press === null) return
-    press.heldSeconds += seconds
-    if (press.stroke !== null) return
-    if (press.hold.kind === 'pouring') return this.keepPouring(press, press.hold.pour, seconds)
-    if (press.hold.kind === 'notHeldYet' && !press.hasMovedAway && press.heldSeconds >= holdBeforePouringSeconds) press.hold = this.startPouringInto(press.target)
+    this.aimedPour?.advance(seconds)
+    if (this.press !== null) this.press.heldSeconds += seconds
   }
 
   private tapped(target: RoomTapTarget): void {
@@ -191,12 +192,15 @@ export class RoomPlay {
       case 'heaterSwitch':
         this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
         return
+      case 'faucet':
+        return this.turnTheTap()
       default:
         return this.log(`tap on ${describeTarget(target)} in the close-up does nothing`)
     }
   }
 
   private keeperMovedTo(furnitureId: FurnitureId | null): void {
+    if (this.aimedPour !== null) this.pourDone()
     this.ritual.dispatch({ type: 'standAt', placeId: furnitureId })
     const tool = this.chosenTool
     if (tool === null || furnitureId === this.ritualFurnitureId()) return
@@ -211,8 +215,36 @@ export class RoomPlay {
       case 'cloth':
         return this.log(`tap on ${itemId} with the cloth ignored: the cloth wipes the table`)
       case null:
+        if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
         this.ritual.dispatch({ type: 'pickUp', itemId })
     }
+  }
+
+  private canAimAPourAt(targetId: string): boolean {
+    const sourceId = this.selectedItemId()
+    const target = this.ritual.state.vessels[targetId]
+    return sourceId !== null && sourceId !== targetId && this.ritual.state.vessels[sourceId] !== undefined && target?.location.kind === 'onSurface'
+  }
+
+  private startAimingAt(targetId: string): void {
+    const sourceId = this.selectedItemId()
+    const target = this.ritual.state.vessels[targetId]
+    const targetShape = carriedItemShapes[targetId]
+    if (sourceId === null || target?.location.kind !== 'onSurface' || targetShape === undefined) return this.log(`no pour to aim at ${targetId}`)
+    this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, targetId, target.location.spot, openingRadiusMetres[targetShape])
+  }
+
+  private turnTheTap(): void {
+    if (this.ritual.state.filling !== null) {
+      this.ritual.dispatch({ type: 'stopFillingFromTap' })
+      return
+    }
+    const vesselId = this.selectedItemId()
+    const vessel = vesselId === null ? undefined : this.ritual.state.vessels[vesselId]
+    if (vessel === undefined) return this.log('tap on the tap ignored: no hand with a vessel is chosen')
+    const mustOpenTheLid = definitionIn(this.catalog, 'vessels', vessel.definitionId).lid?.mustBeOpenToFill === true && !vessel.isLidOpen
+    if (mustOpenTheLid) this.ritual.dispatch({ type: 'openVesselLid', vesselId: vessel.id })
+    this.ritual.dispatch({ type: 'startFillingFromTap', vesselId: vessel.id })
   }
 
   private useTheSpoonOn(itemId: string): void {
@@ -287,44 +319,6 @@ export class RoomPlay {
     this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'placeOnHeater', vesselId: itemId }))
   }
 
-  private startPouringInto(target: RoomTapTarget): Hold {
-    if (target.kind !== 'item' || this.view.kind !== 'closeUp') {
-      this.log(`held on ${describeTarget(target)} with nothing to pour into here, it counts as a tap`)
-      return { kind: 'nothingToPour' }
-    }
-    const sourceId = this.pouringVesselId(target.itemId)
-    if (sourceId === null) {
-      this.log(`held on ${target.itemId} with no vessel chosen to pour from, it counts as a tap`)
-      return { kind: 'nothingToPour' }
-    }
-    const events = this.ritual.dispatch({ type: 'startPouring', sourceId, targetId: target.itemId })
-    if (events.some((event) => event.type === 'actionRefused')) return { kind: 'pourRefused' }
-    const pour = { sourceId, targetId: target.itemId, tiltDegrees: firstTiltDegrees }
-    this.ritual.dispatch({ type: 'adjustPour', tiltDegrees: pour.tiltDegrees, streamOnTargetFraction: 1 })
-    return { kind: 'pouring', pour }
-  }
-
-  private keepPouring(press: Press, pour: Pour, seconds: number): void {
-    if (this.ritual.state.pour === null) {
-      this.log(`the pour from ${pour.sourceId} into ${pour.targetId} ended while the finger was still down`)
-      press.hold = { kind: 'pourEnded' }
-      return
-    }
-    const tiltDegrees = Math.min(steepestTiltDegrees, pour.tiltDegrees + tiltGrowthDegreesPerSecond * seconds)
-    if (tiltDegrees === pour.tiltDegrees) return
-    this.ritual.dispatch({ type: 'adjustPour', tiltDegrees, streamOnTargetFraction: 1 })
-    press.hold = { kind: 'pouring', pour: { ...pour, tiltDegrees } }
-  }
-
-  private pouringVesselId(targetId: string): string | null {
-    const chosenItemId = this.selectedItemId()
-    if (chosenItemId !== null && chosenItemId !== targetId && this.ritual.state.vessels[chosenItemId] !== undefined) return chosenItemId
-    const vesselsInHand = this.ritual.state.keeper.hands.filter(
-      (itemId): itemId is string => itemId !== null && itemId !== targetId && this.ritual.state.vessels[itemId] !== undefined,
-    )
-    return vesselsInHand.length === 1 ? (vesselsInHand[0] ?? null) : null
-  }
-
   private selectedItemId(): string | null {
     const handIndex = this.selectedHandIndex
     return handIndex === null ? null : this.ritual.state.keeper.hands[handIndex] ?? null
@@ -338,6 +332,8 @@ export class RoomPlay {
       case 'heater':
       case 'heaterSwitch':
         return furnitureWithPlace(this.heaterSpot().placeId)
+      case 'faucet':
+        return furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.placeId ?? null)
       case 'item':
       case 'lid':
         return furnitureWithPlace(placeOf(this.locationOfItem(target.itemId)))

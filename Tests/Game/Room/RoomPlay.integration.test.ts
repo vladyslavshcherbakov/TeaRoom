@@ -90,38 +90,88 @@ test('heaterTap_withNoHandChosen_leavesTheHeaterEmpty', () => {
   assert.ok(room.logLines.includes('tap on the heater ignored: no hand is chosen'), room.logLines.join('\n'))
 })
 
-test('bowl_whileHeldWithTheKettleInHand_isPouredInto', () => {
+test('bowl_whenTappedWithTheKettleChosen_isAimedAtWithoutPouring', () => {
   const room = new RoomVisit()
   room.bringABowlToTheCounterAndTakeTheKettle()
+  room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.pressOn({ kind: 'item', itemId: 'bowl1' }, 1)
+  room.tap({ kind: 'item', itemId: 'bowl1' })
 
-  assert.equal(room.state.pour?.sourceId, 'kettle')
-  assert.equal(room.state.pour?.targetId, 'bowl1')
+  assert.equal(room.play.aimedPourView?.targetId, 'bowl1')
+  assert.equal(room.state.pour, null)
 })
 
-test('pour_whenTheFingerLifts_stopsWithWaterInTheBowl', () => {
+test('pour_whileTiltIsHeldWithTheSpoutMovedOverTheBowl_landsEntirelyInTheBowl', () => {
   const room = new RoomVisit()
-  room.bringABowlToTheCounterAndTakeTheKettle()
-  room.pressOn({ kind: 'item', itemId: 'bowl1' }, 1)
+  room.aimTheKettleAtTheBowl()
+  room.moveTheSpout({ x: 0.22, z: 0 })
 
-  room.play.pressEnded()
+  room.play.tiltPressed()
+  room.wait(2)
 
-  assert.equal(room.state.pour, null)
+  assert.equal(room.state.pour?.streamOnTargetFraction, 1)
   assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0)
 })
 
-test('pour_whenHeldForFiveSeconds_spillsNothing', () => {
+test('pour_whileTiltIsHeldWithTheSpoutBesideTheBowl_wetsTheTableAndNotTheBowl', () => {
   const room = new RoomVisit()
-  room.bringABowlToTheCounterAndTakeTheKettle()
-  room.pressOn({ kind: 'item', itemId: 'bowl1' }, 5)
+  room.aimTheKettleAtTheBowl()
 
-  const events = room.session.dispatch({ type: 'stopPouring' })
+  room.play.tiltPressed()
+  room.wait(2)
 
-  assert.deepEqual(
-    events.flatMap((event) => (event.type === 'pourFinished' ? [event.spilledMl] : [])),
-    [0],
-  )
+  assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, 0)
+  assert.ok(room.state.tableWetMl > 0)
+})
+
+test('pour_whenTheTiltButtonIsReleased_stopsAsTheKettleTiltsBack', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheBowl()
+  room.moveTheSpout({ x: 0.22, z: 0 })
+  room.play.tiltPressed()
+  room.wait(2)
+
+  room.play.tiltReleased()
+  room.wait(1)
+
+  assert.equal(room.state.pour, null)
+  assert.equal(room.play.aimedPourView?.tiltDegrees, 0)
+})
+
+test('pourAim_whenDone_endsWithTheKettleStillInHand', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheBowl()
+
+  room.play.pourDone()
+
+  assert.equal(room.play.aimedPourView, null)
+  assert.equal(room.state.keeper.hands[0], 'kettle')
+})
+
+test('kettle_whenChosenAndTheTapIsTapped_getsItsLidOpenedAndFillsFromTheTap', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'faucet' })
+
+  assert.equal(room.state.filling?.vesselId, 'kettle')
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, true)
+})
+
+test('tap_whenTappedAgainWhileRunning_closes', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'faucet' })
+  room.wait(2)
+
+  room.tap({ kind: 'faucet' })
+
+  assert.equal(room.state.filling, null)
+  assertNear(room.state.vessels['kettle']?.liquid.volumeMl ?? 0, 100)
 })
 
 test('bowl_whenTappedShortlyWithTheKettleInHand_isPickedUp', () => {
@@ -273,9 +323,14 @@ class RoomVisit {
     this.play.pressEnded()
   }
 
-  pressOn(target: RoomTapTarget, seconds: number): void {
-    this.play.pressStarted(target)
+  wait(seconds: number): void {
     this.advance(seconds)
+  }
+
+  moveTheSpout(by: FloorPoint): void {
+    this.play.pourFingerDown({ x: 0, z: 0 })
+    this.play.pourFingerMoved(by)
+    this.play.pourFingerUp()
   }
 
   walkTo(furnitureId: FurnitureId): void {
@@ -302,6 +357,12 @@ class RoomVisit {
     this.putDown(0, onTheCounter)
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
     this.fillTheKettleInHand()
+  }
+
+  aimTheKettleAtTheBowl(): void {
+    this.bringABowlToTheCounterAndTakeTheKettle()
+    this.tap({ kind: 'hand', handIndex: 0 })
+    this.tap({ kind: 'item', itemId: 'bowl1' })
   }
 
   setTheTeaTable(): void {

@@ -49,8 +49,9 @@ The simulation core receives one command per player decision and answers with ev
 | Open or close a lid | tap the lid | `openVesselLid`, `closeVesselLid`, `openCaddy`, `closeCaddy` | `vesselLidOpened`, `vesselLidClosed`, `caddyOpened`, `caddyClosed` |
 | Put the kettle on the heater | choose the kettle's hand, then tap the heater | `placeOnHeater` | `placedOnHeater` |
 | Lift the kettle off | tap the kettle on the heater | `pickUp` | `takenOffHeater` with a water judgement if the heater was on, then `pickedUp` |
+| Fill from the tap | choose the kettle's hand, then tap the tap; tap it again to close it | `openVesselLid` when the lid is closed, `startFillingFromTap`, `stopFillingFromTap` | `fillingStarted`, `vesselOverflowed`, `fillingFinished` with filled and overflowed millilitres |
 | Heat | tap the switch on the counter's front | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `targetTemperatureReached`, `heaterSwitchedOff` with a water judgement |
-| Pour | hold a finger on the target with a vessel in hand, release to stop | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
+| Pour | choose the hand with the vessel, tap the target, then move the vessel with one finger and hold the tilt button with another | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
 | Scoop leaves | take the spoon, then tap the open caddy | `scoopTea` with a full spoon's depth | `teaScooped` |
 | Tip leaves | with the spoon taken, tap the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |
 | Taste | choose the hand with a tea bowl, then tap Sip | `tasteCup` | `teaTasted` with a verdict and a reaction |
@@ -84,9 +85,13 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap Sip, shown while the chosen hand holds a tea bowl with tea in it | The keeper takes a sip. A caption shows the taste and the gods' remark for four seconds. |
 | Tap a figurine with a hand chosen | The tea bowl in that hand is offered to it. A caption shows the figurine's response. |
 | Stroke the tea table with the cloth taken | The table is wiped. The stroke's length over time is its speed, and a stroke of 1.5 m covers the whole table. A slow stroke dries more. A tap with the cloth does nothing. |
-| Hold a finger on a vessel in a close-up | The vessel in the chosen hand, or the only vessel in hand, pours into it. The tilt starts at 14° and grows by 20° a second up to 36°, just below the tilt that splashes. Lifting the finger stops the pour. A hold with nothing to pour from counts as a tap. |
+| Tap the tap at the counter with a hand chosen | The keeper holds that hand's vessel under the tap, opening its lid first if the lid must be open to fill, and the water runs. The kettle's water gauge rises. A second tap on the tap closes it. |
+| Tap a vessel on a surface with the hand of another vessel chosen | The pour begins to be aimed: the chosen vessel hovers over the target with its spout 22 cm to the left, and two buttons appear, a round tilt button with a teapot and a small done button. |
+| Drag a finger anywhere while aiming | The vessel moves with the finger, keeping its height above the target. Only the change of the finger's position counts, so the finger never hides the vessel. |
+| Hold the tilt button while aiming | The vessel tilts by 30° a second up to 55°. Past 10° it pours, and past about 38° a tenth of the stream splashes. The share of the stream that lands inside the target's opening goes in, the rest falls on the table. Releasing the button tilts the vessel back by 70° a second, and the pour stops when it is upright. |
+| Tap done while aiming | The aiming ends, and the vessel returns to its hand. |
 
-Items in hand are drawn in the keeper's hands in the room. In a close-up, where the keeper is hidden, they are drawn in the bottom corners of the screen, the first hand on the left and the second on the right, tilted towards the viewer so a bowl's tea shows. Nothing names them: the player sees what they carry. The pouring vessel is drawn tipped over its target.
+Items in hand are drawn in the keeper's hands in the room. In a close-up, where the keeper is hidden, they are drawn in the bottom corners of the screen, the first hand on the left and the second on the right, tilted towards the viewer so a bowl's tea shows. Nothing names them: the player sees what they carry. The vessel being aimed is drawn over the target, tipped by its tilt, with its stream falling straight down from the spout. A vessel under the tap is drawn beneath the tap's spout. The kettle has a glass gauge on its side that shows how full it is.
 
 The room begins the ritual with the first tea of the catalog when it opens, until the tea can be chosen in the room.
 

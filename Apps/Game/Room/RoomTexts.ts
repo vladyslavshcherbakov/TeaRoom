@@ -12,6 +12,8 @@ const offeringResponseTexts: Readonly<Record<OfferingResponse, string>> = {
 }
 
 export const sipText = 'Sip'
+export const tiltText = '🫖'
+export const doneText = '✓'
 
 export function offeringResponseText(figurineId: string, response: OfferingResponse): string {
   return `${figurineNames[figurineId] ?? figurineId} ${offeringResponseTexts[response]}`

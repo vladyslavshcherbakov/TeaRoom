@@ -3,7 +3,8 @@ import { caddyItemId } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
-import { carriedItemShapes, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
+import type { AimedPourView } from '../AimedPour.ts'
+import { carriedItemShapes, faucetSpout, footprintRadiusMetres, type CarriedShape } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
@@ -26,6 +27,11 @@ const heldInViewTiltTowardsCameraRadians = 0.55
 const heldInViewInsetShareOfItemWidth = 0.8
 const handTouchAreaShareOfScreenWidth = 0.42
 const handTouchAreaShareOfScreenHeight = 0.2
+const gaugeBottomMetres = 0.055
+const gaugeHeightMetres = 0.11
+const gaugeFaceMetres = 0.142
+const waterInGaugeColour = '#3f8fc4'
+const heldUnderTheFaucetBelowSpoutMetres = 0.06
 
 export const heldInViewLayer = 1
 
@@ -36,6 +42,7 @@ export type CarriedItemsScene = {
   readonly table: TableViewState
   readonly walk: Walk
   readonly heldInView: HeldInView | null
+  readonly aimedPour: AimedPourView | null
   readonly timeSeconds: number
 }
 
@@ -55,6 +62,7 @@ type CarriedModel = {
   readonly lidClosedPosition: THREE.Vector3
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
+  readonly gaugeWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
   isHeldInView: boolean
@@ -69,6 +77,7 @@ export class CarriedItems {
   private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
   private readonly models: CarriedModel[]
   private readonly stream: THREE.Mesh
+  private readonly tapStream: THREE.Mesh
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   private readonly streamMaterial: THREE.MeshStandardMaterial
 
@@ -84,7 +93,9 @@ export class CarriedItems {
     this.streamMaterial = new THREE.MeshStandardMaterial({ color: '#dfe7ea', transparent: true, opacity: 0.85 })
     this.stream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.streamMaterial)
     this.stream.visible = false
-    this.root.add(this.stream)
+    this.tapStream = new THREE.Mesh(new THREE.CylinderGeometry(streamRadiusMetres, streamRadiusMetres, 1, 6), this.materials.unsharedMaterialFor('tapWater'))
+    this.tapStream.visible = false
+    this.root.add(this.stream, this.tapStream)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
   }
 
@@ -92,6 +103,7 @@ export class CarriedItems {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) this.showContents(model, scene)
     this.showPour(scene)
+    this.showTapWater(scene)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
   }
 
@@ -120,12 +132,13 @@ export class CarriedItems {
   private place(model: CarriedModel, scene: CarriedItemsScene): void {
     const location = locationOf(model.itemId, scene.state)
     if (location === undefined) return
-    const pour = scene.state.pour
-    const isPouringSource = pour !== null && pour.sourceId === model.itemId && pour.targetId !== null
-    const heldInView = location.kind === 'inHand' && !isPouringSource ? scene.heldInView : null
+    const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
+    const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
+    const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet ? scene.heldInView : null
     moveToLayer(model, heldInView !== null)
     model.root.scale.setScalar(1)
-    if (isPouringSource && pour.targetId !== null) return this.tipOver(model, pour.targetId, pour.tiltDegrees)
+    if (aim !== null) return this.aimOver(model, aim)
+    if (isUnderTheFaucet) return holdUnderTheFaucet(model)
     model.root.rotation.set(0, 0, 0)
     if (location.kind === 'onSurface') {
       model.root.visible = true
@@ -140,12 +153,12 @@ export class CarriedItems {
     model.root.rotation.y = scene.walk.headingRadians
   }
 
-  private tipOver(model: CarriedModel, targetId: string, tiltDegrees: number): void {
-    const target = this.models.find((candidate) => candidate.itemId === targetId)
+  private aimOver(model: CarriedModel, aim: AimedPourView): void {
+    const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
     if (target === undefined) return
-    const tiltRadians = -THREE.MathUtils.degToRad(Math.max(0, tiltDegrees))
+    const tiltRadians = -THREE.MathUtils.degToRad(Math.max(0, aim.tiltDegrees))
     const tipAfterTilt = model.spoutTip.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), tiltRadians)
-    const tipGoal = target.root.position.clone().add(new THREE.Vector3(0, target.rimHeight + spoutAboveTargetRimMetres, 0))
+    const tipGoal = new THREE.Vector3(aim.spout.x, target.root.position.y + target.rimHeight + spoutAboveTargetRimMetres, aim.spout.z)
     model.root.visible = true
     model.root.rotation.set(0, 0, tiltRadians)
     model.root.position.copy(tipGoal.sub(tipAfterTilt))
@@ -156,6 +169,7 @@ export class CarriedItems {
     const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
     if (model.lid !== null) model.lid.position.copy(model.lidClosedPosition).add(new THREE.Vector3(isOpen ? -openLidSideMetres : 0, 0, 0))
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
+    if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
     const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
     model.puffs.forEach((puff, index) => {
       puff.visible = index < puffCount
@@ -180,6 +194,16 @@ export class CarriedItems {
     this.streamMaterial.color.set(scene.table.vessels[source.itemId]?.liquorColour ?? '#dfe7ea')
   }
 
+  private showTapWater(scene: CarriedItemsScene): void {
+    const filled = this.models.find((model) => model.itemId === scene.state.filling?.vesselId)
+    this.tapStream.visible = filled !== undefined
+    if (filled === undefined) return
+    const bottomY = filled.root.position.y + filled.rimHeight * 0.5
+    const length = Math.max(0.01, faucetSpout.y - bottomY)
+    this.tapStream.position.set(faucetSpout.x, bottomY + length / 2, faucetSpout.z)
+    this.tapStream.scale.set(1, length, 1)
+  }
+
   private retag(model: CarriedModel, tag: TapTargetTag): void {
     const tagKey = JSON.stringify(tag)
     if (model.tagKey === tagKey) return
@@ -201,6 +225,7 @@ export class CarriedItems {
       liquid.rotation.x = -Math.PI / 2
       root.add(liquid)
     }
+    const gaugeWater = shape === 'kettle' ? this.addWaterGauge(root) : null
     root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
     const puffs = [0, 1, 2].map(() => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
     for (const puff of puffs) puff.castShadow = false
@@ -217,10 +242,20 @@ export class CarriedItems {
       lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
       liquid,
       liquidMaterial,
+      gaugeWater,
       puffs,
       tagKey: '',
       isHeldInView: false,
     }
+  }
+
+  private addWaterGauge(root: THREE.Group): THREE.Mesh {
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(0.048, gaugeHeightMetres + 0.014, 0.006), this.materials.materialFor('gaugeGlass'))
+    glass.position.set(0, gaugeBottomMetres + gaugeHeightMetres / 2, gaugeFaceMetres)
+    const water = new THREE.Mesh(new THREE.BoxGeometry(0.034, 1, 0.008), this.materials.unsharedMaterialFor('gaugeGlass'))
+    water.position.set(0, gaugeBottomMetres, gaugeFaceMetres + 0.001)
+    root.add(glass, water)
+    return water
   }
 
   private partsOf(shape: CarriedShape): { meshes: THREE.Object3D[]; lid: THREE.Object3D | null; spoutTip: THREE.Vector3; rimHeight: number; liquidRadius: number | null } {
@@ -293,6 +328,21 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
 
 function locationOf(itemId: string, state: DeepReadonly<SessionState>): DeepReadonly<ItemLocation> | undefined {
   return itemId === caddyItemId ? state.caddy.location : state.vessels[itemId]?.location
+}
+
+function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel): void {
+  const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres)
+  gaugeWater.visible = vessel.fillShare > 0
+  gaugeWater.scale.y = height
+  gaugeWater.position.y = gaugeBottomMetres + height / 2
+  const material = gaugeWater.material
+  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInGaugeColour : vessel.liquorColour)
+}
+
+function holdUnderTheFaucet(model: CarriedModel): void {
+  model.root.visible = true
+  model.root.quaternion.identity()
+  model.root.position.set(faucetSpout.x, faucetSpout.y - heldUnderTheFaucetBelowSpoutMetres - model.rimHeight, faucetSpout.z)
 }
 
 function moveToLayer(model: CarriedModel, isHeldInView: boolean): void {

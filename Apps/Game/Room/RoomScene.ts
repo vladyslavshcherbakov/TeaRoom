@@ -6,7 +6,7 @@ import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.
 import { tableViewState } from '../Table/TablePresenter.ts'
 import { remarkText, tasteCardLines } from '../Table/TableTexts.ts'
 import { cameraFieldOfViewDegrees, closeUpPose, overviewPose, poseEasedTowards } from './Camera/CameraPoses.ts'
-import { carriedItemShapes, furnitureWithId, type CameraPose } from './RoomLayout.ts'
+import { carriedItemShapes, furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { offeringResponseText } from './RoomTexts.ts'
@@ -14,12 +14,14 @@ import { CarriedItems, heldInViewLayer } from './Views/CarriedItems.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
+import { PourControls } from './Views/PourControls.ts'
 import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
 
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
 const tapSlopPixels = 12
+const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
 const heaterGlowColour = new THREE.Color('#e0603a')
 const heaterGlowIntensity = 0.8
@@ -37,9 +39,11 @@ export class RoomScene {
   private readonly walker: WalkerModel
   private readonly carried: CarriedItems
   private readonly sipButton: SipButton
+  private readonly pourControls: PourControls
   private readonly caption: RoomCaption
   private cameraPose: CameraPose
   private pressStart: { x: number; y: number } | null = null
+  private aimingPointerId: number | null = null
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog) {
     this.session = session
@@ -66,6 +70,11 @@ export class RoomScene {
     reportItemsWithoutAShape(carriedItemIds, log)
     this.carried = new CarriedItems(materials, carriedItemIds)
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
+    this.pourControls = new PourControls(container, {
+      tiltPressed: () => this.play.tiltPressed(),
+      tiltReleased: () => this.play.tiltReleased(),
+      doneTapped: () => this.play.pourDone(),
+    })
     this.caption = new RoomCaption(container)
     this.scene.add(this.room.root, this.walker.root, this.carried.root, ...lights())
     this.fitToWindow()
@@ -87,11 +96,13 @@ export class RoomScene {
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
     const heldInView = isWalkerShown ? null : { camera: this.camera, selectedHandIndex: this.play.selectedHandIndex }
-    this.carried.show({ state, table, walk: this.play.walk, heldInView, timeSeconds: this.clock.elapsedTime })
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, timeSeconds: this.clock.elapsedTime })
     this.showHeater(table.heater.isOn)
     this.room.showRitualTools(table.spoonFillShare, this.play.chosenTool)
     this.room.showPuddle(table.puddleShare)
-    this.sipButton.show(this.play.sippableCupId !== null)
+    const isAiming = this.play.aimedPourView !== null
+    this.sipButton.show(this.play.sippableCupId !== null && !isAiming)
+    this.pourControls.show(isAiming)
     this.render()
   }
 
@@ -135,16 +146,22 @@ export class RoomScene {
   private listenToPresses(): void {
     const canvas = this.renderer.domElement
     canvas.addEventListener('pointerdown', (event) => {
+      if (this.play.aimedPourView !== null) return this.aimingFingerDown(event)
       this.pressStart = { x: event.clientX, y: event.clientY }
       this.play.pressStarted(this.tapTargetAt(event.clientX, event.clientY))
     })
     canvas.addEventListener('pointermove', (event) => {
+      if (event.pointerId === this.aimingPointerId) return this.play.pourFingerMoved(this.aimPlanePointAt(event.clientX, event.clientY))
       const start = this.pressStart
       if (start === null || Math.hypot(event.clientX - start.x, event.clientY - start.y) <= tapSlopPixels) return
       this.play.pressMovedAway()
       this.play.pressMovedOver(this.tapTargetAt(event.clientX, event.clientY))
     })
-    const pressEnded = (): void => {
+    const pressEnded = (event: PointerEvent): void => {
+      if (event.pointerId === this.aimingPointerId) {
+        this.aimingPointerId = null
+        return this.play.pourFingerUp()
+      }
       this.pressStart = null
       this.play.pressEnded()
     }
@@ -152,10 +169,32 @@ export class RoomScene {
     canvas.addEventListener('pointercancel', pressEnded)
   }
 
-  private tapTargetAt(clientX: number, clientY: number): RoomTapTarget {
+  private aimingFingerDown(event: PointerEvent): void {
+    if (this.aimingPointerId !== null) return
+    this.aimingPointerId = event.pointerId
+    this.play.pourFingerDown(this.aimPlanePointAt(event.clientX, event.clientY))
+  }
+
+  private aimPlanePointAt(clientX: number, clientY: number): FloorPoint {
+    this.raycaster.setFromCamera(this.pointerAt(clientX, clientY), this.camera)
+    const aimPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -this.aimPlaneHeight())
+    const hit = this.raycaster.ray.intersectPlane(aimPlane, new THREE.Vector3())
+    return hit === null ? { x: 0, z: 0 } : { x: hit.x, z: hit.z }
+  }
+
+  private aimPlaneHeight(): number {
+    const targetId = this.play.aimedPourView?.targetId
+    const location = targetId === undefined ? undefined : this.session.state.vessels[targetId]?.location
+    return (location?.kind === 'onSurface' ? location.spot.y : 0) + aimPlaneAboveTargetMetres
+  }
+
+  private pointerAt(clientX: number, clientY: number): THREE.Vector2 {
     const bounds = this.renderer.domElement.getBoundingClientRect()
-    const pointer = new THREE.Vector2(((clientX - bounds.left) / bounds.width) * 2 - 1, -((clientY - bounds.top) / bounds.height) * 2 + 1)
-    this.raycaster.setFromCamera(pointer, this.camera)
+    return new THREE.Vector2(((clientX - bounds.left) / bounds.width) * 2 - 1, -((clientY - bounds.top) / bounds.height) * 2 + 1)
+  }
+
+  private tapTargetAt(clientX: number, clientY: number): RoomTapTarget {
+    this.raycaster.setFromCamera(this.pointerAt(clientX, clientY), this.camera)
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes]
     const [nearest] = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
     const tag = nearest?.object.userData['tapTarget'] as TapTargetTag | undefined
@@ -164,6 +203,7 @@ export class RoomScene {
     if ('handIndex' in tag) return { kind: 'hand', handIndex: tag.handIndex }
     if ('isHeater' in tag) return { kind: 'heater' }
     if ('isHeaterSwitch' in tag) return { kind: 'heaterSwitch' }
+    if ('isFaucet' in tag) return { kind: 'faucet' }
     if ('isFloor' in tag) return { kind: 'floor', point: { x: nearest.point.x, z: nearest.point.z } }
     if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
     if ('tool' in tag) return { kind: 'tool', tool: tag.tool }
