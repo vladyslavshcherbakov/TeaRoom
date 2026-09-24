@@ -32,7 +32,7 @@
 
 **In a close-up, what the keeper holds is drawn in the bottom corners of the view, and the items are the hands.** The player sees what they carry, so no label names it. A tap on an item chooses its hand, and an invisible area around it makes the tap forgiving. The held items are drawn in a second pass over the room, after its depth is cleared, so furniture near the camera never cuts through them. The scene therefore clears to a colour instead of drawing a background, since a background clears the screen on every pass. Rejected: buttons with the item's name, because the words stood in for what the room can show.
 
-**Tasting is a Sip button.** In a close-up the keeper is hidden, so there is no face to lift the bowl to. The button appears only while the chosen hand holds a tea bowl with tea in it. The first sip scene of 0.6 replaces it.
+**Tasting is a Sip button, answered by a feeling.** In a close-up the keeper is hidden, so there is no face to lift the bowl to. The button appears only while the chosen hand holds a tea bowl with something in it. The keeper answers each sip with one line in their own words, chosen from the verdict, because a card of temperature, strength and bitterness read like a debug report. The taste judgement tells plain water apart as a strength of `none`, so a sip of water gets its own line. The first sip scene of 0.6 replaces the button.
 
 **The kettle's water comes from the tap at the counter, and the kettle starts empty.** Filling the kettle is the first step of a ritual. The keeper holds the kettle under the tap, so the vessel must be in a hand at the tap's place. Water that overflows runs into the sink and does not wet the table, because the table is where the ritual's spills count.
 

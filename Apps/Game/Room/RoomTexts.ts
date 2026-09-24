@@ -1,6 +1,6 @@
 import type { OfferingResponse } from '../../../Shared/Simulation/Judgement/OfferingJudgement.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
-import { remarkText, tasteCardLines } from '../Table/TableTexts.ts'
+import { remarkText, sipText } from '../Table/TableTexts.ts'
 import { textOrFallback, textWith } from '../Texts/Texts.ts'
 
 export function captionLinesFor(events: readonly RitualEvent[]): readonly string[] {
@@ -11,7 +11,7 @@ export function captionLinesFor(events: readonly RitualEvent[]): readonly string
 function captionLinesOf(event: RitualEvent): readonly string[] {
   switch (event.type) {
     case 'teaTasted':
-      return tasteCardLines(event.verdict)
+      return [sipText(event.verdict)]
     case 'figurineAcceptedTea':
       return [offeringResponseText(event.figurineId, event.response)]
     case 'godsMoodChanged':

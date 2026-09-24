@@ -1,9 +1,9 @@
 import type { TeaDefinition } from '../Definitions/TeaDefinition.ts'
-import type { Liquid } from '../Physics/Liquid.ts'
+import { isPlainWater, type Liquid } from '../Physics/Liquid.ts'
 
 export type TasteVerdict = {
   readonly temperature: 'tooHot' | 'pleasant' | 'lukewarm' | 'cold'
-  readonly strength: 'weak' | 'balanced' | 'rich' | 'heavy'
+  readonly strength: 'none' | 'weak' | 'balanced' | 'rich' | 'heavy'
   readonly bitterness: 'soft' | 'noticeable' | 'high' | 'overbrewed'
   readonly reaction: 'contentSigh' | 'waitsForItToCool' | 'shrug' | 'grimace' | 'strongGrimace'
 }
@@ -31,6 +31,7 @@ function temperatureOf(sip: Liquid): TasteVerdict['temperature'] {
 }
 
 function strengthOf(sip: Liquid, tea: TeaDefinition): TasteVerdict['strength'] {
+  if (isPlainWater(sip)) return 'none'
   if (sip.strength < tea.balancedStrength.lowest) return 'weak'
   if (sip.strength <= tea.balancedStrength.highest) return 'balanced'
   if (sip.strength <= tea.balancedStrength.highest + richStrengthMargin) return 'rich'
@@ -52,6 +53,6 @@ function reactionTo(
   if (temperature === 'tooHot') return 'waitsForItToCool'
   if (bitterness === 'overbrewed') return 'strongGrimace'
   if (bitterness === 'high' || strength === 'heavy') return 'grimace'
-  if (strength === 'weak' || temperature === 'cold') return 'shrug'
+  if (strength === 'none' || strength === 'weak' || temperature === 'cold') return 'shrug'
   return 'contentSigh'
 }

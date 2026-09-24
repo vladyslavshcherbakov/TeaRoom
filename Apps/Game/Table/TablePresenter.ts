@@ -2,7 +2,7 @@ import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitio
 import type { TeaDefinition } from '../../../Shared/Simulation/Definitions/TeaDefinition.ts'
 import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/VesselDefinition.ts'
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
-import { isEmpty, isPlainWater, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
+import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
@@ -56,12 +56,20 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
 }
 
 function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.BrewStage {
-  if (tea === null || isEmpty(liquid) || isPlainWater(liquid)) return 'water'
+  if (tea === null || isEmpty(liquid)) return 'water'
   const verdict = judgeTaste(liquid, tea)
   if (verdict.bitterness === 'overbrewed') return 'overbrewed'
-  if (verdict.strength === 'weak') return 'pale'
-  if (verdict.strength === 'balanced') return 'good'
-  return verdict.strength
+  switch (verdict.strength) {
+    case 'none':
+      return 'water'
+    case 'weak':
+      return 'pale'
+    case 'balanced':
+      return 'good'
+    case 'rich':
+    case 'heavy':
+      return verdict.strength
+  }
 }
 
 function liquorColour(liquid: Liquid, tea: TeaDefinition): string {

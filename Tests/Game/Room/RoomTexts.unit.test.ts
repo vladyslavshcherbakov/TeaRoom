@@ -17,5 +17,5 @@ test('caption_ofASipThatMovesTheGods_leavesTheGodsUnnamed', () => {
     { type: 'godsMoodChanged', delta: 4, satisfaction: 54, remark: 'pleasedWithTheTea' },
   ])
 
-  assert.deepEqual(lines, ['Temperature  good', 'Strength  balanced', 'Bitterness  soft'])
+  assert.deepEqual(lines, ['Ahh… just right.'])
 })

@@ -13,6 +13,17 @@ function ritualWithTeaInCups(steepSeconds: number, cupIds = ['cup1', 'cup2']): T
   return ritual
 }
 
+test('sip_ofPlainWater_tastesOfNoTea', () => {
+  const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
+  ritual.heatKettleTo(80)
+  ritual.pour('kettle', 'cup1', 9)
+  ritual.waitUntilCupCoolsTo('cup1', 60)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
+
+  assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'none')
+})
+
 test('firstSip_whenTheTeaIsGood_pleasesTheGods', () => {
   const ritual = ritualWithTeaInCups(60)
   ritual.waitUntilCupCoolsTo('cup1', 60)
