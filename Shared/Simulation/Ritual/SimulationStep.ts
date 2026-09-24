@@ -1,6 +1,6 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
-import { coolingPerSecondOf, coolLiquid, heatLiquid } from '../Physics/Heat.ts'
+import { coolingPerSecondOf, coolLiquid, heatLiquid, liquidBoiledAway } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap } from '../Physics/TapWater.ts'
@@ -29,8 +29,19 @@ function heatVesselOnHeater(draft: Draft, seconds: number): void {
   const heater = draft.state.heater
   const vessel = heater.vesselIdOnTop === null ? undefined : draft.state.vessels[heater.vesselIdOnTop]
   if (!heater.isOn || vessel === undefined) return
-  vessel.liquid = heatLiquid(vessel.liquid, definitionIn(draft.catalog, 'heaters', heater.definitionId), seconds)
+  const heaterDefinition = definitionIn(draft.catalog, 'heaters', heater.definitionId)
+  const heated = heatLiquid(vessel.liquid, heaterDefinition, seconds)
+  vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
+  if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)
+}
+
+function noteBoilingAway(draft: Draft, vesselId: string, mlPerSecond: number, volumeMlLeft: number): void {
+  if (!draft.state.heater.hasAnnouncedBoilingAway) {
+    draft.state.heater.hasAnnouncedBoilingAway = true
+    note(draft, `${vesselId} boils, its water boils away at ${mlPerSecond} ml/s`)
+  }
+  if (volumeMlLeft === 0) note(draft, `${vesselId} boiled dry on the heater`)
 }
 
 function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatureC: number): void {

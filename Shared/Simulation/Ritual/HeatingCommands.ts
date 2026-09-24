@@ -35,6 +35,7 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   draft.state.heater.isOn = true
   draft.state.heater.hasAnnouncedTargetTemperature = false
+  draft.state.heater.hasAnnouncedBoilingAway = false
   note(draft, `heater switched on with ${draft.state.heater.vesselIdOnTop ?? 'nothing'} on top`)
   draft.events.push({ type: 'heaterSwitchedOn' })
 }

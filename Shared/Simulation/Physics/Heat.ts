@@ -10,6 +10,11 @@ export function heatLiquid(liquid: Liquid, heater: HeaterDefinition, seconds: nu
   return { ...liquid, temperatureC: Math.min(boilingPointC, liquid.temperatureC + risePerSecond * seconds) }
 }
 
+export function liquidBoiledAway(liquid: Liquid, heater: HeaterDefinition, seconds: number): Liquid {
+  if (isEmpty(liquid) || liquid.temperatureC < boilingPointC) return liquid
+  return { ...liquid, volumeMl: Math.max(0, liquid.volumeMl - heater.boilingAwayMlPerSecond * seconds) }
+}
+
 export function coolLiquid(liquid: Liquid, ambientC: number, coolingPerSecond: number, seconds: number): Liquid {
   const shareOfGapClosed = Math.min(1, coolingPerSecond * seconds)
   return { ...liquid, temperatureC: liquid.temperatureC + (ambientC - liquid.temperatureC) * shareOfGapClosed }

@@ -57,7 +57,7 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
       },
     },
     heaters: {
-      testHeater: { id: 'testHeater', degreesPerSecondPerLitre: 2 },
+      testHeater: { id: 'testHeater', degreesPerSecondPerLitre: 2, boilingAwayMlPerSecond: 1 },
     },
     figurines: {
       dragon: { id: 'dragon', affinityByTeaId: { testGreen: 0 }, preferredStrength: { lowest: 40, highest: 70 } },

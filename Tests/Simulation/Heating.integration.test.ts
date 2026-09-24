@@ -128,3 +128,25 @@ test('kettleWater_whenCoolingWhileOnAWorkingHeater_stillReachesBoiling', () => {
 
   assert.equal(ritual.vessel('kettle').liquid.temperatureC, 100)
 })
+
+test('water_boilingOnAWorkingHeater_boilsAwayAtTheHeatersRate', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(200)
+  const volumeAtTheBoil = ritual.vessel('kettle').liquid.volumeMl
+
+  ritual.wait(100)
+
+  assertNear(ritual.vessel('kettle').liquid.volumeMl, volumeAtTheBoil - 100)
+})
+
+test('water_belowTheBoil_doesNotBoilAway', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  ritual.wait(10)
+
+  assert.equal(ritual.vessel('kettle').liquid.volumeMl, 500)
+})

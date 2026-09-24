@@ -70,6 +70,8 @@
 
 **No single moment costs the gods more than 3 points.** The GDD requires that mistakes lower the mood slightly and never reset it.
 
+**Boiling water boils away.** A kettle forgotten on the heater loses its water slowly, so leaving it there has a visible cost that grows with time. The rate belongs to the heater, as the heat does.
+
 **The game names the gods only at an offering.** Brewing, spilling and tasting are plain acts, and a remark from the gods after each one gave away the room's mystery at once. The simulation still keeps the gods' mood and emits their remarks, and the room shows a remark only together with a figurine's response to an offering. The bench shows every remark, because it is a debug page.
 
 **Every text the player reads is one key and one value in one file.** `Apps/Game/Texts/EnglishTexts.ts` lists them all, so the whole of the game's wording can be reviewed in one place, and a second language is a second file with the same keys. The keys are typed, so a missing text for a remark or a verdict fails the type-check. Placeholders such as `{figurine}` are filled by `textWith`.
