@@ -5,6 +5,8 @@ import { text } from '../Texts/Texts.ts'
 import { RoomScene } from './RoomScene.ts'
 
 const roomId = 'quietRoom'
+const voiceSeedStorageKey = 'tearoom.voiceSeed'
+const largestVoiceSeed = 1_000_000
 
 document.title = text('page.title')
 
@@ -31,5 +33,19 @@ if (opening.kind === 'unavailable') {
   const teaId = Object.keys(defaultCatalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })
-  new RoomScene(container, opening.session, defaultCatalog, roomLog)
+  const voiceSeed = keepersVoiceSeed()
+  roomLog(`the keeper speaks with voice ${voiceSeed}`)
+  new RoomScene(container, opening.session, defaultCatalog, roomLog, voiceSeed)
+}
+
+function keepersVoiceSeed(): number {
+  try {
+    const stored = Number(window.localStorage.getItem(voiceSeedStorageKey))
+    if (Number.isInteger(stored) && stored > 0) return stored
+    const chosen = 1 + Math.floor(Math.random() * largestVoiceSeed)
+    window.localStorage.setItem(voiceSeedStorageKey, String(chosen))
+    return chosen
+  } catch {
+    return 1 + Math.floor(Math.random() * largestVoiceSeed)
+  }
 }

@@ -1,6 +1,6 @@
 import type { GodsRemark } from '../../../Shared/Simulation/Judgement/GodsMood.ts'
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
-import { text } from '../Texts/Texts.ts'
+import { phraseVariantFor, text } from '../Texts/Texts.ts'
 
 type SipFeeling = 'noTea' | 'tooHot' | 'overbrewed' | 'bitter' | 'tooStrong' | 'cold' | 'weak' | 'rich' | 'coolingButGood' | 'justRight'
 
@@ -8,8 +8,9 @@ export function remarkText(remark: GodsRemark): string {
   return text(`gods.${remark}`)
 }
 
-export function sipText(verdict: TasteVerdict): string {
-  return text(`sip.${sipFeeling(verdict)}`)
+export function sipText(verdict: TasteVerdict, voiceSeed: number): string {
+  const feeling = sipFeeling(verdict)
+  return text(`sip.${feeling}.${phraseVariantFor(feeling, voiceSeed)}`)
 }
 
 function sipFeeling(verdict: TasteVerdict): SipFeeling {

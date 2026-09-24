@@ -1,25 +1,29 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { remarkText, sipText } from '../../../Apps/Game/Table/TableTexts.ts'
+import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
 
 test('godsRemark_readsAsADeadpanLine', () => {
   assert.equal(remarkText('weWillTellNoOne'), 'We will tell no one.')
   assert.equal(remarkText('pretendNotToNotice'), 'The gods pretend not to notice.')
 })
 
-test('sipLine_answersTheVerdictWithAFeeling', () => {
+test('sipLine_answersTheVerdictWithOneOfItsFeelingsPhrases', () => {
   const rows = [
-    [{ temperature: 'pleasant', strength: 'none', bitterness: 'soft', reaction: 'shrug' }, 'Hmm… no smell of tea in here at all.'],
-    [{ temperature: 'tooHot', strength: 'balanced', bitterness: 'soft', reaction: 'waitsForItToCool' }, 'Ouch, too hot. Let it breathe a little.'],
-    [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'overbrewed', reaction: 'strongGrimace' }, 'Oof… it has gone bitter. It steeped too long.'],
-    [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'high', reaction: 'grimace' }, 'A bitter edge. A little less time next pour.'],
-    [{ temperature: 'pleasant', strength: 'heavy', bitterness: 'soft', reaction: 'grimace' }, 'Strong… it grips the tongue.'],
-    [{ temperature: 'cold', strength: 'balanced', bitterness: 'soft', reaction: 'shrug' }, 'Cold already. The moment has passed.'],
-    [{ temperature: 'pleasant', strength: 'weak', bitterness: 'soft', reaction: 'shrug' }, 'Pale and thin. It wanted more leaves, or more time.'],
-    [{ temperature: 'pleasant', strength: 'rich', bitterness: 'soft', reaction: 'contentSigh' }, 'Rich and deep. Lovely.'],
-    [{ temperature: 'lukewarm', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, 'Good, though it is cooling.'],
-    [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, 'Ahh… just right.'],
+    [{ temperature: 'pleasant', strength: 'none', bitterness: 'soft', reaction: 'shrug' }, 'noTea'],
+    [{ temperature: 'tooHot', strength: 'balanced', bitterness: 'soft', reaction: 'waitsForItToCool' }, 'tooHot'],
+    [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'overbrewed', reaction: 'strongGrimace' }, 'overbrewed'],
+    [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'high', reaction: 'grimace' }, 'bitter'],
+    [{ temperature: 'pleasant', strength: 'heavy', bitterness: 'soft', reaction: 'grimace' }, 'tooStrong'],
+    [{ temperature: 'cold', strength: 'balanced', bitterness: 'soft', reaction: 'shrug' }, 'cold'],
+    [{ temperature: 'pleasant', strength: 'weak', bitterness: 'soft', reaction: 'shrug' }, 'weak'],
+    [{ temperature: 'pleasant', strength: 'rich', bitterness: 'soft', reaction: 'contentSigh' }, 'rich'],
+    [{ temperature: 'lukewarm', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, 'coolingButGood'],
+    [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, 'justRight'],
   ] as const
 
-  for (const [verdict, line] of rows) assert.equal(sipText(verdict), line, JSON.stringify(verdict))
+  for (const [verdict, feeling] of rows) {
+    const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith(`sip.${feeling}.`)).map(([, phrase]) => phrase)
+    assert.ok(phrases.includes(sipText(verdict, 7)), `${feeling}: ${sipText(verdict, 7)}`)
+  }
 })

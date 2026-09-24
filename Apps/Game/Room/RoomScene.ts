@@ -41,6 +41,7 @@ export class RoomScene {
   private readonly clock = new THREE.Clock()
   private readonly session: RitualSession
   private readonly catalog: Catalog
+  private readonly voiceSeed: number
   private readonly play: RoomPlay
   private readonly room: RoomModel
   private readonly walker: WalkerModel
@@ -52,9 +53,10 @@ export class RoomScene {
   private readonly zoom = new CameraZoom()
   private readonly gestures: RoomGestures
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number) {
     this.session = session
     this.catalog = catalog
+    this.voiceSeed = voiceSeed
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
@@ -132,7 +134,7 @@ export class RoomScene {
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
-    this.caption.show(captionLinesFor(events))
+    this.caption.show(captionLinesFor(events, this.voiceSeed))
     return events
   }
 
