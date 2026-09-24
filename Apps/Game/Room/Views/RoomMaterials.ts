@@ -34,7 +34,9 @@ export type Surface =
   | 'blueGlaze'
   | 'yellowGlaze'
   | 'emeraldGlaze'
-  | 'koi'
+  | 'koiSkin'
+  | 'koiFin'
+  | 'koiEye'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -70,12 +72,15 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   blueGlaze: '#2f5ea8',
   yellowGlaze: '#f1cd55',
   emeraldGlaze: '#1f8a68',
-  koi: '#e4622e',
+  koiSkin: '#ffffff',
+  koiFin: '#f4c29b',
+  koiEye: '#1b1410',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const pouredLiquidOpacity = 0.85
+const koiFinOpacity = 0.8
 const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'blueGlaze', 'yellowGlaze', 'emeraldGlaze'])
 const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
 
@@ -97,7 +102,8 @@ export class RoomMaterials {
   unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
     const color = surfaceColours[surface]
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
-    if (surface === 'koi') return new THREE.MeshStandardMaterial({ color, roughness: 0.6, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 })
+    if (surface === 'koiSkin') return new THREE.MeshPhysicalMaterial({ color, vertexColors: true, roughness: 0.3, clearcoat: 0.7 })
+    if (surface === 'koiFin') return new THREE.MeshStandardMaterial({ color, roughness: 0.4, transparent: true, opacity: koiFinOpacity, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -8 })
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })

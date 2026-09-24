@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { footprintRadiusMetres, type CarriedShape } from '../../RoomLayout.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
 import { kettleShape } from './KettleShape.ts'
+import { newKoiCarp } from './KoiCarp.ts'
 import type { LeafPile } from './LeafPile.ts'
 
 export type CarriedModel = {
@@ -48,9 +49,17 @@ const lidTouchPadRadiusMetres = 0.095
 const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
 const bowlsWithACarp: ReadonlySet<string> = new Set(['bowl1'])
-const carpLengthMetres = 0.04
-const carpAboveTheBottomMetres = 0.0095
 const carpTurnRadians = 0.6
+const bowlSegmentsAround = 64
+const bowlProfilePoints = 40
+const bowlProfile = new THREE.SplineCurve([
+  new THREE.Vector2(0, 0.008),
+  new THREE.Vector2(0.04, 0.004),
+  new THREE.Vector2(0.05, 0),
+  new THREE.Vector2(0.066, 0.014),
+  new THREE.Vector2(0.078, 0.036),
+  new THREE.Vector2(0.083, 0.062),
+]).getPoints(bowlProfilePoints)
 const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
   bowl2: 'pearlGlaze',
@@ -214,33 +223,24 @@ function clothParts(clothMaterial: THREE.Material): ItemParts {
 }
 
 function bowlParts(materials: RoomMaterials, glaze: Surface, hasACarp: boolean): ItemParts {
-  const profile = [
-    new THREE.Vector2(0, 0.008),
-    new THREE.Vector2(0.04, 0.004),
-    new THREE.Vector2(0.05, 0),
-    new THREE.Vector2(0.066, 0.014),
-    new THREE.Vector2(0.078, 0.036),
-    new THREE.Vector2(0.083, 0.062),
-  ]
   const glazed = materials.unsharedMaterialFor(glaze)
   glazed.side = THREE.DoubleSide
-  const body = new THREE.Mesh(new THREE.LatheGeometry(profile, 24), glazed)
-  const meshes: THREE.Object3D[] = hasACarp ? [body, carpOnTheBottom(materials)] : [body]
+  const body = new THREE.Mesh(new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround), glazed)
+  const meshes: THREE.Object3D[] = [body]
+  if (hasACarp) {
+    const carp = newKoiCarp(materials, bowlBottomHeightAt)
+    carp.rotation.y = carpTurnRadians
+    meshes.push(carp)
+  }
   return { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
 }
 
-function carpOnTheBottom(materials: RoomMaterials): THREE.Mesh {
-  const half = carpLengthMetres / 2
-  const outline = new THREE.Shape()
-  outline.moveTo(half, 0)
-  outline.quadraticCurveTo(half * 0.55, half * 0.42, -half * 0.35, half * 0.16)
-  outline.lineTo(-half, half * 0.42)
-  outline.quadraticCurveTo(-half * 0.8, 0, -half, -half * 0.42)
-  outline.lineTo(-half * 0.35, -half * 0.16)
-  outline.quadraticCurveTo(half * 0.55, -half * 0.42, half, 0)
-  const carp = new THREE.Mesh(new THREE.ShapeGeometry(outline, 8), materials.materialFor('koi'))
-  carp.renderOrder = 1
-  carp.rotation.set(-Math.PI / 2, 0, carpTurnRadians)
-  carp.position.y = carpAboveTheBottomMetres
-  return carp
+function bowlBottomHeightAt(distanceFromTheCentre: number): number {
+  const outer = bowlProfile.findIndex((point) => point.x >= distanceFromTheCentre)
+  const after = bowlProfile[outer]
+  const before = bowlProfile[outer - 1]
+  if (after === undefined) return bowlProfile.at(-1)?.y ?? 0
+  if (before === undefined) return after.y
+  const share = (distanceFromTheCentre - before.x) / (after.x - before.x)
+  return before.y + (after.y - before.y) * share
 }
