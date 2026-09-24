@@ -56,6 +56,17 @@ test('kettle_whenItsLidIsOpenedUnderTheRunningTap_startsFilling', () => {
   assertNear(ritual.vessel('kettle').liquid.volumeMl, 700)
 })
 
+test('kettle_whenTheTapIsClosedWithItsLidOpen_comesOutOfTheSinkWithTheLidClosed', () => {
+  const ritual = kettleInHandAtTheCounter()
+  ritual.do({ type: 'startFillingFromTap', vesselId: 'kettle' })
+  ritual.wait(1)
+
+  const events = ritual.do({ type: 'stopFillingFromTap' })
+
+  assert.equal(ritual.vessel('kettle').isLidOpen, false)
+  assert.deepEqual(eventsOfType(events, 'vesselLidClosed'), [{ type: 'vesselLidClosed', vesselId: 'kettle' }])
+})
+
 test('filling_awayFromTheTap_isRefused', () => {
   const ritual = kettleInHandAtTheCounter()
   ritual.do({ type: 'standAt', placeId: 'table' })

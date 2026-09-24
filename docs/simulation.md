@@ -42,7 +42,7 @@ A vessel cannot be poured while it stands on the heater. A vessel whose lid must
 
 A room may have a tap at one of its places, with the temperature of its water and its flow in ml per second. The quiet room's tap is at the counter, 18 °C and 50 ml/s, and its kettle starts empty.
 
-A vessel fills from the tap while the keeper holds it in a hand at the tap's place. A vessel whose lid must be open to be filled goes under the tap with its lid closed too, and then the water runs over the lid into the sink until the lid is opened, and over it again if the lid is closed. The tap water mixes by volume with what the vessel holds. Once the vessel is full, the rest runs over the rim into the sink: the core reports the first overflow, and the table stays dry. The filling stops when the tap is closed, when the keeper walks away, and at the next step after the vessel leaves the hand. Only one vessel fills at a time, and a vessel that is filling cannot be poured.
+A vessel fills from the tap while the keeper holds it in a hand at the tap's place. A vessel whose lid must be open to be filled goes under the tap with its lid closed too, and then the water runs over the lid into the sink until the lid is opened, and over it again if the lid is closed. The tap water mixes by volume with what the vessel holds. Once the vessel is full, the rest runs over the rim into the sink: the core reports the first overflow, and the table stays dry. The filling stops when the tap is closed, when the keeper walks away, and at the next step after the vessel leaves the hand. The vessel is lifted out of the sink then, so an open lid closes, as it does when an item is picked up. Only one vessel fills at a time, and a vessel that is filling cannot be poured.
 
 ## Leaves and brewing
 

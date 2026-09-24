@@ -2,6 +2,7 @@ import { definitionIn } from '../Definitions/Catalog.ts'
 import type { CommandOfType } from './Command.ts'
 import { describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import type { VesselState } from '../State/SessionState.ts'
+import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { isKeeperAt, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function startFillingFromTap(draft: Draft, command: CommandOfType<'startFillingFromTap'>): void {
@@ -44,4 +45,5 @@ export function finishFilling(draft: Draft, reason: string): void {
       `${filling.overflowedMl.toFixed(1)} ml into the sink, now ${vessel === undefined ? 'gone' : describeLiquid(vessel)}`,
   )
   draft.events.push({ type: 'fillingFinished', vesselId: filling.vesselId, filledMl: filling.filledMl, overflowedMl: filling.overflowedMl })
+  closeTheLidAsItIsLifted(draft, filling.vesselId, 'it was lifted out of the sink')
 }

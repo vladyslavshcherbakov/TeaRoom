@@ -1,6 +1,6 @@
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { isWithinReach, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { caddyItemId, isWithinReach, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function moveVesselLid(
   draft: Draft,
@@ -28,4 +28,18 @@ export function moveCaddyLid(draft: Draft, command: CommandOfType<'openCaddy'> |
   draft.state.caddy.isOpen = shouldOpen
   note(draft, `caddy ${shouldOpen ? 'opened' : 'closed'} with ${draft.state.caddy.grams.toFixed(1)} g inside`)
   draft.events.push({ type: shouldOpen ? 'caddyOpened' : 'caddyClosed' })
+}
+
+export function closeTheLidAsItIsLifted(draft: Draft, itemId: string, how: string): void {
+  if (itemId === caddyItemId && draft.state.caddy.isOpen) {
+    draft.state.caddy.isOpen = false
+    note(draft, `the caddy lid closed as ${how}`)
+    draft.events.push({ type: 'caddyClosed' })
+    return
+  }
+  const vessel = draft.state.vessels[itemId]
+  if (vessel === undefined || !vessel.isLidOpen) return
+  vessel.isLidOpen = false
+  note(draft, `${vessel.id} lid closed as ${how}`)
+  draft.events.push({ type: 'vesselLidClosed', vesselId: vessel.id })
 }
