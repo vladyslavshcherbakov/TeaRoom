@@ -286,6 +286,8 @@ export class CarriedItems {
     if (model.leaves === null || model.leaves.teaId !== teaId) {
       if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
       const pile = new LeafPile(leafLookFor(teaId), model.shape === 'spoon' ? leavesOnTheSpoon : leavesInTheCaddy)
+      pile.mesh.layers.set(model.layer)
+      pile.mesh.userData = { ...holder.userData }
       holder.add(pile.mesh)
       model.leaves = { pile, teaId }
     }

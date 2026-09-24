@@ -40,6 +40,7 @@ export class LeafPile {
     this.mesh.castShadow = false
     this.mesh.receiveShadow = true
     layOutLeaves(this.mesh, look, size)
+    this.mesh.computeBoundingSphere()
   }
 
   showFill(share: number): void {

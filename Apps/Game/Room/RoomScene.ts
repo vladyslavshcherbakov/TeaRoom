@@ -267,7 +267,7 @@ export class RoomScene {
     this.raycaster.setFromCamera(this.pointerAt(clientX, clientY), this.camera)
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes]
     const [nearest] = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
-    const tag = nearest?.object.userData['tapTarget'] as TapTargetTag | undefined
+    const tag = nearest === undefined ? undefined : tapTargetTagOf(nearest.object)
     if (nearest === undefined || tag === undefined) return { kind: 'nothing' }
     if ('itemId' in tag) return { kind: 'item', itemId: tag.itemId }
     if ('handIndex' in tag) return { kind: 'hand', handIndex: tag.handIndex }
@@ -315,6 +315,16 @@ function captionLinesOfOne(event: RitualEvent): readonly string[] {
     default:
       return []
   }
+}
+
+function tapTargetTagOf(object: THREE.Object3D): TapTargetTag | undefined {
+  let current: THREE.Object3D | null = object
+  while (current !== null) {
+    const tag = current.userData['tapTarget'] as TapTargetTag | undefined
+    if (tag !== undefined) return tag
+    current = current.parent
+  }
+  return undefined
 }
 
 function isShown(object: THREE.Object3D): boolean {
