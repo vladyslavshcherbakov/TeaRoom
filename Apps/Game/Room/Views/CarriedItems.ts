@@ -52,7 +52,6 @@ const glazeByBowlId: Readonly<Record<string, Surface>> = {
 const gaugeBottomMetres = 0.055
 const gaugeHeightMetres = 0.11
 const gaugeFaceMetres = 0.142
-const waterInGaugeColour = '#3f8fc4'
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
 const overflowSideFromTheGaugeRadians = 0.7
 const overflowAboveTheSurfaceMetres = 0.005
@@ -66,7 +65,6 @@ const kettleOpeningRadiusMetres = 0.075
 const kettleOpeningAngle = Math.asin(kettleOpeningRadiusMetres / kettleBodyRadiusMetres)
 const kettleBottomInsideMetres = 0.004
 const kettleWaterBelowTheOpeningMetres = 0.012
-const waterInsideTheKettleColour = '#5f93b5'
 const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14 }
 const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01 }
 
@@ -279,7 +277,8 @@ export class CarriedItems {
     const length = Math.max(0.01, top.y - bottomY)
     this.stream.position.set(top.x, bottomY + length / 2, top.z)
     this.stream.scale.set(1, length, 1)
-    this.streamMaterial.color.set(scene.table.vessels[source.itemId]?.liquorColour ?? '#dfe7ea')
+    const pouredColour = scene.table.vessels[source.itemId]?.liquorColour
+    if (pouredColour !== undefined) this.streamMaterial.color.set(pouredColour)
   }
 
   private showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
@@ -523,7 +522,7 @@ function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel)
   gaugeWater.scale.y = height
   gaugeWater.position.y = gaugeBottomMetres + height / 2
   const material = gaugeWater.material
-  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInGaugeColour : vessel.liquorColour)
+  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
 function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel): void {
@@ -535,7 +534,7 @@ function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vess
   water.position.y = surfaceHeight
   water.scale.setScalar(Math.max(0.001, kettleBodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre)) - 0.003))
   const material = water.material
-  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInsideTheKettleColour : vessel.liquorColour)
+  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
 function leafHolderFor(shape: CarriedShape): THREE.Group | null {

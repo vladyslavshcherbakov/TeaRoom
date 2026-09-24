@@ -7,7 +7,7 @@ import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
 
-const waterColour = '#dfe7ea'
+const waterColour = '#5f93b5'
 const overbrewedColour = '#2b1a10'
 const strengthBelowWhichTeaLooksLikeWater = 5
 const bitternessWhereDarkeningStarts = 45

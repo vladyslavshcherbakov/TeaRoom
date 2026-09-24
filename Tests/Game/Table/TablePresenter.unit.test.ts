@@ -87,10 +87,10 @@ test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
   }
 })
 
-test('liquorColour_blendsFromWaterToTheTeaAndDarkensWhenBitter', () => {
+test('liquorColour_blendsFromBlueWaterToTheTeaAndDarkensWhenBitter', () => {
   const rows = [
-    [{ strength: 0, bitterness: 0 }, '#dfe7ea'],
-    [{ strength: 50, bitterness: 0 }, '#bcc9a0'],
+    [{ strength: 0, bitterness: 0 }, '#5f93b5'],
+    [{ strength: 50, bitterness: 0 }, '#7c9f85'],
     [{ strength: 100, bitterness: 0 }, '#99aa55'],
     [{ strength: 100, bitterness: 100 }, '#626233'],
   ] as const
