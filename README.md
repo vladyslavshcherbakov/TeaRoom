@@ -2,11 +2,13 @@
 
 A small, calm ritual game for the mobile browser. You heat water, brew tea, pour it, offer some to the tea figurines, taste it, tidy up and stay for a while. Nothing is won or lost.
 
+Play it on a phone: <https://vladyslavshcherbakov.github.io/TeaRoom/>. The ritual bench, a debug page over the simulation, is at <https://vladyslavshcherbakov.github.io/TeaRoom/bench/>.
+
 The design is in [docs/game-design.md](docs/game-design.md). The plan up to 1.0 is in [docs/roadmap.md](docs/roadmap.md).
 
 ## Status
 
-Version 0.3 in progress: the walkable 3D room. The simulation and the ritual bench from 0.1 are done.
+Version 0.3 is done: the walkable 3D room with the whole ritual at the tea table. The simulation and the ritual bench from 0.1 are done.
 
 ## Project layout
 
@@ -58,6 +60,6 @@ Each command prints an address that a phone on the same network can open.
 
 ## Deploy
 
-GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `./test.sh`, `./test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages.
+GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `./test.sh`, `./test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages at <https://vladyslavshcherbakov.github.io/TeaRoom/>.
 
 Pages must be enabled once in the repository settings: Settings → Pages → Build and deployment → Source: GitHub Actions.
