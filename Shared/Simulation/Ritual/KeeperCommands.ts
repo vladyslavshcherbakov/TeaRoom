@@ -5,8 +5,9 @@ import { isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
 import { liftOffTheHeater } from './HeatingCommands.ts'
 import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
+import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { finishFilling } from './TapCommands.ts'
-import { isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { clothItemId, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
@@ -30,6 +31,7 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.join(' and ')}`)
   if (draft.state.heater.vesselIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
   draft.state.keeper.hands[handIndex] = command.itemId
+  if (command.itemId === clothItemId) liftTheClothOutOfThePuddle(draft)
   moveItem(draft, command.itemId, { kind: 'inHand', handIndex })
   note(draft, `picked up ${command.itemId} from the ${location.spot.placeId} into hand ${handIndex}`)
   draft.events.push({ type: 'pickedUp', itemId: command.itemId, handIndex })

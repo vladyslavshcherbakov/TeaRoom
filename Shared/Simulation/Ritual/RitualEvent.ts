@@ -48,6 +48,8 @@ export type RefusalReason =
   | 'noTapInThisRoom'
   | 'alreadyFilling'
   | 'notFilling'
+  | 'tableIsDry'
+  | 'clothIsAlreadySoaking'
   | 'vesselIsBeingFilled'
 
 export type RitualEvent =
@@ -89,5 +91,6 @@ export type RitualEvent =
       readonly remark: GodsRemark
     }
   | { readonly type: 'tableWiped'; readonly wetMlLeft: number }
+  | { readonly type: 'clothLaidInThePuddle' }
   | { readonly type: 'ritualFinished' }
   | { readonly type: 'roomLeft' }

@@ -201,6 +201,56 @@ test('room_whenLeftAfterResting_stopsTheWorld', () => {
   assert.deepEqual(ritual.state, stateWhenLeft)
 })
 
+test('cloth_whileLyingInThePuddle_soaksUpHalfAMillilitreASecond', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  const wetMlBeforeSoaking = ritual.state.tableWetMl
+  ritual.do({ type: 'soakUpThePuddle' })
+
+  ritual.wait(10)
+
+  assertNear(ritual.state.tableWetMl, wetMlBeforeSoaking - 5 - 0.5)
+  assertNear(ritual.state.cloth.wetMl, 5 - 0.5)
+})
+
+test('cloth_whenTheWholePuddleIsSoakedUp_stopsSoaking', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'soakUpThePuddle' })
+
+  ritual.wait(60)
+
+  assert.equal(ritual.state.tableWetMl, 0)
+  assert.equal(ritual.state.cloth.isSoakingThePuddle, false)
+})
+
+test('cloth_whenLiftedOutOfThePuddle_stopsSoakingIt', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'soakUpThePuddle' })
+  ritual.wait(4)
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  const wetMlWhenLifted = ritual.state.tableWetMl
+
+  ritual.wait(10)
+
+  assertNear(ritual.state.tableWetMl, wetMlWhenLifted - 0.5)
+})
+
+test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+
+  const events = ritual.do({ type: 'soakUpThePuddle' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'notAtThatPlace' }])
+})
+
+test('puddle_whenTheTableIsDry_isNotSoakedUp', () => {
+  const ritual = TestRitual.begun()
+
+  const events = ritual.do({ type: 'soakUpThePuddle' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'tableIsDry' }])
+})
+
 test('table_withTheClothLyingOnIt_isNotWiped', () => {
   const ritual = ritualWithSpillOnTheTable()
   const wetMlBeforeWiping = ritual.state.tableWetMl

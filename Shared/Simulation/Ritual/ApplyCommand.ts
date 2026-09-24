@@ -1,7 +1,7 @@
 import type { Catalog } from '../Definitions/Catalog.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
-import { wipeTable } from './CleanupCommands.ts'
+import { soakUpThePuddle, wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
 import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
 import { pickUp, putDown, standAt } from './KeeperCommands.ts'
@@ -71,6 +71,8 @@ function carryOut(draft: Draft, command: Command): void {
       return offerCup(draft, command)
     case 'wipeTable':
       return wipeTable(draft, command)
+    case 'soakUpThePuddle':
+      return soakUpThePuddle(draft, command)
     case 'finishRitual':
       return finishRitual(draft)
     case 'leaveRoom':

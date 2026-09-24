@@ -4,7 +4,7 @@ import { coolingPerSecondOf, coolLiquid, heatLiquid, liquidBoiledAway } from '..
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap } from '../Physics/TapWater.ts'
-import { wetMlAfterDrying } from '../Physics/Table.ts'
+import { mlSoakedUp, wetMlAfterDrying } from '../Physics/Table.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
@@ -19,6 +19,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   continuePour(draft, seconds)
   continueFilling(draft, seconds)
   steepAllLeaves(draft, seconds)
+  continueSoaking(draft, seconds)
   draft.state.tableWetMl = wetMlAfterDrying(draft.state.tableWetMl, seconds)
   draft.state.cloth.wetMl = wetMlAfterDrying(draft.state.cloth.wetMl, seconds)
   startOrEndBrews(draft)
@@ -126,4 +127,16 @@ function steepAllLeaves(draft: Draft, seconds: number): void {
     vessel.liquid = steeped.liquid
     vessel.leaves = steeped.leaves
   }
+}
+
+function continueSoaking(draft: Draft, seconds: number): void {
+  const cloth = draft.state.cloth
+  if (!cloth.isSoakingThePuddle) return
+  const soakedMl = mlSoakedUp(draft.state.tableWetMl, cloth.wetMl, seconds)
+  draft.state.tableWetMl -= soakedMl
+  cloth.wetMl += soakedMl
+  if (draft.state.tableWetMl > 0 && soakedMl > 0) return
+  cloth.isSoakingThePuddle = false
+  const why = draft.state.tableWetMl === 0 ? 'the puddle is gone' : 'the cloth is soaked through'
+  note(draft, `the cloth stops soaking because ${why}: it holds ${cloth.wetMl.toFixed(2)} ml, the table is ${draft.state.tableWetMl.toFixed(2)} ml wet`)
 }

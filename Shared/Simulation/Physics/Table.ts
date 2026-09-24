@@ -3,9 +3,15 @@ const slowStrokeCmPerSecond = 50
 const fastStrokeCmPerSecond = 200
 const slowStrokeEfficiency = 0.8
 const fastStrokeEfficiency = 0.3
+const soakingMlPerSecond = 0.5
+const clothHoldsMl = 40
 
 export function wetMlAfterDrying(wetMl: number, seconds: number): number {
   return Math.max(0, wetMl - evaporationMlPerSecond * seconds)
+}
+
+export function mlSoakedUp(tableWetMl: number, clothWetMl: number, seconds: number): number {
+  return Math.max(0, Math.min(tableWetMl, soakingMlPerSecond * seconds, clothHoldsMl - clothWetMl))
 }
 
 export function wetMlAfterWiping(wetMl: number, strokeSpeedCmPerSecond: number, coveredFraction: number): number {

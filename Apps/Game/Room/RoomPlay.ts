@@ -52,7 +52,6 @@ const fullSpoonDepth = 1
 const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
-const shareOfThePuddleTheClothSoaks = 0.15
 
 export class RoomPlay {
   private readonly ritual: RitualPort
@@ -345,8 +344,9 @@ export class RoomPlay {
     const spot: Spot = { placeId: furnitureId, x: point.x, y: point.y, z: point.z }
     const refusal = whyThereIsNoRoomFor(itemId, spot, this.ritual.state, this.heaterSpot())
     if (refusal !== null) return this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}: ${refusal}`)
-    if (itemId === clothItemId) this.soakUpThePuddleIfTheClothLandsInIt(furnitureId, point)
-    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'putDown', itemId, spot }))
+    const events = this.ritual.dispatch({ type: 'putDown', itemId, spot })
+    this.letGoOfTheChoiceUnlessRefused(events)
+    if (itemId === clothItemId && this.ritual.state.cloth.location.kind === 'onSurface') this.soakUpThePuddleIfTheClothLandsInIt(furnitureId, point)
   }
 
   private soakUpThePuddleIfTheClothLandsInIt(furnitureId: FurnitureId, point: WorldPoint): void {
@@ -354,8 +354,8 @@ export class RoomPlay {
     const distanceToThePuddle = Math.hypot(point.x - puddleCentre.x, point.z - puddleCentre.z)
     const isInThePuddle = furnitureId === this.ritualFurnitureId() && puddleRadius > 0 && distanceToThePuddle < puddleRadius + clothHalfWidthMetres
     if (!isInThePuddle) return this.log(`the cloth goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddleRadius.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
-    this.log(`the cloth goes down in the puddle and soaks some of it up`)
-    this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond: 0, coveredFraction: shareOfThePuddleTheClothSoaks })
+    this.log(`the cloth goes down in the puddle ${distanceToThePuddle.toFixed(2)} m from its centre`)
+    this.ritual.dispatch({ type: 'soakUpThePuddle' })
   }
 
   private letGoOfTheChoiceUnlessRefused(events: readonly RitualEvent[]): void {
