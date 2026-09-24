@@ -8,7 +8,7 @@ The design is in [docs/game-design.md](docs/game-design.md). The plan up to 1.0 
 
 ## Status
 
-Version 0.3 is done: the walkable 3D room with the whole ritual at the tea table. The simulation and the ritual bench from 0.1 are done.
+Version 0.3 is done: the walkable 3D room with the whole ritual, from filling the kettle at the tap to wiping the tea table. The simulation and the ritual bench from 0.1 are done.
 
 ## Project layout
 
@@ -17,9 +17,10 @@ Version 0.3 is done: the walkable 3D room with the whole ritual at the tea table
 | `Shared/Simulation/` | The rules of the world: definitions, state, physics, judgements, commands and events. Imports nothing outside itself. |
 | `Shared/Content/` | Teas, vessels, heaters, figurines and rooms as data. |
 | `Apps/Game/Room/` | The walkable room in Three.js: layout, paths, camera and models. Served at the site's root. |
-| `Apps/Game/Table/` | The presenter that turns the ritual's state into what vessels show, and the texts the player reads. |
+| `Apps/Game/Table/` | The presenter that turns the ritual's state into what vessels show, how each tea looks, and the tea's texts. |
+| `Apps/Game/Texts/` | Every text the player reads, as keys and values. |
 | `Apps/Bench/` | The ritual bench: a debug page over the simulation. |
-| `Tests/` | Integration and unit tests, mirroring `Shared/`. |
+| `Tests/` | Integration, unit and browser tests, mirroring `Shared/` and `Apps/`. |
 | `docs/` | How the game behaves. |
 
 ## Requirements

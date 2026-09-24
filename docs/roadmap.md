@@ -4,7 +4,7 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 
 1.0 is the MVP of the GDD: one room, one window, three times of day, rain, a cat, one kettle, an electric heater, a thermos, a caddy and spoon, six tea bowls in different glazes, three teas, a cloth and two figurines, with heating, temperature, pouring, brewing, bitterness, the first sip, the gods' plaque and the option to simply stay.
 
-## 0.1 — Simulation core (this version)
+## 0.1 — Simulation core (done)
 
 - The ritual as a headless simulation in TypeScript that imports nothing: heating, cooling, the thermos, pouring with spills and overflow, scooping and tipping leaves, brewing with strength and bitterness, tasting, offerings, the gods, wiping and drying, finishing, resting and leaving.
 - Fixed-step time, identical results at any frame rate.
@@ -28,6 +28,7 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - A tap on the floor walks there around the furniture. A tap on a piece of furniture walks to it and shows it close up. A tap elsewhere returns to the room.
 - Two hands: pick up and put down, one item per hand, known to the simulation, so the rules can say what is out of reach.
 - The table close-up hosts the tactile ritual from 0.2.
+- The kettle is filled at the tap, pours are aimed with two fingers, the spoon and the cloth are carried in the hands, and the cloth wipes as it moves.
 - Flat colours in the style of Big Walk, with one place to swap in generated textures.
 
 ## 0.4 — Feel

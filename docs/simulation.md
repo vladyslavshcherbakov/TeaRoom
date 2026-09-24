@@ -10,7 +10,7 @@ The world advances in fixed steps of 0.05 s, whatever the frame rate. A frame ha
 
 ## Places and hands
 
-A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel and the caddy — is either on a surface at a spot of a place, or in one of the keeper's two hands. The spot keeps the exact position where the item was put down, so the room can show it there.
+A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's two hands. The spot keeps the exact position where the item was put down, so the room can show it there.
 
 The keeper stands at one place, or at none while walking. An item is within reach when it is in a hand, or on a surface at the place where the keeper stands.
 
@@ -98,4 +98,4 @@ Spilled liquid makes the table wet. The wet area evaporates at 0.05 ml per secon
 
 ## Phases
 
-`settingUp` accepts only choosing the mood and beginning. `ritual` accepts everything except beginning again and leaving. Finishing ends any pour, switches the heater off and moves to `resting`, where the room keeps cooling and drying and only the mood can change. Leaving moves to `ended`, where time stops and every command is refused.
+`settingUp` accepts only choosing the mood and beginning. `ritual` accepts everything except beginning again and leaving. Finishing ends any pour, switches the heater off and moves to `resting`, where the room keeps cooling and drying, and the keeper can still walk, take and put down items, change the mood and leave. Leaving moves to `ended`, where time stops and every command is refused.
