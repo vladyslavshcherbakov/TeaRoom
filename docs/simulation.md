@@ -56,7 +56,7 @@ A bowl set before a figurine goes entirely into its saucer. Each figurine accept
 
 ## The gods
 
-The gods start at 50 in 0.1. Persistence arrives in 0.8.
+The gods start at 50 in 0.1. Persistence arrives in 0.9.
 
 | Moment | Change | Remark |
 |---|---|---|

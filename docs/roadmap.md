@@ -22,7 +22,15 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - The game at the root of the site, the bench under `/bench/`.
 - A browser smoke test in CI that loads the game and completes one ritual.
 
-## 0.3 — Feel
+## 0.3 — The room
+
+- A small 3D room in Three.js, seen from above at an angle: floor, two walls cut away like a dollhouse, the window, the counter with the heater and the tap, the shelf with the caddy and the bowls, the low table with the cushion, the figurines on the windowsill, and a walker.
+- A tap on the floor walks there around the furniture. A tap on a piece of furniture walks to it and shows it close up. A tap elsewhere returns to the room.
+- Two hands: pick up and put down, one item per hand, known to the simulation, so the rules can say what is out of reach.
+- The table close-up hosts the tactile ritual from 0.2.
+- Flat colours in the style of Big Walk, with one place to swap in generated textures.
+
+## 0.4 — Feel
 
 - The five phases of every grab: lift, lag by weight class, resistance, contact bounce, settle.
 - Sockets and allowed areas, spring-back from forbidden places.
@@ -32,14 +40,14 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - The hot vessel: "oh, hot", the hand pulls back.
 - Camera micro-zoom towards the object being held.
 
-## 0.4 — Sound
+## 0.5 — Sound
 
 - Audio unlocked on the first touch, as iOS Safari requires.
 - Sound families by material: water (volume follows flow), ceramic, the kettle's hum rising with temperature, dry leaves, cloth, rain.
 - The last drops as their own sound. No two consecutive plays exactly alike.
 - Haptics as a progressive enhancement on devices that implement the Vibration API. None on iPhone.
 
-## 0.5 — The whole ritual on screen
+## 0.6 — The whole ritual on screen
 
 - The first sip scene: raise, pause, sip, reaction, a small result card.
 - Offering scene: the figurine's glow, pose and resonant sound.
@@ -47,26 +55,26 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - Cleanup with the cloth, then "The tea is ready": Stay, Leave. Stay fades the UI completely.
 - Text in the languages agreed for the game (open question).
 
-## 0.6 — Atmosphere
+## 0.7 — Atmosphere
 
 - The window as its own layer. Sunset, dawn and night with light that changes over two to five seconds.
 - Rain on the glass and its ambient loop.
 - Rare window events with a cooldown, from a seeded random source so tests stay deterministic.
 
-## 0.7 — The cat
+## 0.8 — The cat
 
 - States: sleeping, awake, moving, settling, being petted. Two spots.
 - Moves by walking, never by teleporting: look, walk, turn, settle.
 - Petting without a reward loop. Keeps a safe distance from hot tea. Occasionally nudges a bowl.
 - Habits by time of day and weather.
 
-## 0.8 — Memory
+## 0.9 — Memory
 
 - The room persists between sessions on the device: object positions, the gods, figurine satisfaction, the cat's habits.
 - A ritual history and the first world rules from world-memory.md.
 - Installable to the home screen, playable offline.
 
-## 0.9 — Polish
+## 0.10 — Polish
 
 - The art pass: the illustrated diorama, three teas' liquor colours, three bowls, the optional thermometer as an object.
 - Performance on older iPhones, safe areas, reduced motion, a landscape hint.

@@ -14,7 +14,9 @@ The README has the commands. CI runs the same two scripts.
 
 Layers: `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
-Apps: `Apps/Game` is the Phaser game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. In the game, `Table/TablePresenter.ts` is the only place that turns state into what is drawn, and the scene reads its `TableViewState` every frame. `Table/Touch/TableTouches.ts` is the only place that turns touches into commands, and it owns where each object is while it is held. `Table/TableLayout.ts` holds every position and size in scene coordinates. `TableScene.ts` only forwards pointer events, paints, and shows menus and reactions.
+Apps: `Apps/Game` is the game, `Apps/Bench` the debug page. `Apps/Game/Table` is the Phaser close-up of the tea table, served at the site's root. `Apps/Game/Room` is the walkable 3D room in Three.js, served at `/room/` until the table ritual moves into it. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. In the game, `Table/TablePresenter.ts` is the only place that turns state into what is drawn, and the scene reads its `TableViewState` every frame. `Table/Touch/TableTouches.ts` is the only place that turns touches into commands, and it owns where each object is while it is held. `Table/TableLayout.ts` holds every position and size in scene coordinates. `TableScene.ts` only forwards pointer events, paints, and shows menus and reactions.
+
+In the room, `Room/RoomLayout.ts` holds every position in metres on the floor. `Room/RoomNavigator.ts` is the only place that turns taps into walking and close-ups, and it knows nothing of Three.js. `Room/Walking/` finds paths on the floor grid and moves the walker. `Room/Camera/CameraPoses.ts` computes where the camera looks. `Room/Views/` builds the meshes, and `Room/Views/RoomMaterials.ts` is the one place that decides how each surface looks, so generated textures replace colours there. `RoomScene.ts` renders, raycasts taps and forwards them to the navigator.
 
 Inside the simulation:
 
@@ -42,7 +44,7 @@ Adding a mechanic:
 
 Reference mechanic: pouring (`Physics/Pouring.ts`, `Ritual/PouringCommands.ts`, `SimulationStep.continuePour`, `Tests/Simulation/Pouring.integration.test.ts`).
 
-External dependencies: Phaser for the game, pinned in `package.json`. Vite, TypeScript and `@types/node` for development. The simulation imports none of them.
+External dependencies: Phaser for the table and Three.js for the room, pinned in `package.json`. Vite, TypeScript and `@types/node` for development. The simulation imports none of them.
 
 ## Rules nothing checks
 

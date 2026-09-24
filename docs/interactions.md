@@ -75,10 +75,10 @@ A touch that moves less than 8 px is a tap. Anything longer picks the object up,
 | Raise a bowl into the top of the screen | Takes a sip. |
 | Draw the cloth across the puddle | Wipes. The stroke's speed inside the puddle and the share of the puddle it crossed decide how much dries. |
 
-Every object returns to its place when released, except the kettle placed on the heater. Free placement on the table arrives in 0.3.
+Every object returns to its place when released, except the kettle placed on the heater. Free placement on the table arrives in 0.4.
 
 The pour gesture maps tilt to flow: below 10° nothing pours, the flow grows linearly to full at 45°, and above 80% of full flow a tenth of the stream splashes. The presentation reports which share of the stream lands inside the target opening, because only the presentation knows the geometry.
 
 ## Protocols still to be written in full
 
-The protocols below are specified by the GDD and wait for their presentation version: pick up and place (0.3), open lid as a physical object (0.3), hot vessel touch — "oh, hot" — with the hand pulling back (0.3), pet the animal (0.7), change the time of day with a slow light transition (0.6), remain (0.5).
+The protocols below are specified by the GDD and wait for their presentation version: pick up and place (0.4), open lid as a physical object (0.4), hot vessel touch — "oh, hot" — with the hand pulling back (0.4), pet the animal (0.8), change the time of day with a slow light transition (0.7), remain (0.6).

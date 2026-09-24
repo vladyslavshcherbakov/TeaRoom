@@ -1,6 +1,6 @@
 # World memory and the hidden 70%
 
-This is design material for 0.8 and later. Nothing here is implemented in 0.1.
+This is design material for 0.9 and later. Nothing here is implemented in 0.1.
 
 ## Rule
 
