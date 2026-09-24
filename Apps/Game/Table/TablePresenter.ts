@@ -31,9 +31,13 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     caddy: { isOpen: state.caddy.isOpen, fillShare: share(state.caddy.grams, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
-    puddleShare: share(state.tableWetMl, puddleFullAtMl),
+    puddleShare: puddleShareOf(state.tableWetMl),
     godsPlaque: { litMarks: Math.round((state.godsSatisfaction / 100) * godsPlaqueMarks), totalMarks: godsPlaqueMarks },
   }
+}
+
+export function puddleShareOf(tableWetMl: number): number {
+  return share(tableWetMl, puddleFullAtMl)
 }
 
 function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null): TableViewState.Vessel {

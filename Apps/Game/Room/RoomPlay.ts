@@ -8,7 +8,8 @@ import type { HandIndex, ItemLocation, SessionState } from '../../../Shared/Simu
 import { AimedPour, type AimedPourView } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
-import { carriedItemShapes, furniture, furnitureWithId, openingRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { puddleShareOf } from '../Table/TablePresenter.ts'
+import { carriedItemShapes, furniture, furnitureWithId, openingRadiusMetres, puddleCentre, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
 
@@ -48,6 +49,8 @@ type Press = {
 const fullSpoonDepth = 1
 const strokeCoveringTheWholeTableMetres = 1.5
 const wipeEveryMetres = 0.02
+const clothHalfWidthMetres = 0.1
+const shareOfTheTableUnderTheCloth = 0.15
 
 export class RoomPlay {
   private readonly ritual: RitualPort
@@ -194,7 +197,6 @@ export class RoomPlay {
       case 'figurine':
         return this.offerTheChosenCupTo(target.figurineId)
       case 'surface':
-        if (this.selectedItemId() === clothItemId) return this.log(`tap on the ${target.furnitureId} with the cloth ignored: the cloth wipes with a stroke`)
         return this.putDownSelectedItemAt(target.furnitureId, target.point)
       case 'heater':
         return this.putSelectedVesselOnTheHeater()
@@ -321,7 +323,17 @@ export class RoomPlay {
     const spot: Spot = { placeId: furnitureId, x: point.x, y: point.y, z: point.z }
     const refusal = whyThereIsNoRoomFor(itemId, spot, this.ritual.state, this.heaterSpot())
     if (refusal !== null) return this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}: ${refusal}`)
+    if (itemId === clothItemId) this.soakUpThePuddleIfTheClothLandsInIt(furnitureId, point)
     this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'putDown', itemId, spot }))
+  }
+
+  private soakUpThePuddleIfTheClothLandsInIt(furnitureId: FurnitureId, point: WorldPoint): void {
+    const puddleRadius = puddleRadiusMetres(puddleShareOf(this.ritual.state.tableWetMl))
+    const distanceToThePuddle = Math.hypot(point.x - puddleCentre.x, point.z - puddleCentre.z)
+    const isInThePuddle = furnitureId === this.ritualFurnitureId() && puddleRadius > 0 && distanceToThePuddle < puddleRadius + clothHalfWidthMetres
+    if (!isInThePuddle) return this.log(`the cloth goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddleRadius.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
+    this.log(`the cloth goes down in the puddle and soaks some of it up`)
+    this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond: 0, coveredFraction: shareOfTheTableUnderTheCloth })
   }
 
   private letGoOfTheChoiceUnlessRefused(events: readonly RitualEvent[]): void {

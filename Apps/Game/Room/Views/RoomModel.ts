@@ -5,6 +5,8 @@ import {
   furniture,
   furnitureWithId,
   itemSpots,
+  puddleCentre,
+  puddleRadiusMetres,
   roomHalfSize,
   windowOnBackWall,
   type Footprint,
@@ -18,7 +20,6 @@ import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 const wallHeight = 2.6
 const wallThickness = 0.12
 const reachOfFurnitureMetres = 0.35
-const largestPuddleRadiusMetres = 0.25
 
 export type TapTargetTag =
   | { readonly furnitureId: FurnitureId }
@@ -51,7 +52,7 @@ export class RoomModel {
 
   showPuddle(puddleShare: number): void {
     this.puddle.visible = puddleShare > 0
-    this.puddle.scale.setScalar(Math.sqrt(puddleShare) * largestPuddleRadiusMetres)
+    this.puddle.scale.setScalar(puddleRadiusMetres(puddleShare))
   }
 
   private addFloor(): void {
@@ -128,10 +129,9 @@ export class RoomModel {
   }
 
   private addPuddle(): THREE.Mesh {
-    const teaTable = furnitureWithId('teaTable')
     const puddle = new THREE.Mesh(new THREE.CircleGeometry(1, 20), this.materials.materialFor('puddle'))
     puddle.rotation.x = -Math.PI / 2
-    puddle.position.set(teaTable.footprint.x - 0.2, teaTable.height + 0.002, teaTable.footprint.z + 0.1)
+    puddle.position.set(puddleCentre.x, puddleCentre.y, puddleCentre.z)
     puddle.visible = false
     this.root.add(puddle)
     return puddle

@@ -372,16 +372,30 @@ test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
   assert.deepEqual(room.play.clothOnTheTableAt, { x: 0.9, y: onTheTeaTable.y, z: -1.4 })
 })
 
-test('table_whenTappedWithTheCloth_isNotWiped', () => {
+test('cloth_whenTheTeaTableIsTappedAwayFromThePuddle_isPutDownThereAndWipesNothing', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
   room.takeAndChoose('cloth')
   const wetMlBeforeTheTap = room.state.tableWetMl
 
-  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { x: 1.45, y: onTheTeaTable.y, z: -1.7 } })
 
+  assert.equal(room.state.cloth.location.kind, 'onSurface')
   assert.equal(room.state.tableWetMl, wetMlBeforeTheTap)
+})
+
+test('cloth_whenPutDownInThePuddle_soaksUpSomeOfIt', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.ritual.pour('kettle', null, 2)
+  room.takeAndChoose('cloth')
+  const wetMlBeforeTheTap = room.state.tableWetMl
+
+  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { x: 0.5, y: onTheTeaTable.y, z: -1.45 } })
+
+  assert.equal(room.state.cloth.location.kind, 'onSurface')
+  assertNear(room.state.tableWetMl, wetMlBeforeTheTap * 0.785, 0.01 * wetMlBeforeTheTap)
 })
 
 test('chosenHand_whenTheKeeperLeavesTheCloseUp_isLetGo', () => {

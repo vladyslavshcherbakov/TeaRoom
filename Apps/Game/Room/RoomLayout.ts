@@ -109,6 +109,13 @@ export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
 
 export const heaterFootprintRadiusMetres = 0.18
 
+export const puddleCentre: WorldPoint = { x: 0.8, y: 0.422, z: -1.45 }
+const largestPuddleRadiusMetres = 0.25
+
+export function puddleRadiusMetres(puddleShare: number): number {
+  return Math.sqrt(puddleShare) * largestPuddleRadiusMetres
+}
+
 export const faucetSpout: WorldPoint = { x: -1.45, y: 1.22, z: -2.72 }
 
 export const itemSpots: readonly ItemSpot[] = [
