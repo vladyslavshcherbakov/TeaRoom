@@ -2,11 +2,11 @@
 
 ## Decisions and their reasons
 
-**TypeScript for a mobile Safari game, Phaser for the presentation from 0.2.** The GDD names the stack, and a 2D diorama with sprites, tweens, particles and audio is what Phaser is for. Rejected: a native iOS app, because the target is the mobile browser. Rejected: a hand-written canvas renderer, because particles, tweens and audio would be rewritten from scratch.
+**TypeScript for a mobile Safari game.** The target is the mobile browser. Rejected: a native iOS app, because it would not run in the browser. Rejected: Phaser, which carried the 2D table in 0.2 and was removed when the game became a walkable 3D room.
 
-**The simulation is a functional core with an imperative shell.** Commands and time go in, a new state and events come out, and nothing in `Shared/Simulation` knows about Phaser, the DOM or the clock. This keeps every rule testable without a browser, and lets AI-assisted changes to the presentation leave the rules alone. Rejected: game objects that hold their own state inside Phaser, because rules then live in sprites and cannot be tested headless.
+**The simulation is a functional core with an imperative shell.** Commands and time go in, a new state and events come out, and nothing in `Shared/Simulation` knows about Three.js, the DOM or the clock. This keeps every rule testable without a browser, and lets AI-assisted changes to the presentation leave the rules alone. Rejected: game objects that hold their own state inside the renderer, because rules then live in meshes and cannot be tested headless.
 
-**The architecture skills' MVVM is mapped, not copied.** A Phaser scene plays the view and the view model at once: it forwards gestures as commands and draws the state it is given. The presenter from those skills stays as a pure mapping from state to presentation cues (steam, sound level, colour), arriving in 0.2. Rejected: view models per object, because a game loop that redraws every frame has no binding problem for them to solve.
+**The architecture skills' MVVM is mapped, not copied.** The scene plays the view and the view model at once: it forwards taps as commands and draws the state it is given. The presenter from those skills stays as a pure mapping from state to presentation cues (steam, sound level, colour), arriving in 0.2. Rejected: view models per object, because a game loop that redraws every frame has no binding problem for them to solve.
 
 **Player decisions are commands, consequences are events.** One command per decision, one event per thing the presentation or the world memory must react to. This gives replays, logs for debugging, and the ritual history the world memory will be built from. Rejected: an event bus where objects call each other, because one action has many consequences and the order would be decided by subscription order.
 
@@ -20,9 +20,7 @@
 
 **Broken content is caught before a room opens: loudly in development, quietly for players.** A definition that names a missing heater, vessel, figurine or tea is a developer's mistake no player can fix. `RitualSession.open` checks the whole catalog first. A development build throws with every problem listed, so the mistake cannot be missed. A player's build logs each problem at error level and returns `unavailable`, and the presentation shows a quiet screen instead of crashing mid-ritual. Rejected: throwing from `definitionIn` in a player's build, because the game would stop at the first lookup with nothing on screen.
 
-**Touches become commands in one class that does not know Phaser.** `TableTouches` receives touches in scene coordinates and sends commands to the session. The scene forwards pointer events and paints. This keeps every gesture rule testable in Node with a real session, and the bugs a gesture can have (a vessel jumping away from the finger, a pour starting by accident) are caught by tests instead of by playing. Rejected: gesture logic inside Phaser input handlers, because it could only be checked in a browser.
-
-**Pouring is a press from above.** One finger has to both carry the vessel and tilt it. Over a target the vessel stops at a hover line, and pressing further down tilts it. A pour only starts when the vessel reached the target from above, so carrying a bowl past the kettle on the way to the viewer pours nothing. Rejected: a separate tilt control, because it breaks the one-hand, one-object feel the GDD asks for.
+**Taps become decisions in a class that does not know the renderer.** `RoomNavigator` receives what a tap hit and decides what happens. The scene only raycasts and draws. Every tap rule is then testable in Node. Rejected: logic inside input handlers, because it could only be checked in a browser.
 
 **UI tests run on WebKit and read the ritual log.** WebKit is the engine of iOS Safari, the game's main target. The tests read the `[ritual]` lines from the browser console instead of calling into the game, so the product carries no test hooks. `@playwright/test` is pinned to the version whose Chromium is preinstalled in the agent environment, so the same tests run there and in CI.
 
@@ -44,8 +42,8 @@
 
 **GitHub Actions tests every push and deploys to Pages from the default branch.** The workflow reads the default branch from the event instead of naming `main`, so it keeps working if the default branch is renamed. Action versions are the Node 24 majors (`checkout@v5`, `setup-node@v5`, `upload-pages-artifact@v5`, `deploy-pages@v5`), because GitHub is removing the Node 20 runtime from its runners in September 2026.
 
-**Phaser and Vite are pinned to exact versions, and CI installs from the lockfile.** A game's feel depends on the renderer's timing and input handling, so an update is a deliberate change with its own commit, not a side effect of a fresh install. Phaser is 4.x, the current major, whose API is close to 3.x and whose types ship in the package.
+**Three.js and Vite are pinned to exact versions, and CI installs from the lockfile.** A game's feel depends on the renderer's timing and input handling, so an update is a deliberate change with its own commit, not a side effect of a fresh install.
 
-**Both pages are built by Vite.** The game at the root of the site and the bench under `/bench/` are two Vite builds from `build.sh`, with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build. Rejected: building the bench with the TypeScript compiler alone, because two build tools for two pages would be two pipelines to keep working.
+**Both pages are built by Vite.** The room at the root of the site and the bench under `/bench/` are two Vite builds from `build.sh`, with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build. Rejected: building the bench with the TypeScript compiler alone, because two build tools for two pages would be two pipelines to keep working.
 
 **No haptics on iPhone.** iOS Safari does not implement the Vibration API, and the checkbox-switch workaround is reported to stop working from iOS 26.5. Haptics stay a progressive enhancement for browsers that have the API.

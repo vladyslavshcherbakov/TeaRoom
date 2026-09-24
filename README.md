@@ -6,7 +6,7 @@ The design is in [docs/game-design.md](docs/game-design.md). The plan up to 1.0 
 
 ## Status
 
-Version 0.2 in progress: the Phaser scene over the simulation core. Version 0.1, the simulation and the ritual bench, is done.
+Version 0.3 in progress: the walkable 3D room. The simulation and the ritual bench from 0.1 are done.
 
 ## Project layout
 
@@ -14,8 +14,8 @@ Version 0.2 in progress: the Phaser scene over the simulation core. Version 0.1,
 |---|---|
 | `Shared/Simulation/` | The rules of the world: definitions, state, physics, judgements, commands and events. Imports nothing outside itself. |
 | `Shared/Content/` | Teas, vessels, heaters, figurines and rooms as data. |
-| `Apps/Game/Table/` | The close-up of the tea table in Phaser: the presenter that turns state into what is drawn, and the gestures. Served at the site's root. |
-| `Apps/Game/Room/` | The walkable room in Three.js: layout, paths, camera and models. Served at `/room/`. |
+| `Apps/Game/Room/` | The walkable room in Three.js: layout, paths, camera and models. Served at the site's root. |
+| `Apps/Game/Table/` | The presenter that turns the ritual's state into what vessels show, and the texts the player reads. |
 | `Apps/Bench/` | The ritual bench: a debug page over the simulation. |
 | `Tests/` | Integration and unit tests, mirroring `Shared/`. |
 | `docs/` | How the game behaves. |
@@ -42,7 +42,6 @@ npm install
 ## Run locally
 
 ```sh
-npx vite Apps/Game --host
 npx vite Apps/Game/Room --host
 npx vite Apps/Bench --host
 ```
@@ -55,7 +54,7 @@ Each command prints an address that a phone on the same network can open.
 ./build.sh
 ```
 
-`build.sh` builds the table into `dist/`, the room into `dist/room/` and the bench into `dist/bench/`.
+`build.sh` builds the room into `dist/` and the bench into `dist/bench/`.
 
 ## Deploy
 

@@ -11,7 +11,7 @@ function roomLog(page: Page): { lines: string[]; errors: string[] } {
 
 test('room_whenTheFloorInFrontOfTheWalkerIsTapped_answersTheTap', async ({ page }) => {
   const log = roomLog(page)
-  await page.goto('./room/')
+  await page.goto('./')
   await expect.poll(() => log.lines.some((line) => line.includes('room opened'))).toBe(true)
   const viewport = page.viewportSize()
   if (viewport === null) throw new Error('the page has no viewport')

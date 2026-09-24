@@ -13,7 +13,7 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - A ritual bench: a debug page with buttons and sliders over the core, published on GitHub Pages, so the rules can be tried on a phone.
 - GitHub Actions: type-check and tests on every push, deploy to Pages from the default branch.
 
-## 0.2 — First touch
+## 0.2 — First touch (done, then replaced by the 3D room)
 
 - Phaser (version chosen and pinned when it is added), with a Vite build in the same pipeline.
 - A portrait scene with placeholder shapes: table, kettle, heater, thermos, caddy, spoon, three bowls, two figurines, cloth.

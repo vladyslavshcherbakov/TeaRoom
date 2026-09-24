@@ -14,7 +14,7 @@ The README has the commands. CI runs the same two scripts.
 
 Layers: `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
-Apps: `Apps/Game` is the game, `Apps/Bench` the debug page. `Apps/Game/Table` is the Phaser close-up of the tea table, served at the site's root. `Apps/Game/Room` is the walkable 3D room in Three.js, served at `/room/` until the table ritual moves into it. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. In the game, `Table/TablePresenter.ts` is the only place that turns state into what is drawn, and the scene reads its `TableViewState` every frame. `Table/Touch/TableTouches.ts` is the only place that turns touches into commands, and it owns where each object is while it is held. `Table/TableLayout.ts` holds every position and size in scene coordinates. `TableScene.ts` only forwards pointer events, paints, and shows menus and reactions.
+Apps: `Apps/Game` is the game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. `Apps/Game/Room` is the walkable 3D room in Three.js, served at the site's root. `Apps/Game/Table/TablePresenter.ts` turns the ritual's state into what vessels show (fill, liquor colour, steam, brew stage), and `Table/TableTexts.ts` holds the texts the player reads.
 
 In the room, `Room/RoomLayout.ts` holds every position in metres on the floor. `Room/RoomNavigator.ts` is the only place that turns taps into walking and close-ups, and it knows nothing of Three.js. `Room/Walking/` finds paths on the floor grid and moves the walker. `Room/Camera/CameraPoses.ts` computes where the camera looks. `Room/Views/` builds the meshes, and `Room/Views/RoomMaterials.ts` is the one place that decides how each surface looks, so generated textures replace colours there. `RoomScene.ts` renders, raycasts taps and forwards them to the navigator.
 
@@ -44,7 +44,7 @@ Adding a mechanic:
 
 Reference mechanic: pouring (`Physics/Pouring.ts`, `Ritual/PouringCommands.ts`, `SimulationStep.continuePour`, `Tests/Simulation/Pouring.integration.test.ts`).
 
-External dependencies: Phaser for the table and Three.js for the room, pinned in `package.json`. Vite, TypeScript and `@types/node` for development. The simulation imports none of them.
+External dependencies: Three.js for the room, pinned in `package.json`. Vite, TypeScript and `@types/node` for development. The simulation imports none of them.
 
 Before designing a new feature, read `docs/world-bible.md`. It holds the lore, the living systems and the secrets the game grows from.
 
@@ -67,7 +67,7 @@ Before designing a new feature, read `docs/world-bible.md`. It holds the lore, t
 
 ## Tests
 
-End-to-end UI tests in `Tests/Browser/` play the built site with Playwright and read the ritual log from the console, so the game needs no test hooks. Gesture tests in `Tests/Game/Table/` drive `TableTouches` with a `Finger` over a real session.
+End-to-end UI tests in `Tests/Browser/` play the built site with Playwright and read the logs from the console, so the game needs no test hooks. Room tests in `Tests/Game/Room/` drive `RoomNavigator` with taps.
 
 Integration tests run the real `RitualSession` over `Tests/Support/TestCatalog.ts`, whose round numbers make expected values checkable by hand. Its vessels do not cool unless a test asks for cooling. Content tests run the real catalog. Unit tests are written only for a decision table that has stopped moving.
 
@@ -79,5 +79,3 @@ CI runs `./test.sh` on every push and pull request.
 - Whether a separate teapot joins the MVP, or the kettle stays the brewing vessel. Owner: the user.
 - Where the kettle's water comes from. In 0.1 it starts filled. Owner: the user.
 - Whether the bench stays published after 1.0. Owner: the user.
-- Whether the room's look, camera and furniture layout at `/room/` are approved. The next step, hands and places in the simulation, waits for it. Owner: the user.
-- Whether the site's root shows the room before the table ritual moves into it. Owner: the user.
