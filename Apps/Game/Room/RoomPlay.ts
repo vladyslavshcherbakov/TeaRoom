@@ -366,7 +366,7 @@ export class RoomPlay {
   private putTheChosenVesselOnTheHeater(): void {
     const itemId = this.chosenItemId()
     if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
-    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'placeOnHeater', vesselId: itemId }))
+    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'placeOnHeater', itemId: itemId }))
   }
 
   private chosenItemId(): string | null {

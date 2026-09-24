@@ -13,7 +13,7 @@ function ritualWithSpillOnTheTable(): TestRitual {
 test('room_beforeTheRitualBegins_refusesTouchingTheKettle', () => {
   const ritual = new TestRitual()
 
-  const events = ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  const events = ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'ritualNotStarted' }])
 })

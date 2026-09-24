@@ -76,7 +76,7 @@ test('thermos_whenItsLidIsClosed_refusesWater', () => {
 
 test('kettle_whileOnTheHeater_cannotBePoured', () => {
   const ritual = TestRitual.begun()
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   const events = ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
 

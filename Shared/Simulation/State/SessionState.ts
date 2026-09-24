@@ -26,7 +26,7 @@ export type VesselState = {
 export type HeaterState = {
   definitionId: string
   isOn: boolean
-  vesselIdOnTop: string | null
+  itemIdOnTop: string | null
   hasAnnouncedTargetTemperature: boolean
   hasAnnouncedBoilingAway: boolean
 }

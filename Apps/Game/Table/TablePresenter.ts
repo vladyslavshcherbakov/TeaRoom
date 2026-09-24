@@ -24,7 +24,7 @@ const clothSoakedAtMl = 15
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
   const vessels: Record<string, TableViewState.Vessel> = {}
-  const heatedVesselId = state.heater.isOn ? state.heater.vesselIdOnTop : null
+  const heatedVesselId = state.heater.isOn ? state.heater.itemIdOnTop : null
   for (const vessel of Object.values(state.vessels)) {
     vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), tea, vessel.id === heatedVesselId)
   }

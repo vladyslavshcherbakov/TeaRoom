@@ -68,7 +68,7 @@ function refusalToPour(draft: Draft, source: VesselState, target: VesselState | 
   if (!isWithinReach(draft, source.location)) return 'outOfReach'
   if (target !== null && !isWithinReach(draft, target.location)) return 'outOfReach'
   if (target === null && draft.state.keeper.placeId === null) return 'outOfReach'
-  if (draft.state.heater.vesselIdOnTop === source.id) return 'vesselIsOnTheHeater'
+  if (draft.state.heater.itemIdOnTop === source.id) return 'vesselIsOnTheHeater'
   if (isEmpty(source.liquid)) return 'sourceIsEmpty'
   if (vesselDefinitionOf(draft, source).lid?.mustBeOpenToPour === true && !source.isLidOpen) return 'lidClosed'
   if (target === null) return null

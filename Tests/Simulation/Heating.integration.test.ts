@@ -5,7 +5,7 @@ import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitual {
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   return ritual
 }
@@ -69,7 +69,7 @@ test('kettle_whenLiftedOffAWorkingHeater_isJudgedAndStopsWarming', () => {
   const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.wait(10)
 
-  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', vesselId: 'kettle', waterJudgement: 'ideal' }])
+  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle', waterJudgement: 'ideal' }])
   assertNear(ritual.vessel('kettle').liquid.temperatureC, 76)
 })
 
@@ -100,7 +100,7 @@ test('kettleWater_whenOffTheHeater_coolsButStaysAboveTheRoom', () => {
 test('cup_whenPlacedOnTheHeater_isRefused', () => {
   const ritual = TestRitual.begun()
 
-  const events = ritual.do({ type: 'placeOnHeater', vesselId: 'cup1' })
+  const events = ritual.do({ type: 'placeOnHeater', itemId: 'cup1' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'cannotSitOnHeater' }])
 })
@@ -131,7 +131,7 @@ test('kettleWater_whenCoolingWhileOnAWorkingHeater_stillReachesBoiling', () => {
 
 test('water_boilingOnAWorkingHeater_boilsAwayAtTheHeatersRate', () => {
   const ritual = TestRitual.begun()
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(200)
   const volumeAtTheBoil = ritual.vessel('kettle').liquid.volumeMl
@@ -154,7 +154,7 @@ test('water_liftedOffTheHeaterAtTheBoil_stopsBoilingAway', () => {
 
 test('water_belowTheBoil_doesNotBoilAway', () => {
   const ritual = TestRitual.begun()
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 
   ritual.wait(10)

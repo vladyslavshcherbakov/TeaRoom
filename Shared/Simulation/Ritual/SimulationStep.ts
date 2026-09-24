@@ -29,7 +29,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
 
 function heatVesselOnHeater(draft: Draft, seconds: number): void {
   const heater = draft.state.heater
-  const vessel = heater.vesselIdOnTop === null ? undefined : draft.state.vessels[heater.vesselIdOnTop]
+  const vessel = heater.itemIdOnTop === null ? undefined : draft.state.vessels[heater.itemIdOnTop]
   if (!heater.isOn || vessel === undefined) return
   const heaterDefinition = definitionIn(draft.catalog, 'heaters', heater.definitionId)
   const heated = heatLiquid(vessel.liquid, heaterDefinition, seconds)

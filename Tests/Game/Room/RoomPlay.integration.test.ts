@@ -76,7 +76,7 @@ test('kettle_whenItsHandIsChosenAndTheHeaterIsTapped_sitsOnTheHeater', () => {
 
   room.tap({ kind: 'heater' })
 
-  assert.equal(room.state.heater.vesselIdOnTop, 'kettle')
+  assert.equal(room.state.heater.itemIdOnTop, 'kettle')
   assert.deepEqual(room.state.keeper.hands, [null, null])
 })
 
@@ -97,7 +97,7 @@ test('heaterTap_withNoHandChosen_leavesTheHeaterEmpty', () => {
 
   room.tap({ kind: 'heater' })
 
-  assert.equal(room.state.heater.vesselIdOnTop, null)
+  assert.equal(room.state.heater.itemIdOnTop, null)
   assert.ok(room.logLines.includes('tap on the heater ignored: no hand is chosen'), room.logLines.join('\n'))
 })
 

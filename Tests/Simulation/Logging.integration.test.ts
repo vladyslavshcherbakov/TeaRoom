@@ -4,19 +4,19 @@ import { TestRitual } from '../Support/TestRitual.ts'
 
 test('refusedCommand_isLoggedWithItsReasonAndTheValueThatDecidedIt', () => {
   const ritual = TestRitual.begun()
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   assert.ok(
-    ritual.log.messagesAt('info').some((message) => message.endsWith('placeOnHeater refused (heaterOccupied): {"vesselId":"kettle"}, kettle is on it')),
+    ritual.log.messagesAt('info').some((message) => message.endsWith('placeOnHeater refused (heaterOccupied): {"itemId":"kettle"}, kettle is on it')),
     ritual.log.messagesAt('info').join('\n'),
   )
 })
 
 test('heaterSwitchOff_isLoggedWithTheTemperatureAndTheJudgement', () => {
   const ritual = TestRitual.begun()
-  ritual.do({ type: 'placeOnHeater', vesselId: 'kettle' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(14)
 

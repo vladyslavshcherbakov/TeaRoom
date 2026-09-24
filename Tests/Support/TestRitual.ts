@@ -46,7 +46,7 @@ export class TestRitual {
 
   heatKettleTo(temperatureC: number): readonly RitualEvent[] {
     const events = [
-      ...this.do({ type: 'placeOnHeater', vesselId: 'kettle' }),
+      ...this.do({ type: 'placeOnHeater', itemId: 'kettle' }),
       ...this.do({ type: 'switchHeaterOn' }),
     ]
     events.push(...this.waitUntil(() => this.vessel('kettle').liquid.temperatureC >= temperatureC))

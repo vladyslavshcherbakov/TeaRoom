@@ -11,7 +11,7 @@ export type Command =
   | { readonly type: 'closeVesselLid'; readonly vesselId: string }
   | { readonly type: 'openCaddy' }
   | { readonly type: 'closeCaddy' }
-  | { readonly type: 'placeOnHeater'; readonly vesselId: string }
+  | { readonly type: 'placeOnHeater'; readonly itemId: string }
   | { readonly type: 'switchHeaterOn' }
   | { readonly type: 'switchHeaterOff' }
   | { readonly type: 'startPouring'; readonly sourceId: string; readonly targetId: string | null }

@@ -58,14 +58,14 @@ test('waterSurface_whileHeating_movesMoreAsItGetsHotter', () => {
 
   for (const [temperatureC, surfaceMotion] of rows) {
     const state = stateWithLiquid('kettle', { temperatureC })
-    state.heater = { ...state.heater, isOn: true, vesselIdOnTop: 'kettle' }
+    state.heater = { ...state.heater, isOn: true, itemIdOnTop: 'kettle' }
     assert.equal(vesselView(state, 'kettle')?.surfaceMotion, surfaceMotion, `${temperatureC} °C`)
   }
 })
 
 test('waterSurface_offAWorkingHeater_isStillWhileTheSteamStays', () => {
   const liftedOff = stateWithLiquid('kettle', { temperatureC: 98 })
-  liftedOff.heater = { ...liftedOff.heater, isOn: true, vesselIdOnTop: null }
+  liftedOff.heater = { ...liftedOff.heater, isOn: true, itemIdOnTop: null }
 
   assert.equal(vesselView(liftedOff, 'kettle')?.surfaceMotion, 'still')
   assert.equal(vesselView(liftedOff, 'kettle')?.steam, 'billowing')

@@ -29,7 +29,7 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.join(' and ')}`)
-  if (draft.state.heater.vesselIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
+  if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
   draft.state.keeper.hands[handIndex] = command.itemId
   if (command.itemId === clothItemId) liftTheClothOutOfThePuddle(draft)
   moveItem(draft, command.itemId, { kind: 'inHand', handIndex })

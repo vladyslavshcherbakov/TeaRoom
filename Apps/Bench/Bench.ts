@@ -110,7 +110,7 @@ class RitualBench {
       row(this.live(() => `kettle: ${this.vesselSummary('kettle')}`)),
       row(this.live(() => this.heaterSummary())),
       row(
-        button('Put kettle on heater', () => this.send({ type: 'placeOnHeater', vesselId: 'kettle' })),
+        button('Put kettle on heater', () => this.send({ type: 'placeOnHeater', itemId: 'kettle' })),
         button('Lift kettle off', () => this.send({ type: 'pickUp', itemId: 'kettle' })),
       ),
       row(
@@ -264,8 +264,8 @@ class RitualBench {
   }
 
   private heaterSummary(): string {
-    const { isOn, vesselIdOnTop } = this.session.state.heater
-    return `heater ${isOn ? 'on' : 'off'} · ${vesselIdOnTop === null ? 'nothing on it' : `${vesselIdOnTop} on it`}`
+    const { isOn, itemIdOnTop } = this.session.state.heater
+    return `heater ${isOn ? 'on' : 'off'} · ${itemIdOnTop === null ? 'nothing on it' : `${itemIdOnTop} on it`}`
   }
 
   private leavesSummary(): string {

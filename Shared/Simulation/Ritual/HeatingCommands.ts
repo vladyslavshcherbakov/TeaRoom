@@ -4,10 +4,10 @@ import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefini
 import { heaterSpotOf, isKeeperAt, isWithinReach, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
-  const vessel = draft.state.vessels[command.vesselId]
+  const vessel = draft.state.vessels[command.itemId]
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
   if (!vesselDefinitionOf(draft, vessel).canSitOnHeater) return refuse(draft, command, 'cannotSitOnHeater')
-  const occupant = draft.state.heater.vesselIdOnTop
+  const occupant = draft.state.heater.itemIdOnTop
   if (occupant !== null) return refuse(draft, command, 'heaterOccupied', `${occupant} is on it`)
   if (isInvolvedInPour(draft, vessel.id)) return refuse(draft, command, 'vesselIsBeingPoured')
   const heaterSpot = heaterSpotOf(draft)
@@ -15,16 +15,16 @@ export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeate
   if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}`)
   if (vessel.location.kind === 'inHand') draft.state.keeper.hands[vessel.location.handIndex] = null
   moveItem(draft, vessel.id, { kind: 'onSurface', spot: heaterSpot })
-  draft.state.heater.vesselIdOnTop = vessel.id
+  draft.state.heater.itemIdOnTop = vessel.id
   note(draft, `placed on heater: ${describeLiquid(vessel)}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)
-  draft.events.push({ type: 'placedOnHeater', vesselId: vessel.id })
+  draft.events.push({ type: 'placedOnHeater', itemId: vessel.id })
 }
 
-export function liftOffTheHeater(draft: Draft, vesselId: string): void {
+export function liftOffTheHeater(draft: Draft, itemId: string): void {
   const waterJudgement = draft.state.heater.isOn ? judgementOfWaterOnHeater(draft) : null
-  if (!draft.state.heater.isOn) note(draft, `${vesselId} lifted off a heater that was off, water not judged`)
-  draft.state.heater.vesselIdOnTop = null
-  draft.events.push({ type: 'takenOffHeater', vesselId, waterJudgement })
+  if (!draft.state.heater.isOn) note(draft, `${itemId} lifted off a heater that was off, water not judged`)
+  draft.state.heater.itemIdOnTop = null
+  draft.events.push({ type: 'takenOffHeater', itemId, waterJudgement })
 }
 
 export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeaterOn'>): void {
@@ -33,7 +33,7 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
   draft.state.heater.isOn = true
   draft.state.heater.hasAnnouncedTargetTemperature = false
   draft.state.heater.hasAnnouncedBoilingAway = false
-  note(draft, `heater switched on with ${draft.state.heater.vesselIdOnTop ?? 'nothing'} on top`)
+  note(draft, `heater switched on with ${draft.state.heater.itemIdOnTop ?? 'nothing'} on top`)
   draft.events.push({ type: 'heaterSwitchedOn' })
 }
 
@@ -49,11 +49,11 @@ function isKeeperAtTheHeater(draft: Draft): boolean {
 }
 
 function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
-  const vesselId = draft.state.heater.vesselIdOnTop
-  const vessel = vesselId === null ? undefined : draft.state.vessels[vesselId]
+  const itemId = draft.state.heater.itemIdOnTop
+  const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   const tea = chosenTea(draft)
   if (vessel === undefined || tea === null) {
-    note(draft, `heating stopped with ${vesselId ?? 'nothing'} on the heater and tea ${tea?.id ?? 'not chosen'}, water not judged`)
+    note(draft, `heating stopped with ${itemId ?? 'nothing'} on the heater and tea ${tea?.id ?? 'not chosen'}, water not judged`)
     return null
   }
   const judgement = judgeWater(vessel.liquid.temperatureC, tea)
