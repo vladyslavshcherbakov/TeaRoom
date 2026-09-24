@@ -171,7 +171,7 @@ export class RoomModel {
     post.position.set(base.x, base.y + 0.18, base.z)
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, faucetSpout.z - base.z + 0.02), this.materials.materialFor('steel'))
     arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
-    const touchPad = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.4, 0.3), this.invisibleMaterial())
+    const touchPad = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.36, 0.2), this.invisibleMaterial())
     touchPad.position.set(base.x, base.y + 0.2, (base.z + faucetSpout.z) / 2)
     touchPad.castShadow = false
     faucet.add(post, arm, touchPad)

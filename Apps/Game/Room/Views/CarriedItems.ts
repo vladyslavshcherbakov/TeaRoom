@@ -18,7 +18,7 @@ const streamRadiusMetres = 0.007
 const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const openLidSideMetres = 0.16
-const lidTouchPadRadiusMetres = 0.085
+const lidTouchPadRadiusMetres = 0.095
 const heldInViewDistanceMetres = 0.9
 const heldInViewShareOfScreenWidth = 0.24
 const heldInViewShareOfScreenHeightFromBottom = 0.07
@@ -32,6 +32,14 @@ const gaugeHeightMetres = 0.11
 const gaugeFaceMetres = 0.142
 const waterInGaugeColour = '#3f8fc4'
 const heldUnderTheFaucetBelowSpoutMetres = 0.06
+const kettleBodyRadiusMetres = 0.14
+const kettleBodyCentreMetres = 0.11
+const kettleBodySquash = 0.8
+const kettleOpeningRadiusMetres = 0.075
+const kettleOpeningAngle = Math.asin(kettleOpeningRadiusMetres / kettleBodyRadiusMetres)
+const kettleBottomInsideMetres = 0.004
+const kettleWaterBelowTheOpeningMetres = 0.012
+const waterInsideTheKettleColour = '#5f93b5'
 
 export const heldInViewLayer = 1
 
@@ -64,6 +72,7 @@ type CarriedModel = {
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
   readonly gaugeWater: THREE.Mesh | null
   readonly spoonLeaves: THREE.Mesh | null
+  readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   tagKey: string
   isHeldInView: boolean
@@ -74,6 +83,7 @@ export class CarriedItems {
   readonly tappableMeshes: THREE.Object3D[] = []
   private readonly materials: RoomMaterials
   private readonly insideVisibleMaterial: THREE.Material
+  private readonly claySeenFromInside: THREE.Material
   private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
   private readonly models: CarriedModel[]
@@ -87,6 +97,9 @@ export class CarriedItems {
     const porcelain = materials.unsharedMaterialFor('porcelain')
     porcelain.side = THREE.DoubleSide
     this.insideVisibleMaterial = porcelain
+    const clay = materials.unsharedMaterialFor('clay')
+    clay.side = THREE.DoubleSide
+    this.claySeenFromInside = clay
     this.models = itemIds.flatMap((itemId) => {
       const shape = carriedItemShapes[itemId]
       return shape === undefined ? [] : [this.modelOf(itemId, shape)]
@@ -171,6 +184,7 @@ export class CarriedItems {
     if (model.lid !== null) model.lid.position.copy(model.lidClosedPosition).add(new THREE.Vector3(isOpen ? -openLidSideMetres : 0, 0, 0))
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
     if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
+    if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel)
     if (model.spoonLeaves !== null) showLeavesOnTheSpoon(model.spoonLeaves, scene.table.spoonFillShare)
     const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
     model.puffs.forEach((puff, index) => {
@@ -229,6 +243,7 @@ export class CarriedItems {
     }
     const gaugeWater = shape === 'kettle' ? this.addWaterGauge(root) : null
     const spoonLeaves = shape === 'spoon' ? this.addSpoonLeaves(root) : null
+    const kettleWater = shape === 'kettle' ? this.addKettleWater(root) : null
     root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
     const puffs = [0, 1, 2].map(() => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
     for (const puff of puffs) puff.castShadow = false
@@ -247,10 +262,19 @@ export class CarriedItems {
       liquidMaterial,
       gaugeWater,
       spoonLeaves,
+      kettleWater,
       puffs,
       tagKey: '',
       isHeldInView: false,
     }
+  }
+
+  private addKettleWater(root: THREE.Group): THREE.Mesh {
+    const water = new THREE.Mesh(new THREE.CircleGeometry(1, 24), this.materials.unsharedMaterialFor('gaugeGlass'))
+    water.rotation.x = -Math.PI / 2
+    water.visible = false
+    root.add(water)
+    return water
   }
 
   private addSpoonLeaves(root: THREE.Group): THREE.Mesh {
@@ -288,14 +312,15 @@ export class CarriedItems {
   }
 
   private kettleParts() {
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 10), this.materials.materialFor('clay'))
-    body.scale.set(1, 0.8, 1)
-    body.position.y = 0.11
+    const bodyWithAnOpening = new THREE.SphereGeometry(kettleBodyRadiusMetres, 20, 14, 0, Math.PI * 2, kettleOpeningAngle, Math.PI - kettleOpeningAngle)
+    const body = new THREE.Mesh(bodyWithAnOpening, this.claySeenFromInside)
+    body.scale.set(1, kettleBodySquash, 1)
+    body.position.y = kettleBodyCentreMetres
     const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.14, 8), this.materials.materialFor('clay'))
     spout.position.set(0.15, 0.14, 0)
     spout.rotation.z = -0.9
     const lid = new THREE.Group()
-    const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.03, 12), this.materials.materialFor('darkWood'))
+    const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 14), this.materials.materialFor('darkWood'))
     const lidTouchPad = new THREE.Mesh(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, 0.04, 12), this.touchPadMaterial)
     lid.add(lidTop, lidTouchPad)
     lid.position.y = 0.215
@@ -364,6 +389,18 @@ function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel)
   gaugeWater.position.y = gaugeBottomMetres + height / 2
   const material = gaugeWater.material
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInGaugeColour : vessel.liquorColour)
+}
+
+function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel): void {
+  water.visible = vessel.fillShare > 0
+  const bodyHalfHeight = kettleBodyRadiusMetres * kettleBodySquash
+  const openingHeight = kettleBodyCentreMetres + bodyHalfHeight * Math.cos(kettleOpeningAngle)
+  const surfaceHeight = kettleBottomInsideMetres + vessel.fillShare * (openingHeight - kettleWaterBelowTheOpeningMetres - kettleBottomInsideMetres)
+  const heightFromCentre = (surfaceHeight - kettleBodyCentreMetres) / bodyHalfHeight
+  water.position.y = surfaceHeight
+  water.scale.setScalar(Math.max(0.001, kettleBodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre)) - 0.003))
+  const material = water.material
+  if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.brewStage === 'water' ? waterInsideTheKettleColour : vessel.liquorColour)
 }
 
 function showLeavesOnTheSpoon(leaves: THREE.Mesh, spoonFillShare: number): void {

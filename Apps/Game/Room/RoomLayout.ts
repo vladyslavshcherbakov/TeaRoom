@@ -96,7 +96,7 @@ export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {
 }
 
 export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
-  kettle: 0.06,
+  kettle: 0.075,
   thermos: 0.05,
   caddy: 0.07,
   bowl: 0.075,
