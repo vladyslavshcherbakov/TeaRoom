@@ -1,15 +1,16 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
+import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, heatLiquid, liquidBoiledAway } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap } from '../Physics/TapWater.ts'
-import { clothWetMlAfterDrying, mlSoakedUp, puddleStrengthAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
+import { clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlUnderTheTap, mlSoakedUp, puddleStrengthAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
-import type { SessionState } from '../State/SessionState.ts'
+import type { RunningWaterState, SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
-import { tapOf } from './Reach.ts'
+import { clothItemId, tapOf } from './Reach.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
@@ -98,6 +99,7 @@ function runTheTap(draft: Draft, seconds: number): void {
   const tap = tapOf(draft)
   if (runningWater === null || tap === null) return
   const itemId = draft.state.sink.itemIdInside
+  if (itemId === clothItemId) return washTheCloth(draft, runningWater, tap, seconds)
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   if (vessel === undefined) {
     runningWater.drainedMl += tap.flowMlPerSecond * seconds
@@ -121,6 +123,17 @@ function runTheTap(draft: Draft, seconds: number): void {
     note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the drain`)
     draft.events.push({ type: 'vesselOverflowed', vesselId: vessel.id })
   }
+}
+
+function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {
+  const cloth = draft.state.cloth
+  const stainBefore = cloth.teaStain
+  const wetMlBefore = cloth.wetMl
+  cloth.teaStain = clothStainAfterWashing(cloth.teaStain, seconds)
+  cloth.wetMl = clothWetMlUnderTheTap(cloth.wetMl, tap.flowMlPerSecond, seconds)
+  runningWater.filledMl += cloth.wetMl - wetMlBefore
+  runningWater.drainedMl += tap.flowMlPerSecond * seconds - (cloth.wetMl - wetMlBefore)
+  if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the cloth is washed clean under the tap and holds ${cloth.wetMl.toFixed(1)} ml`)
 }
 
 function steepAllLeaves(draft: Draft, seconds: number): void {

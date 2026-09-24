@@ -283,6 +283,28 @@ test('cloth_whenStainedWithTea_driesSlowerThanAClean', () => {
   assert.ok(wetMlAfterWiping - ritual.state.cloth.wetMl < 0.9, `${wetMlAfterWiping} → ${ritual.state.cloth.wetMl} ml, stain ${ritual.state.cloth.teaStain}`)
 })
 
+test('cloth_whenWashedUnderTheTap_losesItsTeaStain', () => {
+  const ritual = ritualWithTeaSpilledOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.wait(3)
+
+  assert.equal(ritual.state.cloth.teaStain, 0)
+})
+
+test('cloth_whenTakenOutOfTheSink_isWrungOutToEightMillilitres', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.wait(1)
+
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+
+  assert.equal(ritual.state.cloth.wetMl, 8)
+})
+
 test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
   const ritual = ritualWithSpillOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })

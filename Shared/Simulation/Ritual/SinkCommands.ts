@@ -1,8 +1,9 @@
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
+import { clothWetMlAfterWringing } from '../Physics/Table.ts'
 import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { isClosedAgainstFilling, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
-import { caddyItemId, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { caddyItemId, clothItemId, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 const itemsKeptOutOfTheSink: ReadonlySet<string> = new Set([caddyItemId, spoonItemId])
 
@@ -50,6 +51,7 @@ export function liftOutOfTheSink(draft: Draft, itemId: string): void {
   const sink = draft.state.sink
   if (sink.itemIdInside !== itemId) return
   sink.itemIdInside = null
+  if (itemId === clothItemId) wringOutTheCloth(draft)
   const runningWater = sink.runningWater
   if (runningWater === null) return note(draft, `${itemId} lifted out of the sink, the tap is closed`)
   note(draft, `${itemId} lifted out of the sink after ${runningWater.filledMl.toFixed(1)} ml went in, the tap keeps running into the empty sink`)
@@ -70,4 +72,11 @@ function openTheTap(draft: Draft, tap: TapDefinition): void {
 function runningWaterOver(draft: Draft, itemId: string | null): RunningWaterState {
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   return { filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel) }
+}
+
+function wringOutTheCloth(draft: Draft): void {
+  const cloth = draft.state.cloth
+  const wetMlBefore = cloth.wetMl
+  cloth.wetMl = clothWetMlAfterWringing(cloth.wetMl)
+  note(draft, `the cloth is wrung out as it leaves the sink: ${wetMlBefore.toFixed(1)} → ${cloth.wetMl.toFixed(1)} ml`)
 }

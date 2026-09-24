@@ -8,6 +8,8 @@ const cleanClothDryingMlPerSecond = 0.1
 const stainedClothDryingMlPerSecond = 0.03
 const strongTeaMlThatStainsTheClothFully = 20
 const strongestTea = 100
+const washingAFullStainOffSeconds = 3
+const wrungClothHoldsMl = 8
 const clothHoldsMl = 40
 
 export function wetMlAfterDrying(wetMl: number, seconds: number): number {
@@ -27,6 +29,18 @@ export function clothStainAfterTakingIn(stain: number, takenMl: number, strength
 export function clothWetMlAfterDrying(wetMl: number, stain: number, seconds: number): number {
   const dryingMlPerSecond = cleanClothDryingMlPerSecond + (stainedClothDryingMlPerSecond - cleanClothDryingMlPerSecond) * stain
   return Math.max(0, wetMl - dryingMlPerSecond * seconds)
+}
+
+export function clothStainAfterWashing(stain: number, seconds: number): number {
+  return Math.max(0, stain - seconds / washingAFullStainOffSeconds)
+}
+
+export function clothWetMlUnderTheTap(wetMl: number, flowMlPerSecond: number, seconds: number): number {
+  return Math.max(wetMl, Math.min(clothHoldsMl, wetMl + flowMlPerSecond * seconds))
+}
+
+export function clothWetMlAfterWringing(wetMl: number): number {
+  return Math.min(wetMl, wrungClothHoldsMl)
 }
 
 export function mlSoakedUp(tableWetMl: number, clothWetMl: number, seconds: number): number {
