@@ -396,6 +396,18 @@ test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehi
   assertNear(spout?.z ?? 0, 0.319, 0.001)
 })
 
+test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheBowl()
+  room.moveTheSpout({ x: 0.22, z: 0 })
+
+  room.play.tiltPressed()
+  room.wait(3)
+
+  assert.equal(room.state.tableWetMl, 0)
+  assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0, 'the bowl stayed empty')
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')

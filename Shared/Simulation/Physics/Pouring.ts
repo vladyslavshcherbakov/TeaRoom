@@ -14,6 +14,9 @@ const tiltOfFullFlowDegrees = 45
 const flowShareAboveWhichWaterSplashes = 0.8
 const splashedShareOfFastFlow = 0.1
 
+export const tiltWhereWaterSplashesDegrees =
+  tiltWhereWaterStartsDegrees + flowShareAboveWhichWaterSplashes * (tiltOfFullFlowDegrees - tiltWhereWaterStartsDegrees)
+
 export function flowShareAtTilt(tiltDegrees: number): number {
   const share = (tiltDegrees - tiltWhereWaterStartsDegrees) / (tiltOfFullFlowDegrees - tiltWhereWaterStartsDegrees)
   return Math.min(1, Math.max(0, share))

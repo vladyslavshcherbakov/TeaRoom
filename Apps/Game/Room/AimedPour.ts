@@ -1,4 +1,5 @@
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import { tiltWhereWaterSplashesDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import type { RitualPort } from './RoomPlay.ts'
@@ -14,7 +15,8 @@ export type AimedPourView = {
 const firstSpoutOffsetFromTargetMetres = 0.22
 const tiltGrowthDegreesPerSecond = 30
 const tiltFallDegreesPerSecond = 70
-const steepestTiltDegrees = 55
+const steepestTiltBelowTheSplashDegrees = 1
+const steepestTiltDegrees = tiltWhereWaterSplashesDegrees - steepestTiltBelowTheSplashDegrees
 const streamRadiusMetres = 0.012
 
 export class AimedPour {
