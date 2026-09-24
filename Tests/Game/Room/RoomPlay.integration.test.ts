@@ -159,20 +159,19 @@ test('pourAim_whenDone_endsWithTheKettleStillInHand', () => {
   assert.equal(room.state.keeper.hands[0], 'kettle')
 })
 
-test('kettle_withItsLidClosed_goesUnderTheTapAndStaysEmpty', () => {
+test('kettle_whenTheSinkIsTappedWithItChosen_goesInTheSinkUnderTheRunningTap', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
 
   room.tap({ kind: 'faucet' })
-  room.wait(2)
 
-  assert.equal(room.state.filling?.vesselId, 'kettle')
-  assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
-  assert.equal(room.state.vessels['kettle']?.liquid.volumeMl, 0)
+  assert.equal(room.state.sink.itemIdInside, 'kettle')
+  assert.notEqual(room.state.sink.runningWater, null)
+  assert.equal(room.play.chosenHandIndex, null)
 })
 
-test('kettle_whenItsLidIsOpenedUnderTheRunningTap_fillsFromTheTap', () => {
+test('kettle_whenItsLidIsOpenedInTheSink_fillsFromTheTap', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
@@ -184,29 +183,28 @@ test('kettle_whenItsLidIsOpenedUnderTheRunningTap_fillsFromTheTap', () => {
   assertNear(room.state.vessels['kettle']?.liquid.volumeMl ?? 0, 100)
 })
 
-test('kettle_whenItsLidIsOpenedInHandAndTheTapIsTapped_fillsFromTheTap', () => {
+test('tap_whenTappedWithNothingChosenWhileRunning_turnsOff', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'lid', itemId: 'kettle' })
+  room.tap({ kind: 'faucet' })
 
   room.tap({ kind: 'faucet' })
 
-  assert.equal(room.state.filling?.vesselId, 'kettle')
+  assert.equal(room.state.sink.runningWater, null)
+  assert.equal(room.state.sink.itemIdInside, 'kettle')
 })
 
-test('tap_whenTappedAgainWhileRunning_closes', () => {
+test('kettle_inTheSink_whenTapped_isTakenBackIntoAHand', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'lid', itemId: 'kettle' })
-  room.tap({ kind: 'faucet' })
-  room.wait(2)
-
   room.tap({ kind: 'faucet' })
 
-  assert.equal(room.state.filling, null)
-  assertNear(room.state.vessels['kettle']?.liquid.volumeMl ?? 0, 100)
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  assert.deepEqual(room.state.vessels['kettle']?.location, { kind: 'inHand', handIndex: 0 })
+  assert.equal(room.state.sink.itemIdInside, null)
 })
 
 test('kettle_whenASurfaceIsTappedWhileAiming_isPutDownThere', () => {
@@ -486,7 +484,7 @@ test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehi
   const room = new RoomVisit()
   room.walkTo('counter')
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-  room.fillTheKettleInHand()
+  room.fillTheKettleInTheSink()
   room.walkTo('shelf')
   room.tap({ kind: 'hand', handIndex: 0 })
 
@@ -566,7 +564,7 @@ class RoomVisit {
     this.walkTo('counter')
     this.putDown(0, onTheCounter)
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-    this.fillTheKettleInHand()
+    this.fillTheKettleInTheSink()
   }
 
   aimTheKettleAtTheBowl(): void {
@@ -582,7 +580,7 @@ class RoomVisit {
     this.putDown(1, { x: 1.2, y: 0.42, z: -1.5 })
     this.walkTo('counter')
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-    this.fillTheKettleInHand()
+    this.fillTheKettleInTheSink()
     this.walkTo('teaTable')
     this.putDown(0, { x: 1, y: 0.42, z: -1.8 })
   }
@@ -608,11 +606,12 @@ class RoomVisit {
     }
   }
 
-  fillTheKettleInHand(): void {
+  fillTheKettleInTheSink(): void {
     this.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
-    this.session.dispatch({ type: 'startFillingFromTap', vesselId: 'kettle' })
+    this.session.dispatch({ type: 'putInTheSink', itemId: 'kettle' })
     this.advance(10)
-    this.session.dispatch({ type: 'stopFillingFromTap' })
+    this.session.dispatch({ type: 'turnTheTapOff' })
+    this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
   }
 
   private advance(seconds: number): void {

@@ -19,7 +19,7 @@ function fillBoilAndBringTheKettleToTheTeaTable(ritual: TestRitual, temperatureC
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
-  ritual.fillFromTap('kettle', 10)
+  ritual.fillInTheSink('kettle', 10)
   ritual.heatKettleTo(temperatureC)
   ritual.do({ type: 'standAt', placeId: 'teaTable' })
   ritual.do({ type: 'putDown', itemId: 'kettle', spot: onTheTeaTable(1.1) })

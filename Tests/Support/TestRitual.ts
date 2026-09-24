@@ -54,11 +54,12 @@ export class TestRitual {
     return events
   }
 
-  fillFromTap(vesselId: string, seconds: number): readonly RitualEvent[] {
+  fillInTheSink(vesselId: string, seconds: number): readonly RitualEvent[] {
     return [
-      ...this.do({ type: 'startFillingFromTap', vesselId }),
+      ...this.do({ type: 'putInTheSink', itemId: vesselId }),
       ...this.wait(seconds),
-      ...this.do({ type: 'stopFillingFromTap' }),
+      ...this.do({ type: 'turnTheTapOff' }),
+      ...this.do({ type: 'pickUp', itemId: vesselId }),
     ]
   }
 

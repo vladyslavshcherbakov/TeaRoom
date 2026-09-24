@@ -38,7 +38,7 @@ function problemsWithPlaces(room: RoomDefinition): string[] {
     { what: 'the keeper starts at', placeId: room.keeperStartsAt },
     { what: 'the ritual happens at', placeId: room.ritualPlaceId },
     { what: 'the heater stands at', placeId: room.heaterSpot.placeId },
-    { what: 'the tap is at', placeId: room.tap?.placeId ?? null },
+    { what: 'the sink is at', placeId: room.tap?.sinkSpot.placeId ?? null },
     { what: 'the caddy starts at', placeId: room.caddyStartsAt.placeId },
     { what: 'the spoon starts at', placeId: room.spoonStartsAt.placeId },
     { what: 'the cloth starts at', placeId: room.clothStartsAt.placeId },

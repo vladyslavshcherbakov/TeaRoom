@@ -20,7 +20,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
     cloth: { wetMl: 0, isSoakingThePuddle: false, location: { kind: 'onSurface', spot: room.clothStartsAt } },
     pour: null,
-    filling: null,
+    sink: { itemIdInside: null, runningWater: null },
     figurines: figurinesOnTheShelf(room),
     tableWetMl: 0,
     godsSatisfaction: initialGodsSatisfaction,

@@ -1,8 +1,9 @@
 import * as THREE from 'three'
+import type { Spot } from '../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { clothItemId, itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
-import { faucetSpout, type ShapedItem, type WorldPoint } from '../RoomLayout.ts'
+import type { ShapedItem, WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
@@ -18,7 +19,6 @@ const handHeightMetres = 0.55
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
 const spoutAboveTargetRimMetres = 0.1
-const heldUnderTheFaucetBelowSpoutMetres = 0.06
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
@@ -31,7 +31,7 @@ export class CarriedItems {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
-  constructor(materials: RoomMaterials, items: readonly ShapedItem[]) {
+  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null) {
     this.materials = materials
     this.clothMaterial = materials.unsharedMaterialFor('cloth')
     const claySeenFromInside = materials.unsharedMaterialFor('clay')
@@ -42,7 +42,7 @@ export class CarriedItems {
       this.root.add(model.root, ...model.puffs)
       this.tappableMeshes.push(model.root)
     }
-    this.waterStreams = new WaterStreams(materials)
+    this.waterStreams = new WaterStreams(materials, sinkSpot)
     this.root.add(...this.waterStreams.meshes, this.chosenGlow.mesh)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
   }
@@ -60,18 +60,13 @@ export class CarriedItems {
     const location = itemLocationIn(scene.state, model.itemId)
     if (location === undefined) return
     const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
-    const isUnderTheFaucet = scene.state.filling?.vesselId === model.itemId
     const wipingAt = model.itemId === clothItemId ? scene.clothOnTheTableAt : null
-    const heldInView = location.kind === 'inHand' && aim === null && !isUnderTheFaucet && wipingAt === null ? scene.heldInView : null
+    const heldInView = location.kind === 'inHand' && aim === null && wipingAt === null ? scene.heldInView : null
     moveToLayer(model, heldInView !== null ? roomLayers.heldInView : wipingAt !== null ? roomLayers.untappableRoom : roomLayers.room)
     this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
     model.root.scale.setScalar(1)
     if (aim !== null) return this.aimOver(model, aim)
     if (wipingAt !== null) return wipeAt(model, wipingAt)
-    if (isUnderTheFaucet) {
-      this.retag(model, { isFaucet: true })
-      return holdUnderTheFaucet(model)
-    }
     model.root.rotation.set(0, 0, 0)
     if (location.kind === 'onSurface') {
       model.root.visible = true
@@ -102,7 +97,7 @@ export class CarriedItems {
     if (model.tagKey === tagKey) return
     model.tagKey = tagKey
     model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
-    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag || 'isFaucet' in tag)) return
+    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag)) return
     const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
     model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
   }
@@ -141,12 +136,6 @@ function wipeAt(model: CarriedModel, point: WorldPoint): void {
   model.root.visible = true
   model.root.rotation.set(0, 0, 0)
   model.root.position.set(point.x, point.y, point.z)
-}
-
-function holdUnderTheFaucet(model: CarriedModel): void {
-  model.root.visible = true
-  model.root.quaternion.identity()
-  model.root.position.set(faucetSpout.x, faucetSpout.y - heldUnderTheFaucetBelowSpoutMetres - model.rimHeight, faucetSpout.z)
 }
 
 function moveToLayer(model: CarriedModel, layer: number): void {

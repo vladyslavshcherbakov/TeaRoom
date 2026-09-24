@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { faucetSpout, type CarriedShape } from '../../RoomLayout.ts'
 import type { RoomMaterials } from '../RoomMaterials.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
@@ -27,9 +28,11 @@ export class WaterStreams {
   private readonly tapStream: FallingStream
   private readonly overflowStream: CreepingStream
   private readonly overflowPathByShape = new Map<CarriedShape, THREE.TubeGeometry>()
+  private readonly sinkSpot: Spot | null
   readonly meshes: readonly THREE.Object3D[]
 
-  constructor(materials: RoomMaterials) {
+  constructor(materials: RoomMaterials, sinkSpot: Spot | null) {
+    this.sinkSpot = sinkSpot
     this.pouredLiquid = materials.unsharedMaterialFor('pouredLiquid')
     this.pourStream = new FallingStream(streamRadiusMetres, this.pouredLiquid)
     this.tapStream = new FallingStream(streamRadiusMetres, materials.unsharedMaterialFor('tapWater'))
@@ -55,12 +58,13 @@ export class WaterStreams {
   }
 
   private showTapWater(scene: CarriedItemsScene, models: readonly CarriedModel[]): void {
-    const filled = models.find((model) => model.itemId === scene.state.filling?.vesselId)
-    const isRunningOverTheLid = scene.state.filling?.isRunningOverTheLid === true
-    const isOverflowing = filled !== undefined && scene.state.filling?.hasOverflowed === true && !isRunningOverTheLid
-    this.overflowStream.show(isOverflowing ? { path: this.overflowPathOf(filled), position: filled.root.position, quaternion: filled.root.quaternion } : null, scene.timeSeconds)
-    if (filled === undefined) return this.tapStream.show(null, scene.timeSeconds)
-    const bottomY = filled.root.position.y + filled.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
+    const runningWater = scene.state.sink.runningWater
+    const inTheSink = models.find((model) => model.itemId === scene.state.sink.itemIdInside)
+    const isRunningOverTheLid = runningWater?.isRunningOverTheLid === true
+    const isOverflowing = inTheSink !== undefined && runningWater?.hasOverflowed === true && !isRunningOverTheLid
+    this.overflowStream.show(isOverflowing ? { path: this.overflowPathOf(inTheSink), position: inTheSink.root.position, quaternion: inTheSink.root.quaternion } : null, scene.timeSeconds)
+    if (runningWater === null || this.sinkSpot === null) return this.tapStream.show(null, scene.timeSeconds)
+    const bottomY = inTheSink === undefined ? this.sinkSpot.y : inTheSink.root.position.y + inTheSink.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
     this.tapStream.show({ top: new THREE.Vector3(faucetSpout.x, faucetSpout.y, faucetSpout.z), bottomY }, scene.timeSeconds)
   }
 

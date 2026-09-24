@@ -61,12 +61,16 @@ export type PourState = {
   hasRunDry: boolean
 }
 
-export type FillingState = {
-  vesselId: string
+export type RunningWaterState = {
   filledMl: number
-  overflowedMl: number
+  drainedMl: number
   hasOverflowed: boolean
   isRunningOverTheLid: boolean
+}
+
+export type SinkState = {
+  itemIdInside: string | null
+  runningWater: RunningWaterState | null
 }
 
 export type FigurineState = {
@@ -93,7 +97,7 @@ export type SessionState = {
   spoon: SpoonState
   cloth: ClothState
   pour: PourState | null
-  filling: FillingState | null
+  sink: SinkState
   figurines: Record<string, FigurineState>
   tableWetMl: number
   godsSatisfaction: number

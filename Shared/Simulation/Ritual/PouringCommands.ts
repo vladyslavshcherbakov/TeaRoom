@@ -63,8 +63,8 @@ export function finishPour(draft: Draft): void {
 
 function refusalToPour(draft: Draft, source: VesselState, target: VesselState | null): RefusalReason | null {
   if (source.id === target?.id) return 'cannotPourIntoItself'
-  const vesselIdUnderTheTap = draft.state.filling?.vesselId
-  if (vesselIdUnderTheTap !== undefined && (vesselIdUnderTheTap === source.id || vesselIdUnderTheTap === target?.id)) return 'vesselIsBeingFilled'
+  const itemIdInTheSink = draft.state.sink.itemIdInside
+  if (itemIdInTheSink !== null && (itemIdInTheSink === source.id || itemIdInTheSink === target?.id)) return 'vesselIsInTheSink'
   if (!isWithinReach(draft, source.location)) return 'outOfReach'
   if (target !== null && !isWithinReach(draft, target.location)) return 'outOfReach'
   if (target === null && draft.state.keeper.placeId === null) return 'outOfReach'

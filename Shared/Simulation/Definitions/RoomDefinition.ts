@@ -15,7 +15,7 @@ export type TableVessel = {
 }
 
 export type TapDefinition = {
-  readonly placeId: string
+  readonly sinkSpot: Spot
   readonly waterTemperatureC: number
   readonly flowMlPerSecond: number
 }

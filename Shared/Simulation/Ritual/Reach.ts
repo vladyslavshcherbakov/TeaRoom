@@ -1,5 +1,5 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
-import type { Spot } from '../Definitions/RoomDefinition.ts'
+import type { Spot, TapDefinition } from '../Definitions/RoomDefinition.ts'
 import type { DeepReadonly } from '../State/DeepReadonly.ts'
 import type { ItemLocation, SessionState } from '../State/SessionState.ts'
 import type { Draft } from './Draft.ts'
@@ -43,6 +43,10 @@ export function isKeeperAt(draft: Draft, placeId: string): boolean {
 
 export function heaterSpotOf(draft: Draft): Spot {
   return definitionIn(draft.catalog, 'rooms', draft.state.roomId).heaterSpot
+}
+
+export function tapOf(draft: Draft): TapDefinition | null {
+  return definitionIn(draft.catalog, 'rooms', draft.state.roomId).tap
 }
 
 export function ritualPlaceOf(draft: Draft): string {

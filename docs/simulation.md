@@ -38,11 +38,15 @@ Flow follows tilt: nothing below 10°, a linear rise to the vessel's `maxPourMlP
 
 A vessel cannot be poured while it stands on the heater. A vessel whose lid must be open to pour, or to be poured into, refuses while that lid is closed.
 
-## Tap water
+## The sink and the tap
 
-A room may have a tap at one of its places, with the temperature of its water and its flow in ml per second. The quiet room's tap is at the counter, 18 °C and 50 ml/s, and its kettle starts empty.
+A room may have a sink with a tap, at one spot of one of its places, with the temperature of the tap's water and its flow in ml per second. The quiet room's sink is on the counter, its water is 18 °C at 50 ml/s, and its kettle starts empty.
 
-A vessel fills from the tap while the keeper holds it in a hand at the tap's place. A vessel whose lid must be open to be filled goes under the tap with its lid closed too, and then the water runs over the lid into the sink until the lid is opened, and over it again if the lid is closed. The tap water mixes by volume with what the vessel holds. Once the vessel is full, the rest runs over the rim into the sink: the core reports the first overflow, and the table stays dry. The filling stops when the tap is closed, when the keeper walks away, and at the next step after the vessel leaves the hand. The vessel is lifted out of the sink then, so an open lid closes, as it does when an item is picked up. Only one vessel fills at a time, and a vessel that is filling cannot be poured.
+The keeper puts an item from a hand into the sink while standing at the sink's place. One item fits at a time. A vessel or the cloth may go in, and the caddy and the spoon may not. Putting an item in turns the tap on if it is off. The keeper turns the tap on and off only at the sink's place.
+
+The tap runs until it is turned off, also after the keeper walks away. It fills the vessel in the sink. A vessel whose lid must be open to be filled goes in with its lid closed too, and then the water runs over the lid down the drain until the lid is opened, and over it again if the lid is closed. The tap water mixes by volume with what the vessel holds. Once the vessel is full, the rest runs over the rim down the drain: the core reports the first overflow, and the table stays dry. With nothing in the sink, the water runs down the drain.
+
+An item leaves the sink when it is picked up or put on the heater. Picking it up closes an open lid, as it does for any item. A vessel in the sink cannot be poured from or into.
 
 ## Leaves and brewing
 

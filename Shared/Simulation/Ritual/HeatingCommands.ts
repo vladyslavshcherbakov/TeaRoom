@@ -1,6 +1,7 @@
 import { judgeWater, type WaterJudgement } from '../Judgement/WaterJudgement.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { liftOutOfTheSink } from './SinkCommands.ts'
 import { heaterSpotOf, isKeeperAt, isWithinReach, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
@@ -14,6 +15,7 @@ export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeate
   if (!isKeeperAt(draft, heaterSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the heater is at the ${heaterSpot.placeId}`)
   if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}`)
   if (vessel.location.kind === 'inHand') draft.state.keeper.hands[vessel.location.handIndex] = null
+  liftOutOfTheSink(draft, vessel.id)
   moveItem(draft, vessel.id, { kind: 'onSurface', spot: heaterSpot })
   draft.state.heater.itemIdOnTop = vessel.id
   note(draft, `placed on heater: ${describeLiquid(vessel)}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)

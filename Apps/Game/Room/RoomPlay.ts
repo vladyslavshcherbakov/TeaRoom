@@ -215,7 +215,7 @@ export class RoomPlay {
         this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
         return
       case 'faucet':
-        return this.turnTheTap()
+        return this.useTheSink()
       default:
         return this.log(`tap on ${describeTarget(target)} in the close-up does nothing`)
     }
@@ -258,15 +258,12 @@ export class RoomPlay {
     this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, targetId, target.location.spot, openingRadiusMetres[targetShape], spoutDirection)
   }
 
-  private turnTheTap(): void {
-    if (this.ritual.state.filling !== null) {
-      this.ritual.dispatch({ type: 'stopFillingFromTap' })
-      return
-    }
-    const vesselId = this.chosenItemId()
-    const vessel = vesselId === null ? undefined : this.ritual.state.vessels[vesselId]
-    if (vessel === undefined) return this.log('tap on the tap ignored: no hand with a vessel is chosen')
-    this.ritual.dispatch({ type: 'startFillingFromTap', vesselId: vessel.id })
+  private useTheSink(): void {
+    const itemId = this.chosenItemId()
+    const itemIdInTheSink = this.ritual.state.sink.itemIdInside
+    if (itemId !== null && itemIdInTheSink === null) return this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'putInTheSink', itemId }))
+    if (itemId !== null) this.log(`${itemId} stays in hand: ${itemIdInTheSink} is in the sink, so the tap is turned instead`)
+    this.ritual.dispatch({ type: this.ritual.state.sink.runningWater === null ? 'turnTheTapOn' : 'turnTheTapOff' })
   }
 
   private useTheSpoonOn(itemId: string): void {
@@ -383,7 +380,7 @@ export class RoomPlay {
       case 'heaterSwitch':
         return furnitureWithPlace(this.heaterSpot().placeId)
       case 'faucet':
-        return furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.placeId ?? null)
+        return furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.sinkSpot.placeId ?? null)
       case 'item':
       case 'lid':
         return furnitureWithPlace(placeOf(this.locationOfItem(target.itemId)))
