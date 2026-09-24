@@ -121,8 +121,11 @@ export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
 
 export const heaterFootprintRadiusMetres = 0.18
 
-export const puddleCentre: WorldPoint = { x: 0.8, y: 0.422, z: -1.45 }
+const puddleOffsetFromTheTeaTableCentre: FloorPoint = { x: -0.2, z: 0.1 }
+const puddleAboveTheTeaTableMetres = 0.002
 const largestPuddleRadiusMetres = 0.25
+
+export const puddleCentre: WorldPoint = puddleOnTheTeaTable()
 
 export function puddleRadiusMetres(puddleShare: number): number {
   return Math.sqrt(puddleShare) * largestPuddleRadiusMetres
@@ -140,4 +143,9 @@ export function furnitureWithId(id: FurnitureId): Furniture {
   const found = furniture.find((piece) => piece.id === id)
   if (found === undefined) throw new Error(`the room layout has no furniture "${id}"`)
   return found
+}
+
+function puddleOnTheTeaTable(): WorldPoint {
+  const { footprint, height } = furnitureWithId('teaTable')
+  return { x: footprint.x + puddleOffsetFromTheTeaTableCentre.x, y: height + puddleAboveTheTeaTableMetres, z: footprint.z + puddleOffsetFromTheTeaTableCentre.z }
 }
