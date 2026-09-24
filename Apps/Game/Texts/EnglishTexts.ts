@@ -54,9 +54,9 @@ export const englishTexts = {
   'spill.4': 'Careful hands, wet table.',
 
   'sillIsTheRoomsOwn.1': 'Wow, you tap everything here. The room would like to keep something for itself.',
-  'sillIsTheRoomsOwn.2': 'Those two on the sill are not for grabbing. The room keeps them.',
-  'sillIsTheRoomsOwn.3': 'Everything in reach, and still the sill? Let the room have one secret.',
-  'sillIsTheRoomsOwn.4': "The sill is the room's own corner. Look, but leave it be.",
+  'sillIsTheRoomsOwn.2': 'The figurines on the windowsill belong to the room. It keeps them for itself.',
+  'sillIsTheRoomsOwn.3': 'You have touched almost everything here. Let the room keep these two for itself.',
+  'sillIsTheRoomsOwn.4': 'Not these ones. The room likes to keep a few things just for itself.',
 
   'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',
