@@ -14,7 +14,7 @@ A room has places, such as the counter, the shelf and the tea table. Each item t
 
 The keeper stands at one place, or at none while walking. An item is within reach when it is in a hand, or on a surface at the place where the keeper stands.
 
-- Picking up needs the item within reach and a free hand. The first free hand takes it. Picking up the kettle from the heater lifts it off, and the water is judged if the heater was on.
+- Picking up needs the item within reach and a free hand. The first free hand takes it, and an open lid of the vessel or the caddy closes. Picking up the kettle from the heater lifts it off, and the water is judged if the heater was on.
 - Putting down needs the item in a hand and the spot at the keeper's place.
 - The heater's switch and the heater plate need the keeper at the heater's place. Putting a vessel on the heater takes it from the hand or from the same surface.
 - Pouring needs the source and the target within reach. Walking away ends a pour.

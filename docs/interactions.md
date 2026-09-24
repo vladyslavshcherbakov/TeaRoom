@@ -79,7 +79,7 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Tap a surface in a close-up with a hand chosen | The item goes down exactly where the finger touched, if it fits. It does not fit over the edge, on the heater or on another item, and then it stays in the hand, still chosen. |
 | Tap the heater with a hand chosen | The vessel in that hand goes on the heater. |
 | Tap the switch under the heater | The heater switches on or off. The plate glows while it is on. |
-| Tap the lid of a kettle, thermos or caddy that stands on a surface | The lid opens or closes. |
+| Tap the lid of a kettle, thermos or caddy, standing or held in a corner of the close-up | The lid opens or closes. An open lid lies on the surface beside its item, and on a held item it sits ajar on the rim. Taking an item closes its lid. |
 | Tap the spoon or the cloth | The keeper takes it into a free hand, like any item. It shows in a corner of the close-up and is put down like any item. |
 | Tap the open caddy with the spoon's hand chosen | A full spoon of leaves is scooped, and the leaves show on the spoon. |
 | Tap a vessel with the spoon's hand chosen | The spoon's leaves are tipped into it. With an empty spoon there is nothing to tip, so the vessel is taken into the free hand, as is any other item. |

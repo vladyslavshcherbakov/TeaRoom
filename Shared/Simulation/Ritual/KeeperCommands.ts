@@ -5,7 +5,7 @@ import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
 import { finishPour } from './PouringCommands.ts'
 import { finishFilling } from './TapCommands.ts'
-import { isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { caddyItemId, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
@@ -32,6 +32,21 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   moveItem(draft, command.itemId, { kind: 'inHand', handIndex })
   note(draft, `picked up ${command.itemId} from the ${location.spot.placeId} into hand ${handIndex}`)
   draft.events.push({ type: 'pickedUp', itemId: command.itemId, handIndex })
+  closeTheLidOf(draft, command.itemId)
+}
+
+function closeTheLidOf(draft: Draft, itemId: string): void {
+  if (itemId === caddyItemId && draft.state.caddy.isOpen) {
+    draft.state.caddy.isOpen = false
+    note(draft, 'the caddy lid closed as the caddy was picked up')
+    draft.events.push({ type: 'caddyClosed' })
+    return
+  }
+  const vessel = draft.state.vessels[itemId]
+  if (vessel === undefined || !vessel.isLidOpen) return
+  vessel.isLidOpen = false
+  note(draft, `${vessel.id} lid closed as it was picked up`)
+  draft.events.push({ type: 'vesselLidClosed', vesselId: vessel.id })
 }
 
 export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {

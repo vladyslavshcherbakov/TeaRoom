@@ -154,6 +154,7 @@ export class RoomPlay {
 
   private tapped(target: RoomTapTarget): void {
     if (target.kind === 'hand') return this.handTapped(target.handIndex)
+    if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)

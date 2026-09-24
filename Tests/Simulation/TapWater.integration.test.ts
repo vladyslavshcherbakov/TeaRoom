@@ -17,6 +17,7 @@ test('tapWater_whenAddedToAnEqualVolumeOfHotWater_meetsItHalfway', () => {
   const ritual = kettleInHandAtTheCounter()
   ritual.heatKettleTo(80)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
 
   ritual.fillFromTap('kettle', 5)
 

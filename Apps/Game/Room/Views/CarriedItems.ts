@@ -20,6 +20,10 @@ const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const openLidSideMetres = 0.16
 const lidTouchPadRadiusMetres = 0.095
+const lidLyingOnTheSurfaceMetres = 0.015
+const ajarLidSideMetres = 0.045
+const ajarLidRiseMetres = 0.02
+const ajarLidTiltRadians = 0.5
 const heldInViewDistanceMetres = 0.9
 const heldInViewShareOfScreenWidth = 0.24
 const heldInViewShareOfScreenHeightFromBottom = 0.07
@@ -224,7 +228,7 @@ export class CarriedItems {
   private showContents(model: CarriedModel, scene: CarriedItemsScene): void {
     const vessel = scene.table.vessels[model.itemId]
     const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
-    if (model.lid !== null) model.lid.position.copy(model.lidClosedPosition).add(new THREE.Vector3(isOpen ? -openLidSideMetres : 0, 0, 0))
+    if (model.lid !== null) placeLid(model, model.lid, isOpen, itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface')
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
     if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
     if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel)
@@ -279,7 +283,7 @@ export class CarriedItems {
     if (model.tagKey === tagKey) return
     model.tagKey = tagKey
     model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
-    if (model.lid === null || !('itemId' in tag)) return
+    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag)) return
     const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
     model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
   }
@@ -480,6 +484,20 @@ function holdUnderTheFaucet(model: CarriedModel): void {
   model.root.visible = true
   model.root.quaternion.identity()
   model.root.position.set(faucetSpout.x, faucetSpout.y - heldUnderTheFaucetBelowSpoutMetres - model.rimHeight, faucetSpout.z)
+}
+
+function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, isStanding: boolean): void {
+  lid.position.copy(model.lidClosedPosition)
+  lid.rotation.set(0, 0, 0)
+  if (!isOpen) return
+  if (isStanding) {
+    lid.position.x -= openLidSideMetres
+    lid.position.y = lidLyingOnTheSurfaceMetres
+    return
+  }
+  lid.position.x -= ajarLidSideMetres
+  lid.position.y += ajarLidRiseMetres
+  lid.rotation.z = ajarLidTiltRadians
 }
 
 function moveToLayer(model: CarriedModel, isHeldInView: boolean): void {

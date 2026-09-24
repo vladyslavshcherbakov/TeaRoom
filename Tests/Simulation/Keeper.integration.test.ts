@@ -147,3 +147,24 @@ test('caddy_whenOnTheShelfAndTheKeeperAtTheTable_cannotBeOpened', () => {
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'openCaddy', reason: 'outOfReach' }])
 })
+
+test('kettle_whenPickedUpWithItsLidOpen_hasItsLidClosed', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
+
+  assert.equal(ritual.vessel('kettle').isLidOpen, false)
+  assert.deepEqual(eventsOfType(events, 'vesselLidClosed'), [{ type: 'vesselLidClosed', vesselId: 'kettle' }])
+})
+
+test('caddy_whenPickedUpOpen_isClosed', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.do({ type: 'openCaddy' })
+
+  ritual.do({ type: 'pickUp', itemId: 'caddy' })
+
+  assert.equal(ritual.state.caddy.isOpen, false)
+})

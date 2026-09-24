@@ -42,6 +42,8 @@
 
 **Items standing on furniture cast no shadows.** Their shadows on the tea table and the shelves read as clutter at this size.
 
+**Taking an item closes its lid.** A lid is not an item of its own, so it cannot stay behind, and leaving it open while carried would float it in the air. Closing it changes the rules visibly: a closed kettle keeps its heat, and a closed thermos cannot pour until its lid is tapped open again, which works on a held item too. An open lid lies on the surface beside its item, and on a held item it sits ajar on the rim.
+
 **An item taken by a tap is chosen at once.** Taking something is nearly always followed by using it or putting it back, so the next tap already acts with it. A chosen vessel aims a pour only when it holds something, because otherwise a tap on the next bowl would aim a pour from an empty bowl instead of taking it.
 
 **Tea leaves are drawn as many small leaves, shaped by the tea.** A flat disc said nothing about what was in the caddy. `LeafPile.ts` heaps hundreds of small pieces with a fixed seed, so the same heap appears every time, and shows fewer of them as the caddy empties. Each tea's look lives in the presentation, like its name.
