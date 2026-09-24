@@ -4,6 +4,7 @@ import { koiPaintingAspect } from '../KoiPainting.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
 import { kettleShape } from './KettleShape.ts'
 import type { LeafPile } from './LeafPile.ts'
+import { clothLengthMetres, rumpledClothGeometry } from './RumpledClothGeometry.ts'
 
 export type CarriedModel = {
   readonly itemId: string
@@ -221,9 +222,8 @@ function spoonParts(materials: RoomMaterials): ItemParts {
 }
 
 function clothParts(clothMaterial: THREE.Material): ItemParts {
-  const cloth = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.02, 0.2), clothMaterial)
-  cloth.position.y = 0.01
-  return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(0.14, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
+  const cloth = new THREE.Mesh(rumpledClothGeometry(), clothMaterial)
+  return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(clothLengthMetres / 2, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
 }
 
 function bowlParts(materials: RoomMaterials, glaze: Surface, hasACarp: boolean): ItemParts {

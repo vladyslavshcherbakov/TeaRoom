@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { weaveCloth } from './ClothWeave.ts'
 import { paintKoi } from './KoiPainting.ts'
 
 export type Surface =
@@ -46,8 +47,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   porcelain: '#f7f2e8',
   steel: '#7d97a3',
   caddyGreen: '#5f9a7c',
-  cloth: '#e7dcc4',
-  wetCloth: '#9f917a',
+  cloth: '#ffffff',
+  wetCloth: '#a89c8a',
   jade: '#6fb59a',
   toadBrown: '#b39a5c',
   heaterPlate: '#3d3733',
@@ -78,6 +79,7 @@ const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
+const clothRoughness = 1
 const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'blueGlaze', 'yellowGlaze', 'emeraldGlaze'])
 const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
 
@@ -100,6 +102,7 @@ export class RoomMaterials {
     const color = surfaceColours[surface]
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
     if (surface === 'koiPainting') return koiPaintingMaterial()
+    if (surface === 'cloth') return wovenClothMaterial()
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
@@ -123,4 +126,11 @@ function koiPaintingMaterial(): THREE.MeshStandardMaterial {
     polygonOffsetFactor: -2,
     polygonOffsetUnits: -8,
   })
+}
+
+function wovenClothMaterial(): THREE.MeshStandardMaterial {
+  const texture = new THREE.CanvasTexture(weaveCloth())
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = paintingSharpness
+  return new THREE.MeshStandardMaterial({ map: texture, color: surfaceColours.cloth, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide })
 }
