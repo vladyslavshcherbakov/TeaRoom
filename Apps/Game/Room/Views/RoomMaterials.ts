@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { weaveCloth } from './ClothWeave.ts'
 import { paintKoi } from './KoiPainting.ts'
+import { paintLotus } from './LotusPainting.ts'
 
 export type Surface =
   | 'floor'
@@ -42,6 +43,7 @@ export type Surface =
   | 'yellowGlaze'
   | 'emeraldGlaze'
   | 'koiPainting'
+  | 'lotusPainting'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -83,6 +85,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   yellowGlaze: '#f1cd55',
   emeraldGlaze: '#1f8a68',
   koiPainting: '#ffffff',
+  lotusPainting: '#ffffff',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
@@ -115,6 +118,7 @@ export class RoomMaterials {
     if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
     if (surface === 'flame' || surface === 'flameCore') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
+    if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'cloth') return wovenClothMaterial()
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
