@@ -5,8 +5,8 @@ import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { ConsoleLog } from '../ConsoleLog.ts'
-import { roomViewState } from './RoomPresenter.ts'
-import { problemsPlacingRoom, sceneHeight, sceneWidth, vesselHomes, vesselShapes, type ScenePoint } from './RoomLayout.ts'
+import { tableViewState } from './TablePresenter.ts'
+import { problemsLayingOutTable, sceneHeight, sceneWidth, vesselHomes, vesselShapes, type ScenePoint } from './TableLayout.ts'
 import { TableTouches, type RitualPort } from './Touch/TableTouches.ts'
 import { Reactions } from './Views/Reactions.ts'
 import { RitualMenus } from './Views/RitualMenus.ts'
@@ -16,7 +16,7 @@ import { VesselPainter } from './Views/VesselPainter.ts'
 const roomId = 'quietRoom'
 const longestFrameSeconds = 0.25
 
-export class RoomScene extends Phaser.Scene {
+export class TableScene extends Phaser.Scene {
   private readonly log = new ConsoleLog()
   private session: RitualSession | null = null
   private touches: TableTouches | null = null
@@ -26,7 +26,7 @@ export class RoomScene extends Phaser.Scene {
   private menus: RitualMenus | null = null
 
   constructor() {
-    super('room')
+    super('table')
   }
 
   create(): void {
@@ -63,7 +63,7 @@ export class RoomScene extends Phaser.Scene {
     const opening = RitualSession.open(defaultCatalog, roomId, this.log, import.meta.env.DEV)
     if (opening.kind === 'unavailable') return null
     const room = definitionIn(defaultCatalog, 'rooms', roomId)
-    const layoutProblems = problemsPlacingRoom(room.vessels.map((vessel) => vessel.id), room.figurineIds)
+    const layoutProblems = problemsLayingOutTable(room.vessels.map((vessel) => vessel.id), room.figurineIds)
     if (layoutProblems.length === 0) return opening.session
     if (import.meta.env.DEV) throw new Error(`room "${roomId}" cannot be laid out:\n${layoutProblems.join('\n')}`)
     for (const problem of layoutProblems) this.log.write({ level: 'error', message: `layout problem: ${problem}` })
@@ -102,10 +102,10 @@ export class RoomScene extends Phaser.Scene {
   private paint(session: RitualSession, timeMs: number): void {
     const touches = this.touches
     if (touches === null) return
-    const room = roomViewState(session.state, defaultCatalog)
-    this.tablePainter?.paint(room, session.state.atmosphere, touches.poseOf('spoon'), touches.poseOf('cloth'), timeMs)
+    const table = tableViewState(session.state, defaultCatalog)
+    this.tablePainter?.paint(table, session.state.atmosphere, touches.poseOf('spoon'), touches.poseOf('cloth'), timeMs)
     for (const [vesselId, painter] of this.vesselPainters) {
-      const vessel = room.vessels[vesselId]
+      const vessel = table.vessels[vesselId]
       if (vessel !== undefined) painter.paint(vessel, touches.poseOf(vesselId), timeMs)
     }
   }

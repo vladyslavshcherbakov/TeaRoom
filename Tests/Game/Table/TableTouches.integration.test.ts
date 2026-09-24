@@ -11,8 +11,8 @@ import {
   spoonHome,
   vesselHomes,
   type ScenePoint,
-} from '../../../Apps/Game/Room/RoomLayout.ts'
-import { TableTouches } from '../../../Apps/Game/Room/Touch/TableTouches.ts'
+} from '../../../Apps/Game/Table/TableLayout.ts'
+import { TableTouches } from '../../../Apps/Game/Table/Touch/TableTouches.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { assertNear } from '../../Support/Assertions.ts'

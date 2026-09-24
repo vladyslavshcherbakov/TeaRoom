@@ -13,8 +13,8 @@ import {
   sceneWidth,
   tableTopY,
   windowFrame,
-} from '../RoomLayout.ts'
-import type { RoomViewState } from '../RoomViewState.ts'
+} from '../TableLayout.ts'
+import type { TableViewState } from '../TableViewState.ts'
 import type { ObjectPose } from '../Touch/TableTouches.ts'
 import { palette, windowSkyByTime } from './Palette.ts'
 
@@ -28,16 +28,16 @@ export class TablePainter {
     this.graphics = graphics
   }
 
-  paint(room: RoomViewState, atmosphere: Atmosphere, spoon: ObjectPose, cloth: ObjectPose, timeMs: number): void {
+  paint(table: TableViewState, atmosphere: Atmosphere, spoon: ObjectPose, cloth: ObjectPose, timeMs: number): void {
     this.graphics.clear()
     this.paintRoom(atmosphere, timeMs)
-    this.paintPuddle(room.puddleShare)
-    this.paintHeater(room.heater, timeMs)
-    this.paintCaddy(room.caddy)
+    this.paintPuddle(table.puddleShare)
+    this.paintHeater(table.heater, timeMs)
+    this.paintCaddy(table.caddy)
     this.paintFigurines()
-    this.paintGodsPlaque(room.godsPlaque)
+    this.paintGodsPlaque(table.godsPlaque)
     this.paintCloth(cloth)
-    this.paintSpoon(spoon, room.spoonFillShare)
+    this.paintSpoon(spoon, table.spoonFillShare)
   }
 
   private paintRoom(atmosphere: Atmosphere, timeMs: number): void {
@@ -73,7 +73,7 @@ export class TablePainter {
     this.graphics.fillEllipse(puddleCentre.x, puddleCentre.y, puddleRadius * 2 * puddleShare, puddleRadius * puddleShare)
   }
 
-  private paintHeater(heater: RoomViewState.Heater, timeMs: number): void {
+  private paintHeater(heater: TableViewState.Heater, timeMs: number): void {
     const graphics = this.graphics
     graphics.fillStyle(palette.heaterPlate)
     graphics.fillRoundedRect(heaterPlate.x - heaterPlate.width / 2, heaterPlate.y - heaterPlate.height / 2, heaterPlate.width, heaterPlate.height, 6)
@@ -87,7 +87,7 @@ export class TablePainter {
     graphics.fillCircle(heaterSwitch.x + (heater.isOn ? 16 : -16), heaterSwitch.y, 11)
   }
 
-  private paintCaddy(caddy: RoomViewState.Caddy): void {
+  private paintCaddy(caddy: TableViewState.Caddy): void {
     const graphics = this.graphics
     const left = caddyHome.x - caddyHome.width / 2
     const top = caddyHome.y - caddyHome.height / 2
@@ -114,7 +114,7 @@ export class TablePainter {
     }
   }
 
-  private paintGodsPlaque(plaque: RoomViewState.GodsPlaque): void {
+  private paintGodsPlaque(plaque: TableViewState.GodsPlaque): void {
     const graphics = this.graphics
     graphics.fillStyle(palette.plaque)
     graphics.fillRoundedRect(godsPlaque.x - godsPlaque.width / 2, godsPlaque.y - godsPlaque.height / 2, godsPlaque.width, godsPlaque.height, 6)

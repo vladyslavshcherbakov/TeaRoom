@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { roomViewState } from '../../../Apps/Game/Room/RoomPresenter.ts'
+import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import type { Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { testCatalog } from '../../Support/TestCatalog.ts'
@@ -22,7 +22,7 @@ function stateWithLiquid(vesselId: string, liquid: Partial<Liquid>, isLidOpen = 
 }
 
 function vesselView(state: SessionState, vesselId: string) {
-  return roomViewState(state, catalog).vessels[vesselId]
+  return tableViewState(state, catalog).vessels[vesselId]
 }
 
 test('steam_risesWithTheWaterTemperature', () => {
@@ -58,7 +58,7 @@ test('kettleHum_whileHeating_growsWithTheTemperature', () => {
   for (const [temperatureC, hum] of rows) {
     const state = stateWithLiquid('kettle', { temperatureC })
     state.heater = { ...state.heater, isOn: true, vesselIdOnTop: 'kettle' }
-    assert.equal(roomViewState(state, catalog).heater.hum, hum, `${temperatureC} °C`)
+    assert.equal(tableViewState(state, catalog).heater.hum, hum, `${temperatureC} °C`)
   }
 })
 
@@ -68,8 +68,8 @@ test('kettleHum_whenTheHeaterIsOffOrEmpty_isSilent', () => {
   const heaterEmpty = stateWithLiquid('kettle', { temperatureC: 90 })
   heaterEmpty.heater = { ...heaterEmpty.heater, isOn: true, vesselIdOnTop: null }
 
-  assert.equal(roomViewState(heaterOff, catalog).heater.hum, 'silent')
-  assert.equal(roomViewState(heaterEmpty, catalog).heater.hum, 'silent')
+  assert.equal(tableViewState(heaterOff, catalog).heater.hum, 'silent')
+  assert.equal(tableViewState(heaterEmpty, catalog).heater.hum, 'silent')
 })
 
 test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
@@ -120,7 +120,7 @@ test('puddle_growsWithTheSpillUntilThirtyMillilitres', () => {
   for (const [tableWetMl, puddleShare] of rows) {
     const state = ritualState()
     state.tableWetMl = tableWetMl
-    assert.equal(roomViewState(state, catalog).puddleShare, puddleShare, `${tableWetMl} ml`)
+    assert.equal(tableViewState(state, catalog).puddleShare, puddleShare, `${tableWetMl} ml`)
   }
 })
 
@@ -135,6 +135,6 @@ test('godsPlaque_lightsOneMarkPerFifthOfSatisfaction', () => {
   for (const [godsSatisfaction, litMarks] of rows) {
     const state = ritualState()
     state.godsSatisfaction = godsSatisfaction
-    assert.deepEqual(roomViewState(state, catalog).godsPlaque, { litMarks, totalMarks: 5 }, `${godsSatisfaction}`)
+    assert.deepEqual(tableViewState(state, catalog).godsPlaque, { litMarks, totalMarks: 5 }, `${godsSatisfaction}`)
   }
 })

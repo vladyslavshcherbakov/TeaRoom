@@ -18,7 +18,7 @@ import {
   vesselHomes,
   type Box,
   type ScenePoint,
-} from '../RoomLayout.ts'
+} from '../TableLayout.ts'
 import { isInPourZone, hoverLineAbove, streamOnTargetFraction, tiltForPress } from './PourAim.ts'
 import { coveredFraction, extendStroke, startStroke, strokeSpeedCmPerSecond, type WipeStroke } from './WipeStroke.ts'
 
@@ -296,13 +296,13 @@ export class TableTouches {
     if (objectId === 'spoon') return spoonHome
     if (objectId === 'cloth') return clothHome
     const home = vesselHomes[objectId]
-    if (home === undefined) throw new Error(`the room layout has no place for "${objectId}"`)
+    if (home === undefined) throw new Error(`the table layout has no place for "${objectId}"`)
     return home
   }
 
   private vesselBox(vesselId: string): Box {
     const home = vesselHomes[vesselId]
-    if (home === undefined) throw new Error(`the room layout has no place for vessel "${vesselId}"`)
+    if (home === undefined) throw new Error(`the table layout has no place for vessel "${vesselId}"`)
     return this.boxAtPose(vesselId, home)
   }
 

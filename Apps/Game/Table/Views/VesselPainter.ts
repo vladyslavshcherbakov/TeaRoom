@@ -1,10 +1,10 @@
 import type Phaser from 'phaser'
-import type { Box, VesselShape } from '../RoomLayout.ts'
-import type { RoomViewState } from '../RoomViewState.ts'
+import type { Box, VesselShape } from '../TableLayout.ts'
+import type { TableViewState } from '../TableViewState.ts'
 import type { ObjectPose } from '../Touch/TableTouches.ts'
 import { colourNumber, palette } from './Palette.ts'
 
-const puffCountByLevel: Readonly<Record<RoomViewState.SteamLevel, number>> = { none: 0, wisps: 2, visible: 4, billowing: 7 }
+const puffCountByLevel: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 2, visible: 4, billowing: 7 }
 const leafDotsWhenFull = 14
 
 export class VesselPainter {
@@ -18,7 +18,7 @@ export class VesselPainter {
     this.size = size
   }
 
-  paint(vessel: RoomViewState.Vessel, pose: ObjectPose, timeMs: number): void {
+  paint(vessel: TableViewState.Vessel, pose: ObjectPose, timeMs: number): void {
     const graphics = this.graphics
     graphics.clear()
     graphics.setPosition(pose.x, pose.y - (pose.isHeld ? 6 : 0))
@@ -64,7 +64,7 @@ export class VesselPainter {
     }
   }
 
-  private paintLiquid(vessel: RoomViewState.Vessel): void {
+  private paintLiquid(vessel: TableViewState.Vessel): void {
     if (vessel.fillShare <= 0) return
     const { width, height } = this.size
     const graphics = this.graphics
@@ -97,7 +97,7 @@ export class VesselPainter {
     else this.graphics.fillRoundedRect(-lidWidth / 2, -height / 2 - 6, lidWidth, 10, 4)
   }
 
-  private paintSteam(steam: RoomViewState.SteamLevel, timeMs: number): void {
+  private paintSteam(steam: TableViewState.SteamLevel, timeMs: number): void {
     const puffs = puffCountByLevel[steam]
     for (let puff = 0; puff < puffs; puff += 1) {
       const phase = (timeMs / 1600 + puff / puffs) % 1

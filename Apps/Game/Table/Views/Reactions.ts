@@ -1,6 +1,6 @@
 import type Phaser from 'phaser'
 import type { RitualEvent } from '../../../../Shared/Simulation/Ritual/RitualEvent.ts'
-import { remarkText, tasteCardLines } from '../RoomTexts.ts'
+import { remarkText, tasteCardLines } from '../TableTexts.ts'
 import { palette } from './Palette.ts'
 
 const remarkPosition = { x: 195, y: 335 }

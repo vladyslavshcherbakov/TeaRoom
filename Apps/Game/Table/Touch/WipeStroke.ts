@@ -1,4 +1,4 @@
-import type { ScenePoint } from '../RoomLayout.ts'
+import type { ScenePoint } from '../TableLayout.ts'
 
 const scenePixelsPerCentimetre = 10
 

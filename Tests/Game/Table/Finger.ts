@@ -1,5 +1,5 @@
-import type { ScenePoint } from '../../../Apps/Game/Room/RoomLayout.ts'
-import type { TableTouches } from '../../../Apps/Game/Room/Touch/TableTouches.ts'
+import type { ScenePoint } from '../../../Apps/Game/Table/TableLayout.ts'
+import type { TableTouches } from '../../../Apps/Game/Table/Touch/TableTouches.ts'
 
 const stepsPerDrag = 12
 

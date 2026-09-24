@@ -51,10 +51,10 @@ export const saucerOffset = 44
 export const godsPlaque: Box = { x: 78, y: 40, width: 128, height: 36 }
 export const finishButton: Box = { x: 330, y: 40, width: 92, height: 36 }
 
-export function problemsPlacingRoom(vesselIds: readonly string[], figurineIds: readonly string[]): string[] {
+export function problemsLayingOutTable(vesselIds: readonly string[], figurineIds: readonly string[]): string[] {
   return [
-    ...vesselIds.filter((id) => vesselHomes[id] === undefined).map((id) => `the room layout has no place for vessel "${id}"`),
-    ...figurineIds.filter((id) => figurineHomes[id] === undefined).map((id) => `the room layout has no place for figurine "${id}"`),
+    ...vesselIds.filter((id) => vesselHomes[id] === undefined).map((id) => `the table layout has no place for vessel "${id}"`),
+    ...figurineIds.filter((id) => figurineHomes[id] === undefined).map((id) => `the table layout has no place for figurine "${id}"`),
   ]
 }
 

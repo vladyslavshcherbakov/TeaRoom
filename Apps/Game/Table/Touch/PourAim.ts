@@ -1,4 +1,4 @@
-import type { Box, ScenePoint } from '../RoomLayout.ts'
+import type { Box, ScenePoint } from '../TableLayout.ts'
 
 const hoverGapAboveTargetPx = 36
 const hoverZoneHeightPx = 150

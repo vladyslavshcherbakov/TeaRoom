@@ -5,7 +5,7 @@ import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
-import type { RoomViewState } from './RoomViewState.ts'
+import type { TableViewState } from './TableViewState.ts'
 
 const waterColour = '#dfe7ea'
 const overbrewedColour = '#2b1a10'
@@ -20,9 +20,9 @@ const leavesFillingTheBottomGrams = 10
 const puddleFullAtMl = 30
 const godsPlaqueMarks = 5
 
-export function roomViewState(state: DeepReadonly<SessionState>, catalog: Catalog): RoomViewState {
+export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
-  const vessels: Record<string, RoomViewState.Vessel> = {}
+  const vessels: Record<string, TableViewState.Vessel> = {}
   for (const vessel of Object.values(state.vessels)) vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), tea)
   return {
     vessels,
@@ -34,7 +34,7 @@ export function roomViewState(state: DeepReadonly<SessionState>, catalog: Catalo
   }
 }
 
-function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null): RoomViewState.Vessel {
+function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null): TableViewState.Vessel {
   const brewStage = brewStageOf(vessel.liquid, tea)
   return {
     id: vessel.id,
@@ -47,7 +47,7 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
   }
 }
 
-function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): RoomViewState.BrewStage {
+function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.BrewStage {
   if (tea === null || isEmpty(liquid) || liquid.strength < strengthBelowWhichTeaLooksLikeWater) return 'water'
   const verdict = judgeTaste(liquid, tea)
   if (verdict.bitterness === 'overbrewed') return 'overbrewed'
@@ -62,7 +62,7 @@ function liquorColour(liquid: Liquid, tea: TeaDefinition): string {
   return mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
 }
 
-function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): RoomViewState.SteamLevel {
+function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): TableViewState.SteamLevel {
   const isSealed = definition.lid?.mustBeOpenToPour === true && !vessel.isLidOpen
   if (isSealed || isEmpty(vessel.liquid)) return 'none'
   const temperatureC = vessel.liquid.temperatureC
@@ -72,13 +72,13 @@ function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition
   return 'none'
 }
 
-function heaterView(state: DeepReadonly<SessionState>): RoomViewState.Heater {
+function heaterView(state: DeepReadonly<SessionState>): TableViewState.Heater {
   const { isOn, vesselIdOnTop } = state.heater
   const heatedVessel = vesselIdOnTop === null ? undefined : state.vessels[vesselIdOnTop]
   return { isOn, vesselIdOnTop, hum: isOn && heatedVessel !== undefined ? humOf(heatedVessel.liquid.temperatureC) : 'silent' }
 }
 
-function humOf(temperatureC: number): RoomViewState.Heater['hum'] {
+function humOf(temperatureC: number): TableViewState.Heater['hum'] {
   if (temperatureC >= steamBillowingFromC) return 'rumbling'
   if (temperatureC >= steamVisibleFromC) return 'active'
   if (temperatureC >= humQuietBelowC) return 'rising'

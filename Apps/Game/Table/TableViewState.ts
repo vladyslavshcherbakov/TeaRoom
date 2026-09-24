@@ -1,13 +1,13 @@
-export type RoomViewState = {
-  readonly vessels: Readonly<Record<string, RoomViewState.Vessel>>
-  readonly heater: RoomViewState.Heater
-  readonly caddy: RoomViewState.Caddy
+export type TableViewState = {
+  readonly vessels: Readonly<Record<string, TableViewState.Vessel>>
+  readonly heater: TableViewState.Heater
+  readonly caddy: TableViewState.Caddy
   readonly spoonFillShare: number
   readonly puddleShare: number
-  readonly godsPlaque: RoomViewState.GodsPlaque
+  readonly godsPlaque: TableViewState.GodsPlaque
 }
 
-export declare namespace RoomViewState {
+export declare namespace TableViewState {
   type SteamLevel = 'none' | 'wisps' | 'visible' | 'billowing'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed'
 

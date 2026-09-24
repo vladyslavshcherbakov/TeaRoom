@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
-import { remarkText, tasteCardLines, teaName, timeOfDayName } from '../../../Apps/Game/Room/RoomTexts.ts'
+import { remarkText, tasteCardLines, teaName, timeOfDayName } from '../../../Apps/Game/Table/TableTexts.ts'
 
 test('teaName_isWrittenForPeopleNotForCode', () => {
   assert.equal(teaName('shouPuerh'), 'Shou puerh')

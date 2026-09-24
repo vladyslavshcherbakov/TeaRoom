@@ -14,7 +14,7 @@ The README has the commands. CI runs the same two scripts.
 
 Layers: `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
-Apps: `Apps/Game` is the Phaser game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. In the game, `Room/RoomPresenter.ts` is the only place that turns state into what is drawn, and the scene reads its `RoomViewState` every frame. `Room/Touch/TableTouches.ts` is the only place that turns touches into commands, and it owns where each object is while it is held. `Room/RoomLayout.ts` holds every position and size in scene coordinates. `RoomScene.ts` only forwards pointer events, paints, and shows menus and reactions.
+Apps: `Apps/Game` is the Phaser game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. In the game, `Table/TablePresenter.ts` is the only place that turns state into what is drawn, and the scene reads its `TableViewState` every frame. `Table/Touch/TableTouches.ts` is the only place that turns touches into commands, and it owns where each object is while it is held. `Table/TableLayout.ts` holds every position and size in scene coordinates. `TableScene.ts` only forwards pointer events, paints, and shows menus and reactions.
 
 Inside the simulation:
 
@@ -63,7 +63,7 @@ External dependencies: Phaser for the game, pinned in `package.json`. Vite, Type
 
 ## Tests
 
-End-to-end UI tests in `Tests/Browser/` play the built site with Playwright and read the ritual log from the console, so the game needs no test hooks. Gesture tests in `Tests/Game/Room/` drive `TableTouches` with a `Finger` over a real session.
+End-to-end UI tests in `Tests/Browser/` play the built site with Playwright and read the ritual log from the console, so the game needs no test hooks. Gesture tests in `Tests/Game/Table/` drive `TableTouches` with a `Finger` over a real session.
 
 Integration tests run the real `RitualSession` over `Tests/Support/TestCatalog.ts`, whose round numbers make expected values checkable by hand. Its vessels do not cool unless a test asks for cooling. Content tests run the real catalog. Unit tests are written only for a decision table that has stopped moving.
 
