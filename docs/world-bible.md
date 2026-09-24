@@ -35,6 +35,10 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 ## Principles
 
+**A conversation with the world.** The player does not only handle objects and follow a ritual. Every act is a sentence said to the world, and the world answers. Sometimes it answers at once: the kettle hisses, the tea darkens. Sometimes it answers days later: a bird grows bolder, a jar of kintsugi lacquer turns up in the drawer. The player learns to listen for late answers.
+
+**The world helps tell the story.** It rarely punishes. When something goes wrong, the world offers a way to turn it into a story: the broken bowl becomes a gold-seamed favourite, the crooked rug becomes the cat's bed, the bitter cup becomes a guest's running joke. A mistake opens a thread instead of closing one.
+
 **Design causes, not content.** A new tea is content. A figurine that slowly starts to prefer the tea you brew most is a cause. Causes multiply, content only adds.
 
 **The hidden 70%.** Every noticeable detail may have a reason the player never learns. The team writes that reason down here. The player sees only the consequence.
@@ -218,6 +222,17 @@ In gongfu brewing, the same leaves are steeped many times. Real behaviour, and o
 - Each tea has its own curve. Pu-erh lasts many infusions, green tea few.
 - A rinse before the first infusion wakes the leaves. Skipping it is allowed, and the first cup is a little dusty.
 
+### Kettles and heat
+
+The kettle is a character. Each kind has its own gestures, sounds and temper:
+
+- **Electric kettle.** A switch that clicks off by itself at the boil. Easy, reliable, a little soulless. It can be set to stop earlier on later models.
+- **Stovetop kettle with a whistle.** It whistles when it boils, so the player learns to take it off before the whistle for green tea. The whistle rises slowly, and a good ear hears it coming.
+- **Clay kettle on a small burner.** An alcohol or gas burner with a flame the player turns up and down. It needs attention and rewards it.
+- **Cast-iron tetsubin on charcoal.** Slow to heat, holds heat for a long time, and makes the water softer. The charcoal has to be lit and tended. Old tetsubin water tastes slightly of iron, and some guests love that.
+
+Each kettle keeps its own history: the limescale inside, the darkened handle, the dent from the day it fell.
+
 ### Water
 
 - Tap water, rainwater collected in a barrel on the veranda, spring water brought by a guest.
@@ -289,6 +304,17 @@ Priority, from the GDD: water, ceramic, kettle, cloth, surroundings. Also:
 - Music from the player's gramophone that fades with distance.
 - Sounds are short, soft and never repeat exactly.
 
+## The coffee shelf
+
+A tea game has one shelf that is not about tea. On it stands a coffee jar. Tapping it gives one of several outcomes, chosen at random with a cooldown:
+
+- The jar is empty. "Of course he knew this was a tea game. He looked anyway."
+- The jar holds a forgotten tea. "Of course he knew this was a tea game. He looked anyway, and found the tea he lost last spring." The tea goes into the caddy.
+- A full-screen card: "GAME OVER, COFFEE LOVER." One button: "We'll see about that." The jar goes back on the shelf, and the room carries on as if nothing happened.
+- Much later, a guest brings actual coffee. The keeper can brew it with the same ritual, badly. The gods say nothing, pointedly.
+
+The jokes use the keeper's pronoun from the character's settings, so the lines follow the player's choice.
+
 ## Humour bank
 
 Lines the game may show. Each one is small, dry and appears rarely.
@@ -306,6 +332,8 @@ Lines the game may show. Each one is small, dry and appears rarely.
 - "The kettle is hot. Your fingers already knew."
 - "The bowl is chipped. It has been chipped for a long time."
 - "It is snowing. The tea tastes warmer."
+- "Of course he knew this was a tea game. He looked anyway."
+- "GAME OVER, COFFEE LOVER." Button: "We'll see about that."
 
 ## Secrets and their conditions
 
