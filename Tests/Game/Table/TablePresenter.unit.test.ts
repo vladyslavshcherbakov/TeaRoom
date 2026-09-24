@@ -47,6 +47,29 @@ test('steam_whenTheVesselIsEmpty_isNone', () => {
   assert.equal(vesselView(stateWithLiquid('cup1', { volumeMl: 0, temperatureC: 95 }), 'cup1')?.steam, 'none')
 })
 
+test('waterSurface_whileHeating_movesMoreAsItGetsHotter', () => {
+  const rows = [
+    [39, 'still'],
+    [40, 'shimmering'],
+    [55, 'simmering'],
+    [95, 'boiling'],
+  ] as const
+
+  for (const [temperatureC, surfaceMotion] of rows) {
+    const state = stateWithLiquid('kettle', { temperatureC })
+    state.heater = { ...state.heater, isOn: true, vesselIdOnTop: 'kettle' }
+    assert.equal(vesselView(state, 'kettle')?.surfaceMotion, surfaceMotion, `${temperatureC} °C`)
+  }
+})
+
+test('waterSurface_offAWorkingHeater_isStillWhileTheSteamStays', () => {
+  const liftedOff = stateWithLiquid('kettle', { temperatureC: 98 })
+  liftedOff.heater = { ...liftedOff.heater, isOn: true, vesselIdOnTop: null }
+
+  assert.equal(vesselView(liftedOff, 'kettle')?.surfaceMotion, 'still')
+  assert.equal(vesselView(liftedOff, 'kettle')?.steam, 'billowing')
+})
+
 test('kettleHum_whileHeating_growsWithTheTemperature', () => {
   const rows = [
     [50, 'quiet'],

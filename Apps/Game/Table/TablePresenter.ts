@@ -16,6 +16,9 @@ const steamWispsFromC = 60
 const steamVisibleFromC = 75
 const steamBillowingFromC = 85
 const humQuietBelowC = 60
+const shimmeringFromC = 40
+const simmeringFromC = 55
+const boilingFromC = 95
 const leavesFillingTheBottomGrams = 10
 const puddleFullAtMl = 30
 const clothSoakedAtMl = 20
@@ -24,7 +27,10 @@ const godsPlaqueMarks = 5
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
   const vessels: Record<string, TableViewState.Vessel> = {}
-  for (const vessel of Object.values(state.vessels)) vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), tea)
+  const heatedVesselId = state.heater.isOn ? state.heater.vesselIdOnTop : null
+  for (const vessel of Object.values(state.vessels)) {
+    vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), tea, vessel.id === heatedVesselId)
+  }
   return {
     vessels,
     heater: heaterView(state),
@@ -40,13 +46,14 @@ export function puddleShareOf(tableWetMl: number): number {
   return share(tableWetMl, puddleFullAtMl)
 }
 
-function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null): TableViewState.Vessel {
+function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null, isHeated: boolean): TableViewState.Vessel {
   const brewStage = brewStageOf(vessel.liquid, tea)
   return {
     id: vessel.id,
     fillShare: share(vessel.liquid.volumeMl, definition.capacityMl),
     liquorColour: tea === null || brewStage === 'water' ? waterColour : liquorColour(vessel.liquid, tea),
     steam: steamOf(vessel, definition),
+    surfaceMotion: isHeated && !isEmpty(vessel.liquid) ? surfaceMotionAt(vessel.liquid.temperatureC) : 'still',
     brewStage,
     isLidOpen: definition.lid === null ? null : vessel.isLidOpen,
     leavesShare: share(vessel.leaves?.grams ?? 0, leavesFillingTheBottomGrams),
@@ -76,6 +83,13 @@ function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition
   if (temperatureC >= steamVisibleFromC) return 'visible'
   if (temperatureC >= steamWispsFromC) return 'wisps'
   return 'none'
+}
+
+function surfaceMotionAt(temperatureC: number): TableViewState.SurfaceMotion {
+  if (temperatureC >= boilingFromC) return 'boiling'
+  if (temperatureC >= simmeringFromC) return 'simmering'
+  if (temperatureC >= shimmeringFromC) return 'shimmering'
+  return 'still'
 }
 
 function heaterView(state: DeepReadonly<SessionState>): TableViewState.Heater {

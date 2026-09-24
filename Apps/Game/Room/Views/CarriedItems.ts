@@ -73,6 +73,21 @@ export const untappableRoomLayer = 2
 
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: 3 }
 
+type Wave = {
+  readonly riseMetres: number
+  readonly tiltXRadians: number
+  readonly tiltZRadians: number
+}
+
+const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
+
+const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
+  still: { heightMetres: 0, tiltRadians: 0, wavesPerSecond: 0 },
+  shimmering: { heightMetres: 0.0008, tiltRadians: 0.02, wavesPerSecond: 1.5 },
+  simmering: { heightMetres: 0.002, tiltRadians: 0.05, wavesPerSecond: 2.5 },
+  boiling: { heightMetres: 0.004, tiltRadians: 0.09, wavesPerSecond: 4 },
+}
+
 export type CarriedItemsScene = {
   readonly state: DeepReadonly<SessionState>
   readonly table: TableViewState
@@ -252,8 +267,9 @@ export class CarriedItems {
     const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
     if (model.lid !== null) placeLid(model, model.lid, isOpen, itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface')
     if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
-    if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel)
-    if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel)
+    const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
+    if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)
+    if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
     if (model.leafHolder !== null) this.showLeaves(model, model.leafHolder, scene)
     if (model.itemId === clothItemId) this.clothMaterial.color.copy(this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), scene.table.clothWetShare))
     const puffCount = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
@@ -518,8 +534,18 @@ function pointsDownAStraightSide(model: CarriedModel): { distance: number; heigh
   ]
 }
 
-function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel): void {
-  const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres)
+function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave {
+  const { heightMetres, tiltRadians, wavesPerSecond } = wavesByMotion[motion]
+  const phase = timeSeconds * wavesPerSecond * Math.PI * 2
+  return {
+    riseMetres: Math.sin(phase) * heightMetres,
+    tiltXRadians: Math.sin(phase * 0.8) * tiltRadians,
+    tiltZRadians: Math.cos(phase * 1.3) * tiltRadians,
+  }
+}
+
+function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
+  const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres + (vessel.fillShare > 0 ? wave.riseMetres : 0))
   gaugeWater.visible = vessel.fillShare > 0
   gaugeWater.scale.y = height
   gaugeWater.position.y = gaugeBottomMetres + height / 2
@@ -527,13 +553,14 @@ function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel)
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
-function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel): void {
+function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
   water.visible = vessel.fillShare > 0
   const bodyHalfHeight = kettleBodyRadiusMetres * kettleBodySquash
   const openingHeight = kettleBodyCentreMetres + bodyHalfHeight * Math.cos(kettleOpeningAngle)
   const surfaceHeight = kettleBottomInsideMetres + vessel.fillShare * (openingHeight - kettleWaterBelowTheOpeningMetres - kettleBottomInsideMetres)
   const heightFromCentre = (surfaceHeight - kettleBodyCentreMetres) / bodyHalfHeight
-  water.position.y = surfaceHeight
+  water.position.y = surfaceHeight + wave.riseMetres
+  water.rotation.set(-Math.PI / 2 + wave.tiltXRadians, 0, wave.tiltZRadians)
   water.scale.setScalar(Math.max(0.001, kettleBodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre)) - 0.003))
   const material = water.material
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)

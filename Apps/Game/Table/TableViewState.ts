@@ -10,6 +10,7 @@ export type TableViewState = {
 
 export declare namespace TableViewState {
   type SteamLevel = 'none' | 'wisps' | 'visible' | 'billowing'
+  type SurfaceMotion = 'still' | 'shimmering' | 'simmering' | 'boiling'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed'
 
   type Vessel = {
@@ -17,6 +18,7 @@ export declare namespace TableViewState {
     readonly fillShare: number
     readonly liquorColour: string
     readonly steam: SteamLevel
+    readonly surfaceMotion: SurfaceMotion
     readonly brewStage: BrewStage
     readonly isLidOpen: boolean | null
     readonly leavesShare: number
