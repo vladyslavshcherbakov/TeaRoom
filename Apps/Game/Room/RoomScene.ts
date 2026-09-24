@@ -9,13 +9,12 @@ import { tableViewState } from '../Table/TablePresenter.ts'
 import {
   cameraFieldOfViewDegrees,
   closeUpPose,
-  distanceShareAfterPinch,
-  distanceShareAfterWheel,
   overviewPose,
   poseEasedTowards,
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
+import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type ShapedItem } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
@@ -29,19 +28,8 @@ import { PourControls } from './Views/PourControls.ts'
 import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
 
-type ScreenPoint = {
-  readonly x: number
-  readonly y: number
-}
-
-type Pinch = {
-  readonly fingerGapAtStart: number
-  readonly distanceShareAtStart: number
-}
-
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
-const tapSlopPixels = 12
 const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
 
@@ -52,7 +40,6 @@ export class RoomScene {
   private readonly raycaster = newRaycasterSeeingEveryLayer()
   private readonly clock = new THREE.Clock()
   private readonly session: RitualSession
-  private readonly log: RoomLog
   private readonly catalog: Catalog
   private readonly play: RoomPlay
   private readonly room: RoomModel
@@ -62,13 +49,8 @@ export class RoomScene {
   private readonly pourControls: PourControls
   private readonly caption: RoomCaption
   private cameraPose: CameraPose
-  private pressStart: { x: number; y: number } | null = null
-  private aimingPointerId: number | null = null
-  private aimingStart: ScreenPoint | null = null
-  private hasAimingFingerMoved = false
-  private readonly fingersOnTheRoom = new Map<number, ScreenPoint>()
-  private pinch: Pinch | null = null
   private readonly zoom = new CameraZoom()
+  private readonly gestures: RoomGestures
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog) {
     this.session = session
@@ -86,8 +68,8 @@ export class RoomScene {
       },
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
-    this.log = log
     this.play = new RoomPlay(ritual, catalog, log)
+    this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials()
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, roomDefinition.heaterSpot)
@@ -162,82 +144,19 @@ export class RoomScene {
 
   private listenToPresses(): void {
     const canvas = this.renderer.domElement
-    canvas.addEventListener('pointerdown', (event) => {
-      if (this.play.aimedPourView !== null) return this.aimingFingerDown(event)
-      this.fingersOnTheRoom.set(event.pointerId, { x: event.clientX, y: event.clientY })
-      if (this.fingersOnTheRoom.size === 2) return this.startPinching()
-      if (this.fingersOnTheRoom.size > 2) return
-      this.pressStart = { x: event.clientX, y: event.clientY }
-      this.play.pressStarted(this.tapTargetAt(event.clientX, event.clientY))
-    })
-    canvas.addEventListener('pointermove', (event) => {
-      if (event.pointerId === this.aimingPointerId) return this.aimingFingerMoved(event)
-      if (this.fingersOnTheRoom.has(event.pointerId)) this.fingersOnTheRoom.set(event.pointerId, { x: event.clientX, y: event.clientY })
-      if (this.pinch !== null) return this.keepPinching(this.pinch)
-      const start = this.pressStart
-      if (start === null || Math.hypot(event.clientX - start.x, event.clientY - start.y) <= tapSlopPixels) return
-      this.play.pressMovedAway()
-      this.play.pressMovedOver(this.tapTargetAt(event.clientX, event.clientY))
-    })
-    const pressEnded = (event: PointerEvent): void => {
-      if (event.pointerId === this.aimingPointerId) return this.aimingFingerUp()
-      this.fingersOnTheRoom.delete(event.pointerId)
-      if (this.pinch !== null && this.fingersOnTheRoom.size < 2) this.stopPinching()
-      this.pressStart = null
-      this.play.pressEnded()
-    }
-    canvas.addEventListener('pointerup', pressEnded)
-    canvas.addEventListener('pointercancel', pressEnded)
+    canvas.addEventListener('pointerdown', (event) => this.gestures.fingerDown(event.pointerId, { x: event.clientX, y: event.clientY }))
+    canvas.addEventListener('pointermove', (event) => this.gestures.fingerMoved(event.pointerId, { x: event.clientX, y: event.clientY }))
+    canvas.addEventListener('pointerup', (event) => this.gestures.fingerUp(event.pointerId))
+    canvas.addEventListener('pointercancel', (event) => this.gestures.fingerUp(event.pointerId))
     canvas.addEventListener('wheel', (event) => {
       event.preventDefault()
-      this.zoom.zoomTo(distanceShareAfterWheel(this.zoom.distanceShare, event.deltaY))
+      this.gestures.wheelTurned(event.deltaY)
     }, { passive: false })
     for (const safariGesture of ['gesturestart', 'gesturechange']) document.addEventListener(safariGesture, (event) => event.preventDefault())
   }
 
-  private startPinching(): void {
-    this.pinch = { fingerGapAtStart: this.fingerGap(), distanceShareAtStart: this.zoom.distanceShare }
-    this.play.pressMovedAway()
-  }
-
-  private keepPinching(pinch: Pinch): void {
-    this.zoom.zoomTo(distanceShareAfterPinch(pinch.distanceShareAtStart, pinch.fingerGapAtStart, this.fingerGap()))
-  }
-
-  private stopPinching(): void {
-    this.pinch = null
-    this.log(`pinched the camera to ${this.zoom.distanceShare.toFixed(2)} of its distance in the ${this.play.view.kind} view`)
-  }
-
-  private fingerGap(): number {
-    const [first, second] = [...this.fingersOnTheRoom.values()]
-    return first === undefined || second === undefined ? 1 : Math.hypot(first.x - second.x, first.y - second.y)
-  }
-
-  private aimingFingerDown(event: PointerEvent): void {
-    if (this.aimingPointerId !== null) return
-    this.aimingPointerId = event.pointerId
-    this.aimingStart = { x: event.clientX, y: event.clientY }
-    this.hasAimingFingerMoved = false
-    this.play.pourFingerDown(this.aimPlanePointAt(event.clientX, event.clientY))
-  }
-
-  private aimingFingerMoved(event: PointerEvent): void {
-    const start = this.aimingStart
-    if (start !== null && Math.hypot(event.clientX - start.x, event.clientY - start.y) > tapSlopPixels) this.hasAimingFingerMoved = true
-    this.play.pourFingerMoved(this.aimPlanePointAt(event.clientX, event.clientY))
-  }
-
-  private aimingFingerUp(): void {
-    this.aimingPointerId = null
-    this.aimingStart = null
-    if (this.hasAimingFingerMoved) return this.play.pourFingerUp()
-    this.log('tap while aiming ends the pour')
-    this.play.pourDone()
-  }
-
-  private aimPlanePointAt(clientX: number, clientY: number): FloorPoint {
-    this.raycaster.setFromCamera(this.pointerAt(clientX, clientY), this.camera)
+  private aimPlanePointAt(point: ScreenPoint): FloorPoint {
+    this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
     const aimPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -this.aimPlaneHeight())
     const hit = this.raycaster.ray.intersectPlane(aimPlane, new THREE.Vector3())
     return hit === null ? { x: 0, z: 0 } : { x: hit.x, z: hit.z }
@@ -249,13 +168,13 @@ export class RoomScene {
     return (location?.kind === 'onSurface' ? location.spot.y : 0) + aimPlaneAboveTargetMetres
   }
 
-  private pointerAt(clientX: number, clientY: number): THREE.Vector2 {
+  private pointerAt(point: ScreenPoint): THREE.Vector2 {
     const bounds = this.renderer.domElement.getBoundingClientRect()
-    return new THREE.Vector2(((clientX - bounds.left) / bounds.width) * 2 - 1, -((clientY - bounds.top) / bounds.height) * 2 + 1)
+    return new THREE.Vector2(((point.x - bounds.left) / bounds.width) * 2 - 1, -((point.y - bounds.top) / bounds.height) * 2 + 1)
   }
 
-  private tapTargetAt(clientX: number, clientY: number): RoomTapTarget {
-    this.raycaster.setFromCamera(this.pointerAt(clientX, clientY), this.camera)
+  private tapTargetAt(point: ScreenPoint): RoomTapTarget {
+    this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes]
     const [nearest] = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
     const tag = nearest === undefined ? undefined : tapTargetTagOf(nearest.object)
