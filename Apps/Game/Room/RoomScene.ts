@@ -120,7 +120,7 @@ export class RoomScene {
     this.moveCamera(seconds)
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
-    const heldInView = isWalkerShown ? null : { camera: this.camera, selectedHandIndex: this.play.selectedHandIndex }
+    const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothOnTheTableAt: this.play.clothOnTheTableAt, timeSeconds: this.clock.elapsedTime })
     this.showHeater(table.isHeaterOn)
     this.room.showPuddle(table.puddleShare)

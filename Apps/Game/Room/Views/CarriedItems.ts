@@ -101,7 +101,7 @@ export type CarriedItemsScene = {
 
 export type HeldInView = {
   readonly camera: THREE.PerspectiveCamera
-  readonly selectedHandIndex: HandIndex | null
+  readonly chosenHandIndex: HandIndex | null
 }
 
 type CarriedModel = {
@@ -176,7 +176,7 @@ export class CarriedItems {
 
   private showChosenGlow(scene: CarriedItemsScene): void {
     const heldInView = scene.heldInView
-    const handIndex = heldInView?.selectedHandIndex ?? null
+    const handIndex = heldInView?.chosenHandIndex ?? null
     const itemId = handIndex === null ? null : (scene.state.keeper.hands[handIndex] ?? null)
     const chosen = this.models.find((model) => model.itemId === itemId)
     this.chosenGlow.visible = heldInView !== null && handIndex !== null && chosen?.isHeldInView === true
@@ -644,13 +644,13 @@ function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldI
 }
 
 function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex) {
-  const { camera, selectedHandIndex } = heldInView
+  const { camera, chosenHandIndex } = heldInView
   const screenHeight = 2 * heldInViewDistanceMetres * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
   const screenWidth = screenHeight * camera.aspect
   const itemWidth = screenWidth * heldInViewShareOfScreenWidth
   const side = handIndex === 0 ? -1 : 1
   const x = side * (screenWidth / 2 - itemWidth * heldInViewInsetShareOfItemWidth)
-  const lift = selectedHandIndex === handIndex ? screenHeight * chosenHeldLiftShareOfScreenHeight : 0
+  const lift = chosenHandIndex === handIndex ? screenHeight * chosenHeldLiftShareOfScreenHeight : 0
   const bottom = -screenHeight / 2 + screenHeight * heldInViewShareOfScreenHeightFromBottom + lift
   return {
     screenWidth,

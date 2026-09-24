@@ -29,7 +29,7 @@ test('bowl_whenPickedUpByATap_isChosenAtOnce', () => {
   room.tap({ kind: 'item', itemId: 'bowl2' })
 
   assert.deepEqual(room.state.keeper.hands, ['bowl1', 'bowl2'])
-  assert.equal(room.play.selectedHandIndex, 1)
+  assert.equal(room.play.chosenHandIndex, 1)
 })
 
 test('bowl_whenItsHandIsChosenAndTheTeaTableIsTapped_standsWhereTheTableWasTapped', () => {
@@ -41,7 +41,7 @@ test('bowl_whenItsHandIsChosenAndTheTeaTableIsTapped_standsWhereTheTableWasTappe
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
 
   assert.deepEqual(room.state.vessels['bowl1']?.location, { kind: 'onSurface', spot: spotOn('teaTable', onTheTeaTable) })
-  assert.equal(room.play.selectedHandIndex, null)
+  assert.equal(room.play.chosenHandIndex, null)
 })
 
 test('surfaceTap_withNoHandChosen_leavesTheItemInHand', () => {
@@ -65,7 +65,7 @@ test('bowl_whenPutDownWhereAnotherBowlStands_staysInHandWithItsHandChosen', () =
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { ...onTheTeaTable, x: onTheTeaTable.x + 0.1 } })
 
   assert.deepEqual(room.state.keeper.hands, [null, 'bowl2'])
-  assert.equal(room.play.selectedHandIndex, 1)
+  assert.equal(room.play.chosenHandIndex, 1)
   assert.ok(room.logLines.some((line) => line.startsWith('no room for bowl2') && line.endsWith('somethingIsThere')), room.logLines.join('\n'))
 })
 
@@ -299,7 +299,7 @@ test('sipButton_whenTheKettleIsPickedUp_isNotOffered', () => {
 
   room.tap({ kind: 'item', itemId: 'kettle' })
 
-  assert.equal(room.play.selectedHandIndex, 0)
+  assert.equal(room.play.chosenHandIndex, 0)
   assert.equal(room.play.sippableCupId, null)
 })
 
@@ -405,7 +405,7 @@ test('chosenHand_whenTheKeeperLeavesTheCloseUp_isLetGo', () => {
 
   room.tap({ kind: 'floor', point: { x: 1, z: 1 } })
 
-  assert.equal(room.play.selectedHandIndex, null)
+  assert.equal(room.play.chosenHandIndex, null)
 })
 
 test('hand_whenTappedInTheRoomView_isNotChosen', () => {
@@ -416,7 +416,7 @@ test('hand_whenTappedInTheRoomView_isNotChosen', () => {
 
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  assert.equal(room.play.selectedHandIndex, null)
+  assert.equal(room.play.chosenHandIndex, null)
 })
 
 test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehindTheShelf', () => {
@@ -467,7 +467,7 @@ class RoomVisit {
   takeAndChoose(itemId: string): void {
     this.tap({ kind: 'item', itemId })
     const handIndex = this.state.keeper.hands.indexOf(itemId)
-    if (this.play.selectedHandIndex !== handIndex) throw new Error(`${itemId} did not reach a chosen hand`)
+    if (this.play.chosenHandIndex !== handIndex) throw new Error(`${itemId} did not reach a chosen hand`)
   }
 
   wait(seconds: number): void {
