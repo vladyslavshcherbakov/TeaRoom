@@ -151,7 +151,7 @@ export class RoomScene {
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
-    this.caption.show(events.flatMap(captionLinesOf))
+    this.caption.show(captionLinesOf(events))
     return events
   }
 
@@ -298,7 +298,12 @@ function reportItemsWithoutAShape(itemIds: readonly string[], log: RoomLog): voi
   log(problem)
 }
 
-function captionLinesOf(event: RitualEvent): readonly string[] {
+function captionLinesOf(events: readonly RitualEvent[]): readonly string[] {
+  const isAnOffering = events.some((event) => event.type === 'figurineAcceptedTea')
+  return events.flatMap((event) => (event.type === 'godsMoodChanged' && !isAnOffering ? [] : captionLinesOfOne(event)))
+}
+
+function captionLinesOfOne(event: RitualEvent): readonly string[] {
   switch (event.type) {
     case 'teaTasted':
       return tasteCardLines(event.verdict)
