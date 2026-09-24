@@ -64,6 +64,7 @@ export type FillingState = {
   filledMl: number
   overflowedMl: number
   hasOverflowed: boolean
+  isRunningOverTheLid: boolean
 }
 
 export type FigurineState = {

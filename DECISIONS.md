@@ -48,7 +48,9 @@
 
 **Tea leaves are drawn as many small leaves, shaped by the tea.** A flat disc said nothing about what was in the caddy. `LeafPile.ts` heaps hundreds of small pieces with a fixed seed, so the same heap appears every time, and shows fewer of them as the caddy empties. Each tea's look lives in the presentation, like its name.
 
-**The sink is the tap's touch area.** The tap itself is thin, and a tap beside it landed on the counter top, where it put the chosen kettle down. The sink under the tap catches those taps instead, and while the water runs the vessel under the tap belongs to the tap too, so the next tap closes it.
+**The sink is the tap's touch area.** The tap itself is thin, and a tap beside it landed on the counter top, where it put the chosen kettle down. The sink under the tap catches those taps instead, and while the water runs the vessel under the tap belongs to the tap too, so the next tap closes it. Its lid stays its own target.
+
+**A kettle with a closed lid goes under the tap, and the water runs over the lid.** The player opens the lid under the tap, as at a real sink, and the water goes in from that moment. Refusing the closed kettle made the tap look broken, and opening the lid by itself took the decision from the player. Rejected: holding the water back until the lid opens, because a tap that is open and dry is not what a sink does.
 
 **The heater's switch is its own target on the counter's front.** With the kettle on the plate, a tap on the plate lands on the kettle and lifts it. A separate switch keeps "take the kettle" and "switch the heater" apart, and gives the switch a touch target of its own.
 

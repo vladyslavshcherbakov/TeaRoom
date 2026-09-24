@@ -9,7 +9,7 @@ import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { isKeeperAt } from './Reach.ts'
-import { finishFilling } from './TapCommands.ts'
+import { finishFilling, isClosedAgainstFilling } from './TapCommands.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
@@ -98,6 +98,15 @@ function continueFilling(draft: Draft, seconds: number): void {
   if (tap === null || vessel === undefined) return finishFilling(draft, 'there is no tap or vessel')
   if (vessel.location.kind !== 'inHand') return finishFilling(draft, `${vessel.id} left the hand`)
   if (!isKeeperAt(draft, tap.placeId)) return finishFilling(draft, `the keeper left the ${tap.placeId}`)
+  const isRunningOverTheLid = isClosedAgainstFilling(draft, vessel)
+  if (isRunningOverTheLid !== filling.isRunningOverTheLid) {
+    filling.isRunningOverTheLid = isRunningOverTheLid
+    note(draft, isRunningOverTheLid ? `${vessel.id} lid closed under the tap, the water runs over it into the sink` : `${vessel.id} lid open under the tap, the water runs in`)
+  }
+  if (isRunningOverTheLid) {
+    filling.overflowedMl += tap.flowMlPerSecond * seconds
+    return
+  }
   const fill = fillFromTap(vessel.liquid, vesselDefinitionOf(draft, vessel).capacityMl, tap, seconds)
   vessel.liquid = fill.liquid
   filling.filledMl += fill.filledMl

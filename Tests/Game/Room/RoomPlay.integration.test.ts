@@ -159,15 +159,29 @@ test('pourAim_whenDone_endsWithTheKettleStillInHand', () => {
   assert.equal(room.state.keeper.hands[0], 'kettle')
 })
 
-test('kettle_withItsLidClosed_getsNoWaterFromTheTap', () => {
+test('kettle_withItsLidClosed_goesUnderTheTapAndStaysEmpty', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
 
   room.tap({ kind: 'faucet' })
+  room.wait(2)
 
-  assert.equal(room.state.filling, null)
+  assert.equal(room.state.filling?.vesselId, 'kettle')
   assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
+  assert.equal(room.state.vessels['kettle']?.liquid.volumeMl, 0)
+})
+
+test('kettle_whenItsLidIsOpenedUnderTheRunningTap_fillsFromTheTap', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'faucet' })
+
+  room.tap({ kind: 'lid', itemId: 'kettle' })
+  room.wait(2)
+
+  assertNear(room.state.vessels['kettle']?.liquid.volumeMl ?? 0, 100)
 })
 
 test('kettle_whenItsLidIsOpenedInHandAndTheTapIsTapped_fillsFromTheTap', () => {

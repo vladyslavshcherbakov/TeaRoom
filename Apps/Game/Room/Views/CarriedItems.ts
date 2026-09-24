@@ -280,9 +280,10 @@ export class CarriedItems {
   private showTapWater(scene: CarriedItemsScene): void {
     const filled = this.models.find((model) => model.itemId === scene.state.filling?.vesselId)
     this.tapStream.visible = filled !== undefined
-    this.overflowStream.visible = filled !== undefined && scene.state.filling?.hasOverflowed === true
+    const isRunningOverTheLid = scene.state.filling?.isRunningOverTheLid === true
+    this.overflowStream.visible = filled !== undefined && (scene.state.filling?.hasOverflowed === true || isRunningOverTheLid)
     if (filled === undefined) return
-    const bottomY = filled.root.position.y + filled.rimHeight * 0.5
+    const bottomY = filled.root.position.y + filled.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
     placeStream(this.tapStream, faucetSpout, bottomY)
     const overRim = filled.root.position.clone().add(new THREE.Vector3(0, filled.rimHeight * overflowStartShareOfTheRim, filled.footprintRadius * overflowShareOfTheRadius))
     placeStream(this.overflowStream, overRim, faucetSpout.y - faucetSpoutAboveTheSinkMetres)
@@ -293,7 +294,7 @@ export class CarriedItems {
     if (model.tagKey === tagKey) return
     model.tagKey = tagKey
     model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
-    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag)) return
+    if (model.lid === null || !('itemId' in tag || 'handIndex' in tag || 'isFaucet' in tag)) return
     const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
     model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
   }

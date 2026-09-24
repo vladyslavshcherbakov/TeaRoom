@@ -34,13 +34,26 @@ test('kettle_whenFullUnderTheTap_sendsTheRestIntoTheSink', () => {
   assert.equal(ritual.state.tableWetMl, 0)
 })
 
-test('filling_withTheLidClosed_isRefused', () => {
+test('tapWater_onAClosedLid_runsIntoTheSinkAndNotIntoTheKettle', () => {
   const ritual = kettleInHandAtTheCounter()
   ritual.do({ type: 'closeVesselLid', vesselId: 'kettle' })
 
-  const events = ritual.do({ type: 'startFillingFromTap', vesselId: 'kettle' })
+  ritual.fillFromTap('kettle', 2)
 
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'startFillingFromTap', reason: 'lidClosed' }])
+  assertNear(ritual.vessel('kettle').liquid.volumeMl, 500)
+  assert.equal(ritual.state.tableWetMl, 0)
+})
+
+test('kettle_whenItsLidIsOpenedUnderTheRunningTap_startsFilling', () => {
+  const ritual = kettleInHandAtTheCounter()
+  ritual.do({ type: 'closeVesselLid', vesselId: 'kettle' })
+  ritual.do({ type: 'startFillingFromTap', vesselId: 'kettle' })
+  ritual.wait(1)
+
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+  ritual.wait(2)
+
+  assertNear(ritual.vessel('kettle').liquid.volumeMl, 700)
 })
 
 test('filling_awayFromTheTap_isRefused', () => {
