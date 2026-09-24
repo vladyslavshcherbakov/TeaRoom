@@ -29,10 +29,13 @@ class RitualBench {
   private streamOnTargetFraction = 1
   private scoopDepth = 1
   private figurineId = this.room.figurineIds[0] ?? ''
+  private placeId = this.room.places[0] ?? ''
+  private itemId = this.room.vessels[0]?.id ?? ''
 
   mount(container: HTMLElement): void {
     container.append(
       this.setupSection(),
+      this.keeperSection(),
       this.heatingSection(),
       this.leavesSection(),
       this.pouringSection(),
@@ -53,6 +56,29 @@ class RitualBench {
 
   private send(command: Command): void {
     this.session.dispatch(command)
+  }
+
+  private keeperSection(): HTMLElement {
+    const itemIds = [...this.room.vessels.map((vessel) => vessel.id), 'caddy']
+    return section(
+      'Keeper',
+      row(this.live(() => this.keeperSummary())),
+      row(
+        picker(this.room.places, (placeId) => (this.placeId = placeId)),
+        button('Stand here', () => this.send({ type: 'standAt', placeId: this.placeId })),
+        button('Walk away', () => this.send({ type: 'standAt', placeId: null })),
+      ),
+      row(
+        picker(itemIds, (itemId) => (this.itemId = itemId)),
+        button('Pick up', () => this.send({ type: 'pickUp', itemId: this.itemId })),
+        button('Put down here', () => this.putDownWhereTheKeeperStands()),
+      ),
+    )
+  }
+
+  private putDownWhereTheKeeperStands(): void {
+    const placeId = this.session.state.keeper.placeId ?? this.placeId
+    this.send({ type: 'putDown', itemId: this.itemId, spot: { placeId, x: 0, y: 0, z: 0 } })
   }
 
   private setupSection(): HTMLElement {
@@ -210,6 +236,12 @@ class RitualBench {
     const opening = RitualSession.open(defaultCatalog, roomId, this.log, true)
     if (opening.kind !== 'opened') throw new Error(`the bench room is unavailable: ${opening.problems.join('; ')}`)
     return opening.session
+  }
+
+  private keeperSummary(): string {
+    const { placeId, hands } = this.session.state.keeper
+    const heldItems = hands.map((itemId) => itemId ?? 'empty').join(' · ')
+    return `${placeId === null ? 'walking' : `at the ${placeId}`} · hands: ${heldItems}`
   }
 
   private sessionSummary(): string {

@@ -2,8 +2,8 @@ import type { Phase } from '../State/SessionState.ts'
 import type { Command } from './Command.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
-const commandsWhileSettingUp: ReadonlySet<Command['type']> = new Set(['beginRitual', 'chooseAtmosphere'])
-const commandsWhileResting: ReadonlySet<Command['type']> = new Set(['chooseAtmosphere', 'leaveRoom'])
+const commandsWhileSettingUp: ReadonlySet<Command['type']> = new Set(['beginRitual', 'chooseAtmosphere', 'standAt'])
+const commandsWhileResting: ReadonlySet<Command['type']> = new Set(['chooseAtmosphere', 'leaveRoom', 'standAt', 'pickUp', 'putDown'])
 
 export function refusalInPhase(phase: Phase, commandType: Command['type']): RefusalReason | null {
   switch (phase) {

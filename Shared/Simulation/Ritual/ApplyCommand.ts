@@ -4,6 +4,7 @@ import { startOrEndBrews } from './Brews.ts'
 import { wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
 import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
+import { pickUp, putDown, standAt } from './KeeperCommands.ts'
 import { placeOnHeater, switchHeaterOff, switchHeaterOn, takeOffHeater } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
 import { moveCaddyLid, moveVesselLid } from './LidCommands.ts'
@@ -31,6 +32,12 @@ function carryOut(draft: Draft, command: Command): void {
       return beginRitual(draft, command)
     case 'chooseAtmosphere':
       return chooseAtmosphere(draft, command)
+    case 'standAt':
+      return standAt(draft, command)
+    case 'pickUp':
+      return pickUp(draft, command)
+    case 'putDown':
+      return putDown(draft, command)
     case 'openVesselLid':
     case 'closeVesselLid':
       return moveVesselLid(draft, command)

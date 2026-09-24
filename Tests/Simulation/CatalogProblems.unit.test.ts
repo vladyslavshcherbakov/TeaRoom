@@ -30,9 +30,9 @@ test('contentProblems_whenTheRoomOffersNoWeather_sayWhatIsMissing', () => {
 test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
   const catalog = catalogWithRoomChanges({
     vessels: [
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 2, y: 0, z: 0 } },
     ],
   })
 

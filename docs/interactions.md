@@ -41,6 +41,9 @@ The simulation core receives one command per player decision and answers with ev
 
 | Interaction | Gesture | Commands | Events the presentation reacts to |
 |---|---|---|---|
+| Walk to a place | tap a piece of furniture, the keeper arrives | `standAt` with the place, or with none when walking away | `keeperMoved` |
+| Take an item | tap it in a close-up | `pickUp` | `pickedUp` with the hand |
+| Put an item down | select it in a hand, then tap a surface | `putDown` with the exact spot | `putDown` |
 | Choose the mood | pick presets before or during the ritual | `chooseAtmosphere` | `atmosphereChanged` |
 | Begin | pick a tea | `beginRitual` | `ritualBegan` |
 | Open or close a lid | tap the lid | `openVesselLid`, `closeVesselLid`, `openCaddy`, `closeCaddy` | `vesselLidOpened`, `vesselLidClosed`, `caddyOpened`, `caddyClosed` |

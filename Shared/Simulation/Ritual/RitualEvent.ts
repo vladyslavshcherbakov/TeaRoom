@@ -1,4 +1,6 @@
 import type { Atmosphere } from '../Definitions/Atmosphere.ts'
+import type { Spot } from '../Definitions/RoomDefinition.ts'
+import type { HandIndex } from '../State/SessionState.ts'
 import type { GodsRemark } from '../Judgement/GodsMood.ts'
 import type { OfferingResponse } from '../Judgement/OfferingJudgement.ts'
 import type { TasteVerdict } from '../Judgement/TasteJudgement.ts'
@@ -37,11 +39,21 @@ export type RefusalReason =
   | 'notDrinkable'
   | 'cupIsEmpty'
   | 'figurineAlreadyOffered'
+  | 'unknownPlace'
+  | 'unknownItem'
+  | 'outOfReach'
+  | 'notAtThatPlace'
+  | 'handsFull'
+  | 'notInHand'
+  | 'alreadyInHand'
 
 export type RitualEvent =
   | { readonly type: 'ritualBegan'; readonly teaId: string }
   | { readonly type: 'atmosphereChanged'; readonly atmosphere: Atmosphere }
   | { readonly type: 'actionRefused'; readonly command: Command['type']; readonly reason: RefusalReason }
+  | { readonly type: 'keeperMoved'; readonly placeId: string | null }
+  | { readonly type: 'pickedUp'; readonly itemId: string; readonly handIndex: HandIndex }
+  | { readonly type: 'putDown'; readonly itemId: string; readonly spot: Spot }
   | { readonly type: 'vesselLidOpened'; readonly vesselId: string }
   | { readonly type: 'vesselLidClosed'; readonly vesselId: string }
   | { readonly type: 'caddyOpened' }

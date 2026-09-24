@@ -13,7 +13,7 @@ export function problemsOpeningRoom(catalog: Catalog, roomId: string): string[] 
 }
 
 function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
-  const problems: string[] = []
+  const problems: string[] = [...problemsWithPlaces(room)]
   if (room.timesOfDay.length === 0) problems.push(`room "${room.id}" offers no time of day`)
   if (room.weathers.length === 0) problems.push(`room "${room.id}" offers no weather`)
   if (catalog.heaters[room.heaterId] === undefined) problems.push(`room "${room.id}" uses unknown heater "${room.heaterId}"`)
@@ -30,6 +30,20 @@ function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
     if (catalog.figurines[figurineId] === undefined) problems.push(`room "${room.id}" uses unknown figurine "${figurineId}"`)
   }
   return problems
+}
+
+function problemsWithPlaces(room: RoomDefinition): string[] {
+  const knownPlaces = new Set(room.places)
+  const namedPlaces = [
+    { what: 'the keeper starts at', placeId: room.keeperStartsAt },
+    { what: 'the ritual happens at', placeId: room.ritualPlaceId },
+    { what: 'the heater stands at', placeId: room.heaterSpot.placeId },
+    { what: 'the caddy starts at', placeId: room.caddyStartsAt.placeId },
+    ...room.vessels.map((vessel) => ({ what: `"${vessel.id}" starts at`, placeId: vessel.startsAt.placeId })),
+  ]
+  return namedPlaces
+    .filter(({ placeId }) => placeId !== null && !knownPlaces.has(placeId))
+    .map(({ what, placeId }) => `room "${room.id}": ${what} unknown place "${placeId}"`)
 }
 
 function problemsWithTea(tea: TeaDefinition): string[] {

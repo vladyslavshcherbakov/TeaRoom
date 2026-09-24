@@ -1,5 +1,6 @@
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { isWithinReach, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function moveVesselLid(
   draft: Draft,
@@ -8,6 +9,7 @@ export function moveVesselLid(
   const vessel = draft.state.vessels[command.vesselId]
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
   if (vesselDefinitionOf(draft, vessel).lid === null) return refuse(draft, command, 'vesselHasNoLid')
+  if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}, ${whereTheKeeperStands(draft)}`)
   const shouldOpen = command.type === 'openVesselLid'
   if (vessel.isLidOpen === shouldOpen) return refuse(draft, command, shouldOpen ? 'lidAlreadyOpen' : 'lidAlreadyClosed')
   vessel.isLidOpen = shouldOpen
@@ -17,6 +19,9 @@ export function moveVesselLid(
 
 export function moveCaddyLid(draft: Draft, command: CommandOfType<'openCaddy'> | CommandOfType<'closeCaddy'>): void {
   const shouldOpen = command.type === 'openCaddy'
+  if (!isWithinReach(draft, draft.state.caddy.location)) {
+    return refuse(draft, command, 'outOfReach', `the caddy is ${whereIs(draft.state.caddy.location)}, ${whereTheKeeperStands(draft)}`)
+  }
   if (draft.state.caddy.isOpen === shouldOpen) {
     return refuse(draft, command, shouldOpen ? 'lidAlreadyOpen' : 'lidAlreadyClosed')
   }

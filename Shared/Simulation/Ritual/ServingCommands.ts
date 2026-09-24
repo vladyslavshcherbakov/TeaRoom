@@ -15,6 +15,7 @@ import {
   vesselDefinitionOf,
   type Draft,
 } from './Draft.ts'
+import { isKeeperAt, isWithinReach, ritualPlaceOf, whereTheKeeperStands } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
 const sipMl = 20
@@ -47,6 +48,7 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   if (cup === undefined) return refuse(draft, command, 'unknownVessel')
   if (figurine === undefined) return refuse(draft, command, 'unknownFigurine')
   if (figurine.wasOfferedTeaThisRitual) return refuse(draft, command, 'figurineAlreadyOffered')
+  if (!isKeeperAt(draft, ritualPlaceOf(draft))) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the figurines are at the ${ritualPlaceOf(draft)}`)
   const refusal = refusalToServe(draft, cup)
   if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(cup))
   const definition = definitionIn(draft.catalog, 'figurines', figurine.id)
@@ -71,6 +73,7 @@ function letTheGodsJudgeTheFirstSip(draft: Draft, reaction: Parameters<typeof go
 
 function refusalToServe(draft: Draft, cup: VesselState): RefusalReason | null {
   if (!vesselDefinitionOf(draft, cup).isDrinkable) return 'notDrinkable'
+  if (!isWithinReach(draft, cup.location)) return 'outOfReach'
   if (isInvolvedInPour(draft, cup.id)) return 'vesselIsBeingPoured'
   if (isEmpty(cup.liquid)) return 'cupIsEmpty'
   return null

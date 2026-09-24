@@ -3,6 +3,7 @@ import { isEmpty } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { describeLiquid, letTheGodsJudge, note, noteDetail, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { isWithinReach } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
 export function startPouring(draft: Draft, command: CommandOfType<'startPouring'>): void {
@@ -62,6 +63,9 @@ export function finishPour(draft: Draft): void {
 
 function refusalToPour(draft: Draft, source: VesselState, target: VesselState | null): RefusalReason | null {
   if (source.id === target?.id) return 'cannotPourIntoItself'
+  if (!isWithinReach(draft, source.location)) return 'outOfReach'
+  if (target !== null && !isWithinReach(draft, target.location)) return 'outOfReach'
+  if (target === null && draft.state.keeper.placeId === null) return 'outOfReach'
   if (draft.state.heater.vesselIdOnTop === source.id) return 'vesselIsOnTheHeater'
   if (isEmpty(source.liquid)) return 'sourceIsEmpty'
   if (vesselDefinitionOf(draft, source).lid?.mustBeOpenToPour === true && !source.isLidOpen) return 'lidClosed'

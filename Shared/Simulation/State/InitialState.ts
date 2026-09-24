@@ -13,9 +13,10 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     roomId,
     atmosphere: { timeOfDay: firstOf(room.timesOfDay, room), weather: firstOf(room.weathers, room) },
     teaId: null,
-    vessels: vesselsOnTheTable(room),
+    keeper: { placeId: room.keeperStartsAt, hands: [null, null] },
+    vessels: vesselsInTheRoom(room),
     heater: { definitionId: room.heaterId, isOn: false, vesselIdOnTop: null, hasAnnouncedTargetTemperature: false },
-    caddy: { teaId: null, grams: room.caddyGrams, isOpen: false },
+    caddy: { teaId: null, grams: room.caddyGrams, isOpen: false, location: { kind: 'onSurface', spot: room.caddyStartsAt } },
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams },
     pour: null,
     figurines: figurinesOnTheShelf(room),
@@ -25,7 +26,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
   }
 }
 
-function vesselsOnTheTable(room: RoomDefinition): Record<string, VesselState> {
+function vesselsInTheRoom(room: RoomDefinition): Record<string, VesselState> {
   const vessels: Record<string, VesselState> = {}
   for (const vessel of room.vessels) {
     vessels[vessel.id] = {
@@ -34,6 +35,7 @@ function vesselsOnTheTable(room: RoomDefinition): Record<string, VesselState> {
       liquid: water(vessel.initialWaterMl, room.ambientTemperatureC),
       leaves: null,
       isLidOpen: false,
+      location: { kind: 'onSurface', spot: vessel.startsAt },
     }
   }
   return vessels

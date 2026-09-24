@@ -1,4 +1,5 @@
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
+import type { Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
 
 export type CoolingPerSecond = {
   readonly kettle?: number
@@ -68,17 +69,52 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         ambientTemperatureC: 20,
         timesOfDay: ['sunset', 'dawn', 'night'],
         weathers: ['rain'],
+        places: ['table'],
+        keeperStartsAt: 'table',
+        ritualPlaceId: 'table',
         heaterId: 'testHeater',
+        heaterSpot: onTheTable(0),
         vessels: [
-          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500 },
-          { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0 },
-          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0 },
-          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0 },
-          { id: 'cup3', definitionId: 'testCup', initialWaterMl: 0 },
+          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: onTheTable(1) },
+          { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0, startsAt: onTheTable(2) },
+          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(3) },
+          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(4) },
+          { id: 'cup3', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(5) },
         ],
         figurineIds: ['dragon', 'toad'],
         caddyGrams: 50,
+        caddyStartsAt: onTheTable(6),
         spoonCapacityGrams: 5,
+      },
+    },
+  }
+}
+
+function onTheTable(position: number): Spot {
+  return { placeId: 'table', x: position, y: 0, z: 0 }
+}
+
+export function testHouseCatalog(): Catalog {
+  const catalog = testCatalog()
+  const room = catalog.rooms.testRoom
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  const at = (placeId: string, x: number): Spot => ({ placeId, x, y: 0, z: 0 })
+  return {
+    ...catalog,
+    rooms: {
+      testHouse: {
+        ...room,
+        id: 'testHouse',
+        places: ['counter', 'shelf', 'table'],
+        keeperStartsAt: null,
+        ritualPlaceId: 'table',
+        heaterSpot: at('counter', 0),
+        vessels: [
+          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: at('counter', 1) },
+          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 1) },
+          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 2) },
+        ],
+        caddyStartsAt: at('shelf', 3),
       },
     },
   }

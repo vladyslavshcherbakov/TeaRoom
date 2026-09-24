@@ -8,6 +8,18 @@ Units: temperature in °C, volume in millilitres, leaves in grams, time in secon
 
 The world advances in fixed steps of 0.05 s, whatever the frame rate. A frame hands over its elapsed time and the core runs as many whole steps as fit, carrying the remainder to the next frame. The same session played at 30 and at 60 frames per second ends in the same state.
 
+## Places and hands
+
+A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel and the caddy — is either on a surface at a spot of a place, or in one of the keeper's two hands. The spot keeps the exact position where the item was put down, so the room can show it there.
+
+The keeper stands at one place, or at none while walking. An item is within reach when it is in a hand, or on a surface at the place where the keeper stands.
+
+- Picking up needs the item within reach and a free hand. The first free hand takes it. Picking up the kettle from the heater lifts it off, and the water is judged if the heater was on.
+- Putting down needs the item in a hand and the spot at the keeper's place.
+- The heater's switch and the heater plate need the keeper at the heater's place. Putting a vessel on the heater takes it from the hand or from the same surface.
+- Pouring needs the source and the target within reach. Walking away ends a pour.
+- Lids, tasting and scooping need the item within reach. The spoon, the cloth and the figurines stay at the ritual place, so scooping, tipping leaves, offering and wiping need the keeper there.
+
 ## Heat
 
 A vessel on a working heater gains `degreesPerSecondPerLitre × 1000 / volume` degrees per second, up to 100 °C. Less water heats faster.
