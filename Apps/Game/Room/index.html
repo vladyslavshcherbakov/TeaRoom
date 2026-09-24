@@ -22,6 +22,43 @@
         position: fixed;
         inset: 0;
       }
+      .hands {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        display: flex;
+        justify-content: space-between;
+        padding: 0 16px;
+        pointer-events: none;
+      }
+      .hands button {
+        pointer-events: auto;
+        min-width: 120px;
+        min-height: 48px;
+        padding: 0 16px;
+        border: 2px solid #8f5a3a;
+        border-radius: 24px;
+        background: #fbf4e8;
+        color: #5a3a26;
+        font: 600 16px/1 system-ui, sans-serif;
+      }
+      .hands button:disabled {
+        opacity: 0.5;
+        border-style: dashed;
+      }
+      .hands button.chosen {
+        background: #8f5a3a;
+        color: #fbf4e8;
+      }
+      .quiet {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #5a3a26;
+        font: 16px/1.4 system-ui, sans-serif;
+      }
     </style>
   </head>
   <body>

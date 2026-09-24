@@ -1,7 +1,14 @@
 import * as THREE from 'three'
-import { furnitureWithId, type CameraPose } from './RoomLayout.ts'
-import { RoomNavigator, type RoomLog, type TapTarget } from './RoomNavigator.ts'
+import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
+import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
+import { tableViewState } from '../Table/TablePresenter.ts'
 import { cameraFieldOfViewDegrees, closeUpPose, overviewPose, poseEasedTowards } from './Camera/CameraPoses.ts'
+import { carriedItemShapes, furnitureWithId, type CameraPose } from './RoomLayout.ts'
+import type { RoomLog } from './RoomNavigator.ts'
+import { RoomPlay, type RoomTapTarget } from './RoomPlay.ts'
+import { CarriedItems } from './Views/CarriedItems.ts'
+import { HandButtons } from './Views/HandButtons.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
@@ -9,7 +16,9 @@ import { WalkerModel } from './Views/WalkerModel.ts'
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
 const tapSlopPixels = 12
-const tapLongestMs = 500
+const smallestUpwardNormalOfASurface = 0.7
+const heaterGlowColour = new THREE.Color('#e0603a')
+const heaterGlowIntensity = 0.8
 
 export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
@@ -17,71 +26,108 @@ export class RoomScene {
   private readonly camera = new THREE.PerspectiveCamera(cameraFieldOfViewDegrees, 1, 0.1, 100)
   private readonly raycaster = new THREE.Raycaster()
   private readonly clock = new THREE.Clock()
-  private readonly navigator: RoomNavigator
+  private readonly session: RitualSession
+  private readonly catalog: Catalog
+  private readonly play: RoomPlay
   private readonly room: RoomModel
   private readonly walker: WalkerModel
+  private readonly carried: CarriedItems
+  private readonly hands: HandButtons
   private cameraPose: CameraPose
-  private pressStart: { x: number; y: number; atMs: number } | null = null
+  private pressStart: { x: number; y: number } | null = null
 
-  constructor(container: HTMLElement, log: RoomLog) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog) {
+    this.session = session
+    this.catalog = catalog
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
     container.append(this.renderer.domElement)
-    this.navigator = new RoomNavigator(log)
+    this.play = new RoomPlay(session, catalog, log)
     const materials = new RoomMaterials()
-    this.room = new RoomModel(materials)
+    const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
+    this.room = new RoomModel(materials, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
+    const carriedItemIds = [...roomDefinition.vessels.map((vessel) => vessel.id), caddyItemId]
+    reportItemsWithoutAShape(carriedItemIds, log)
+    this.carried = new CarriedItems(materials, carriedItemIds)
+    this.hands = new HandButtons(container, (handIndex) => this.play.handTapped(handIndex))
     this.scene.background = new THREE.Color(backgroundColour)
-    this.scene.add(this.room.root, this.walker.root, ...lights())
+    this.scene.add(this.room.root, this.walker.root, this.carried.root, ...lights())
     this.fitToWindow()
-    this.cameraPose = overviewPose(this.navigator.walk.position, this.camera.aspect)
-    this.listenToTaps()
+    this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
+    this.listenToPresses()
     window.addEventListener('resize', () => this.fitToWindow())
     this.renderer.setAnimationLoop(() => this.frame())
   }
 
   private frame(): void {
     const seconds = Math.min(this.clock.getDelta(), longestFrameSeconds)
-    this.navigator.advance(seconds)
-    this.walker.show(this.navigator.walk, this.clock.elapsedTime)
-    this.walker.root.visible = this.navigator.view.kind !== 'closeUp'
+    this.play.advance(seconds)
+    this.session.advance(seconds)
+    const isWalkerShown = this.play.view.kind !== 'closeUp'
+    this.walker.show(this.play.walk, this.clock.elapsedTime)
+    this.walker.root.visible = isWalkerShown
+    const state = this.session.state
+    const table = tableViewState(state, this.catalog)
+    this.carried.show({ state, table, walk: this.play.walk, isWalkerShown, timeSeconds: this.clock.elapsedTime })
+    this.showHeater(table.heater.isOn)
+    this.hands.show({ hands: state.keeper.hands, selectedHandIndex: this.play.selectedHandIndex })
     this.cameraPose = poseEasedTowards(this.cameraPose, this.cameraGoal(), seconds)
     this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
     this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
     this.renderer.render(this.scene, this.camera)
   }
 
-  private cameraGoal(): CameraPose {
-    const view = this.navigator.view
-    if (view.kind === 'closeUp') return closeUpPose(furnitureWithId(view.furnitureId).closeUp, this.camera.aspect)
-    return overviewPose(this.navigator.walk.position, this.camera.aspect)
+  private showHeater(isOn: boolean): void {
+    const material = this.room.heaterPlate.material
+    if (!(material instanceof THREE.MeshStandardMaterial)) return
+    material.emissive.copy(isOn ? heaterGlowColour : new THREE.Color(0x000000))
+    material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
   }
 
-  private listenToTaps(): void {
+  private cameraGoal(): CameraPose {
+    const view = this.play.view
+    if (view.kind === 'closeUp') return closeUpPose(furnitureWithId(view.furnitureId).closeUp, this.camera.aspect)
+    return overviewPose(this.play.walk.position, this.camera.aspect)
+  }
+
+  private listenToPresses(): void {
     const canvas = this.renderer.domElement
     canvas.addEventListener('pointerdown', (event) => {
-      this.pressStart = { x: event.clientX, y: event.clientY, atMs: event.timeStamp }
+      this.pressStart = { x: event.clientX, y: event.clientY }
+      this.play.pressStarted(this.tapTargetAt(event.clientX, event.clientY))
     })
-    canvas.addEventListener('pointerup', (event) => {
-      const press = this.pressStart
+    canvas.addEventListener('pointermove', (event) => {
+      const start = this.pressStart
+      if (start === null || Math.hypot(event.clientX - start.x, event.clientY - start.y) <= tapSlopPixels) return
+      this.play.pressMovedAway()
+    })
+    const pressEnded = (): void => {
       this.pressStart = null
-      if (press === null) return
-      const isTap = Math.hypot(event.clientX - press.x, event.clientY - press.y) <= tapSlopPixels && event.timeStamp - press.atMs <= tapLongestMs
-      if (isTap) this.navigator.tapped(this.tapTargetAt(event.clientX, event.clientY))
-    })
+      this.play.pressEnded()
+    }
+    canvas.addEventListener('pointerup', pressEnded)
+    canvas.addEventListener('pointercancel', pressEnded)
   }
 
-  private tapTargetAt(clientX: number, clientY: number): TapTarget {
+  private tapTargetAt(clientX: number, clientY: number): RoomTapTarget {
     const bounds = this.renderer.domElement.getBoundingClientRect()
     const pointer = new THREE.Vector2(((clientX - bounds.left) / bounds.width) * 2 - 1, -((clientY - bounds.top) / bounds.height) * 2 + 1)
     this.raycaster.setFromCamera(pointer, this.camera)
-    const [nearest] = this.raycaster.intersectObjects(this.room.tappableMeshes, true)
+    const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes]
+    const [nearest] = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
     const tag = nearest?.object.userData['tapTarget'] as TapTargetTag | undefined
     if (nearest === undefined || tag === undefined) return { kind: 'nothing' }
-    if ('furnitureId' in tag) return { kind: 'furniture', furnitureId: tag.furnitureId }
-    return { kind: 'floor', point: { x: nearest.point.x, z: nearest.point.z } }
+    if ('itemId' in tag) return { kind: 'item', itemId: tag.itemId }
+    if ('handIndex' in tag) return { kind: 'hand', handIndex: tag.handIndex }
+    if ('isHeater' in tag) return { kind: 'heater' }
+    if ('isHeaterSwitch' in tag) return { kind: 'heaterSwitch' }
+    if ('isFloor' in tag) return { kind: 'floor', point: { x: nearest.point.x, z: nearest.point.z } }
+    const upwardNormal = nearest.face?.normal.clone().transformDirection(nearest.object.matrixWorld).y ?? 0
+    if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }
+    return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: nearest.point.x, y: nearest.point.y, z: nearest.point.z } }
   }
 
   private fitToWindow(): void {
@@ -91,6 +137,23 @@ export class RoomScene {
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
   }
+}
+
+function reportItemsWithoutAShape(itemIds: readonly string[], log: RoomLog): void {
+  const itemIdsWithoutAShape = itemIds.filter((itemId) => carriedItemShapes[itemId] === undefined)
+  if (itemIdsWithoutAShape.length === 0) return
+  const problem = `the room layout has no shape for ${itemIdsWithoutAShape.join(', ')}, so they are not drawn`
+  if (import.meta.env.DEV) throw new Error(problem)
+  log(problem)
+}
+
+function isShown(object: THREE.Object3D): boolean {
+  let current: THREE.Object3D | null = object
+  while (current !== null) {
+    if (!current.visible) return false
+    current = current.parent
+  }
+  return true
 }
 
 function lights(): THREE.Light[] {

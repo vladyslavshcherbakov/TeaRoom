@@ -22,6 +22,14 @@
 
 **Taps become decisions in a class that does not know the renderer.** `RoomNavigator` receives what a tap hit and decides what happens. The scene only raycasts and draws. Every tap rule is then testable in Node. Rejected: logic inside input handlers, because it could only be checked in a browser.
 
+**Items are put down by choosing a hand, then tapping anywhere on a surface.** People do not think in grids, so the item lands exactly where the finger touched, and `Placement.ts` refuses only what cannot be: over the edge, on the heater, on another item. A refused spot keeps the item in hand and the hand chosen, so the next tap can try again. Rejected: snapping to sockets, because it decides for the player where a bowl belongs.
+
+**Pouring is a held finger on the target.** Holding for 0.3 s on a vessel pours from the vessel in hand, the tilt grows on its own, and lifting the finger stops it. The tilt stops at 36°, below the 80 % flow where a tenth of the stream splashes, so holding patiently never spills. One thumb is enough, and the pour has a clear start and end. Rejected for now: a vertical drag for the tilt, which comes back when the feel of 0.4 needs finer control.
+
+**The heater's switch is its own target on the counter's front.** With the kettle on the plate, a tap on the plate lands on the kettle and lifts it. A separate switch keeps "take the kettle" and "switch the heater" apart, and gives the switch a touch target of its own.
+
+**The room begins the ritual with the first tea of the catalog.** Carrying needs the ritual phase, and the room has no tea choice yet. The room logs which tea it chose. It stays so until the room offers a choice of tea.
+
 **UI tests run on WebKit and read the ritual log.** WebKit is the engine of iOS Safari, the game's main target. The tests read the `[ritual]` lines from the browser console instead of calling into the game, so the product carries no test hooks. `@playwright/test` is pinned to the version whose Chromium is preinstalled in the agent environment, so the same tests run there and in CI.
 
 **The room is real 3D in Three.js, seen from above at an angle, and controlled by taps.** A 3D room lets the camera change later, to first person or over the shoulder, by changing only the camera module and the tap rules. Seen from above, the whole small room fits a portrait phone, and one thumb is enough: a tap on the floor walks there, a tap on furniture walks to it and shows it close up. Rejected: isometric 2D sprites, because another camera would mean redrawing every picture. Rejected: first person as the start, because it needs looking around with a second gesture and a model of the hands.

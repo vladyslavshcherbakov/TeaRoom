@@ -34,7 +34,7 @@ export type Furniture = {
   readonly closeUp: CloseUp
 }
 
-export type ItemShape = 'kettle' | 'thermos' | 'caddy' | 'bowl' | 'spoon' | 'cloth' | 'figurine' | 'heater' | 'faucet'
+export type ItemShape = 'spoon' | 'cloth' | 'figurine' | 'faucet'
 
 export type ItemSpot = {
   readonly id: string
@@ -73,15 +73,28 @@ export const furniture: readonly Furniture[] = [
   },
 ]
 
+export type CarriedShape = 'kettle' | 'thermos' | 'caddy' | 'bowl'
+
+export const carriedItemShapes: Readonly<Record<string, CarriedShape>> = {
+  kettle: 'kettle',
+  thermos: 'thermos',
+  caddy: 'caddy',
+  bowl1: 'bowl',
+  bowl2: 'bowl',
+  bowl3: 'bowl',
+}
+
+export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {
+  kettle: 0.16,
+  thermos: 0.08,
+  caddy: 0.09,
+  bowl: 0.09,
+}
+
+export const heaterFootprintRadiusMetres = 0.18
+
 export const itemSpots: readonly ItemSpot[] = [
-  { id: 'heater', shape: 'heater', position: { x: -2.35, y: 0.9, z: -2.65 } },
-  { id: 'kettle', shape: 'kettle', position: { x: -2.35, y: 0.95, z: -2.65 } },
   { id: 'faucet', shape: 'faucet', position: { x: -1.45, y: 0.9, z: -2.9 } },
-  { id: 'thermos', shape: 'thermos', position: { x: -1, y: 0.9, z: -2.7 } },
-  { id: 'caddy', shape: 'caddy', position: { x: -2.75, y: 1.22, z: -0.1 } },
-  { id: 'bowl1', shape: 'bowl', position: { x: -2.75, y: 0.72, z: 0.1 } },
-  { id: 'bowl2', shape: 'bowl', position: { x: -2.75, y: 0.72, z: 0.45 } },
-  { id: 'bowl3', shape: 'bowl', position: { x: -2.75, y: 0.72, z: 0.8 } },
   { id: 'spoon', shape: 'spoon', position: { x: 1.45, y: 0.42, z: -1.3 } },
   { id: 'cloth', shape: 'cloth', position: { x: 0.5, y: 0.42, z: -1.25 } },
   { id: 'dragon', shape: 'figurine', position: { x: 0.45, y: 0.85, z: -2.88 } },

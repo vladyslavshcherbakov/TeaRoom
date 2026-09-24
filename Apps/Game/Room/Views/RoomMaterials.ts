@@ -47,10 +47,14 @@ export class RoomMaterials {
   materialFor(surface: Surface): THREE.Material {
     const existing = this.materialsBySurface.get(surface)
     if (existing !== undefined) return existing
-    const material = unlitSurfaces.has(surface)
-      ? new THREE.MeshBasicMaterial({ color: surfaceColours[surface] })
-      : new THREE.MeshStandardMaterial({ color: surfaceColours[surface], roughness: 0.92, metalness: 0, flatShading: true })
+    const material = this.unsharedMaterialFor(surface)
     this.materialsBySurface.set(surface, material)
     return material
+  }
+
+  unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
+    return unlitSurfaces.has(surface)
+      ? new THREE.MeshBasicMaterial({ color: surfaceColours[surface] })
+      : new THREE.MeshStandardMaterial({ color: surfaceColours[surface], roughness: 0.92, metalness: 0, flatShading: true })
   }
 }

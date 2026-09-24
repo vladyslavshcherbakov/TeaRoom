@@ -1,6 +1,8 @@
 import * as THREE from 'three'
+import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
   furniture,
+  furnitureWithId,
   itemSpots,
   roomHalfSize,
   windowOnBackWall,
@@ -8,6 +10,7 @@ import {
   type Furniture,
   type FurnitureId,
   type ItemSpot,
+  type WorldPoint,
 } from '../RoomLayout.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 
@@ -15,20 +18,28 @@ const wallHeight = 2.6
 const wallThickness = 0.12
 const reachOfFurnitureMetres = 0.35
 
-export type TapTargetTag = { readonly furnitureId: FurnitureId } | { readonly isFloor: true }
+export type TapTargetTag =
+  | { readonly furnitureId: FurnitureId }
+  | { readonly isFloor: true }
+  | { readonly isHeater: true }
+  | { readonly isHeaterSwitch: true }
+  | { readonly itemId: string }
+  | { readonly handIndex: HandIndex }
 
 export class RoomModel {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
+  readonly heaterPlate: THREE.Mesh
   private readonly materials: RoomMaterials
 
-  constructor(materials: RoomMaterials) {
+  constructor(materials: RoomMaterials, heaterSpot: WorldPoint) {
     this.materials = materials
     this.addFloor()
     this.addBackWallWithWindow()
     this.addLeftWall()
     for (const piece of furniture) this.addFurniture(piece)
     for (const spot of itemSpots) this.addItem(spot)
+    this.heaterPlate = this.addHeater(heaterSpot)
   }
 
   private addFloor(): void {
@@ -102,21 +113,25 @@ export class RoomModel {
     if (furnitureId !== null) this.tag(mesh, { furnitureId })
   }
 
+  private addHeater(spot: WorldPoint): THREE.Mesh {
+    const plate = this.box('heaterPlate', 0.34, 0.05, 0.3, { x: spot.x, y: spot.y - 0.025, z: spot.z })
+    plate.material = this.materials.unsharedMaterialFor('heaterPlate')
+    this.tag(plate, { isHeater: true })
+    const counterFront = furnitureWithId('counter').footprint
+    const frontZ = counterFront.z + counterFront.depth / 2
+    const switchPanel = this.box('heaterPlate', 0.32, 0.2, 0.02, { x: spot.x, y: spot.y - 0.2, z: frontZ + 0.01 })
+    const switchKnob = this.cylinder('steel', 0.05, 0.04, { x: spot.x, y: spot.y - 0.2, z: frontZ + 0.04 })
+    switchKnob.rotation.x = Math.PI / 2
+    this.tag(switchPanel, { isHeaterSwitch: true })
+    this.tag(switchKnob, { isHeaterSwitch: true })
+    return plate
+  }
+
   private itemMesh(spot: ItemSpot): THREE.Object3D {
     const { x, y, z } = spot.position
     switch (spot.shape) {
-      case 'heater':
-        return this.box('heaterPlate', 0.34, 0.05, 0.3, { x, y: y + 0.025, z })
-      case 'kettle':
-        return this.kettle({ x, y: y + 0.05, z })
       case 'faucet':
         return this.box('steel', 0.05, 0.35, 0.05, { x, y: y + 0.17, z })
-      case 'thermos':
-        return this.cylinder('steel', 0.07, 0.34, { x, y: y + 0.17, z })
-      case 'caddy':
-        return this.cylinder('caddyGreen', 0.08, 0.18, { x, y: y + 0.09, z })
-      case 'bowl':
-        return this.bowl({ x, y, z })
       case 'spoon':
         return this.box('darkWood', 0.2, 0.02, 0.04, { x, y: y + 0.01, z })
       case 'cloth':
@@ -124,31 +139,6 @@ export class RoomModel {
       case 'figurine':
         return this.figurine(spot)
     }
-  }
-
-  private kettle(base: { x: number; y: number; z: number }): THREE.Object3D {
-    const kettle = new THREE.Group()
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 8), this.materials.materialFor('clay'))
-    body.scale.set(1, 0.8, 1)
-    body.position.y = 0.11
-    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.14, 6), this.materials.materialFor('clay'))
-    spout.position.set(0.15, 0.14, 0)
-    spout.rotation.z = -0.9
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.03, 10), this.materials.materialFor('darkWood'))
-    lid.position.y = 0.23
-    kettle.add(body, spout, lid)
-    kettle.position.set(base.x, base.y, base.z)
-    kettle.traverse((part) => (part.castShadow = true))
-    this.root.add(kettle)
-    return kettle
-  }
-
-  private bowl(base: { x: number; y: number; z: number }): THREE.Object3D {
-    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.05, 0.06, 12), this.materials.materialFor('porcelain'))
-    bowl.position.set(base.x, base.y + 0.03, base.z)
-    bowl.castShadow = true
-    this.root.add(bowl)
-    return bowl
   }
 
   private figurine(spot: ItemSpot): THREE.Object3D {

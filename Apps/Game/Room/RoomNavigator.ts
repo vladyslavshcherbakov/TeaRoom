@@ -14,14 +14,19 @@ export type RoomView =
 
 export type RoomLog = (message: string) => void
 
+export type KeeperMoved = (furnitureId: FurnitureId | null) => void
+
 export class RoomNavigator {
   private readonly floor = new FloorGrid(furniture.map((piece) => piece.footprint))
   private readonly log: RoomLog
+  private readonly keeperMoved: KeeperMoved
   private currentWalk: Walk = standingAt(walkerStart, Math.PI)
   private currentView: RoomView = { kind: 'overview' }
+  private furnitureStoodAt: FurnitureId | null = null
 
-  constructor(log: RoomLog) {
+  constructor(log: RoomLog, keeperMoved: KeeperMoved = () => {}) {
     this.log = log
+    this.keeperMoved = keeperMoved
     log(`room opened, walker at ${coordinatesOf(walkerStart)}`)
   }
 
@@ -50,7 +55,9 @@ export class RoomNavigator {
     if (isWalking(this.currentWalk) || this.currentView.kind !== 'approaching') return
     const { furnitureId } = this.currentView
     this.currentView = { kind: 'closeUp', furnitureId }
+    this.furnitureStoodAt = furnitureId
     this.log(`arrived at ${furnitureId}, showing it close up`)
+    this.keeperMoved(furnitureId)
   }
 
   private walkToFloor(point: FloorPoint): void {
@@ -61,6 +68,10 @@ export class RoomNavigator {
   }
 
   private approach(furnitureId: FurnitureId): void {
+    if (this.furnitureStoodAt === furnitureId && !isWalking(this.currentWalk)) {
+      this.currentView = { kind: 'closeUp', furnitureId }
+      return this.log(`already at ${furnitureId}, showing it close up`)
+    }
     const { standingPoint } = furnitureWithId(furnitureId)
     if (!this.startWalkingTo(standingPoint)) return
     this.currentView = { kind: 'approaching', furnitureId }
@@ -74,6 +85,11 @@ export class RoomNavigator {
       return false
     }
     this.currentWalk = { ...this.currentWalk, waypoints: waypoints.slice(1) }
+    if (this.furnitureStoodAt !== null) {
+      this.log(`left ${this.furnitureStoodAt}`)
+      this.furnitureStoodAt = null
+      this.keeperMoved(null)
+    }
     return true
   }
 

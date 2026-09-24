@@ -47,10 +47,10 @@ The simulation core receives one command per player decision and answers with ev
 | Choose the mood | pick presets before or during the ritual | `chooseAtmosphere` | `atmosphereChanged` |
 | Begin | pick a tea | `beginRitual` | `ritualBegan` |
 | Open or close a lid | tap the lid | `openVesselLid`, `closeVesselLid`, `openCaddy`, `closeCaddy` | `vesselLidOpened`, `vesselLidClosed`, `caddyOpened`, `caddyClosed` |
-| Put the kettle on the heater | drag and release over the heater | `placeOnHeater` | `placedOnHeater` |
-| Lift the kettle off | drag away from the heater | `takeOffHeater` | `takenOffHeater` with a water judgement if the heater was on |
-| Heat | tap the switch | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `targetTemperatureReached`, `heaterSwitchedOff` with a water judgement |
-| Pour | grab a vessel over a target, tilt with a vertical drag, release to stop | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
+| Put the kettle on the heater | choose the kettle's hand, then tap the heater | `placeOnHeater` | `placedOnHeater` |
+| Lift the kettle off | tap the kettle on the heater | `pickUp` | `takenOffHeater` with a water judgement if the heater was on, then `pickedUp` |
+| Heat | tap the switch on the counter's front | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `targetTemperatureReached`, `heaterSwitchedOff` with a water judgement |
+| Pour | hold a finger on the target with a vessel in hand, release to stop | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
 | Scoop leaves | drag the spoon through the open caddy | `scoopTea` with the depth reached | `teaScooped` |
 | Tip leaves | tilt the spoon over the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |
 | Taste | lift a bowl to the viewer | `tasteCup` | `teaTasted` with a verdict and a reaction |
@@ -65,13 +65,23 @@ Every change to the gods' plaque arrives as `godsMoodChanged` with a remark. The
 
 A touch that moves less than 12 px and lasts under half a second is a tap.
 
+A press that moves less than 12 px is a tap when the finger lifts, unless it started a pour. A press that moves further does nothing.
+
 | Gesture | What it does |
 |---|---|
 | Tap the floor | The keeper walks there, around the furniture. |
-| Tap a piece of furniture | The keeper walks to it, and the camera shows it close up. |
-| Tap anything else in a close-up | The camera returns to the room. |
+| Tap a piece of furniture, or anything on it | The keeper walks to it, and the camera shows it close up. |
+| Tap the floor or empty space in a close-up | The camera returns to the room. |
+| Tap an item in a close-up | The keeper takes it into the first free hand. |
+| Tap a hand at the bottom of the screen, or the item in it | The hand is chosen. A second tap lets go of the choice. |
+| Tap a surface in a close-up with a hand chosen | The item goes down exactly where the finger touched, if it fits. It does not fit over the edge, on the heater or on another item, and then it stays in the hand, still chosen. |
+| Tap the heater with a hand chosen | The vessel in that hand goes on the heater. |
+| Tap the switch under the heater | The heater switches on or off. The plate glows while it is on. |
+| Hold a finger on a vessel in a close-up | The vessel in the chosen hand, or the only vessel in hand, pours into it. The tilt starts at 14° and grows by 20° a second up to 36°, just below the tilt that splashes. Lifting the finger stops the pour. A hold with nothing to pour from counts as a tap. |
 
-Taking things in hand, the heater and pouring in the room arrive with the next steps of 0.3.
+Items in hand are drawn in the keeper's hands in the room, and are not drawn in a close-up, where the keeper is hidden. The pouring vessel is drawn tipped over its target.
+
+The room begins the ritual with the first tea of the catalog when it opens, until the tea can be chosen in the room.
 
 The pour gesture maps tilt to flow: below 10° nothing pours, the flow grows linearly to full at 45°, and above 80% of full flow a tenth of the stream splashes. The presentation reports which share of the stream lands inside the target opening, because only the presentation knows the geometry.
 
