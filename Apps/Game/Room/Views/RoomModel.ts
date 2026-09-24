@@ -137,9 +137,6 @@ export class RoomModel {
     return puddle
   }
 
-  private invisibleMaterial(): THREE.Material {
-    return new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
-  }
 
   private addHeater(spot: WorldPoint): THREE.Mesh {
     const plate = this.box('heaterPlate', 0.34, 0.05, 0.3, { x: spot.x, y: spot.y - 0.025, z: spot.z })
@@ -171,10 +168,13 @@ export class RoomModel {
     post.position.set(base.x, base.y + 0.18, base.z)
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, faucetSpout.z - base.z + 0.02), this.materials.materialFor('steel'))
     arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
-    const touchPad = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.36, 0.2), this.invisibleMaterial())
-    touchPad.position.set(base.x, base.y + 0.2, (base.z + faucetSpout.z) / 2)
-    touchPad.castShadow = false
-    faucet.add(post, arm, touchPad)
+    const sinkRim = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.012, 0.34), this.materials.materialFor('steel'))
+    sinkRim.position.set(base.x, base.y + 0.006, faucetSpout.z + 0.02)
+    const sinkHollow = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.004, 0.28), this.materials.materialFor('sinkHollow'))
+    sinkHollow.position.set(base.x, base.y + 0.014, faucetSpout.z + 0.02)
+    sinkRim.receiveShadow = true
+    sinkHollow.receiveShadow = true
+    faucet.add(post, arm, sinkRim, sinkHollow)
     post.castShadow = true
     arm.castShadow = true
     this.root.add(faucet)

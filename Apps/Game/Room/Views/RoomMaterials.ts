@@ -22,6 +22,7 @@ export type Surface =
   | 'puddle'
   | 'gaugeGlass'
   | 'tapWater'
+  | 'sinkHollow'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -45,6 +46,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   puddle: '#9c6a44',
   gaugeGlass: '#f4f8f9',
   tapWater: '#a9d3ea',
+  sinkHollow: '#4f5f66',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])

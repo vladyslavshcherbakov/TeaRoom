@@ -152,7 +152,10 @@ export class CarriedItems {
     moveToLayer(model, heldInView !== null)
     model.root.scale.setScalar(1)
     if (aim !== null) return this.aimOver(model, aim)
-    if (isUnderTheFaucet) return holdUnderTheFaucet(model)
+    if (isUnderTheFaucet) {
+      this.retag(model, { isFaucet: true })
+      return holdUnderTheFaucet(model)
+    }
     model.root.rotation.set(0, 0, 0)
     if (location.kind === 'onSurface') {
       model.root.visible = true
