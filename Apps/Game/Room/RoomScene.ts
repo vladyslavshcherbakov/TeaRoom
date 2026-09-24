@@ -43,8 +43,6 @@ const longestFrameSeconds = 0.1
 const tapSlopPixels = 12
 const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
-const heaterGlowColour = new THREE.Color('#e0603a')
-const heaterGlowIntensity = 0.8
 
 export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
@@ -121,7 +119,7 @@ export class RoomScene {
     const table = tableViewState(state, this.catalog)
     const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothOnTheTableAt: this.play.clothOnTheTableAt, timeSeconds: this.clock.elapsedTime })
-    this.showHeater(table.isHeaterOn)
+    this.room.showHeater(table.isHeaterOn)
     this.room.showPuddle(table.puddleShare)
     const isAiming = this.play.aimedPourView !== null
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming)
@@ -153,13 +151,6 @@ export class RoomScene {
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
     this.caption.show(captionLinesFor(events))
     return events
-  }
-
-  private showHeater(isOn: boolean): void {
-    const material = this.room.heaterPlate.material
-    if (!(material instanceof THREE.MeshStandardMaterial)) return
-    material.emissive.copy(isOn ? heaterGlowColour : new THREE.Color(0x000000))
-    material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
   }
 
   private cameraGoal(): CameraPose {

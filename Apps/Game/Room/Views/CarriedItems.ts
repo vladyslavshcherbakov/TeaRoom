@@ -139,7 +139,6 @@ export class CarriedItems {
   private readonly materials: RoomMaterials
   private readonly claySeenFromInside: THREE.Material
   private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
-  private readonly steamMaterial = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.45, depthWrite: false })
   private readonly models: CarriedModel[]
   private readonly pourStream: FallingStream
   private readonly tapStream: FallingStream
@@ -147,7 +146,7 @@ export class CarriedItems {
   private readonly overflowPathByShape = new Map<CarriedShape, THREE.TubeGeometry>()
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   private readonly chosenGlow = newChosenGlow()
-  private readonly streamMaterial: THREE.MeshStandardMaterial
+  private readonly streamMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
   private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
 
   constructor(materials: RoomMaterials, items: readonly ShapedItem[]) {
@@ -157,7 +156,7 @@ export class CarriedItems {
     clay.side = THREE.DoubleSide
     this.claySeenFromInside = clay
     this.models = items.map(({ itemId, shape }) => this.modelOf(itemId, shape))
-    this.streamMaterial = new THREE.MeshStandardMaterial({ color: '#dfe7ea', transparent: true, opacity: 0.85 })
+    this.streamMaterial = materials.unsharedMaterialFor('pouredLiquid')
     this.pourStream = new FallingStream(streamRadiusMetres, this.streamMaterial)
     this.tapStream = new FallingStream(streamRadiusMetres, this.materials.unsharedMaterialFor('tapWater'))
     this.overflowStream = new CreepingStream(this.materials.unsharedMaterialFor('tapWater'))
@@ -360,7 +359,7 @@ export class CarriedItems {
     if (leafHolder !== null) root.add(leafHolder)
     const kettleWater = shape === 'kettle' ? this.addKettleWater(root) : null
     root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
-    const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.steamMaterial))
+    const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), this.materials.materialFor('steam')))
     for (const puff of puffs) puff.castShadow = false
     this.root.add(root, ...puffs)
     this.tappableMeshes.push(root)

@@ -20,6 +20,9 @@ import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 const wallHeight = 2.6
 const wallThickness = 0.12
 const reachOfFurnitureMetres = 0.35
+const heaterGlowColour = new THREE.Color('#e0603a')
+const heaterGlowIntensity = 0.8
+const noGlow = new THREE.Color(0x000000)
 
 export type TapTargetTag =
   | { readonly furnitureId: FurnitureId }
@@ -35,8 +38,8 @@ export type TapTargetTag =
 export class RoomModel {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
-  readonly heaterPlate: THREE.Mesh
   private readonly materials: RoomMaterials
+  private readonly heaterPlate: THREE.Mesh
   private readonly puddle: THREE.Mesh
 
   constructor(materials: RoomMaterials, heaterSpot: WorldPoint) {
@@ -48,6 +51,13 @@ export class RoomModel {
     for (const spot of itemSpots) this.addItem(spot)
     this.heaterPlate = this.addHeater(heaterSpot)
     this.puddle = this.addPuddle()
+  }
+
+  showHeater(isOn: boolean): void {
+    const material = this.heaterPlate.material
+    if (!(material instanceof THREE.MeshStandardMaterial)) return
+    material.emissive.copy(isOn ? heaterGlowColour : noGlow)
+    material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
   }
 
   showPuddle(puddleShare: number): void {
