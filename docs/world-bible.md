@@ -66,6 +66,7 @@ Nobody has to come back. There are no streaks, no daily rewards and no losses fo
 - **Hints of life.** Small things happen that the player only half sees: a shadow crossing the window, a moth at the lamp, a sound behind the wall, a figurine turned a little.
 - **What happened while you were away.** On return, one or two short lines tell what the room did: "It rained all night. The toad looks satisfied." "A letter came. It is on the table." In the story mode, new objects appear.
 - **Ending the day.** A button ends the day on purpose. The record plays to its end, the candle burns down, the lamp goes out, and the night's events happen before the next morning. It moves the world forward without waiting for the real clock.
+- **Letting the room sleep.** When the player stays in the game for a long time without leaving, the game shows a reminder in the spirit of: "Let me go to sleep, and then come back."
 
 ## When the player only watches
 
