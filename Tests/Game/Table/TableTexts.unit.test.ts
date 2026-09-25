@@ -25,6 +25,22 @@ test('sipLine_answersTheVerdictWithOneOfItsFeelingsPhrases', () => {
 
   for (const [verdict, feeling] of rows) {
     const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith(`sip.${feeling}.`)).map(([, phrase]) => phrase)
-    assert.ok(phrases.includes(sipText(verdict, 7)), `${feeling}: ${sipText(verdict, 7)}`)
+    assert.ok(phrases.includes(sipText(verdict, false, 7)), `${feeling}: ${sipText(verdict, false, 7)}`)
   }
+})
+
+test('sipLine_fromABowlWithLeavesInIt_isAboutTheLeaves', () => {
+  const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('sip.amongLeaves.')).map(([, phrase]) => phrase)
+
+  const line = sipText({ temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, true, 7)
+
+  assert.ok(phrases.includes(line), line)
+})
+
+test('sipLine_fromABowlWithLeavesThatIsTooHot_saysItIsTooHot', () => {
+  const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('sip.tooHot.')).map(([, phrase]) => phrase)
+
+  const line = sipText({ temperature: 'tooHot', strength: 'balanced', bitterness: 'soft', reaction: 'waitsForItToCool' }, true, 7)
+
+  assert.ok(phrases.includes(line), line)
 })

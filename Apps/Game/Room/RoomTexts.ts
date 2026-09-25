@@ -18,7 +18,7 @@ export function roomRemarkLine(remark: RoomRemark, voiceSeed: number): string {
 function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[] {
   switch (event.type) {
     case 'teaTasted':
-      return [sipText(event.verdict, voiceSeed)]
+      return [sipText(event.verdict, event.cupHeldLeaves, voiceSeed)]
     case 'pourFinished':
       return event.spilledMl >= spillTheKeeperRemarksOnMl ? [text(`spill.${phraseVariantFor('spill', voiceSeed)}`)] : []
     case 'actionRefused':

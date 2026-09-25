@@ -20,8 +20,8 @@ const shimmeringFromC = 40
 const simmeringFromC = 55
 const boilingFromC = 95
 const puddleFullAtMl = 30
-const floatingLeavesPerGram = 2
-export const mostFloatingLeaves = 12
+const soakedLeavesShownPerGram = 2
+export const mostSoakedLeavesShown = 12
 const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95 }
 const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
@@ -75,14 +75,14 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
     surfaceMotion: isHeated && !isEmpty(vessel.liquid) ? surfaceMotionAt(vessel.liquid.temperatureC) : 'still',
     brewStage,
     isLidOpen: definition.lid === null ? null : vessel.isLidOpen,
-    floatingLeaves: floatingLeavesOf(vessel),
+    soakedLeaves: soakedLeavesOf(vessel),
     shellGlow: vessel.shellHeat,
   }
 }
 
-function floatingLeavesOf(vessel: DeepReadonly<VesselState>): TableViewState.FloatingLeaves | null {
-  if (vessel.leaves === null || vessel.leaves.grams <= 0 || isEmpty(vessel.liquid)) return null
-  const count = Math.min(mostFloatingLeaves, Math.max(1, Math.round(vessel.leaves.grams * floatingLeavesPerGram)))
+function soakedLeavesOf(vessel: DeepReadonly<VesselState>): TableViewState.SoakedLeaves | null {
+  if (vessel.leaves === null || vessel.leaves.grams <= 0) return null
+  const count = Math.min(mostSoakedLeavesShown, Math.max(1, Math.round(vessel.leaves.grams * soakedLeavesShownPerGram)))
   return { teaId: vessel.leaves.teaId, count }
 }
 

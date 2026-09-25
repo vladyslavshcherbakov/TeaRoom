@@ -31,11 +31,11 @@ export declare namespace TableViewState {
     readonly surfaceMotion: SurfaceMotion
     readonly brewStage: BrewStage
     readonly isLidOpen: boolean | null
-    readonly floatingLeaves: FloatingLeaves | null
+    readonly soakedLeaves: SoakedLeaves | null
     readonly shellGlow: number
   }
 
-  type FloatingLeaves = {
+  type SoakedLeaves = {
     readonly teaId: string
     readonly count: number
   }

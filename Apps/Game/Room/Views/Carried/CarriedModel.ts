@@ -29,8 +29,8 @@ export type CarriedModel = {
   readonly gaugeWater: GaugeStrip | null
   readonly leafHolder: THREE.Group | null
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
-  readonly floatingLeafHolder: THREE.Group | null
-  floatingLeaves: { readonly pile: LeafPile; readonly teaId: string } | null
+  readonly soakedLeafHolder: THREE.Group | null
+  soakedLeaves: { readonly pile: LeafPile; readonly teaId: string } | null
   readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
@@ -194,8 +194,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const leafHolder = leafHolderFor(shape)
   if (leafHolder !== null) root.add(leafHolder)
   const kettleWater = shape === 'kettle' ? addKettleWater(root, materials.room) : null
-  const floatingLeafHolder = shape === 'kettle' ? new THREE.Group() : null
-  if (floatingLeafHolder !== null) root.add(floatingLeafHolder)
+  const soakedLeafHolder = shape === 'kettle' || shape === 'bowl' ? new THREE.Group() : null
+  if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === materials.touchPad)))
   const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), materials.room.materialFor('steam')))
   for (const puff of puffs) puff.castShadow = false
@@ -217,8 +217,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     gaugeWater,
     leafHolder,
     leaves: null,
-    floatingLeafHolder,
-    floatingLeaves: null,
+    soakedLeafHolder,
+    soakedLeaves: null,
     kettleWater,
     puffs,
     heldInViewLook: parts.heldInViewLook ?? null,

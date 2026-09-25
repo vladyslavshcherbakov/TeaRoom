@@ -3,7 +3,7 @@ import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefi
 import { itemLocationIn } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
 import { openLidOffsetBeside } from '../../Placement.ts'
 import type { FloorPoint } from '../../RoomLayout.ts'
-import { mostFloatingLeaves } from '../../../Table/TablePresenter.ts'
+import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
@@ -32,7 +32,8 @@ const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
 const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14, isLyingFlat: false }
 const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false }
-const leavesOnTheWater: LeafPileSize = { leafCount: mostFloatingLeaves, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true }
+const leavesOnTheKettlesWater: LeafPileSize = { leafCount: mostSoakedLeavesShown, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true }
+const leavesInABowl: LeafPileSize = { leafCount: mostSoakedLeavesShown, radiusMetres: 0.035, heightMetres: 0, isLyingFlat: true }
 const leavesAboveTheWaterMetres = 0.0015
 const redHotMetal = new THREE.Color('#3a0904')
 const dullRedHeat = new THREE.Color('#8a1000')
@@ -58,7 +59,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, he
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
   if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)
   if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
-  if (model.floatingLeafHolder !== null && vessel !== undefined) showLeavesOnTheKettlesWater(model, model.floatingLeafHolder, vessel, wave, scene.timeSeconds)
+  if (model.soakedLeafHolder !== null && vessel !== undefined) showSoakedLeaves(model, model.soakedLeafHolder, vessel, wave, scene.timeSeconds)
   if (model.leafHolder !== null) showLeaves(model, model.leafHolder, scene)
   if (model.glowingShell !== null && vessel !== undefined) showRedHeat(model.glowingShell, vessel.shellGlow)
   const puffsPerSource = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
@@ -129,20 +130,27 @@ function showWaterInGauge(gaugeWater: GaugeStrip, vessel: TableViewState.Vessel,
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
-function showLeavesOnTheKettlesWater(model: CarriedModel, holder: THREE.Group, vessel: TableViewState.Vessel, wave: Wave, timeSeconds: number): void {
-  const floating = vessel.floatingLeaves
-  holder.visible = floating !== null && vessel.fillShare > 0 && vessel.isLidOpen === true
-  if (floating === null || !holder.visible) return
-  if (model.floatingLeaves === null || model.floatingLeaves.teaId !== floating.teaId) {
-    if (model.floatingLeaves !== null) holder.remove(model.floatingLeaves.pile.mesh)
-    const pile = new LeafPile(teaLookFor(floating.teaId), leavesOnTheWater)
+function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: TableViewState.Vessel, wave: Wave, timeSeconds: number): void {
+  const soaked = vessel.soakedLeaves
+  const isInsideShown = model.shape === 'kettle' ? vessel.fillShare > 0 && vessel.isLidOpen === true : true
+  holder.visible = soaked !== null && isInsideShown
+  if (soaked === null || !holder.visible) return
+  if (model.soakedLeaves === null || model.soakedLeaves.teaId !== soaked.teaId) {
+    if (model.soakedLeaves !== null) holder.remove(model.soakedLeaves.pile.mesh)
+    const pile = new LeafPile(teaLookFor(soaked.teaId), model.shape === 'kettle' ? leavesOnTheKettlesWater : leavesInABowl)
     pile.mesh.layers.set(model.layer)
     holder.add(pile.mesh)
-    model.floatingLeaves = { pile, teaId: floating.teaId }
+    model.soakedLeaves = { pile, teaId: soaked.teaId }
   }
-  model.floatingLeaves.pile.showFill(floating.count / mostFloatingLeaves)
-  holder.position.y = kettleSurfaceHeight(vessel) + wave.riseMetres + leavesAboveTheWaterMetres
+  model.soakedLeaves.pile.showFill(soaked.count / mostSoakedLeavesShown)
+  const waterRise = vessel.fillShare > 0 ? wave.riseMetres : 0
+  holder.position.y = soakedLeavesHeight(model, vessel) + waterRise + leavesAboveTheWaterMetres
   holder.rotation.set(wave.tiltXRadians, timeSeconds * leavesDriftRadiansPerSecond, wave.tiltZRadians)
+}
+
+function soakedLeavesHeight(model: CarriedModel, vessel: TableViewState.Vessel): number {
+  if (model.liquidLevel !== null) return model.liquidLevel(vessel.fillShare).heightMetres
+  return kettleSurfaceHeight(vessel)
 }
 
 function showRedHeat(shell: GlowingShell, glow: number): void {
