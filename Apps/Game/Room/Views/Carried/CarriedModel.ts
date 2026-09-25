@@ -66,7 +66,7 @@ const flutesAround = 16
 const fluteDepthShare = 0.025
 const flutesStartAboveTheFootMetres = 0.008
 const flutesFullAboveTheFootMetres = 0.02
-const flutedBowls: ReadonlySet<string> = new Set(['bowl5'])
+const flutedBowls: ReadonlySet<string> = new Set(['bowl8'])
 const bowlWallProfilePoints = 32
 const bowlInsideProfile = new THREE.SplineCurve([
   new THREE.Vector2(0, 0.009),
@@ -99,9 +99,11 @@ const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
   bowl2: 'pearlGlaze',
   bowl3: 'skyBlueGlaze',
-  bowl4: 'temperGlaze',
-  bowl5: 'flutedGlass',
+  bowl4: 'blueGlaze',
+  bowl5: 'yellowGlaze',
   bowl6: 'emeraldGlaze',
+  bowl7: 'temperGlaze',
+  bowl8: 'flutedGlass',
 }
 
 export function newCarriedModel(itemId: string, shape: CarriedShape, materials: CarriedModelMaterials): CarriedModel {
