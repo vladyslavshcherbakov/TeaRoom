@@ -56,7 +56,7 @@ export const windowOnBackWall = { centreX: 1, sillHeight: 0.85, width: 1.8, heig
 
 export const medalOnLeftWall = { z: -1.4, y: 1.55 }
 
-export const settingsGearOnLeftWall = { z: 1.48, y: 1.55 }
+export const settingsGearOnLeftWall = { z: medalOnLeftWall.z, y: 1.05 }
 
 export const furniture: readonly Furniture[] = [
   {
