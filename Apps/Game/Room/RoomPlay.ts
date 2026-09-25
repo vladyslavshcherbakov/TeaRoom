@@ -12,7 +12,10 @@ import { ItemInspection, type ItemInspectionView } from './ItemInspection.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
-import { carriedShapeOf, layoutOf, type CarriedShape } from './CarriedShapes.ts'
+import { RoomRemarks, type RoomRemark } from './RoomRemarks.ts'
+import { TapsInARow } from './TapsInARow.ts'
+import { WipeStroke } from './WipeStroke.ts'
+import { carriedShapeOf, layoutOf } from './CarriedShapes.ts'
 import { puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { ScreenPoint } from './RoomGestures.ts'
@@ -45,17 +48,6 @@ export type ClothWiping = {
   readonly at: WorldPoint
 }
 
-type WipeStroke = {
-  readonly clothId: string
-  readonly furnitureId: FurnitureId
-  lengthMetres: number
-  unwipedMetres: number
-  unwipedMetresOverThePuddle: number
-  metresOverThePuddle: number
-  lastPoint: WorldPoint
-  heldSecondsAtLastWipe: number
-}
-
 type Press = {
   readonly target: RoomTapTarget
   heldSeconds: number
@@ -63,19 +55,17 @@ type Press = {
   readonly stroke: WipeStroke | null
 }
 
+type CloseUpAction = {
+  readonly act: () => void
+  readonly isDoneWithTheChosenItem: boolean
+}
+
 const fullSpoonDepth = 1
-const clothWipingWidthMetres = 0.2
-const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const tapsWithFullHandsThatGrowAMiddleHand = 10
 const fullTurnDegrees = 360
-const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
-
-export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester' | 'everythingOnTheShelf'
-
-
-export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: number }
+const roseBushKey = 'roseBush'
 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
@@ -92,24 +82,22 @@ export class RoomPlay {
   private readonly layout: RoomLayout
   private readonly log: RoomLog
   private readonly listener: RoomPlayListener
-  private readonly heaterItemsBeforeTheTesterJoke: number
   private readonly navigator: RoomNavigator
+  private readonly remarks: RoomRemarks
+  private readonly roseBushTaps = new TapsInARow()
+  private readonly tapsWithFullHands = new TapsInARow()
   private choice: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
   private inspection: ItemInspection | null = null
-  private readonly timesRemarked = new Map<RoomRemarkKind, number>()
-  private readonly itemsTriedOnTheWorkingHeater = new Set<string>()
-  private roseBushTapsInARow = 0
-  private tapsWithFullHands: { readonly itemId: string; count: number } | null = null
 
   constructor(ritual: RitualPort, catalog: Catalog, layout: RoomLayout, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
     this.ritual = ritual
     this.catalog = catalog
     this.layout = layout
     this.log = log
-    this.heaterItemsBeforeTheTesterJoke = heaterItemsBeforeTheTesterJoke
     this.listener = listener
+    this.remarks = new RoomRemarks(heaterItemsBeforeTheTesterJoke, log, (remark) => listener.remarked(remark))
     this.navigator = new RoomNavigator(layout, log, (furnitureId) => this.keeperMovedTo(furnitureId), startsAt)
   }
 
@@ -154,19 +142,8 @@ export class RoomPlay {
   }
 
   canTheChosenItemActOn(target: RoomTapTarget): boolean {
-    const itemId = this.chosenItemId()
-    if (itemId === null || this.view.kind !== 'closeUp') return false
-    switch (target.kind) {
-      case 'surface':
-      case 'heater':
-      case 'faucet':
-      case 'figurine':
-        return true
-      case 'item':
-        return itemId === spoonItemId || this.canAimAPourAt(target.itemId)
-      default:
-        return false
-    }
+    if (this.chosenItemId() === null || this.view.kind !== 'closeUp') return false
+    return this.closeUpActionOn(target)?.isDoneWithTheChosenItem === true
   }
 
   pressStarted(target: RoomTapTarget): void {
@@ -178,16 +155,8 @@ export class RoomPlay {
     const press = this.press
     const stroke = press?.stroke
     if (press === null || stroke === undefined || stroke === null || target.kind !== 'surface' || target.furnitureId !== stroke.furnitureId) return
-    const segmentMetres = Math.hypot(target.point.x - stroke.lastPoint.x, target.point.z - stroke.lastPoint.z)
-    const middle = { x: (target.point.x + stroke.lastPoint.x) / 2, z: (target.point.z + stroke.lastPoint.z) / 2 }
-    stroke.lengthMetres += segmentMetres
-    stroke.unwipedMetres += segmentMetres
-    if (this.isTheClothOverThePuddleAt(stroke.furnitureId, middle)) {
-      stroke.unwipedMetresOverThePuddle += segmentMetres
-      stroke.metresOverThePuddle += segmentMetres
-    }
-    stroke.lastPoint = target.point
-    if (stroke.unwipedMetres >= wipeEveryMetres) this.wipeWhatTheStrokeCovered(stroke, press.heldSeconds)
+    const isTimeToWipe = stroke.movedTo(target.point, (middle) => this.isTheClothOverThePuddleAt(stroke.furnitureId, middle))
+    if (isTimeToWipe) this.wipeWhatTheStrokeCovered(stroke, press.heldSeconds)
   }
 
   pressMovedAway(): void {
@@ -307,7 +276,7 @@ export class RoomPlay {
     this.log(`tap on ${describeTarget(target)}, ${chosenItemId === null ? 'no hand chosen' : `${chosenItemId} chosen in hand ${this.choice}`}`)
     if (target.kind === 'roseBush') return this.countTheRoseBushTap()
     this.forgetTheRoseBushTaps()
-    if (target.kind !== 'item' || target.itemId !== this.tapsWithFullHands?.itemId) this.forgetTheTapsWithFullHands()
+    if (target.kind !== 'item' || !this.tapsWithFullHands.isCounting(target.itemId)) this.forgetTheTapsWithFullHands()
     if (target.kind === 'medal') return this.showTheAchievements()
     if (target.kind === 'settingsGear') return this.showTheSettings()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
@@ -334,23 +303,23 @@ export class RoomPlay {
   }
 
   private countTheRoseBushTap(): void {
-    this.roseBushTapsInARow += 1
-    this.log(`rose bush tapped ${this.roseBushTapsInARow} times in a row`)
-    if (this.roseBushTapsInARow < roseBushTapsThatOpenTheDebugMenu) return
-    this.roseBushTapsInARow = 0
+    const tapsInARow = this.roseBushTaps.countTapOn(roseBushKey)
+    this.log(`rose bush tapped ${tapsInARow} times in a row`)
+    if (tapsInARow < roseBushTapsThatOpenTheDebugMenu) return
+    this.roseBushTaps.startAgain()
     this.log('the debug menu opens after ten taps in a row on a rose bush')
     this.listener.debugMenuAsked()
   }
 
   private forgetTheRoseBushTaps(): void {
-    if (this.roseBushTapsInARow === 0) return
-    this.log(`another tap after ${this.roseBushTapsInARow} taps on a rose bush starts the count again`)
-    this.roseBushTapsInARow = 0
+    if (this.roseBushTaps.countSoFar === 0) return
+    this.log(`another tap after ${this.roseBushTaps.countSoFar} taps on a rose bush starts the count again`)
+    this.roseBushTaps.startAgain()
   }
 
   private keepTheSillForTheRoom(figurineId: string): void {
-    const timesTapped = this.remark('sillIsTheRoomsOwn')
-    this.log(`tap on ${figurineId} from afar leaves the keeper in place: it stands on the sill, tapped from afar ${timesTapped} times`)
+    this.log(`tap on ${figurineId} from afar leaves the keeper in place: it stands on the sill`)
+    this.remarks.heard({ kind: 'figurineTappedFromAfar', figurineId })
   }
 
   private navigate(target: RoomTapTarget, targetFurnitureId: FurnitureId | null): void {
@@ -367,25 +336,34 @@ export class RoomPlay {
   }
 
   private actAtCloseUp(target: RoomTapTarget): void {
+    const action = this.closeUpActionOn(target)
+    if (action === null) return this.log(`tap on ${describeTarget(target)} in the close-up does nothing`)
+    action.act()
+  }
+
+  private closeUpActionOn(target: RoomTapTarget): CloseUpAction | null {
     switch (target.kind) {
       case 'item':
-        return this.touchItem(target.itemId)
+        return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId || this.canAimAPourAt(target.itemId) }
       case 'lid':
-        return this.toggleLidOf(target.itemId)
+        return { act: () => this.toggleLidOf(target.itemId), isDoneWithTheChosenItem: false }
       case 'figurine':
-        return this.offerTheChosenCupTo(target.figurineId)
+        return { act: () => this.offerTheChosenCupTo(target.figurineId), isDoneWithTheChosenItem: true }
       case 'surface':
-        return this.putDownTheChosenItemAt(target.furnitureId, target.point)
+        return { act: () => this.putDownTheChosenItemAt(target.furnitureId, target.point), isDoneWithTheChosenItem: true }
       case 'heater':
-        return this.putTheChosenItemOnTheHeater()
+        return { act: () => this.putTheChosenItemOnTheHeater(), isDoneWithTheChosenItem: true }
       case 'heaterSwitch':
-        this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
-        return
+        return { act: () => this.switchTheHeater(), isDoneWithTheChosenItem: false }
       case 'faucet':
-        return this.useTheSink()
+        return { act: () => this.useTheSink(), isDoneWithTheChosenItem: true }
       default:
-        return this.log(`tap on ${describeTarget(target)} in the close-up does nothing`)
+        return null
     }
+  }
+
+  private switchTheHeater(): void {
+    this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
   }
 
   private keeperMovedTo(furnitureId: FurnitureId | null): void {
@@ -471,16 +449,10 @@ export class RoomPlay {
   }
 
   private wipeWhatTheStrokeCovered(stroke: WipeStroke, heldSeconds: number): void {
-    const seconds = Math.max(heldSeconds - stroke.heldSecondsAtLastWipe, Number.EPSILON)
-    const strokeSpeedCmPerSecond = (stroke.unwipedMetres * 100) / seconds
-    const puddleArea = Math.PI * (this.puddleOn(stroke.furnitureId)?.radiusMetres ?? 0) ** 2
-    const overThePuddle = stroke.unwipedMetresOverThePuddle
-    stroke.unwipedMetres = 0
-    stroke.unwipedMetresOverThePuddle = 0
-    stroke.heldSecondsAtLastWipe = heldSeconds
-    if (overThePuddle === 0 || puddleArea === 0) return
-    const coveredFraction = Math.min(1, (overThePuddle * clothWipingWidthMetres) / puddleArea)
-    this.ritual.dispatch({ type: 'wipeTable', clothId: stroke.clothId, strokeSpeedCmPerSecond, coveredFraction })
+    const puddleAreaSquareMetres = Math.PI * (this.puddleOn(stroke.furnitureId)?.radiusMetres ?? 0) ** 2
+    const wipe = stroke.wipeWhatWasCovered(heldSeconds, puddleAreaSquareMetres)
+    if (wipe === null) return
+    this.ritual.dispatch({ type: 'wipeTable', clothId: stroke.clothId, ...wipe })
   }
 
   private isTheClothOverThePuddleAt(furnitureId: FurnitureId, point: FloorPoint): boolean {
@@ -496,14 +468,14 @@ export class RoomPlay {
   }
 
   private finishTheStroke(stroke: WipeStroke, heldSeconds: number): void {
-    if (stroke.unwipedMetres > 0) this.wipeWhatTheStrokeCovered(stroke, heldSeconds)
-    this.log(`stroke with ${stroke.clothId} ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, ${stroke.metresOverThePuddle.toFixed(2)} m of it over the puddle, the ${stroke.furnitureId} is ${wetMlAt(this.ritual.state, stroke.furnitureId).toFixed(1)} ml wet`)
+    if (stroke.hasUnwipedLength) this.wipeWhatTheStrokeCovered(stroke, heldSeconds)
+    this.log(`stroke with ${stroke.clothId} ended: ${stroke.describe(heldSeconds)}, the ${stroke.furnitureId} is ${wetMlAt(this.ritual.state, stroke.furnitureId).toFixed(1)} ml wet`)
   }
 
   private wipeStrokeStartingAt(target: RoomTapTarget): WipeStroke | null {
     const clothId = this.chosenItemId()
     if (clothId === null || !isACloth(this.ritual.state, clothId) || target.kind !== 'surface') return null
-    return { clothId, furnitureId: target.furnitureId, lengthMetres: 0, unwipedMetres: 0, unwipedMetresOverThePuddle: 0, metresOverThePuddle: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
+    return new WipeStroke(clothId, target.furnitureId, target.point)
   }
 
   private toggleHand(handIndex: HandIndex): void {
@@ -523,19 +495,15 @@ export class RoomPlay {
     const events = this.ritual.dispatch({ type: 'putDown', itemId, spot })
     this.letGoOfTheChoiceUnlessRefused(events)
     if (this.ritual.state.cloths[itemId]?.location.kind === 'onSurface') this.soakUpThePuddleIfTheClothLandsInIt(itemId, furnitureId, point)
-    if (furnitureId === 'shelf') this.remarkOnceWhenEverythingIsOnTheShelf(itemId)
+    if (furnitureId === 'shelf') this.remarks.heard({ kind: 'putOnTheShelf', itemId, isEverythingOnTheShelf: this.isEverythingOnTheShelf() })
   }
 
-  private remarkOnceWhenEverythingIsOnTheShelf(lastItemId: string): void {
-    if (this.timesRemarked.has('everythingOnTheShelf')) return
+  private isEverythingOnTheShelf(): boolean {
     const state = this.ritual.state
-    const itemIdsElsewhere = carriedItemIdsIn(state).filter((itemId) => {
+    return carriedItemIdsIn(state).every((itemId) => {
       const location = itemLocationIn(state, itemId)
-      return location !== undefined && location.kind !== 'gone' && !(location.kind === 'onSurface' && location.spot.placeId === 'shelf')
+      return location === undefined || location.kind === 'gone' || (location.kind === 'onSurface' && location.spot.placeId === 'shelf')
     })
-    if (itemIdsElsewhere.length > 0) return
-    this.remark('everythingOnTheShelf')
-    this.log(`${lastItemId} was the last thing put on the shelf, everything is put away, remarked once for this visit`)
   }
 
   private soakUpThePuddleIfTheClothLandsInIt(clothId: string, furnitureId: FurnitureId, point: WorldPoint): void {
@@ -558,22 +526,14 @@ export class RoomPlay {
     if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
     const events = this.ritual.dispatch({ type: 'placeOnHeater', itemId })
     this.letGoOfTheChoiceUnlessRefused(events)
-    const isNewOnTheWorkingHeater = this.ritual.state.heater.isOn && !this.itemsTriedOnTheWorkingHeater.has(itemId)
-    if (isNewOnTheWorkingHeater) this.itemsTriedOnTheWorkingHeater.add(itemId)
-    if (isNewOnTheWorkingHeater && this.itemsTriedOnTheWorkingHeater.size === this.heaterItemsBeforeTheTesterJoke) return this.teaseTheHeaterTester(itemId)
     const isKeptOff = events.some((event) => event.type === 'actionRefused' && event.reason === 'cannotSitOnHeater')
-    const shape = carriedShapeOf(this.ritual.state, itemId)
-    const remarkKind = isKeptOff && shape !== undefined ? remarkWhenKeptOffTheHeater[shape] : undefined
-    if (remarkKind === undefined) return
-    const timesTapped = this.remark(remarkKind)
-    this.log(`${itemId} is kept off the heater, remarked on ${timesTapped} times`)
+    this.remarks.heard({ kind: 'putOnTheHeater', itemId, shape: carriedShapeOf(this.ritual.state, itemId), isKeptOff, isTheHeaterOn: this.ritual.state.heater.isOn })
   }
 
   private tapWithFullHands(itemId: string): void {
-    const count = (this.tapsWithFullHands?.count ?? 0) + 1
-    this.tapsWithFullHands = { itemId, count }
+    const count = this.tapsWithFullHands.countTapOn(itemId)
     if (count < tapsWithFullHandsThatGrowAMiddleHand) return this.remarkOnFullHands(itemId)
-    this.tapsWithFullHands = null
+    this.tapsWithFullHands.startAgain()
     if (!this.listener.mayGrowAMiddleHand()) {
       this.log(`${itemId} tapped ${count} times in a row with full hands, but the middle hand has been grown before, so none grows`)
       return this.remarkOnFullHands(itemId)
@@ -586,28 +546,16 @@ export class RoomPlay {
   }
 
   private forgetTheTapsWithFullHands(): void {
-    if (this.tapsWithFullHands === null) return
-    this.log(`another tap after ${this.tapsWithFullHands.count} taps on ${this.tapsWithFullHands.itemId} with full hands starts the count again`)
-    this.tapsWithFullHands = null
+    if (this.tapsWithFullHands.countSoFar === 0) return
+    this.log(`another tap after ${this.tapsWithFullHands.countSoFar} taps with full hands starts the count again`)
+    this.tapsWithFullHands.startAgain()
   }
 
   private remarkOnFullHands(itemId: string): void {
     const state = this.ritual.state
     const holdsOnlyBowls = state.keeper.hands.slice(0, middleHandIndex).every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
-    const timesTapped = this.remark(holdsOnlyBowls ? 'handsFullOfBowls' : 'handsFull')
-    this.log(`${itemId} not taken: both hands are full${holdsOnlyBowls ? ' of bowls' : ''}, remarked on ${timesTapped} times`)
-  }
-
-  private teaseTheHeaterTester(itemId: string): void {
-    this.remark('heaterTester')
-    this.log(`${itemId} is the ${this.itemsTriedOnTheWorkingHeater.size}th different item tried on the working heater, the tester is teased, once for this visit`)
-  }
-
-  private remark(kind: RoomRemarkKind): number {
-    const timesTapped = (this.timesRemarked.get(kind) ?? 0) + 1
-    this.timesRemarked.set(kind, timesTapped)
-    this.listener.remarked({ kind, timesTapped })
-    return timesTapped
+    this.log(`${itemId} not taken: both hands are full${holdsOnlyBowls ? ' of bowls' : ''}`)
+    this.remarks.heard({ kind: 'takenWithFullHands', itemId, holdsOnlyBowls })
   }
 
   private chosenItemId(): string | null {

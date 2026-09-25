@@ -4,7 +4,7 @@ import type { SessionState } from '../../../Shared/Simulation/State/SessionState
 import { sipFeeling } from '../Table/TableTexts.ts'
 import { carriedShapeOf } from './CarriedShapes.ts'
 import type { RoomLog } from './RoomNavigator.ts'
-import type { RoomRemarkKind } from './RoomPlay.ts'
+import type { RoomRemarkKind } from './RoomRemarks.ts'
 
 export const achievementIds = [
   'burntClothWashed',

@@ -5,7 +5,7 @@ import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
 import { phraseLineAtTurn, phraseVariantsOf, textOrFallback, textWith } from '../Texts/Texts.ts'
 import type { RoomLog } from './RoomNavigator.ts'
-import type { RoomRemark } from './RoomPlay.ts'
+import type { RoomRemark } from './RoomRemarks.ts'
 
 const spillTheKeeperRemarksOnMl = 5
 const spillRemarksApartSeconds = 120
