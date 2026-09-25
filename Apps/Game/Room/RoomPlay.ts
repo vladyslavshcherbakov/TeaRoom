@@ -287,6 +287,7 @@ export class RoomPlay {
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: openingRadiusMetres[targetShape] }
     this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, pourTarget, this.pourTargetsBeside(sourceId, target.location.spot.placeId), spoutDirection)
   }
+
   private pourTargetsBeside(sourceId: string, placeId: string): PourTarget[] {
     return Object.values(this.ritual.state.vessels).flatMap((vessel) => {
       const shape = carriedShapeOf(this.ritual.state, vessel.id)
@@ -295,7 +296,6 @@ export class RoomPlay {
       return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: openingRadiusMetres[shape] }]
     })
   }
-
 
   private useTheSink(): void {
     const itemId = this.chosenItemId()

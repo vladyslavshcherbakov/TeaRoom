@@ -92,7 +92,7 @@ type ItemParts = {
   readonly pointsDownTheSide?: readonly PointDownTheSide[]
 }
 
-export const mostSteamSources = 2
+const mostSteamSources = 2
 export const mostPuffsFromOneSource = 3
 
 const lidTouchPadRadiusMetres = 0.095
