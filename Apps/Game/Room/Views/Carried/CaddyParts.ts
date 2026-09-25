@@ -1,8 +1,20 @@
 import * as THREE from 'three'
 import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import type { ItemParts } from './ItemParts.ts'
 
-export function caddyParts(materials: RoomMaterials): ItemParts {
+export const caddyShapeLook: CarriedShapeLook = {
+  partsFor: (materials) => caddyParts(materials.room),
+  steamRisesAboveTheSpout: false,
+  looseLeaves: {
+    heapStartsAt: { x: 0, y: 0.004, z: 0 },
+    pile: { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14, isLyingFlat: false },
+    fillShareIn: (table) => table.caddy.fillShare,
+  },
+  soakedLeaves: null,
+}
+
+function caddyParts(materials: RoomMaterials): ItemParts {
   const tin = materials.unsharedMaterialFor('caddyGreen')
   tin.side = THREE.DoubleSide
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 28, 1, true), tin)

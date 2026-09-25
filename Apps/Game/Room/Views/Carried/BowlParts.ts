@@ -2,8 +2,10 @@ import * as THREE from 'three'
 import { heronPaintingAspect } from '../HeronPainting.ts'
 import { koiPaintingAspect } from '../KoiPainting.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
+import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
 import { teaCharacterPaintingAspect } from '../TeaCharacterPainting.ts'
+import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { bowlInsideProfile, bowlOutsideWall, bowlProfile, bowlRimTop, bowlUndersideAndFoot } from './BowlProfile.ts'
 import { liquidBelowTheRimMetres, overflowOverTheLipMetres, type ItemParts, type PointDownTheSide } from './ItemParts.ts'
 
@@ -68,7 +70,18 @@ const pointsDownTheBowl: readonly PointDownTheSide[] = [
   ...[...bowlOutsideWall].reverse().map((point) => ({ distance: point.x + overflowOverTheLipMetres, height: point.y })),
 ]
 
-export function bowlParts(materials: RoomMaterials, itemId: string): ItemParts {
+export const bowlShapeLook: CarriedShapeLook = {
+  partsFor: (materials, itemId) => bowlParts(materials.room, itemId),
+  steamRisesAboveTheSpout: false,
+  looseLeaves: null,
+  soakedLeaves: {
+    pile: { leafCount: mostSoakedLeavesShown, radiusMetres: 0.035, heightMetres: 0, isLyingFlat: true },
+    floatHeightAt: (fillShare) => bowlLiquidLevel(fillShare).heightMetres,
+    areSeenOnlyOnWaterUnderAnOpenLid: false,
+  },
+}
+
+function bowlParts(materials: RoomMaterials, itemId: string): ItemParts {
   const look = bowlLookById[itemId] ?? porcelainBowl
   const glazed = materials.unsharedMaterialFor(look.glaze)
   glazed.side = THREE.DoubleSide

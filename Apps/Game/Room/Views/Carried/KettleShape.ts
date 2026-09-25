@@ -17,3 +17,9 @@ export function kettleRadiusAt(heightMetres: number): number {
   const heightFromCentre = (heightMetres - bodyCentreMetres) / (bodyRadiusMetres * bodySquash)
   return bodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre))
 }
+
+export function kettleWaterHeightAt(fillShare: number): number {
+  const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle, bottomInsideMetres, waterBelowTheOpeningMetres } = kettleShape
+  const openingHeight = bodyCentreMetres + bodyRadiusMetres * bodySquash * Math.cos(openingAngle)
+  return bottomInsideMetres + fillShare * (openingHeight - waterBelowTheOpeningMetres - bottomInsideMetres)
+}

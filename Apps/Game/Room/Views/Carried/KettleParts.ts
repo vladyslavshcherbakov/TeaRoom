@@ -1,8 +1,10 @@
 import * as THREE from 'three'
+import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { GaugeStrip } from './GaugeStrip.ts'
 import type { CarriedModelMaterials, ItemParts, PointDownTheSide } from './ItemParts.ts'
-import { kettleShape } from './KettleShape.ts'
+import { kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
 
 const lidTouchPadRadiusMetres = 0.095
 const gaugeFrameHalfWidthMetres = 0.024
@@ -14,7 +16,18 @@ const overflowAboveTheBodyMetres = 0.005
 const overflowLeavesTheKettleAtRadians = 2.4
 const overflowPointsOnTheKettle = 12
 
-export function kettleParts(materials: CarriedModelMaterials): ItemParts {
+export const kettleShapeLook: CarriedShapeLook = {
+  partsFor: kettleParts,
+  steamRisesAboveTheSpout: true,
+  looseLeaves: null,
+  soakedLeaves: {
+    pile: { leafCount: mostSoakedLeavesShown, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true },
+    floatHeightAt: kettleWaterHeightAt,
+    areSeenOnlyOnWaterUnderAnOpenLid: true,
+  },
+}
+
+function kettleParts(materials: CarriedModelMaterials): ItemParts {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle } = kettleShape
   const bodyWithAnOpening = new THREE.SphereGeometry(bodyRadiusMetres, 20, 14, 0, Math.PI * 2, openingAngle, Math.PI - openingAngle)
   const body = new THREE.Mesh(bodyWithAnOpening, materials.claySeenFromInside)

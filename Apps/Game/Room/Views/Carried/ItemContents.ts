@@ -11,8 +11,8 @@ import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import { mostPuffsFromOneSource, type CarriedModel } from './CarriedModel.ts'
 import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
-import { kettleShape } from './KettleShape.ts'
-import { LeafPile, type LeafPileSize } from './LeafPile.ts'
+import { kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
+import { LeafPile } from './LeafPile.ts'
 
 type Wave = {
   readonly riseMetres: number
@@ -32,10 +32,6 @@ const smallestPuffScale = 0.6
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
-const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14, isLyingFlat: false }
-const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false }
-const leavesOnTheKettlesWater: LeafPileSize = { leafCount: mostSoakedLeavesShown, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true }
-const leavesInABowl: LeafPileSize = { leafCount: mostSoakedLeavesShown, radiusMetres: 0.035, heightMetres: 0, isLyingFlat: true }
 const leavesAboveTheWaterMetres = 0.0015
 const redHotMetal = new THREE.Color('#3a0904')
 const dullRedHeat = new THREE.Color('#8a1000')
@@ -81,16 +77,18 @@ function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], 
 }
 
 function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
+  const looseLeaves = model.look.looseLeaves
+  if (looseLeaves === null) return
   const teaId = scene.state.caddy.teaId
   if (model.leaves === null || model.leaves.teaId !== teaId) {
     if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
-    const pile = new LeafPile(teaLookFor(teaId), model.shape === 'spoon' ? leavesOnTheSpoon : leavesInTheCaddy)
+    const pile = new LeafPile(teaLookFor(teaId), looseLeaves.pile)
     pile.mesh.layers.set(model.layer)
     pile.mesh.userData = { ...holder.userData }
     holder.add(pile.mesh)
     model.leaves = { pile, teaId }
   }
-  model.leaves.pile.showFill(model.shape === 'spoon' ? scene.table.spoonFillShare : scene.table.caddy.fillShare)
+  model.leaves.pile.showFill(looseLeaves.fillShareIn(scene.table))
 }
 
 function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
@@ -134,25 +132,21 @@ function showWaterInGauge(gaugeWater: GaugeStrip, vessel: TableViewState.Vessel,
 
 function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: TableViewState.Vessel, wave: Wave, timeSeconds: number): void {
   const soaked = vessel.soakedLeaves
-  const isInsideShown = model.shape === 'kettle' ? vessel.fillShare > 0 && vessel.isLidOpen === true : true
-  holder.visible = soaked !== null && isInsideShown
-  if (soaked === null || !holder.visible) return
+  const soakedLook = model.look.soakedLeaves
+  const isInsideShown = soakedLook?.areSeenOnlyOnWaterUnderAnOpenLid === true ? vessel.fillShare > 0 && vessel.isLidOpen === true : true
+  holder.visible = soaked !== null && soakedLook !== null && isInsideShown
+  if (soaked === null || soakedLook === null || !holder.visible) return
   if (model.soakedLeaves === null || model.soakedLeaves.teaId !== soaked.teaId) {
     if (model.soakedLeaves !== null) holder.remove(model.soakedLeaves.pile.mesh)
-    const pile = new LeafPile(teaLookFor(soaked.teaId), model.shape === 'kettle' ? leavesOnTheKettlesWater : leavesInABowl)
+    const pile = new LeafPile(teaLookFor(soaked.teaId), soakedLook.pile)
     pile.mesh.layers.set(model.layer)
     holder.add(pile.mesh)
     model.soakedLeaves = { pile, teaId: soaked.teaId }
   }
   model.soakedLeaves.pile.showFill(soaked.count / mostSoakedLeavesShown)
   const waterRise = vessel.fillShare > 0 ? wave.riseMetres : 0
-  holder.position.y = soakedLeavesHeight(model, vessel) + waterRise + leavesAboveTheWaterMetres
+  holder.position.y = soakedLook.floatHeightAt(vessel.fillShare) + waterRise + leavesAboveTheWaterMetres
   holder.rotation.set(wave.tiltXRadians, timeSeconds * leavesDriftRadiansPerSecond, wave.tiltZRadians)
-}
-
-function soakedLeavesHeight(model: CarriedModel, vessel: TableViewState.Vessel): number {
-  if (model.liquidLevel !== null) return model.liquidLevel(vessel.fillShare).heightMetres
-  return kettleSurfaceHeight(vessel)
 }
 
 function showRedHeat(shell: GlowingShell, glow: number): void {
@@ -163,17 +157,11 @@ function showRedHeat(shell: GlowingShell, glow: number): void {
   metal.emissiveIntensity = glow ** redHeatRisesWithGlow * brightestRedHeatIntensity
 }
 
-function kettleSurfaceHeight(vessel: TableViewState.Vessel): number {
-  const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle, bottomInsideMetres, waterBelowTheOpeningMetres } = kettleShape
-  const openingHeight = bodyCentreMetres + bodyRadiusMetres * bodySquash * Math.cos(openingAngle)
-  return bottomInsideMetres + vessel.fillShare * (openingHeight - waterBelowTheOpeningMetres - bottomInsideMetres)
-}
-
 function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
   water.visible = vessel.fillShare > 0 && vessel.isLidOpen === true
   const bodyHalfHeight = bodyRadiusMetres * bodySquash
-  const surfaceHeight = kettleSurfaceHeight(vessel)
+  const surfaceHeight = kettleWaterHeightAt(vessel.fillShare)
   const heightFromCentre = (surfaceHeight - bodyCentreMetres) / bodyHalfHeight
   water.position.y = surfaceHeight + wave.riseMetres
   water.rotation.set(-Math.PI / 2 + wave.tiltXRadians, 0, wave.tiltZRadians)
@@ -185,8 +173,7 @@ function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vess
 function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vector3[] {
   const aboveTheOpening = model.root.position.clone().add(new THREE.Vector3(0, model.rimHeight + steamStartsAboveTheOpeningMetres, 0))
   const aboveTheSpout = model.root.localToWorld(model.spoutTip.clone()).add(new THREE.Vector3(0, steamStartsAboveTheSpoutMetres, 0))
-  if (model.shape !== 'kettle') return isOpenToTheAir ? [aboveTheOpening] : []
-  return isOpenToTheAir ? [aboveTheSpout, aboveTheOpening] : [aboveTheSpout]
+  return [...(model.look.steamRisesAboveTheSpout ? [aboveTheSpout] : []), ...(isOpenToTheAir ? [aboveTheOpening] : [])]
 }
 
 function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, lyingOffset: FloorPoint | null): void {

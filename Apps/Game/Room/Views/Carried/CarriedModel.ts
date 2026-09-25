@@ -1,18 +1,20 @@
 import * as THREE from 'three'
 import { layoutByShape, type CarriedShape } from '../../CarriedShapes.ts'
-import { bowlParts } from './BowlParts.ts'
-import { caddyParts } from './CaddyParts.ts'
-import { clothParts } from './ClothParts.ts'
+import { bowlShapeLook } from './BowlParts.ts'
+import { caddyShapeLook } from './CaddyParts.ts'
+import type { CarriedShapeLook } from './CarriedShapeLook.ts'
+import { clothShapeLook } from './ClothParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
-import type { CarriedModelMaterials, GlowingShell, HeldInViewLook, ItemParts, LiquidLevel, LiquidVolumeAt, PointDownTheSide } from './ItemParts.ts'
-import { kettleParts } from './KettleParts.ts'
+import type { CarriedModelMaterials, GlowingShell, HeldInViewLook, LiquidLevel, LiquidVolumeAt, PointDownTheSide } from './ItemParts.ts'
+import { kettleShapeLook } from './KettleParts.ts'
 import type { LeafPile } from './LeafPile.ts'
-import { spoonParts } from './SpoonParts.ts'
-import { thermosParts } from './ThermosParts.ts'
+import { spoonShapeLook } from './SpoonParts.ts'
+import { thermosShapeLook } from './ThermosParts.ts'
 
 export type CarriedModel = {
   readonly itemId: string
   readonly shape: CarriedShape
+  readonly look: CarriedShapeLook
   readonly root: THREE.Group
   readonly spoutTip: THREE.Vector3
   readonly rimHeight: number
@@ -48,10 +50,19 @@ const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
 const liquidSurfaceSegments = 64
 const liquidDrawnAfterThePaintingBelowIt = 2
+const lookByShape: Readonly<Record<CarriedShape, CarriedShapeLook>> = {
+  kettle: kettleShapeLook,
+  thermos: thermosShapeLook,
+  caddy: caddyShapeLook,
+  bowl: bowlShapeLook,
+  spoon: spoonShapeLook,
+  cloth: clothShapeLook,
+}
 
 export function newCarriedModel(itemId: string, shape: CarriedShape, materials: CarriedModelMaterials): CarriedModel {
   const root = new THREE.Group()
-  const parts = partsOf(shape, itemId, materials)
+  const look = lookByShape[shape]
+  const parts = look.partsFor(materials, itemId)
   root.add(...parts.meshes)
   if (parts.lid !== null) root.add(parts.lid)
   const liquidMaterial = parts.liquidLevel === null ? null : (materials.room.unsharedMaterialFor('liquidSurface') as THREE.MeshStandardMaterial)
@@ -65,9 +76,9 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const liquidVolume = parts.liquidVolumeAt !== null ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
   if (liquidVolume !== null) root.add(liquidVolume)
   if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight, materials.touchPad))
-  const leafHolder = leafHolderFor(shape)
+  const leafHolder = look.looseLeaves === null ? null : leafHolderAt(look.looseLeaves.heapStartsAt)
   if (leafHolder !== null) root.add(leafHolder)
-  const soakedLeafHolder = shape === 'kettle' || shape === 'bowl' ? new THREE.Group() : null
+  const soakedLeafHolder = look.soakedLeaves === null ? null : new THREE.Group()
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === materials.touchPad)))
   const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), materials.room.materialFor('steam')))
@@ -75,6 +86,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   return {
     itemId,
     shape,
+    look,
     root,
     spoutTip: parts.spoutTip,
     rimHeight: parts.rimHeight,
@@ -113,26 +125,8 @@ function forgivingTouchPad(shape: CarriedShape, rimHeight: number, touchPad: THR
   return pad
 }
 
-function leafHolderFor(shape: CarriedShape): THREE.Group | null {
-  if (shape !== 'caddy' && shape !== 'spoon') return null
+function leafHolderAt(point: { readonly x: number; readonly y: number; readonly z: number }): THREE.Group {
   const holder = new THREE.Group()
-  holder.position.set(shape === 'spoon' ? 0.07 : 0, shape === 'spoon' ? 0.02 : 0.004, 0)
+  holder.position.set(point.x, point.y, point.z)
   return holder
-}
-
-function partsOf(shape: CarriedShape, itemId: string, materials: CarriedModelMaterials): ItemParts {
-  switch (shape) {
-    case 'kettle':
-      return kettleParts(materials)
-    case 'thermos':
-      return thermosParts(materials.room)
-    case 'caddy':
-      return caddyParts(materials.room)
-    case 'bowl':
-      return bowlParts(materials.room, itemId)
-    case 'spoon':
-      return spoonParts(materials.room)
-    case 'cloth':
-      return clothParts(materials.cloth)
-  }
 }

@@ -7,13 +7,11 @@ import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { CarriedModel } from './CarriedModel.ts'
 import { CreepingStream } from './CreepingStream.ts'
 import { FallingStream } from './FallingStream.ts'
-import type { PointDownTheSide } from './ItemParts.ts'
 
 const streamRadiusMetres = 0.007
 const smallestVisibleTiltDegrees = 10
 const pourStreamEndsAboveTheTargetMetres = 0.01
 const overflowSideFromTheGaugeRadians = 0.7
-const overflowAboveTheSurfaceMetres = 0.005
 const overflowStreamRadiusMetres = 0.009
 
 export class WaterStreams {
@@ -57,7 +55,8 @@ export class WaterStreams {
     const isRunningOverTheLid = runningWater?.isRunningOverTheLid === true
     const isTheSinkOverflowing = inTheSink !== undefined && runningWater?.hasOverflowed === true && !isRunningOverTheLid
     const overflowing = isTheSinkOverflowing ? inTheSink : this.overfilledPourTarget(scene, models)
-    this.overflowStream.show(overflowing === undefined ? null : { path: this.overflowPathOf(overflowing), position: overflowing.root.position, quaternion: overflowing.root.quaternion }, scene.timeSeconds)
+    const overflowPath = overflowing === undefined ? null : this.overflowPathOf(overflowing)
+    this.overflowStream.show(overflowing === undefined || overflowPath === null ? null : { path: overflowPath, position: overflowing.root.position, quaternion: overflowing.root.quaternion }, scene.timeSeconds)
     if (runningWater === null || this.sinkSpot === null) return this.tapStream.show(null, scene.timeSeconds)
     const bottomY = inTheSink === undefined ? this.sinkSpot.y : inTheSink.root.position.y + inTheSink.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
     this.tapStream.show({ top: new THREE.Vector3(faucetSpout.x, faucetSpout.y, faucetSpout.z), bottomY }, scene.timeSeconds)
@@ -69,23 +68,16 @@ export class WaterStreams {
     return models.find((model) => model.itemId === pour.targetId)
   }
 
-  private overflowPathOf(model: CarriedModel): THREE.TubeGeometry {
+  private overflowPathOf(model: CarriedModel): THREE.TubeGeometry | null {
     const known = this.overflowPathByShape.get(model.shape)
     if (known !== undefined) return known
+    const pointsOnTheSide = model.pointsDownTheSide
+    if (pointsOnTheSide === null) return null
     const side = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
-    const pointsOnTheSide = model.pointsDownTheSide ?? pointsDownAStraightSide(model)
     const lastOnTheSide = pointsOnTheSide[pointsOnTheSide.length - 1] ?? { distance: 0, height: 0 }
     const points = [...pointsOnTheSide, { distance: lastOnTheSide.distance, height: 0 }].map(({ distance, height }) => side.clone().multiplyScalar(distance).setY(height))
     const path = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, overflowStreamRadiusMetres, 6, false)
     this.overflowPathByShape.set(model.shape, path)
     return path
   }
-}
-
-function pointsDownAStraightSide(model: CarriedModel): readonly PointDownTheSide[] {
-  const distance = model.footprintRadius + overflowAboveTheSurfaceMetres
-  return [
-    { distance, height: model.rimHeight },
-    { distance, height: model.rimHeight / 2 },
-  ]
 }

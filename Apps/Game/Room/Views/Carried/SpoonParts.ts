@@ -1,8 +1,20 @@
 import * as THREE from 'three'
 import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import type { ItemParts } from './ItemParts.ts'
 
-export function spoonParts(materials: RoomMaterials): ItemParts {
+export const spoonShapeLook: CarriedShapeLook = {
+  partsFor: (materials) => spoonParts(materials.room),
+  steamRisesAboveTheSpout: false,
+  looseLeaves: {
+    heapStartsAt: { x: 0.07, y: 0.02, z: 0 },
+    pile: { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false },
+    fillShareIn: (table) => table.spoonFillShare,
+  },
+  soakedLeaves: null,
+}
+
+function spoonParts(materials: RoomMaterials): ItemParts {
   const handle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.015, 0.025), materials.materialFor('darkWood'))
   handle.position.set(-0.04, 0.01, 0)
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.02, 12), materials.materialFor('darkWood'))
