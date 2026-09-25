@@ -93,7 +93,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   aluminium: '#aab0b5',
   caddyGreen: '#5f9a7c',
   cloth: '#ffffff',
-  wetCloth: '#8a7c68',
+  wetCloth: '#a4a4a6',
   teaStainedCloth: '#f2dc96',
   charredCloth: '#2e2520',
   charredBamboo: '#1c1714',
