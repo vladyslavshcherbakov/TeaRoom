@@ -51,6 +51,17 @@ type Side = 'inside' | 'outside'
 type CanvasPoint = { readonly x: number; readonly y: number }
 type Rgb = readonly [number, number, number]
 
+type GlazeColumn = {
+  readonly bareClayBelowY: number
+  readonly run: number
+  readonly runLength: number
+}
+
+type NoiseLattice = {
+  readonly period: number
+  readonly valuesByRow: readonly Float64Array[]
+}
+
 export type KintsugiGlaze = {
   readonly colours: HTMLCanvasElement
   readonly surface: HTMLCanvasElement
@@ -64,35 +75,42 @@ const insideLength = profileLength - rimLength
 const discRadius = insideLength
 const rimY = canvasPointAt(0, rimLength).y
 const footY = (1 - bareClayUpToProfileIndex / (bowlProfile.length - 1)) * canvasHeight
+const cloudLatticesByFrequency = new Map<number, NoiseLattice>()
 
 export function paintKintsugi(): KintsugiGlaze {
   const cracks = cracksOfTheBreak()
   const patch = lostChip(cracks)
-  return { colours: paintColours(cracks, patch), surface: paintSurface(cracks, patch) }
+  const columns = Array.from({ length: canvasWidth }, (_, x) => glazeColumnAt(x))
+  return { colours: paintColours(cracks, patch, columns), surface: paintSurface(cracks, patch, columns) }
 }
 
-function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[]): HTMLCanvasElement {
+function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[], columns: readonly GlazeColumn[]): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
   if (context === null) return canvas
-  paintEveryPixel(context, (x, y) => (isBareClayAt(x, y) ? mixed(bareClay, darkClay, clouds(x, y, glazeCloudsAcross * 3)) : ruriGlazeAt(x, y)))
+  paintEveryPixel(context, columns, (x, y, column) => (isBareClayAt(y, column) ? mixed(bareClay, darkClay, clouds(x, y, glazeCloudsAcross * 3)) : ruriGlazeAt(x, y, column)))
   fillSeams(context, cracks, seamWidthMetres, goldEdge)
   fillPatch(context, patch, goldMiddle, goldEdge)
   fillSeams(context, cracks, seamHighlightWidthMetres, goldMiddle)
   return canvas
 }
 
-function paintSurface(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[]): HTMLCanvasElement {
+function paintSurface(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[], columns: readonly GlazeColumn[]): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
   if (context === null) return canvas
-  paintEveryPixel(context, (x, y) => (isBareClayAt(x, y) ? [0, Math.round(255 * clayRoughness), 0] : [255, Math.round(255 * glazeRoughness), 0]))
+  paintEveryPixel(context, columns, (_, y, column) => (isBareClayAt(y, column) ? [0, Math.round(255 * clayRoughness), 0] : [255, Math.round(255 * glazeRoughness), 0]))
   fillSeams(context, cracks, seamWidthMetres, goldSurface)
   fillPatch(context, patch, goldSurface, goldSurface)
   return canvas
 }
 
-function ruriGlazeAt(x: number, y: number): Rgb {
+function glazeColumnAt(x: number): GlazeColumn {
+  const wobble = bareClayEdgeWobblePx * valueNoise(x / bareClayEdgeWavelengthPx, 3, canvasWidth / bareClayEdgeWavelengthPx)
   const run = valueNoise(x / runWavelengthPx, 0.5, canvasWidth / runWavelengthPx)
   const runLength = shortestRunPx + runLengthSpreadPx * valueNoise(x / runLengthWavelengthPx, 7.5, canvasWidth / runLengthWavelengthPx) ** 2
+  return { bareClayBelowY: footY - wobble, run, runLength }
+}
+
+function ruriGlazeAt(x: number, y: number, { run, runLength }: GlazeColumn): Rgb {
   const fromTheRim = Math.abs(y - rimY)
   const runStrength = run > runsFromShare ? Math.min(1, (run - runsFromShare) / (runFullStrengthShare - runsFromShare)) : 0
   const runShare = runStrength * Math.sqrt(Math.max(0, 1 - fromTheRim / runLength))
@@ -100,16 +118,17 @@ function ruriGlazeAt(x: number, y: number): Rgb {
   return mixed(lapisBlue, paleRunBlue, lapisShowingThroughShare + glazeCloudShare * clouds(x, y, glazeCloudsAcross) + paleRunShare * Math.max(runShare, thinAtTheRim))
 }
 
-function isBareClayAt(x: number, y: number): boolean {
-  const wobble = bareClayEdgeWobblePx * valueNoise(x / bareClayEdgeWavelengthPx, 3, canvasWidth / bareClayEdgeWavelengthPx)
-  return y > footY - wobble
+function isBareClayAt(y: number, column: GlazeColumn): boolean {
+  return y > column.bareClayBelowY
 }
 
-function paintEveryPixel(context: CanvasRenderingContext2D, colourAt: (x: number, y: number) => Rgb): void {
+function paintEveryPixel(context: CanvasRenderingContext2D, columns: readonly GlazeColumn[], colourAt: (x: number, y: number, column: GlazeColumn) => Rgb): void {
   const image = context.createImageData(canvasWidth, canvasHeight)
   for (let y = 0; y < canvasHeight; y += 1) {
     for (let x = 0; x < canvasWidth; x += 1) {
-      const [red, green, blue] = colourAt(x, y)
+      const column = columns[x]
+      if (column === undefined) continue
+      const [red, green, blue] = colourAt(x, y, column)
       const index = (y * canvasWidth + x) * 4
       image.data[index] = red
       image.data[index + 1] = green
@@ -130,7 +149,7 @@ function clouds(x: number, y: number, across: number): number {
   let weight = 0.5
   let frequency = across
   for (let octave = 0; octave < 4; octave += 1) {
-    sum += weight * valueNoise((x / canvasWidth) * frequency, (y / canvasHeight) * frequency, frequency)
+    sum += weight * latticeNoise((x / canvasWidth) * frequency, (y / canvasHeight) * frequency, cloudLatticeFor(frequency))
     weight /= 2
     frequency *= 2
   }
@@ -140,13 +159,43 @@ function clouds(x: number, y: number, across: number): number {
 function valueNoise(x: number, y: number, period: number): number {
   const cellX = Math.floor(x)
   const cellY = Math.floor(y)
-  const alongX = smoothed(x - cellX)
-  const alongY = smoothed(y - cellY)
-  const wrapped = (cell: number) => ((cell % period) + period) % period
-  const topLeft = pseudoRandom(wrapped(cellX) * 157 + cellY * 311, noisePhase)
-  const topRight = pseudoRandom(wrapped(cellX + 1) * 157 + cellY * 311, noisePhase)
-  const bottomLeft = pseudoRandom(wrapped(cellX) * 157 + (cellY + 1) * 311, noisePhase)
-  const bottomRight = pseudoRandom(wrapped(cellX + 1) * 157 + (cellY + 1) * 311, noisePhase)
+  const left = wrapped(cellX, period)
+  const right = wrapped(cellX + 1, period)
+  const corners = [latticeValue(left, cellY), latticeValue(right, cellY), latticeValue(left, cellY + 1), latticeValue(right, cellY + 1)] as const
+  return smoothlyBetween(x - cellX, y - cellY, corners)
+}
+
+function latticeNoise(x: number, y: number, lattice: NoiseLattice): number {
+  const cellX = Math.floor(x)
+  const cellY = Math.floor(y)
+  const left = wrapped(cellX, lattice.period)
+  const right = wrapped(cellX + 1, lattice.period)
+  const row = lattice.valuesByRow[cellY]
+  const nextRow = lattice.valuesByRow[cellY + 1]
+  if (row === undefined || nextRow === undefined) return 0
+  return smoothlyBetween(x - cellX, y - cellY, [row[left] ?? 0, row[right] ?? 0, nextRow[left] ?? 0, nextRow[right] ?? 0])
+}
+
+function cloudLatticeFor(frequency: number): NoiseLattice {
+  const known = cloudLatticesByFrequency.get(frequency)
+  if (known !== undefined) return known
+  const valuesByRow = Array.from({ length: frequency + 2 }, (_, row) => Float64Array.from({ length: frequency }, (_, column) => latticeValue(column, row)))
+  const lattice = { period: frequency, valuesByRow }
+  cloudLatticesByFrequency.set(frequency, lattice)
+  return lattice
+}
+
+function latticeValue(column: number, row: number): number {
+  return pseudoRandom(column * 157 + row * 311, noisePhase)
+}
+
+function wrapped(cell: number, period: number): number {
+  return ((cell % period) + period) % period
+}
+
+function smoothlyBetween(shareAcross: number, shareDown: number, [topLeft, topRight, bottomLeft, bottomRight]: readonly [number, number, number, number]): number {
+  const alongX = smoothed(shareAcross)
+  const alongY = smoothed(shareDown)
   const top = topLeft + (topRight - topLeft) * alongX
   const bottom = bottomLeft + (bottomRight - bottomLeft) * alongX
   return top + (bottom - top) * alongY
