@@ -18,6 +18,7 @@ export type Surface =
   | 'clay'
   | 'porcelain'
   | 'steel'
+  | 'thermosInside'
   | 'caddyGreen'
   | 'cloth'
   | 'wetCloth'
@@ -68,6 +69,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   clay: '#b8643c',
   porcelain: '#f7f2e8',
   steel: '#7d97a3',
+  thermosInside: '#3f4b50',
   caddyGreen: '#5f9a7c',
   cloth: '#ffffff',
   wetCloth: '#8a7c68',

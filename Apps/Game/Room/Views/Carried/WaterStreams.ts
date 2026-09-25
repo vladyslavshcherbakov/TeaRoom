@@ -61,11 +61,18 @@ export class WaterStreams {
     const runningWater = scene.state.sink.runningWater
     const inTheSink = models.find((model) => model.itemId === scene.state.sink.itemIdInside)
     const isRunningOverTheLid = runningWater?.isRunningOverTheLid === true
-    const isOverflowing = inTheSink !== undefined && runningWater?.hasOverflowed === true && !isRunningOverTheLid
-    this.overflowStream.show(isOverflowing ? { path: this.overflowPathOf(inTheSink), position: inTheSink.root.position, quaternion: inTheSink.root.quaternion } : null, scene.timeSeconds)
+    const isTheSinkOverflowing = inTheSink !== undefined && runningWater?.hasOverflowed === true && !isRunningOverTheLid
+    const overflowing = isTheSinkOverflowing ? inTheSink : this.overfilledPourTarget(scene, models)
+    this.overflowStream.show(overflowing === undefined ? null : { path: this.overflowPathOf(overflowing), position: overflowing.root.position, quaternion: overflowing.root.quaternion }, scene.timeSeconds)
     if (runningWater === null || this.sinkSpot === null) return this.tapStream.show(null, scene.timeSeconds)
     const bottomY = inTheSink === undefined ? this.sinkSpot.y : inTheSink.root.position.y + inTheSink.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
     this.tapStream.show({ top: new THREE.Vector3(faucetSpout.x, faucetSpout.y, faucetSpout.z), bottomY }, scene.timeSeconds)
+  }
+
+  private overfilledPourTarget(scene: CarriedItemsScene, models: readonly CarriedModel[]): CarriedModel | undefined {
+    const pour = scene.state.pour
+    if (pour === null || !pour.hasOverflowed) return undefined
+    return models.find((model) => model.itemId === pour.targetId)
   }
 
   private overflowPathOf(model: CarriedModel): THREE.TubeGeometry {

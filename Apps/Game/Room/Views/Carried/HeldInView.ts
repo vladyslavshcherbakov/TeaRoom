@@ -21,13 +21,16 @@ const chosenHeldLiftShareOfScreenHeight = 0.05
 const heldInViewTiltTowardsCameraRadians = 0.55
 const heldInViewInsetShareOfItemWidth = 0.8
 const touchAreaCentreShareOfItsHeight = 0.4
+const heldInViewMostShareOfScreenHeight = 0.2
 
 export function holdInView(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView): void {
   const { camera } = heldInView
   const frame = heldInViewFrame(heldInView, handIndex)
   model.root.position.copy(camera.localToWorld(frame.baseInCamera))
   model.root.quaternion.copy(camera.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), heldInViewTiltTowardsCameraRadians))
-  model.root.scale.setScalar(frame.itemWidth / (2 * model.footprintRadius))
+  const widthScale = frame.itemWidth / (2 * model.footprintRadius)
+  const heightScale = (frame.screenHeight * heldInViewMostShareOfScreenHeight) / model.rimHeight
+  model.root.scale.setScalar(Math.min(widthScale, heightScale))
 }
 
 export function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex): HeldInViewFrame {

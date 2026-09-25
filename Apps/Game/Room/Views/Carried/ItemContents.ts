@@ -13,8 +13,6 @@ type Wave = {
   readonly tiltZRadians: number
 }
 
-const lowestLiquidInABowlMetres = 0.011
-const liquidBelowTheRimMetres = 0.006
 const openLidSideMetres = 0.16
 const lidLyingOnTheSurfaceMetres = 0.015
 const ajarLidSideMetres = 0.045
@@ -77,12 +75,11 @@ function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItem
 }
 
 function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
-  if (model.liquid === null || model.liquidMaterial === null) return
-  model.liquid.visible = vessel.fillShare > 0
-  const surfaceHeight = lowestLiquidInABowlMetres + vessel.fillShare * (model.rimHeight - liquidBelowTheRimMetres - lowestLiquidInABowlMetres)
-  const radius = 0.042 + (surfaceHeight / model.rimHeight) * 0.038
+  if (model.liquid === null || model.liquidMaterial === null || model.liquidLevel === null) return
+  model.liquid.visible = vessel.fillShare > 0 && vessel.isLidOpen !== false
+  const { heightMetres: surfaceHeight, radiusMetres } = model.liquidLevel(vessel.fillShare)
   model.liquid.position.y = surfaceHeight
-  model.liquid.scale.setScalar(radius)
+  model.liquid.scale.setScalar(radiusMetres)
   model.liquidMaterial.color.set(vessel.liquorColour)
   model.liquidMaterial.opacity = vessel.liquorOpacity
   if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel)
