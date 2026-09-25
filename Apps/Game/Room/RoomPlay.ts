@@ -13,7 +13,7 @@ import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
 import { carriedShapeOf, layoutOf, type CarriedShape } from './CarriedShapes.ts'
-import { furniture, furnitureWithId, puddleCentreOn, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { furniture, puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
 import { wetMlAt } from '../../../Shared/Simulation/Ritual/Puddles.ts'
@@ -110,6 +110,10 @@ export class RoomPlay {
 
   get view(): RoomView {
     return this.navigator.view
+  }
+
+  get closeUpInView(): CloseUp | null {
+    return this.navigator.closeUpInView
   }
 
   get place(): RoomPlace {
@@ -364,9 +368,9 @@ export class RoomPlay {
     const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
     const target = this.ritual.state.vessels[targetId]
     const targetLayout = layoutOf(this.ritual.state, targetId)
-    const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
-    if (source === undefined || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
-    const spoutDirection = screenRightOnTheFloor(furnitureWithId(closeUpFurnitureId).closeUp)
+    const closeUp = this.closeUpInView
+    if (source === undefined || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUp === null) return this.log(`no pour to aim at ${targetId}`)
+    const spoutDirection = screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
     this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot.placeId), spoutDirection)
   }

@@ -223,7 +223,8 @@ export class RoomModel {
       const position = { x: footprint.x + legX * (footprint.width / 2 - 0.08), y: (height - 0.06) / 2, z: footprint.z + legZ * (footprint.depth / 2 - 0.08) }
       this.tag(this.box('darkWood', 0.07, height - 0.06, 0.07, position), { furnitureId: piece.id })
     }
-    const cushion = this.cylinder('cushion', 0.28, 0.08, { x: piece.standingPoint.x, y: 0.04, z: piece.standingPoint.z })
+    const [frontSide] = piece.sides
+    const cushion = this.cylinder('cushion', 0.28, 0.08, { x: frontSide.standingPoint.x, y: 0.04, z: frontSide.standingPoint.z })
     cushion.castShadow = false
   }
 

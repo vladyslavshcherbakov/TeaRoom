@@ -23,7 +23,7 @@ import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
-import { furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
+import type { CameraPose, FloorPoint } from './RoomLayout.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
@@ -369,8 +369,8 @@ export class RoomScene {
   }
 
   private cameraGoal(): CameraPose {
-    const view = this.play.view
-    if (view.kind === 'closeUp') return closeUpPose(furnitureWithId(view.furnitureId).closeUp, this.camera.aspect)
+    const closeUp = this.play.closeUpInView
+    if (closeUp !== null) return closeUpPose(closeUp, this.camera.aspect)
     if (this.cameraMode === 'firstPerson') return firstPersonPose(this.play.walk.position, this.look)
     return overviewPose(this.play.walk.position, this.camera.aspect)
   }

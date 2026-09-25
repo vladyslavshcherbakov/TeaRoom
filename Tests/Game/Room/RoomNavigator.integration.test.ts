@@ -7,6 +7,7 @@ import { assertNear } from '../../Support/Assertions.ts'
 
 const frameSeconds = 1 / 60
 const teaTable = furnitureWithId('teaTable')
+const [teaTableFront, teaTableWindowSide] = teaTable.sides
 
 function roomWithLog() {
   const logLines: string[] = []
@@ -68,7 +69,7 @@ test('shelf_whenTapped_isShownCloseUpOnceTheWalkerArrives', () => {
 
   assert.deepEqual(viewOnTheWay, { kind: 'approaching', furnitureId: 'shelf' })
   assert.deepEqual(navigator.view, { kind: 'closeUp', furnitureId: 'shelf' })
-  assert.deepEqual(navigator.walk.position, furnitureWithId('shelf').standingPoint)
+  assert.deepEqual(navigator.walk.position, furnitureWithId('shelf').sides[0].standingPoint)
 })
 
 test('closeUp_whenTheFloorIsTapped_returnsToTheOverviewWithoutWalking', () => {
@@ -129,7 +130,7 @@ test('walker_whenWalkingFreelyOnTheWayToFurniture_givesUpTheWay', () => {
 })
 
 test('walker_whenTheVisitLeftThemAtTheTeaTableCloseUp_startsThereCloseUp', () => {
-  const place = { position: teaTable.standingPoint, headingRadians: 1, closeUpOf: 'teaTable' } as const
+  const place = { position: teaTableFront.standingPoint, headingRadians: 1, closeUpOf: 'teaTable' } as const
 
   const navigator = new RoomNavigator(() => {}, () => {}, place)
 
@@ -146,9 +147,37 @@ test('walker_whenTheSavedPlaceIsInsideFurniture_startsAtTheEntrance', () => {
 })
 
 test('walker_whenStartedAtTheTeaTableCloseUpAndTheFloorIsTapped_leavesTheCloseUp', () => {
-  const navigator = new RoomNavigator(() => {}, () => {}, { position: teaTable.standingPoint, headingRadians: 1, closeUpOf: 'teaTable' })
+  const navigator = new RoomNavigator(() => {}, () => {}, { position: teaTableFront.standingPoint, headingRadians: 1, closeUpOf: 'teaTable' })
 
   navigator.tapped({ kind: 'floor', point: { x: -1, z: 1.5 } })
 
   assert.deepEqual(navigator.view, { kind: 'overview' })
+})
+
+test('teaTable_whenTappedFromTheEntrance_isApproachedAndShownFromTheFront', () => {
+  const { navigator } = roomWithLog()
+
+  navigator.tapped({ kind: 'furniture', furnitureId: 'teaTable' })
+  walkUntilStill(navigator)
+
+  assert.deepEqual(navigator.walk.position, teaTableFront.standingPoint)
+  assert.deepEqual(navigator.closeUpInView, teaTableFront.closeUp)
+})
+
+test('teaTable_whenTappedFromBesideTheWindow_isApproachedAndShownFromTheWindowSide', () => {
+  const navigator = new RoomNavigator(() => {}, () => {}, { position: { x: 2.5, z: -2.5 }, headingRadians: 0, closeUpOf: null })
+
+  navigator.tapped({ kind: 'furniture', furnitureId: 'teaTable' })
+  walkUntilStill(navigator)
+
+  assert.deepEqual(navigator.walk.position, teaTableWindowSide?.standingPoint)
+  assert.deepEqual(navigator.closeUpInView, teaTableWindowSide?.closeUp)
+})
+
+test('walker_whenTheVisitLeftThemAtTheTeaTableWindowSideCloseUp_startsShowingItFromTheWindowSide', () => {
+  const place = { position: teaTableWindowSide?.standingPoint ?? walkerStart, headingRadians: 0, closeUpOf: 'teaTable' } as const
+
+  const navigator = new RoomNavigator(() => {}, () => {}, place)
+
+  assert.deepEqual(navigator.closeUpInView, teaTableWindowSide?.closeUp)
 })

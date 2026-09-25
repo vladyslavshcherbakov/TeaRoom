@@ -70,7 +70,7 @@ A press that moves less than 12 px is a tap when the finger lifts, unless it sta
 | Gesture | What it does |
 |---|---|
 | Tap the floor | The keeper walks there, around the furniture. |
-| Tap a piece of furniture, or anything on it | The keeper walks to it, and the camera shows it close up. |
+| Tap a piece of furniture, or anything on it | The keeper walks to it, and the camera shows it close up. The tea table can be used from both long sides: the keeper takes the shorter way, to the front or to the window side, and the camera shows the table from the side the keeper stands at. From the window side it looks from behind the back wall, so the wall and the sill fill the bottom of the screen. |
 | Tap the floor or empty space in a close-up | The camera returns to the room. |
 | Pinch with two fingers, or turn the mouse wheel | The camera moves closer or farther along its line of sight, from half to 1.6 times its usual distance. The first finger's press does not count as a tap. The room keeps its zoom while the keeper walks to furniture, and gets it back after the close-up. Each close-up starts at its usual distance, and its own zoom is forgotten when the player leaves it. There is no pinch while a pour is being aimed. |
 | Tap a rose bush in the garden ten times in a row | The debug menu opens. Any other tap before the tenth starts the count again. The menu switches the camera between the room view and first person, chooses which stick walks and which looks, and closes with its Close button. |

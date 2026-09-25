@@ -1,4 +1,4 @@
-import { furniture, furnitureWithId, walkerStart, type FloorPoint, type FurnitureId } from './RoomLayout.ts'
+import { furniture, furnitureWithId, sideStoodAt, walkerStart, type CloseUp, type FloorPoint, type FurnitureId } from './RoomLayout.ts'
 import { FloorGrid } from './Walking/FloorGrid.ts'
 import { isWalking, standingAt, walkFurther, type Walk } from './Walking/Walk.ts'
 
@@ -54,6 +54,12 @@ export class RoomNavigator {
   get place(): RoomPlace {
     const view = this.currentView
     return { position: this.currentWalk.position, headingRadians: this.currentWalk.headingRadians, closeUpOf: view.kind === 'closeUp' ? view.furnitureId : null }
+  }
+
+  get closeUpInView(): CloseUp | null {
+    const view = this.currentView
+    if (view.kind !== 'closeUp') return null
+    return sideStoodAt(furnitureWithId(view.furnitureId), this.currentWalk.position).closeUp
   }
 
   tapped(target: TapTarget): void {
@@ -132,10 +138,16 @@ export class RoomNavigator {
       this.currentView = { kind: 'closeUp', furnitureId }
       return this.log(`already at ${furnitureId}, showing it close up`)
     }
-    const { standingPoint } = furnitureWithId(furnitureId)
-    if (!this.startWalkingTo(standingPoint)) return
+    const from = this.currentWalk.position
+    const ways = furnitureWithId(furnitureId).sides.flatMap((side) => {
+      const waypoints = this.floor.pathBetween(from, side.standingPoint)
+      return waypoints === null ? [] : [{ side, waypoints }]
+    })
+    const shortestWay = ways.reduce<(typeof ways)[number] | null>((shortest, way) => (shortest === null || lengthOf(way.waypoints) < lengthOf(shortest.waypoints) ? way : shortest), null)
+    if (shortestWay === null) return this.log(`no way to any side of ${furnitureId} from ${coordinatesOf(from)}, staying put`)
+    this.followTheWay(shortestWay.waypoints)
     this.currentView = { kind: 'approaching', furnitureId }
-    this.log(`walking to ${furnitureId}`)
+    this.log(`walking to the ${shortestWay.side.name} of ${furnitureId}, the shortest way of ${ways.length}`)
   }
 
   private startWalkingTo(point: FloorPoint): boolean {
@@ -144,13 +156,16 @@ export class RoomNavigator {
       this.log(`no way to ${coordinatesOf(point)} from ${coordinatesOf(this.currentWalk.position)}, staying put`)
       return false
     }
-    this.currentWalk = { ...this.currentWalk, waypoints: waypoints.slice(1) }
-    if (this.furnitureStoodAt !== null) {
-      this.log(`left ${this.furnitureStoodAt}`)
-      this.furnitureStoodAt = null
-      this.keeperMoved(null)
-    }
+    this.followTheWay(waypoints)
     return true
+  }
+
+  private followTheWay(waypoints: readonly FloorPoint[]): void {
+    this.currentWalk = { ...this.currentWalk, waypoints: waypoints.slice(1) }
+    if (this.furnitureStoodAt === null) return
+    this.log(`left ${this.furnitureStoodAt}`)
+    this.furnitureStoodAt = null
+    this.keeperMoved(null)
   }
 
   private leaveCloseUp(reason: string): void {
@@ -158,6 +173,13 @@ export class RoomNavigator {
     this.log(`left the close-up of ${this.currentView.furnitureId}: ${reason}`)
     this.currentView = { kind: 'overview' }
   }
+}
+
+function lengthOf(waypoints: readonly FloorPoint[]): number {
+  return waypoints.slice(1).reduce((length, point, index) => {
+    const previous = waypoints[index] ?? point
+    return length + Math.hypot(point.x - previous.x, point.z - previous.z)
+  }, 0)
 }
 
 function coordinatesOf(point: FloorPoint): string {

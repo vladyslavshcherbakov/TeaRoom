@@ -5,23 +5,27 @@ import { furniture } from '../../../Apps/Game/Room/RoomLayout.ts'
 
 const iPhonePortraitAspect = 390 / 844
 
-test('closeUp_onAPortraitPhone_showsTheWholeWidthOfEachPieceOfFurniture', () => {
+test('closeUp_onAPortraitPhone_showsTheWholeWidthOfEachPieceOfFurnitureFromEachSide', () => {
   for (const piece of furniture) {
-    const pose = closeUpPose(piece.closeUp, iPhonePortraitAspect)
-    const distance = Math.hypot(pose.position.x - pose.target.x, pose.position.y - pose.target.y, pose.position.z - pose.target.z)
+    for (const side of piece.sides) {
+      const pose = closeUpPose(side.closeUp, iPhonePortraitAspect)
+      const distance = Math.hypot(pose.position.x - pose.target.x, pose.position.y - pose.target.y, pose.position.z - pose.target.z)
 
-    assert.ok(visibleWidthMetres(distance, iPhonePortraitAspect) >= piece.closeUp.widthMetres - 0.001, piece.id)
+      assert.ok(visibleWidthMetres(distance, iPhonePortraitAspect) >= side.closeUp.widthMetres - 0.001, `${piece.id} from its ${side.name}`)
+    }
   }
 })
 
-test('closeUp_ofTheTeaTable_looksDownFromAbove', () => {
+test('closeUp_ofTheTeaTableFromEachSide_looksDownFromAbove', () => {
   const teaTable = furniture.find((piece) => piece.id === 'teaTable')
   if (teaTable === undefined) throw new Error('the layout lost the tea table')
 
-  const pose = closeUpPose(teaTable.closeUp, iPhonePortraitAspect)
+  const downwardAnglesDegrees = teaTable.sides.map((side) => {
+    const pose = closeUpPose(side.closeUp, iPhonePortraitAspect)
+    return (Math.atan2(pose.position.y - pose.target.y, Math.hypot(pose.position.x - pose.target.x, pose.position.z - pose.target.z)) * 180) / Math.PI
+  })
 
-  const downwardAngleDegrees = (Math.atan2(pose.position.y - pose.target.y, Math.hypot(pose.position.x - pose.target.x, pose.position.z - pose.target.z)) * 180) / Math.PI
-  assert.ok(downwardAngleDegrees > 45, `the camera looks down at only ${downwardAngleDegrees.toFixed(0)}°`)
+  assert.ok(downwardAnglesDegrees.every((angle) => angle > 45), `the camera looks down at only ${downwardAnglesDegrees.map((angle) => angle.toFixed(0)).join('° and ')}°`)
 })
 
 test('pinch_whenTheFingersSpreadToTwiceTheirGap_bringsTheCameraToHalfItsDistance', () => {
