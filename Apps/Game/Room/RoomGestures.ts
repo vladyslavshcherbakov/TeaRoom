@@ -76,7 +76,8 @@ export class RoomGestures {
     this.pressStart = point
     const target = this.screen.tapTargetAt(point)
     this.play.pressStarted(target)
-    if (target.kind === 'hand') this.startHolding(pointerId, target.handIndex)
+    const heldHandIndex = this.play.handHoldingWhatIsPressed(target)
+    if (heldHandIndex !== null) this.startHolding(pointerId, heldHandIndex)
   }
 
   fingerMoved(pointerId: number, point: ScreenPoint): void {

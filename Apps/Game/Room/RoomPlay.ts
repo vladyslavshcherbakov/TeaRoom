@@ -244,6 +244,13 @@ export class RoomPlay {
     this.putDownTheChosenItemAt(target.furnitureId, target.point)
   }
 
+  handHoldingWhatIsPressed(target: RoomTapTarget): HandIndex | null {
+    if (target.kind === 'hand') return target.handIndex
+    if (target.kind !== 'lid') return null
+    const location = this.locationOfItem(target.itemId)
+    return location?.kind === 'inHand' ? location.handIndex : null
+  }
+
   handPressHeld(handIndex: HandIndex, heldSeconds: number): void {
     this.press = null
     const itemId = this.ritual.state.keeper.hands[handIndex] ?? null
