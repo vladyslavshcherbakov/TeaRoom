@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { prophecyInscriptionAspect } from './ProphecyInscription.ts'
 import { touchAreaOf } from './RoomLayers.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
@@ -25,7 +24,6 @@ import type { TableViewState } from '../../Table/TableViewState.ts'
 const puddleSegments = 40
 const wallHeight = 2.6
 const wallThickness = 0.12
-const prophecyWidthMetres = 0.95
 const medalRadiusMetres = 0.13
 const medalThicknessMetres = 0.025
 const medalRibbonWidthMetres = 0.09
@@ -156,8 +154,7 @@ export class RoomModel {
   }
 
   private addProphecy(wall: WallSide, point: PointOnAWall): THREE.Mesh {
-    const size = { width: prophecyWidthMetres, height: prophecyWidthMetres / prophecyInscriptionAspect }
-    return this.wallPlane(wall, 'prophecyInscription', size, point, true)
+    return this.wallPlane(wall, 'prophecyInscription', this.materials.prophecySizeMetres(), point, true)
   }
 
   private wallBox(wall: WallSide, surface: Surface, alongTheWall: number, height: number, thickness: number, centre: PointOnAWall): THREE.Mesh {

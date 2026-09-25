@@ -7,7 +7,7 @@ import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
 import { paintKoiPond, type KoiPond } from './KoiPond.ts'
 import { paintLotus } from './LotusPainting.ts'
-import { paintProphecyInscription } from './ProphecyInscription.ts'
+import { paintProphecyInscription, prophecyInscriptionPixelsPerMetre } from './ProphecyInscription.ts'
 import { paintTeaCharacter } from './TeaCharacterPainting.ts'
 import { paintGreenMarble } from './MarbleGlaze.ts'
 import { paintTemperBands } from './TemperBands.ts'
@@ -198,6 +198,7 @@ export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
   private readonly reflections: THREE.Texture | null
   private readonly koiPond: KoiPond
+  private prophecyPainting: HTMLCanvasElement | null = null
   readonly bowlIdWithTheToadUnderneath: string
 
   constructor(reflections: THREE.Texture | null, bowlPaintings: BowlPaintings) {
@@ -212,6 +213,11 @@ export class RoomMaterials {
     const material = this.unsharedMaterialFor(surface)
     this.materialsBySurface.set(surface, material)
     return material
+  }
+
+  prophecySizeMetres(): { readonly width: number; readonly height: number } {
+    const painting = this.paintedProphecy()
+    return { width: painting.width / prophecyInscriptionPixelsPerMetre, height: painting.height / prophecyInscriptionPixelsPerMetre }
   }
 
   colourOf(surface: Surface): THREE.Color {
@@ -233,7 +239,7 @@ export class RoomMaterials {
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoiPond(this.koiPond))
     if (surface === 'toadPainting') return paintingMaterial(paintToad())
-    if (surface === 'prophecyInscription') return paintingMaterial(paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')]))
+    if (surface === 'prophecyInscription') return paintingMaterial(this.paintedProphecy())
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'heronPainting') return paintingMaterial(paintHeron())
     if (surface === 'teaCharacterPainting') return paintingMaterial(paintTeaCharacter())
@@ -245,6 +251,11 @@ export class RoomMaterials {
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
     if (glazedSurfaces.has(surface)) return glazeMaterial(surface, color)
     return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+  }
+
+  private paintedProphecy(): HTMLCanvasElement {
+    this.prophecyPainting ??= paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')])
+    return this.prophecyPainting
   }
 
   private kintsugiMaterial(): THREE.MeshPhysicalMaterial {
