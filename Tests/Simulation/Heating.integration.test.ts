@@ -57,6 +57,15 @@ test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
   assertNear(ritual.vessel('kettle').liquid.temperatureC, 60)
 })
 
+test('kettleWater_withItsLidOpenForTenSecondsOnAWorkingHeater_warmsByTwentyDegrees', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+
+  ritual.wait(10)
+
+  assertNear(ritual.vessel('kettle').liquid.temperatureC, 40)
+})
+
 test('kettleWater_whenLeftOnTheHeater_stopsAtBoiling', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
 

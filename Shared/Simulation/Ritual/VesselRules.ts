@@ -1,6 +1,6 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
-import { heatLiquid, liquidBoiledAway } from '../Physics/Heat.ts'
+import { heatLiquid, liquidBoiledAway, shareOfTheHeatKeptBy } from '../Physics/Heat.ts'
 import { water } from '../Physics/Liquid.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
 import type { RunningWaterState, VesselState } from '../State/SessionState.ts'
@@ -31,7 +31,7 @@ function withTheVessel(draft: Draft, itemId: string, act: (vessel: VesselState) 
 
 function heatTheVessel(draft: Draft, vessel: VesselState, seconds: number): void {
   const heaterDefinition = definitionIn(draft.catalog, 'heaters', draft.state.heater.definitionId)
-  const heated = heatLiquid(vessel.liquid, heaterDefinition, seconds)
+  const heated = heatLiquid(vessel.liquid, heaterDefinition, shareOfTheHeatKeptBy(vesselDefinitionOf(draft, vessel), vessel.isLidOpen), seconds)
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
   if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)

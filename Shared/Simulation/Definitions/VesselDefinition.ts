@@ -2,6 +2,7 @@ export type LidDefinition = {
   readonly mustBeOpenToPour: boolean
   readonly mustBeOpenToFill: boolean
   readonly coolingMultiplierWhenOpen: number
+  readonly heatingMultiplierWhenOpen: number
 }
 
 export type VesselDefinition = {
