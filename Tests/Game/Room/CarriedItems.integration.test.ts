@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
-import { steepestTiltDegrees } from '../../../Apps/Game/Room/AimedPour.ts'
 import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
 import { sinkBasin } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
@@ -12,6 +11,7 @@ import { overflowSideFromTheGaugeRadians, overflowStreamRadiusMetres } from '../
 import type { SurfaceMaterials } from '../../../Apps/Game/Room/Views/RoomMaterials.ts'
 import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import { tiltOfFullFlowDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import { assertNear } from '../../Support/Assertions.ts'
@@ -20,7 +20,7 @@ import { TestRitual } from '../../Support/TestRitual.ts'
 const teaTableTopMetres = 0.42
 const drawingToleranceMetres = 0.001
 const streamTouchesTheWallWithinMetres = 0.002
-const tiltsDegrees = [0, 10, 20, 30, steepestTiltDegrees]
+const tiltsDegrees = [0, 10, 20, 30, tiltOfFullFlowDegrees]
 const spoutDirections = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -0.6, z: -0.8 }]
 const portraitPhoneAspects = [375 / 667, 390 / 844, 412 / 915]
 const closeUpAndFirstPersonFieldsOfViewDegrees = [30, 70]

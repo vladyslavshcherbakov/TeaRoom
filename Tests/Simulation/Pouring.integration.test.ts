@@ -46,6 +46,16 @@ test('pour_whenFast_splashesATenthOfTheStream', () => {
   assertNear(eventsOfType(events, 'pourFinished')[0]?.spilledMl ?? -1, 8)
 })
 
+test('pour_atFullFlowIntoTheWideCaddy_splashesNothing', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+
+  const events = ritual.pour('kettle', 'caddy', 4, fullFlowTiltDegrees)
+
+  assertNear(ritual.vessel('caddy').liquid.volumeMl, 80)
+  assertNear(eventsOfType(events, 'pourFinished')[0]?.spilledMl ?? -1, 0)
+})
+
 test('cup_whenPouredPastItsBrim_overflowsOntoTheTableOnce', () => {
   const ritual = TestRitual.begun()
 

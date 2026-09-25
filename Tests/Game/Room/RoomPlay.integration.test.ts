@@ -978,7 +978,11 @@ class RoomVisit {
   holdTheCaddyWithColdTapWater(): void {
     this.carryFromTheShelf('caddy')
     this.walkTo('counter')
-    this.fillInTheSink('caddy')
+    this.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
+    this.session.dispatch({ type: 'putInTheSink', itemId: 'caddy' })
+    this.advance(4)
+    this.session.dispatch({ type: 'turnTheTapOff' })
+    this.session.dispatch({ type: 'pickUp', itemId: 'caddy' })
     this.tap({ kind: 'hand', handIndex: this.state.keeper.hands[0] === 'caddy' ? 0 : 1 })
   }
 

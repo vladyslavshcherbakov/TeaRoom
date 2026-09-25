@@ -3,7 +3,8 @@ import type { VesselDefinition } from '../Simulation/Definitions/VesselDefinitio
 export const clayKettle: VesselDefinition = {
   id: 'clayKettle',
   capacityMl: 800,
-  maxPourMlPerSecond: 25,
+  maxPourMlPerSecond: 45,
+  takesAStreamOfUpToMlPerSecond: 40,
   coolingPerSecond: 0.003,
   lid: { mustBeOpenToPour: false, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 1.5 },
   canSitOnHeater: true,
@@ -16,6 +17,7 @@ export const thermos: VesselDefinition = {
   id: 'thermos',
   capacityMl: 500,
   maxPourMlPerSecond: 20,
+  takesAStreamOfUpToMlPerSecond: 20,
   coolingPerSecond: 0.0004,
   lid: { mustBeOpenToPour: true, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 8 },
   canSitOnHeater: true,
@@ -28,6 +30,7 @@ export const teaBowl: VesselDefinition = {
   id: 'teaBowl',
   capacityMl: 120,
   maxPourMlPerSecond: 15,
+  takesAStreamOfUpToMlPerSecond: 20,
   coolingPerSecond: 0.01,
   lid: null,
   canSitOnHeater: false,
@@ -38,8 +41,9 @@ export const teaBowl: VesselDefinition = {
 
 export const teaCaddy: VesselDefinition = {
   id: 'teaCaddy',
-  capacityMl: 600,
+  capacityMl: 450,
   maxPourMlPerSecond: 30,
+  takesAStreamOfUpToMlPerSecond: 60,
   coolingPerSecond: 0.006,
   lid: { mustBeOpenToPour: true, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 2 },
   canSitOnHeater: false,

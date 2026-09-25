@@ -1,5 +1,4 @@
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
-import { tiltWhereWaterSplashesDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import type { RitualPort } from './RoomPlay.ts'
@@ -16,13 +15,13 @@ export type PourTarget = {
   readonly id: string
   readonly spot: Spot
   readonly openingRadiusMetres: number
+  readonly tiltWhereTheStreamSplashesDegrees: number
 }
 
 const firstSpoutOffsetFromTargetMetres = 0.22
 const tiltGrowthDegreesPerSecond = 30
 const tiltFallDegreesPerSecond = 70
 const steepestTiltBelowTheSplashDegrees = 1
-export const steepestTiltDegrees = tiltWhereWaterSplashesDegrees - steepestTiltBelowTheSplashDegrees
 const streamRadiusMetres = 0.012
 const spoutMovesThePuddleFromMetres = 0.01
 
@@ -86,7 +85,7 @@ export class AimedPour {
 
   advance(seconds: number): void {
     const tiltChange = this.isTiltHeld ? tiltGrowthDegreesPerSecond * seconds : -tiltFallDegreesPerSecond * seconds
-    this.tiltDegrees = Math.min(steepestTiltDegrees, Math.max(0, this.tiltDegrees + tiltChange))
+    this.tiltDegrees = Math.min(this.target.tiltWhereTheStreamSplashesDegrees - steepestTiltBelowTheSplashDegrees, Math.max(0, this.tiltDegrees + tiltChange))
     if (this.isPouring && this.ritual.state.pour === null) {
       this.isPouring = false
       this.log(`the pour from ${this.sourceId} ended while it was tilted`)

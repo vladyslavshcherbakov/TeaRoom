@@ -2,11 +2,12 @@ import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitio
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
+import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
 import { caddyItemId, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
-import type { HandIndex, ItemLocation, SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
+import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { AimedPour, type AimedPourView, type PourTarget } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
@@ -334,22 +335,27 @@ export class RoomPlay {
 
   private startAimingAt(targetId: string): void {
     const sourceId = this.chosenItemId()
+    const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
     const target = this.ritual.state.vessels[targetId]
     const targetLayout = layoutOf(this.ritual.state, targetId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
-    if (sourceId === null || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
+    if (source === undefined || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
     const spoutDirection = screenRightOnTheFloor(furnitureWithId(closeUpFurnitureId).closeUp)
-    const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres }
-    this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, pourTarget, this.pourTargetsBeside(sourceId, target.location.spot.placeId), spoutDirection)
+    const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
+    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot.placeId), spoutDirection)
   }
 
-  private pourTargetsBeside(sourceId: string, placeId: string): PourTarget[] {
+  private pourTargetsBeside(source: DeepReadonly<VesselState>, placeId: string): PourTarget[] {
     return Object.values(this.ritual.state.vessels).flatMap((vessel) => {
       const layout = layoutOf(this.ritual.state, vessel.id)
       const isStandingThere = vessel.location.kind === 'onSurface' && vessel.location.spot.placeId === placeId
-      if (vessel.id === sourceId || layout === undefined || !isStandingThere || vessel.location.kind !== 'onSurface') return []
-      return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: layout.openingRadiusMetres }]
+      if (vessel.id === source.id || layout === undefined || !isStandingThere || vessel.location.kind !== 'onSurface') return []
+      return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: layout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, vessel) }]
     })
+  }
+
+  private tiltWhereTheStreamSplashes(source: DeepReadonly<VesselState>, target: DeepReadonly<VesselState>): number {
+    return tiltWhereTheStreamSplashes(definitionIn(this.catalog, 'vessels', source.definitionId), definitionIn(this.catalog, 'vessels', target.definitionId))
   }
 
   private useTheSink(): void {
