@@ -243,6 +243,8 @@ export class RoomPlay {
   }
 
   private tapped(target: RoomTapTarget): void {
+    const chosenItemId = this.chosenItemId()
+    this.log(`tap on ${describeTarget(target)}, ${chosenItemId === null ? 'no hand chosen' : `${chosenItemId} chosen in hand ${this.choice}`}`)
     if (target.kind === 'roseBush') return this.countTheRoseBushTap()
     this.forgetTheRoseBushTaps()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
