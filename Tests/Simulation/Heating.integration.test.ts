@@ -17,7 +17,7 @@ test('heater_whenSwitchedOffAfterTheKettleWasTakenOffAndTheSpoonPutOn_namesBothW
   const ritual = ritualWithKettleOnWorkingHeater()
   ritual.wait(10)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
-  ritual.do({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'counter', x: 2, y: 0, z: 0 } })
+  ritual.do({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'table', x: 2, y: 0, z: 0 } })
   ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
   ritual.wait(5)
 
