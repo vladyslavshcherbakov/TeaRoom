@@ -87,7 +87,7 @@ export const englishTexts = {
   'handsFull.1': 'Two hands, both busy. Shiva I am not, sadly.',
   'handsFull.2': 'A third arm would help right now. Evolution is taking its time.',
   'handsFull.3': 'Telekinesis is still on my list. Put something down first.',
-  'handsFull.4': 'Sorry, both my hands are spoken for.',
+  'handsFull.4': 'Sorry, hands full. Unless you want me to carry it in my teeth.',
   'handsFullOfBowls.1': 'Waiters carry four bowls in one hand. I should practise that some quiet evening.',
   'handsFullOfBowls.2': 'Two bowls, two hands. Stacking them in one hand is a skill for another day.',
   'handsFullOfBowls.3': 'One day I will balance three bowls on one palm. Today is not that day.',
