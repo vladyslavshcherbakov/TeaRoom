@@ -1,3 +1,4 @@
+import { browserStorage, parsedJsonOrNull } from './BrowserStorage.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { defaultRoomSettings, roomSettingsFrom, type RoomSettings } from './RoomSettings.ts'
 
@@ -11,23 +12,24 @@ export class SettingsStore {
   }
 
   load(): RoomSettings {
-    try {
-      const text = localStorage.getItem(storageKey)
-      if (text === null) return defaultRoomSettings
-      const settings = roomSettingsFrom(JSON.parse(text))
-      this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}, face ${settings.faceFeature}`)
-      return settings
-    } catch (error) {
-      this.log(`the saved settings cannot be read, so the defaults are used: ${String(error)}`)
+    const stored = browserStorage.read(storageKey)
+    if (stored.kind === 'unreachable') {
+      this.log(`the saved settings cannot be read, so the defaults are used: ${stored.error}`)
       return defaultRoomSettings
     }
+    if (stored.kind === 'none') return defaultRoomSettings
+    const saved = parsedJsonOrNull(stored.text)
+    if (saved === null) {
+      this.log('the saved settings cannot be read as JSON, so the defaults are used')
+      return defaultRoomSettings
+    }
+    const settings = roomSettingsFrom(saved)
+    this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}, face ${settings.faceFeature}`)
+    return settings
   }
 
   keep(settings: RoomSettings): void {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(settings))
-    } catch (error) {
-      this.log(`the settings could not be saved: ${String(error)}`)
-    }
+    const write = browserStorage.keep(storageKey, JSON.stringify(settings))
+    if (write.kind === 'failed') this.log(`the settings could not be saved: ${write.error}`)
   }
 }

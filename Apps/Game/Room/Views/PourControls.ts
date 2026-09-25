@@ -1,3 +1,4 @@
+import { browserStorage } from '../BrowserStorage.ts'
 import { text } from '../../Texts/Texts.ts'
 
 export type PourControlsListener = {
@@ -41,17 +42,10 @@ export class PourControls {
 }
 
 function wasHintSeen(): boolean {
-  try {
-    return window.localStorage.getItem(hintSeenStorageKey) === 'yes'
-  } catch {
-    return false
-  }
+  const stored = browserStorage.read(hintSeenStorageKey)
+  return stored.kind === 'found' && stored.text === 'yes'
 }
 
 function rememberHintSeenIfStorageAllows(): void {
-  try {
-    window.localStorage.setItem(hintSeenStorageKey, 'yes')
-  } catch {
-    return
-  }
+  browserStorage.keep(hintSeenStorageKey, 'yes')
 }

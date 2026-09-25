@@ -1,3 +1,4 @@
+import { browserStorage, parsedJsonOrNull } from './BrowserStorage.ts'
 import { achievementIds, type AchievementId, type AchievementRecord, type AchievementStorage } from './Achievements.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 
@@ -12,9 +13,13 @@ export class AchievementStore implements AchievementStorage {
   }
 
   readonly load = (): AchievementRecord => {
-    const text = this.read()
-    if (text === null) return nothingUnlocked
-    const saved = parsedOrNull(text)
+    const stored = browserStorage.read(storageKey)
+    if (stored.kind === 'unreachable') {
+      this.log(`the saved achievements cannot be read, so none are unlocked: ${stored.error}`)
+      return nothingUnlocked
+    }
+    if (stored.kind === 'none') return nothingUnlocked
+    const saved = parsedJsonOrNull(stored.text)
     if (typeof saved !== 'object' || saved === null) {
       this.log('the saved achievements cannot be read, so none are unlocked')
       return nothingUnlocked
@@ -27,28 +32,8 @@ export class AchievementStore implements AchievementStorage {
   }
 
   readonly keep = (record: AchievementRecord): void => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(record))
-    } catch (error) {
-      this.log(`the achievements could not be saved: ${String(error)}`)
-    }
-  }
-
-  private read(): string | null {
-    try {
-      return localStorage.getItem(storageKey)
-    } catch (error) {
-      this.log(`the saved achievements cannot be read, so none are unlocked: ${String(error)}`)
-      return null
-    }
-  }
-}
-
-function parsedOrNull(text: string): unknown {
-  try {
-    return JSON.parse(text)
-  } catch {
-    return null
+    const write = browserStorage.keep(storageKey, JSON.stringify(record))
+    if (write.kind === 'failed') this.log(`the achievements could not be saved: ${write.error}`)
   }
 }
 

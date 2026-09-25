@@ -1,3 +1,4 @@
+import { browserStorage, parsedJsonOrNull } from './BrowserStorage.ts'
 import type { FirstPersonLook } from './Camera/FirstPersonLook.ts'
 import { arrangementBeforeRoomsVaried, arrangementOfAnEarlierSave, describeArrangement, problemWithArrangement, type RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
@@ -36,9 +37,13 @@ export class VisitStore {
   }
 
   find(): FoundVisit {
-    const text = this.read()
-    if (text === null) return { kind: 'none' }
-    const parsedVisit = parsedOrNull(text)
+    const stored = browserStorage.read(storageKey)
+    if (stored.kind === 'unreachable') {
+      this.log(`the saved visit cannot be read, so the room opens anew: ${stored.error}`)
+      return { kind: 'none' }
+    }
+    if (stored.kind === 'none') return { kind: 'none' }
+    const parsedVisit = parsedJsonOrNull(stored.text)
     if (parsedVisit === null) {
       this.log('the saved visit cannot be read as JSON, so the room opens anew')
       return { kind: 'brokenByAnUpdate' }
@@ -55,23 +60,20 @@ export class VisitStore {
   }
 
   keep(visit: SavedVisit): void {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(visit))
+    const write = browserStorage.keep(storageKey, JSON.stringify(visit))
+    if (write.kind === 'done') {
       this.hasLoggedAFailedKeep = false
-    } catch (error) {
-      if (this.hasLoggedAFailedKeep) return
-      this.hasLoggedAFailedKeep = true
-      this.log(`the visit could not be saved, it will be tried again: ${String(error)}`)
+      return
     }
+    if (this.hasLoggedAFailedKeep) return
+    this.hasLoggedAFailedKeep = true
+    this.log(`the visit could not be saved, it will be tried again: ${write.error}`)
   }
 
   forget(reason: string): void {
-    try {
-      localStorage.removeItem(storageKey)
-      this.log(`the saved visit is forgotten: ${reason}`)
-    } catch (error) {
-      this.log(`the saved visit could not be forgotten (${reason}): ${String(error)}`)
-    }
+    const write = browserStorage.forget(storageKey)
+    if (write.kind === 'done') this.log(`the saved visit is forgotten: ${reason}`)
+    else this.log(`the saved visit could not be forgotten (${reason}): ${write.error}`)
   }
 
   private withTheArrangementInTodaysWords(visit: unknown): unknown {
@@ -86,23 +88,6 @@ export class VisitStore {
     if (visit.arrangement !== undefined) return { ...visit, arrangement: visit.arrangement }
     this.log('the saved visit is from before the room was arranged anew for each game, so it continues in the room it was played in')
     return { ...visit, arrangement: arrangementBeforeRoomsVaried }
-  }
-
-  private read(): string | null {
-    try {
-      return localStorage.getItem(storageKey)
-    } catch (error) {
-      this.log(`the saved visit cannot be read, so the room opens anew: ${String(error)}`)
-      return null
-    }
-  }
-}
-
-function parsedOrNull(text: string): unknown {
-  try {
-    return JSON.parse(text)
-  } catch {
-    return null
   }
 }
 
