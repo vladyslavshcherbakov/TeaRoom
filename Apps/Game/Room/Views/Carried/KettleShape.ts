@@ -10,5 +10,10 @@ export const kettleShape = {
   waterBelowTheOpeningMetres: 0.012,
   gaugeBottomMetres: 0.075,
   gaugeHeightMetres: 0.11,
-  gaugeFaceMetres: 0.142,
 } as const
+
+export function kettleRadiusAt(heightMetres: number): number {
+  const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
+  const heightFromCentre = (heightMetres - bodyCentreMetres) / (bodyRadiusMetres * bodySquash)
+  return bodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre))
+}

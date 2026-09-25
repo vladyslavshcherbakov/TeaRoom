@@ -6,6 +6,7 @@ import { lotusPaintingAspect } from '../LotusPainting.ts'
 import { teaCharacterPaintingAspect } from '../TeaCharacterPainting.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
 import { bowlInsideProfile, bowlOutsideWall, bowlProfile, bowlRimTop, bowlUndersideAndFoot } from './BowlProfile.ts'
+import { GaugeStrip } from './GaugeStrip.ts'
 import { kettleShape } from './KettleShape.ts'
 import type { LeafPile } from './LeafPile.ts'
 import { clothLengthMetres, rumpledClothGeometry } from './RumpledClothGeometry.ts'
@@ -25,7 +26,7 @@ export type CarriedModel = {
   readonly pointsDownTheSide: readonly PointDownTheSide[] | null
   readonly liquidVolume: THREE.Mesh | null
   liquidVolumeHeight: number
-  readonly gaugeWater: THREE.Mesh | null
+  readonly gaugeWater: GaugeStrip | null
   readonly leafHolder: THREE.Group | null
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
   readonly floatingLeafHolder: THREE.Group | null
@@ -95,6 +96,11 @@ export const mostSteamSources = 2
 export const mostPuffsFromOneSource = 3
 
 const lidTouchPadRadiusMetres = 0.095
+const gaugeFrameHalfWidthMetres = 0.024
+const gaugeFrameAboveTheBodyMetres = 0.0015
+const gaugeFrameMarginMetres = 0.007
+const gaugeWaterHalfWidthMetres = 0.017
+const gaugeWaterAboveTheBodyMetres = 0.003
 const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
 const paintingAboveTheGlazeMetres = 0.0004
@@ -241,13 +247,13 @@ function addKettleWater(root: THREE.Group, materials: RoomMaterials): THREE.Mesh
   return water
 }
 
-function addWaterGauge(root: THREE.Group, materials: RoomMaterials): THREE.Mesh {
-  const { gaugeBottomMetres, gaugeHeightMetres, gaugeFaceMetres } = kettleShape
-  const glass = new THREE.Mesh(new THREE.BoxGeometry(0.048, gaugeHeightMetres + 0.014, 0.006), materials.materialFor('gaugeTube'))
-  glass.position.set(0, gaugeBottomMetres + gaugeHeightMetres / 2, gaugeFaceMetres)
-  const water = new THREE.Mesh(new THREE.BoxGeometry(0.034, 1, 0.008), materials.unsharedMaterialFor('gaugeGlass'))
-  water.position.set(0, gaugeBottomMetres, gaugeFaceMetres + 0.001)
-  root.add(glass, water)
+function addWaterGauge(root: THREE.Group, materials: RoomMaterials): GaugeStrip {
+  const { gaugeBottomMetres, gaugeHeightMetres } = kettleShape
+  const frame = new GaugeStrip(gaugeFrameHalfWidthMetres, gaugeFrameAboveTheBodyMetres, materials.materialFor('gaugeTube'))
+  frame.cover(gaugeBottomMetres - gaugeFrameMarginMetres, gaugeBottomMetres + gaugeHeightMetres + gaugeFrameMarginMetres)
+  const water = new GaugeStrip(gaugeWaterHalfWidthMetres, gaugeWaterAboveTheBodyMetres, materials.unsharedMaterialFor('gaugeGlass'))
+  water.cover(gaugeBottomMetres, gaugeBottomMetres)
+  root.add(frame.mesh, water.mesh)
   return water
 }
 

@@ -8,6 +8,7 @@ import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import { bowlLiquidGeometry, mostPuffsFromOneSource, type CarriedModel, type GlowingShell } from './CarriedModel.ts'
+import type { GaugeStrip } from './GaugeStrip.ts'
 import { kettleShape } from './KettleShape.ts'
 import { LeafPile, type LeafPileSize } from './LeafPile.ts'
 
@@ -119,13 +120,12 @@ function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave
   }
 }
 
-function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
+function showWaterInGauge(gaugeWater: GaugeStrip, vessel: TableViewState.Vessel, wave: Wave): void {
   const { gaugeBottomMetres, gaugeHeightMetres } = kettleShape
   const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres + (vessel.fillShare > 0 ? wave.riseMetres : 0))
-  gaugeWater.visible = vessel.fillShare > 0
-  gaugeWater.scale.y = height
-  gaugeWater.position.y = gaugeBottomMetres + height / 2
-  const material = gaugeWater.material
+  gaugeWater.mesh.visible = vessel.fillShare > 0
+  gaugeWater.cover(gaugeBottomMetres, gaugeBottomMetres + height)
+  const material = gaugeWater.mesh.material
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
