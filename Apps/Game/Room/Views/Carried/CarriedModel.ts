@@ -3,6 +3,7 @@ import { footprintRadiusMetres, type CarriedShape } from '../../RoomLayout.ts'
 import { heronPaintingAspect } from '../HeronPainting.ts'
 import { koiPaintingAspect } from '../KoiPainting.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
+import { teaCharacterPaintingAspect } from '../TeaCharacterPainting.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
 import { kettleShape } from './KettleShape.ts'
 import type { LeafPile } from './LeafPile.ts'
@@ -137,6 +138,7 @@ const bowlLookById: Readonly<Record<string, BowlLook>> = {
   bowl7: { ...plainBowl, glaze: 'temperGlaze' },
   bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted' },
   bowl9: { ...plainBowl, glaze: 'glass', relief: 'hobnail', isRimGilded: true },
+  bowl10: { ...plainBowl, glaze: 'yixingClay', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
 
 export function newCarriedModel(itemId: string, shape: CarriedShape, materials: CarriedModelMaterials): CarriedModel {

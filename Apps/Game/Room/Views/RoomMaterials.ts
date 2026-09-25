@@ -5,8 +5,10 @@ import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
 import { paintKoi } from './KoiPainting.ts'
 import { paintLotus } from './LotusPainting.ts'
+import { paintTeaCharacter } from './TeaCharacterPainting.ts'
 import { paintGreenMarble } from './MarbleGlaze.ts'
 import { paintTemperBands } from './TemperBands.ts'
+import { paintYixingClay } from './YixingClay.ts'
 
 export type Surface =
   | 'floor'
@@ -55,6 +57,8 @@ export type Surface =
   | 'koiPainting'
   | 'lotusPainting'
   | 'heronPainting'
+  | 'teaCharacterPainting'
+  | 'yixingClay'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -103,12 +107,15 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   koiPainting: '#ffffff',
   lotusPainting: '#ffffff',
   heronPainting: '#ffffff',
+  teaCharacterPainting: '#ffffff',
+  yixingClay: '#ffffff',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const smokeOpacity = 0.4
 const clearGlassOpacity = 0.28
+const clayPoreDepth = 1.5
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
 const clothRoughness = 1
@@ -149,6 +156,8 @@ export class RoomMaterials {
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'heronPainting') return paintingMaterial(paintHeron())
+    if (surface === 'teaCharacterPainting') return paintingMaterial(paintTeaCharacter())
+    if (surface === 'yixingClay') return yixingClayMaterial()
     if (surface === 'cloth') return wovenClothMaterial()
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
@@ -260,4 +269,16 @@ function glazeMaterial(surface: Surface, color: string): THREE.MeshPhysicalMater
   texture.wrapS = THREE.RepeatWrapping
   texture.anisotropy = paintingSharpness
   return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.3, clearcoat: 0.7 })
+}
+
+function yixingClayMaterial(): THREE.MeshStandardMaterial {
+  const clay = paintYixingClay()
+  const colours = new THREE.CanvasTexture(clay.colours)
+  colours.colorSpace = THREE.SRGBColorSpace
+  const pores = new THREE.CanvasTexture(clay.pores)
+  for (const texture of [colours, pores]) {
+    texture.wrapS = THREE.RepeatWrapping
+    texture.anisotropy = paintingSharpness
+  }
+  return new THREE.MeshStandardMaterial({ map: colours, bumpMap: pores, bumpScale: clayPoreDepth, roughness: 0.9, metalness: 0 })
 }
