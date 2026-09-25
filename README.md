@@ -62,6 +62,6 @@ Scripts/build-artifact.sh
 
 ## Deploy
 
-GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `Scripts/test.sh`, `Scripts/test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages at <https://vladyslavshcherbakov.github.io/TeaRoom/>.
+GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request. Three jobs run side by side: `Scripts/test.sh`, `Scripts/test-ui.sh` once for each browser, and `Scripts/build.sh`. On a push to the default branch, once all three pass, it publishes `dist/` to GitHub Pages at <https://vladyslavshcherbakov.github.io/TeaRoom/>.
 
 Pages must be enabled once in the repository settings: Settings → Pages → Build and deployment → Source: GitHub Actions.

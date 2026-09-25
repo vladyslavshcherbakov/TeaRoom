@@ -10,7 +10,7 @@ The world advances in fixed steps of 0.05 s, whatever the frame rate. A frame ha
 
 ## Places and hands
 
-A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy among them, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's two hands. A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`. The spot keeps the exact position where the item was put down, so the room can show it there.
+A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy among them, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's hands: the two hands, and a middle hand that can grow when both are full. A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`. The spot keeps the exact position where the item was put down, so the room can show it there.
 
 The keeper stands at one place, or at none while walking. An item is within reach when it is in a hand, or on a surface at the place where the keeper stands.
 
