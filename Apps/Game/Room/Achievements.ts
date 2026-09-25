@@ -50,6 +50,8 @@ const longRunSeconds = 120
 const kettleShape = 'kettle'
 const puddlesWipedForOcd = 2
 
+const achievementsThatNeedLeaves: readonly AchievementId[] = ['perfectTea', 'teaBrewedInTheBowl']
+
 const achievementByRemark: Partial<Record<RoomRemarkKind, AchievementId>> = {
   bowlKeptOffTheHeater: 'bowlTriedOnTheHeater',
   everythingOnTheShelf: 'everythingOnTheShelf',
@@ -172,6 +174,17 @@ export class Achievements {
     this.record = record
     this.storage.keep(record)
   }
+}
+
+export function achievementsOutOfReach(state: DeepReadonly<SessionState>, room: { readonly hasTheProphecy: boolean }): ReadonlySet<AchievementId> {
+  const outOfReach = new Set<AchievementId>()
+  if (!room.hasTheProphecy) outOfReach.add('delphicOracle')
+  const leafGramsInTheCaddies = Object.values(state.vessels).filter((vessel) => carriedShapeOf(state, vessel.id) === 'caddy').reduce((grams, caddy) => grams + (caddy.leaves?.grams ?? 0), 0)
+  const leafGramsElsewhere = state.spoon.grams + Object.values(state.vessels).filter((vessel) => carriedShapeOf(state, vessel.id) !== 'caddy').reduce((grams, vessel) => grams + (vessel.leaves?.grams ?? 0), 0)
+  if (leafGramsInTheCaddies + state.spoon.grams === 0) outOfReach.add('died')
+  if (leafGramsInTheCaddies + leafGramsElsewhere === 0) for (const id of achievementsThatNeedLeaves) outOfReach.add(id)
+  if (state.spoon.location.kind === 'gone') outOfReach.add('spoonBurnt')
+  return outOfReach
 }
 
 function achievementOf(event: RitualEvent, state: DeepReadonly<SessionState>): AchievementId | null {

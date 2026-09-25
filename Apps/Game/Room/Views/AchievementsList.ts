@@ -11,6 +11,7 @@ export class AchievementsList {
   private readonly resetButton: HTMLButtonElement
   private readonly actions: AchievementsListActions
   private isResetArmed = false
+  private outOfReach: ReadonlySet<AchievementId> = new Set()
 
   constructor(container: HTMLElement, actions: AchievementsListActions) {
     this.actions = actions
@@ -38,8 +39,9 @@ export class AchievementsList {
     container.append(this.element)
   }
 
-  show(unlocked: ReadonlySet<AchievementId>): void {
-    this.items.replaceChildren(...achievementIds.map((id) => this.item(id, unlocked.has(id))))
+  show(unlocked: ReadonlySet<AchievementId>, outOfReach: ReadonlySet<AchievementId>): void {
+    this.outOfReach = outOfReach
+    this.items.replaceChildren(...achievementIds.map((id) => this.item(id, unlocked.has(id), outOfReach.has(id))))
     this.disarmTheReset()
     this.element.hidden = false
   }
@@ -48,9 +50,9 @@ export class AchievementsList {
     this.element.hidden = true
   }
 
-  private item(id: AchievementId, isUnlocked: boolean): HTMLElement {
+  private item(id: AchievementId, isUnlocked: boolean, isOutOfReach: boolean): HTMLElement {
     const item = document.createElement('li')
-    item.className = isUnlocked ? 'achievement is-unlocked' : 'achievement'
+    item.className = isUnlocked ? 'achievement is-unlocked' : isOutOfReach ? 'achievement is-out-of-reach' : 'achievement'
     const title = document.createElement('span')
     title.className = 'achievement-title'
     title.textContent = text(`achievement.${id}.title`)
@@ -70,7 +72,7 @@ export class AchievementsList {
       return
     }
     this.actions.resetAsked()
-    this.show(new Set())
+    this.show(new Set(), this.outOfReach)
   }
 
   private disarmTheReset(): void {

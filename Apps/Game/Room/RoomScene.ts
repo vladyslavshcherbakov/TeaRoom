@@ -34,7 +34,7 @@ import { SettingsStore } from './SettingsStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
 import { FullScreenButton } from './Views/FullScreenButton.ts'
-import { Achievements } from './Achievements.ts'
+import { Achievements, achievementsOutOfReach } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
 import { AchievementsList } from './Views/AchievementsList.ts'
@@ -162,7 +162,7 @@ export class RoomScene {
         this.achievements.roseBushTappedTenTimes()
         this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout })
       },
-      achievementsAsked: () => this.achievementsList.show(this.achievements.unlocked),
+      achievementsAsked: () => this.showTheAchievements(),
       settingsAsked: () => this.settingsScreen.show(this.settings),
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       keeperDied: () => {
@@ -253,6 +253,12 @@ export class RoomScene {
     this.joysticks.show(isFirstPerson && !isCloseUp && !isAiming && !isInspecting)
     this.render()
     this.noticeTheProphecyIfSeenWhole()
+  }
+
+  private showTheAchievements(): void {
+    const outOfReach = achievementsOutOfReach(this.session.state, { hasTheProphecy: this.room.prophecyInscription !== null })
+    this.log(`the achievements are shown, out of reach here or now: ${[...outOfReach].join(', ') || 'none'}`)
+    this.achievementsList.show(this.achievements.unlocked, outOfReach)
   }
 
   private noticeTheProphecyIfSeenWhole(): void {

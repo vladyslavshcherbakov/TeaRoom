@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { Achievements, type AchievementId, type AchievementRecord, type AchievementStorage } from '../../../Apps/Game/Room/Achievements.ts'
+import { Achievements, achievementsOutOfReach, type AchievementId, type AchievementRecord, type AchievementStorage } from '../../../Apps/Game/Room/Achievements.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
@@ -168,6 +168,27 @@ test('achievement_whenTheIdleTapIsStillRunning_isNotUnlockedBeforeItIsTurnedOff'
   assert.deepEqual(room.announced, [])
 })
 
+test('achievementsOutOfReach_whenTheRoomOpensWithTheProphecy_areNone', () => {
+  const room = new AchievementsInTheRoom()
+
+  assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: true })], [])
+})
+
+test('achievementsOutOfReach_inARoomWithoutTheProphecy_includeTheDelphicOracle', () => {
+  const room = new AchievementsInTheRoom()
+
+  assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: false })], ['delphicOracle'])
+})
+
+test('achievementsOutOfReach_whenTheCaddyIsWashedOut_includeEveryAchievementThatNeedsLeaves', () => {
+  const room = new AchievementsInTheRoom()
+  room.washOutTheCaddy()
+
+  const outOfReach = achievementsOutOfReach(room.ritual.state, { hasTheProphecy: true })
+
+  assert.deepEqual([...outOfReach].sort(), ['died', 'perfectTea', 'teaBrewedInTheBowl'])
+})
+
 test('achievements_unlockedInAnEarlierVisit_areStillUnlocked', () => {
   const storage = new StorageInMemory()
   new AchievementsInTheRoom(storage).achievements.remarked('everythingOnTheShelf')
@@ -225,6 +246,16 @@ class AchievementsInTheRoom {
     this.ritual.do({ type: 'switchHeaterOn' })
     this.ritual.wait(seconds)
     this.achievements.eventsHappened(this.ritual.do({ type: 'switchHeaterOff' }), this.ritual.state)
+  }
+
+  washOutTheCaddy(): void {
+    this.ritual.do({ type: 'standAt', placeId: 'shelf' })
+    this.ritual.do({ type: 'pickUp', itemId: 'caddy' })
+    this.ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+    this.ritual.do({ type: 'standAt', placeId: 'counter' })
+    this.ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
+    this.ritual.wait(120)
+    this.ritual.do({ type: 'turnTheTapOff' })
   }
 
   private putInTheSink(itemId: string): void {
