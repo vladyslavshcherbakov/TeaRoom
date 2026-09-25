@@ -45,7 +45,7 @@ type InspectionPinch = {
 }
 
 const tapSlopPixels = 12
-const holdSecondsThatInspectAnItem = 2
+const holdSecondsThatInspectAnItem = 1.5
 
 export class RoomGestures {
   private readonly play: RoomPlay
