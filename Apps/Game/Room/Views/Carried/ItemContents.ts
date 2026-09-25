@@ -36,6 +36,7 @@ const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none
 const leavesAboveTheWaterMetres = 0.0015
 const leavesBelowTheLiquidMetres = 0.004
 const flattestSoakedHeapShare = 0.05
+const oilySheenOfTar = 0.9
 const redHotMetal = new THREE.Color('#3a0904')
 const dullRedHeat = new THREE.Color('#8a1000')
 const brightRedHeat = new THREE.Color('#ff2a00')
@@ -112,6 +113,7 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
   model.liquidMaterial.color.set(vessel.liquorColour)
   if (model.liquidTint !== null) model.liquidMaterial.color.multiply(model.liquidTint)
   model.liquidMaterial.opacity = vessel.liquorOpacity
+  if (model.liquidMaterial instanceof THREE.MeshPhysicalMaterial) model.liquidMaterial.iridescence = vessel.brewStage === 'tar' ? oilySheenOfTar : 0
   if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel)
 }
 

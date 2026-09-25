@@ -12,6 +12,9 @@ import { teaLookFor } from './TeaLooks.ts'
 
 const waterColour = '#c9e3f0'
 const overbrewedColour = '#2b1a10'
+const tarColour = '#130b06'
+const strengthWhereTarStarts = 94
+const strengthOfPureTar = 99
 const bitternessWhereDarkeningStarts = 45
 const darkestShareOfOverbrewedColour = 0.5
 const steamWispsFromC = 60
@@ -23,7 +26,7 @@ const boilingFromC = 95
 const puddleFullAtMl = 30
 const soakedLeavesShownPerGram = 2
 export const mostSoakedLeavesShown = 12
-const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95 }
+const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95, tar: 1 }
 const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
@@ -104,6 +107,7 @@ function soakedLeavesOf(vessel: DeepReadonly<VesselState>): TableViewState.Soake
 function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.BrewStage {
   if (tea === null || isEmpty(liquid)) return 'water'
   const verdict = judgeTaste(liquid, tea)
+  if (verdict.strength === 'extreme') return 'tar'
   if (verdict.bitterness === 'overbrewed') return 'overbrewed'
   switch (verdict.strength) {
     case 'none':
@@ -115,15 +119,14 @@ function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.
     case 'rich':
     case 'heavy':
       return verdict.strength
-    case 'extreme':
-      return 'heavy'
   }
 }
 
 function liquorColour(liquid: Liquid, tea: TeaDefinition): string {
   const brewed = mixColours(waterColour, teaLookFor(tea.id).liquorColour, liquid.strength / 100)
   const darkening = share(liquid.bitterness - bitternessWhereDarkeningStarts, 100 - bitternessWhereDarkeningStarts)
-  return mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
+  const darkened = mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
+  return mixColours(darkened, tarColour, share(liquid.strength - strengthWhereTarStarts, strengthOfPureTar - strengthWhereTarStarts))
 }
 
 function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): TableViewState.SteamLevel {

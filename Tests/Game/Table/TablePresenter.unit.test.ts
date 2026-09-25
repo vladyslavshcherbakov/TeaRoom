@@ -79,6 +79,7 @@ test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
     [{ strength: 80, bitterness: 10 }, 'rich'],
     [{ strength: 90, bitterness: 10 }, 'heavy'],
     [{ strength: 90, bitterness: 75 }, 'overbrewed'],
+    [{ strength: 100, bitterness: 75 }, 'tar'],
   ] as const
 
   for (const [liquid, brewStage] of rows) {
@@ -86,12 +87,13 @@ test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
   }
 })
 
-test('senchaColour_blendsFromClearWaterToTheTeaAndDarkensWhenBitter', () => {
+test('senchaColour_blendsFromClearWaterToTheTeaDarkensWhenBitterAndTurnsToTarAtFullStrength', () => {
   const rows = [
     [{ strength: 0, bitterness: 0 }, '#c9e3f0'],
     [{ strength: 50, bitterness: 0 }, '#c1d4ad'],
-    [{ strength: 100, bitterness: 0 }, '#b8c46a'],
-    [{ strength: 100, bitterness: 100 }, '#726f3d'],
+    [{ strength: 90, bitterness: 0 }, '#bac777'],
+    [{ strength: 90, bitterness: 100 }, '#737144'],
+    [{ strength: 100, bitterness: 0 }, '#130b06'],
   ] as const
 
   for (const [liquid, colour] of rows) {
