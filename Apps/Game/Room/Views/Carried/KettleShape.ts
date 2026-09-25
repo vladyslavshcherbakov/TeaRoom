@@ -8,7 +8,7 @@ export const kettleShape = {
   openingAngle: Math.asin(openingRadiusMetres / bodyRadiusMetres),
   bottomInsideMetres: 0.004,
   waterBelowTheOpeningMetres: 0.012,
-  gaugeBottomMetres: 0.055,
+  gaugeBottomMetres: 0.075,
   gaugeHeightMetres: 0.11,
   gaugeFaceMetres: 0.142,
 } as const

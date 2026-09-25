@@ -10,7 +10,7 @@ export const quietRoom: RoomDefinition = {
   ritualPlaceId: 'teaTable',
   heaterId: 'electricPlate',
   heaterSpot: { placeId: 'counter', x: -2.35, y: 0.95, z: -2.65 },
-  tap: { sinkSpot: { placeId: 'counter', x: -1.45, y: 0.76, z: -2.7 }, waterTemperatureC: 18, flowMlPerSecond: 50 },
+  tap: { sinkSpot: { placeId: 'counter', x: -1.45, y: 0.82, z: -2.7 }, waterTemperatureC: 18, flowMlPerSecond: 50 },
   vessels: [
     { id: 'kettle', definitionId: 'clayKettle', initialWaterMl: 0, startsAt: { placeId: 'counter', x: -1.9, y: 0.9, z: -2.6 } },
     { id: 'thermos', definitionId: 'thermos', initialWaterMl: 0, startsAt: { placeId: 'counter', x: -1, y: 0.9, z: -2.7 } },
