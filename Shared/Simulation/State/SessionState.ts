@@ -66,6 +66,8 @@ export type PourState = {
 }
 
 export type RunningWaterState = {
+  openedAtSeconds: number
+  drainedSinceOpenedMl: number
   filledMl: number
   drainedMl: number
   hasOverflowed: boolean

@@ -26,7 +26,7 @@ export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'
   note(draft, `${command.itemId} put in the sink from hand ${location.handIndex}`)
   draft.events.push({ type: 'putInTheSink', itemId: command.itemId })
   if (draft.state.sink.runningWater === null) return openTheTap(draft, tap)
-  draft.state.sink.runningWater = runningWaterOver(draft, command.itemId)
+  draft.state.sink.runningWater = runningWaterOver(draft, command.itemId, draft.state.sink.runningWater)
   note(draft, `the running tap now runs onto ${command.itemId}`)
 }
 
@@ -45,8 +45,13 @@ export function turnTheTapOff(draft: Draft, command: CommandOfType<'turnTheTapOf
   if (runningWater === null) return refuse(draft, command, 'tapAlreadyOff')
   if (!isKeeperAt(draft, tap.sinkSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the tap is at the ${tap.sinkSpot.placeId}`)
   draft.state.sink.runningWater = null
-  note(draft, `tap closed over ${draft.state.sink.itemIdInside ?? 'the empty sink'}: ${runningWater.filledMl.toFixed(1)} ml went in, ${runningWater.drainedMl.toFixed(1)} ml down the drain`)
-  draft.events.push({ type: 'tapTurnedOff' })
+  const openSeconds = draft.state.elapsedSeconds - runningWater.openedAtSeconds
+  note(
+    draft,
+    `tap closed over ${draft.state.sink.itemIdInside ?? 'the empty sink'}: ${runningWater.filledMl.toFixed(1)} ml went in, ${runningWater.drainedMl.toFixed(1)} ml down the drain; ` +
+      `open for ${openSeconds.toFixed(1)} s, ${runningWater.drainedSinceOpenedMl.toFixed(1)} ml down the drain since it opened`,
+  )
+  draft.events.push({ type: 'tapTurnedOff', openSeconds, drainedMl: runningWater.drainedSinceOpenedMl })
 }
 
 export function liftOutOfTheSink(draft: Draft, itemId: string): void {
@@ -59,12 +64,12 @@ export function liftOutOfTheSink(draft: Draft, itemId: string): void {
   const runningWater = sink.runningWater
   if (runningWater === null) return note(draft, `${itemId} lifted out of the sink, the tap is closed`)
   note(draft, `${itemId} lifted out of the sink after ${runningWater.filledMl.toFixed(1)} ml went in, the tap keeps running into the empty sink`)
-  sink.runningWater = runningWaterOver(draft, null)
+  sink.runningWater = runningWaterOver(draft, null, runningWater)
 }
 
 function openTheTap(draft: Draft, tap: TapDefinition): void {
   const itemId = draft.state.sink.itemIdInside
-  draft.state.sink.runningWater = runningWaterOver(draft, itemId)
+  draft.state.sink.runningWater = runningWaterOver(draft, itemId, null)
   note(
     draft,
     `tap opened over ${itemId ?? 'the empty sink'}, water at ${tap.waterTemperatureC} °C, ${tap.flowMlPerSecond} ml/s` +
@@ -73,9 +78,16 @@ function openTheTap(draft: Draft, tap: TapDefinition): void {
   draft.events.push({ type: 'tapTurnedOn' })
 }
 
-function runningWaterOver(draft: Draft, itemId: string | null): RunningWaterState {
+function runningWaterOver(draft: Draft, itemId: string | null, runningBefore: RunningWaterState | null): RunningWaterState {
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
-  return { filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel) }
+  return {
+    openedAtSeconds: runningBefore?.openedAtSeconds ?? draft.state.elapsedSeconds,
+    drainedSinceOpenedMl: runningBefore?.drainedSinceOpenedMl ?? 0,
+    filledMl: 0,
+    drainedMl: 0,
+    hasOverflowed: false,
+    isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel),
+  }
 }
 
 function pourAwayTheRinseWater(draft: Draft, itemId: string): void {

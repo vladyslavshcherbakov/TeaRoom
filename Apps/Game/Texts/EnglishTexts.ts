@@ -84,6 +84,11 @@ export const englishTexts = {
   'tooHotToHold.3': "You have your quirks, and I like them. This one I'll sit out.",
   'tooHotToHold.4': "It's literally glowing. Even the thermos is telling you no.",
 
+  'tapRanLong.1': '{litres} litres straight down the drain. The river sends its thanks.',
+  'tapRanLong.2': 'That was {litres} litres for the sink. It has never been this hydrated.',
+  'tapRanLong.3': '{litres} litres, gone. Somewhere a water meter is dancing.',
+  'tapRanLong.4': 'The tap poured {litres} litres into nothing. Very generous of us.',
+
   'offering.glow': '{figurine} glows softly.',
   'offering.subtle': '{figurine} seems pleased.',
   'offering.barely': '{figurine} barely notices.',

@@ -27,6 +27,17 @@ test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 7), [])
 })
 
+test('caption_ofATapTurnedOffAfterTwoMinutes_namesTheLitresThatWentDownTheDrain', () => {
+  const lines = captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460 }], 7)
+
+  assert.equal(lines.length, 1)
+  assert.ok(lines[0]?.includes('4.5 litres'), lines.join(' / '))
+})
+
+test('caption_ofATapTurnedOffBeforeTwoMinutes_staysSilent', () => {
+  assert.deepEqual(captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 119, drainedMl: 4460 }], 7), [])
+})
+
 test('remark_ofTheSillTappedTwice_changesItsLine', () => {
   const firstLine = roomRemarkLine({ kind: 'sillIsTheRoomsOwn', timesTapped: 1 }, 7)
 

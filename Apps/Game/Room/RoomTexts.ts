@@ -5,6 +5,8 @@ import { phraseVariantAtTurn, phraseVariantFor, text, textOrFallback, textWith }
 import type { RoomRemark } from './RoomPlay.ts'
 
 const spillTheKeeperRemarksOnMl = 5
+const tapRanLongFromSeconds = 120
+const millilitresInALitre = 1000
 
 export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
   return events.flatMap((event) => captionLinesOf(event, voiceSeed))
@@ -22,6 +24,8 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return event.spilledMl >= spillTheKeeperRemarksOnMl ? [text(`spill.${phraseVariantFor('spill', voiceSeed)}`)] : []
     case 'actionRefused':
       return event.reason === 'tooHotToHold' ? [text(`tooHotToHold.${phraseVariantFor('tooHotToHold', voiceSeed)}`)] : []
+    case 'tapTurnedOff':
+      return event.openSeconds >= tapRanLongFromSeconds ? [drainedLitresLine(event.drainedMl, voiceSeed)] : []
     case 'burntClothWashedBackToNew':
       return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
     case 'figurineAcceptedTea':
@@ -29,6 +33,11 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
     default:
       return []
   }
+}
+
+function drainedLitresLine(drainedMl: number, voiceSeed: number): string {
+  const litres = String(Number((drainedMl / millilitresInALitre).toFixed(1)))
+  return textWith(`tapRanLong.${phraseVariantFor('tapRanLong', voiceSeed)}`, { litres })
 }
 
 function offeringResponseText(figurineId: string, response: OfferingResponse): string {

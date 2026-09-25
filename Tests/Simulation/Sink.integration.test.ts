@@ -255,6 +255,33 @@ test('boilingWaterInTheThermos_whenTheTapRunsOverItsRim_coolsToTheTapWater', () 
   assertNear(ritual.vessel('thermos').liquid.temperatureC, 20, 0.5)
 })
 
+test('tap_whenTurnedOff_saysHowLongItRanAndHowMuchWentDownTheDrain', () => {
+  const ritual = openKettleInHandAtTheCounter()
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.wait(10)
+
+  const events = ritual.do({ type: 'turnTheTapOff' })
+
+  const [turnedOff] = eventsOfType(events, 'tapTurnedOff')
+  assertNear(turnedOff?.openSeconds ?? 0, 10)
+  assertNear(turnedOff?.drainedMl ?? 0, 500)
+})
+
+test('drainedWater_whileItemsGoInAndOutOfTheSink_countsFromWhenTheTapOpened', () => {
+  const ritual = openKettleInHandAtTheCounter()
+  ritual.do({ type: 'closeVesselLid', vesselId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
+  ritual.wait(2)
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.wait(1)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.wait(1)
+
+  const events = ritual.do({ type: 'turnTheTapOff' })
+
+  assertNear(eventsOfType(events, 'tapTurnedOff')[0]?.drainedMl ?? 0, 400)
+})
+
 function openKettleInHandAtTheCounter(): TestRitual {
   const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })

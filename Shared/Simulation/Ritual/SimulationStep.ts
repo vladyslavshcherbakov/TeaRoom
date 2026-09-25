@@ -130,7 +130,7 @@ function runTheTap(draft: Draft, seconds: number): void {
   if (itemId === clothItemId) return washTheCloth(draft, runningWater, tap, seconds)
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   if (vessel === undefined) {
-    runningWater.drainedMl += tap.flowMlPerSecond * seconds
+    drain(runningWater, tap.flowMlPerSecond * seconds)
     return
   }
   const isRunningOverTheLid = isClosedAgainstFilling(draft, vessel)
@@ -139,14 +139,14 @@ function runTheTap(draft: Draft, seconds: number): void {
     note(draft, isRunningOverTheLid ? `${vessel.id} lid closed under the tap, the water runs over it into the drain` : `${vessel.id} lid open under the tap, the water runs in`)
   }
   if (isRunningOverTheLid) {
-    runningWater.drainedMl += tap.flowMlPerSecond * seconds
+    drain(runningWater, tap.flowMlPerSecond * seconds)
     return
   }
   const capacityMl = vesselDefinitionOf(draft, vessel).capacityMl
   const fill = fillFromTap(vessel.liquid, capacityMl, tap, seconds)
   vessel.liquid = fill.liquid
   runningWater.filledMl += fill.filledMl
-  runningWater.drainedMl += fill.overflowedMl
+  drain(runningWater, fill.overflowedMl)
   if (fill.overflowedMl > 0) {
     draft.state.sink.hasRunOverTheItemInside = true
     washTheLeavesOut(draft, vessel, fill.overflowedMl, capacityMl)
@@ -156,6 +156,11 @@ function runTheTap(draft: Draft, seconds: number): void {
     note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the drain`)
     draft.events.push({ type: 'vesselOverflowed', vesselId: vessel.id })
   }
+}
+
+function drain(runningWater: RunningWaterState, ml: number): void {
+  runningWater.drainedMl += ml
+  runningWater.drainedSinceOpenedMl += ml
 }
 
 function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: number, capacityMl: number): void {
@@ -178,7 +183,7 @@ function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDef
   cloth.charring = clothCharringAfterWashing(cloth.charring, seconds)
   cloth.wetMl = clothWetMlUnderTheTap(cloth.wetMl, tap.flowMlPerSecond, seconds)
   runningWater.filledMl += cloth.wetMl - wetMlBefore
-  runningWater.drainedMl += tap.flowMlPerSecond * seconds - (cloth.wetMl - wetMlBefore)
+  drain(runningWater, tap.flowMlPerSecond * seconds - (cloth.wetMl - wetMlBefore))
   if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the tea is washed out of the cloth, it holds ${cloth.wetMl.toFixed(1)} ml`)
   if (charringBefore === 0 || cloth.charring > 0) return
   cloth.wasBurntBeforeWashing = true

@@ -81,7 +81,7 @@ export type RitualEvent =
     }
   | { readonly type: 'putInTheSink'; readonly itemId: string }
   | { readonly type: 'tapTurnedOn' }
-  | { readonly type: 'tapTurnedOff' }
+  | { readonly type: 'tapTurnedOff'; readonly openSeconds: number; readonly drainedMl: number }
   | { readonly type: 'teaScooped'; readonly grams: number }
   | { readonly type: 'leavesAdded'; readonly vesselId: string; readonly grams: number }
   | { readonly type: 'brewStarted'; readonly vesselId: string; readonly waterJudgement: WaterJudgement }
