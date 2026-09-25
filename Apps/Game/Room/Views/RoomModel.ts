@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { roomLayers } from './RoomLayers.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
   faucetSpout,
@@ -11,6 +12,7 @@ import {
   roomHalfSize,
   windowOnBackWall,
   medalOnLeftWall,
+  settingsGearOnLeftWall,
   type Footprint,
   type Furniture,
   type FurnitureId,
@@ -29,6 +31,11 @@ const medalRibbonWidthMetres = 0.09
 const medalRibbonLengthMetres = 0.3
 const medalRibbonTiltRadians = 0.35
 const medalTouchAreaMetres = 0.55
+const gearRadiusMetres = 0.1
+const gearThicknessMetres = 0.03
+const gearToothMetres = 0.05
+const gearTeeth = 8
+const gearTouchAreaMetres = 0.45
 const faucetPostAboveTheSpoutMetres = 0.04
 const faucetTouchAreaWidthMetres = 0.2
 const faucetTouchAreaAboveTheCounterMetres = 0.12
@@ -50,6 +57,7 @@ export type TapTargetTag =
   | { readonly figurineId: string }
   | { readonly isRoseBush: true }
   | { readonly isMedal: true }
+  | { readonly isSettingsGear: true }
 
 export class RoomModel {
   private readonly materials: RoomMaterials
@@ -65,6 +73,7 @@ export class RoomModel {
     this.addBackWallWithWindow()
     this.addLeftWall()
     this.addMedal()
+    this.addSettingsGear()
     for (const piece of furniture) this.addFurniture(piece)
     for (const spot of itemSpots) this.addItem(spot)
     this.heaterPlate = this.addHeater(heaterSpot)
@@ -123,14 +132,43 @@ export class RoomModel {
     disc.rotation.x = Math.PI / 2
     disc.position.z = medalThicknessMetres / 2 + 0.008
     disc.castShadow = true
-    const touchArea = new THREE.Mesh(new THREE.BoxGeometry(medalTouchAreaMetres, medalTouchAreaMetres * 1.3, 0.05), this.touchAreaMaterial)
+    const touchArea = this.touchArea(medalTouchAreaMetres, medalTouchAreaMetres * 1.3, 0.05)
     touchArea.position.set(0, medalRibbonLengthMetres * 0.4, 0.025)
-    touchArea.userData = { isForgivingTouchArea: true }
     medal.add(disc, touchArea)
     medal.position.set(-roomHalfSize, medalOnLeftWall.y, medalOnLeftWall.z)
     medal.rotation.y = Math.PI / 2
     this.root.add(medal)
     this.tag(medal, { isMedal: true })
+  }
+
+  private addSettingsGear(): void {
+    const gear = new THREE.Group()
+    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(gearRadiusMetres, gearRadiusMetres, gearThicknessMetres, 32), this.materials.materialFor('steel'))
+    wheel.rotation.x = Math.PI / 2
+    gear.add(wheel)
+    for (let tooth = 0; tooth < gearTeeth; tooth += 1) {
+      const angle = (tooth / gearTeeth) * Math.PI * 2
+      const toothMesh = this.plainBox('steel', gearToothMetres, gearToothMetres, gearThicknessMetres, { x: Math.cos(angle) * gearRadiusMetres, y: Math.sin(angle) * gearRadiusMetres, z: 0 })
+      toothMesh.rotation.z = angle
+      gear.add(toothMesh)
+    }
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(gearRadiusMetres * 0.35, gearRadiusMetres * 0.35, gearThicknessMetres * 1.4, 16), this.materials.materialFor('heaterPlate'))
+    hub.rotation.x = Math.PI / 2
+    gear.add(hub)
+    gear.traverse((part) => (part.castShadow = true))
+    const touchArea = this.touchArea(gearTouchAreaMetres, gearTouchAreaMetres, 0.05)
+    gear.add(touchArea)
+    gear.position.set(-roomHalfSize + gearThicknessMetres / 2 + 0.01, settingsGearOnLeftWall.y, settingsGearOnLeftWall.z)
+    gear.rotation.y = Math.PI / 2
+    this.root.add(gear)
+    this.tag(gear, { isSettingsGear: true })
+  }
+
+  private touchArea(width: number, height: number, depth: number): THREE.Mesh {
+    const area = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), this.touchAreaMaterial)
+    area.layers.set(roomLayers.touchAreas)
+    area.userData = { isForgivingTouchArea: true }
+    return area
   }
 
   private addLeftWall(): void {
@@ -248,9 +286,8 @@ export class RoomModel {
     const top = base.y + postHeight + faucetTouchAreaBeyondTheFaucetMetres
     const back = base.z - faucetTouchAreaBeyondTheFaucetMetres
     const front = faucetSpout.z + faucetTouchAreaBeyondTheFaucetMetres
-    const area = new THREE.Mesh(new THREE.BoxGeometry(faucetTouchAreaWidthMetres, top - bottom, front - back), this.touchAreaMaterial)
+    const area = this.touchArea(faucetTouchAreaWidthMetres, top - bottom, front - back)
     area.position.set(base.x, (bottom + top) / 2, (back + front) / 2)
-    area.userData = { isForgivingTouchArea: true }
     return area
   }
 

@@ -100,6 +100,8 @@ The plan is in `docs/roadmap.md`.
 
 **The visit is saved every two seconds and when the page is hidden.** Mobile Safari may drop a page in the background without any event, so a save only on leaving would lose visits. A save is about 4 KB of JSON. The light, the voice and the once-a-visit jokes start anew, because a continued visit is still a new visit. The keeper's death forgets the save, so the joke of YOU DIED keeps its weight.
 
+**Settings hang on the wall as a gear, and soft shadows in corners are off until the player turns them on.** The room has no menu bar, so the gear sits on the wall like the medal. The soft shadows are screen-space ambient occlusion from three.js, `GTAOPass`, drawn only over the room's first pass, so the items held in a close-up stay clean. It costs a pass over the whole screen each frame, and a weak phone may drop frames, so the player chooses it with a warning. The settings are a convenience kept in the browser: without storage they last one visit. Rejected: ambient occlusion for everyone, because the game's first target is a phone.
+
 ### Apps/Game/Room/Views/
 
 **The kettle shows its water in a dark glass gauge on its side, and inside when its lid is open.** The kettle is clay and opaque. A gauge window, as on many kettles, shows the level from any side without opening the lid. The body has an opening under the lid, so an open kettle shows whether it is empty, how high the water stands and its colour. The water's surface is drawn as a disc as wide as the round body at that height.
@@ -109,6 +111,8 @@ The plan is in `docs/roadmap.md`.
 **The thermos is a Chinese vacuum flask painted with sakura branches over Mount Fuji.** Its parts are in `Views/Carried/ThermosParts.ts`, and the painting is drawn on a canvas in `Views/ThermosPainting.ts`, chosen over peonies and over cranes with a pine. The canvas wraps the body once, with the canvas as tall for its width as the body is for its round, so the blossoms stay round, and the branch meets itself at the seam. Fuji stands on a lake, and its reflection is squashed and broken into ripples, so it reads as water and not as a mirror. A pink glow over the horizon was rejected, because the sakura is enough pink. The body's geometry starts half a turn round, so Fuji faces the front of the room and the camera in a close-up. The cup lid's origin sits as far above its rim as an open lid is lifted above the surface in `Views/Carried/ItemContents.ts`, so the open cup stands on the table. Only the neck opens, so the water shows through it, and an overflow runs over the lip, the neck and the shoulder before it reaches the body.
 
 **Water is pale and clear, and moves only while it heats.** Plain water is a pale blue that reads as clear, and tea blends out of it as it steeps in the kettle. Streams grow from the spout and fall away, and an overflow creeps down the kettle's side, because water that appears whole in one frame reads as a drawing. The water shimmers, simmers and boils on a working heater and goes still off it, while its steam follows the temperature and so stays a while.
+
+**Invisible touch areas are on their own render layer.** The medal, the tap and the gear answer taps in areas larger than they are, drawn with no colour. Ambient occlusion reads depth, so it drew those areas as grey boxes. On `roomLayers.touchAreas` the camera never draws them, and the raycaster still sees every layer.
 
 **Items standing on furniture cast no shadows.** Their shadows on the tea table and the shelves read as clutter at this size.
 

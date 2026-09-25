@@ -870,6 +870,14 @@ test('medal_whenTapped_asksForTheListOfAchievements', () => {
   assert.equal(room.achievementListsAsked, 1)
 })
 
+test('settingsGear_whenTapped_asksForTheSettings', () => {
+  const room = new RoomVisit()
+
+  room.tap({ kind: 'settingsGear' })
+
+  assert.equal(room.settingsAsked, 1)
+})
+
 test('middleHand_whenTheSameItemIsTappedTenTimesWithFullHands_growsHoldingItAndChosen', () => {
   const room = new RoomVisit()
   room.carryFromTheShelf('bowl1', 'bowl2')
@@ -908,12 +916,13 @@ class RoomVisit {
   readonly remarks: RoomRemark[] = []
   debugMenusAsked = 0
   achievementListsAsked = 0
+  settingsAsked = 0
   mayGrowAMiddleHand = true
   deathsSeen = 0
   readonly play: RoomPlay
 
   constructor(heaterItemsBeforeTheTesterJoke = 4) {
-    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), mayGrowAMiddleHand: () => this.mayGrowAMiddleHand, keeperDied: () => (this.deathsSeen += 1) })
+    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), settingsAsked: () => (this.settingsAsked += 1), mayGrowAMiddleHand: () => this.mayGrowAMiddleHand, keeperDied: () => (this.deathsSeen += 1) })
   }
 
   get session() {

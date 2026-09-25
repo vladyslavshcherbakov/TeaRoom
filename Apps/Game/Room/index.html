@@ -257,6 +257,80 @@
         background: #fbf4e8;
         color: #5a3a26;
       }
+      .settings {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        background: rgba(40, 26, 16, 0.45);
+      }
+      .settings[hidden] {
+        display: none;
+      }
+      .settings-sheet {
+        display: grid;
+        gap: 10px;
+        width: min(360px, 100%);
+        padding: 20px;
+        border-radius: 4px;
+        background: #fbf4e8;
+        box-shadow: 0 8px 24px rgba(40, 26, 16, 0.35);
+        color: #5a3a26;
+        font: 15px/1.35 system-ui, sans-serif;
+      }
+      .settings-sheet h2 {
+        margin: 0;
+        font: 600 18px/1.2 system-ui, sans-serif;
+      }
+      .settings-sheet h3 {
+        margin: 6px 0 0;
+        font: 600 14px/1.2 system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #8a6d57;
+      }
+      .settings-palette {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+      .settings-swatch {
+        aspect-ratio: 1;
+        border: 3px solid transparent;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px rgba(40, 26, 16, 0.2);
+      }
+      .settings-swatch[aria-pressed='true'] {
+        border-color: #5a3a26;
+      }
+      .settings-toggle {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        min-height: 40px;
+        font-weight: 600;
+      }
+      .settings-toggle input {
+        width: 22px;
+        height: 22px;
+        accent-color: #5f9a7c;
+      }
+      .settings-warning {
+        margin: 0;
+        font-size: 13px;
+        color: #9a3f2f;
+      }
+      .settings-close {
+        justify-self: end;
+        min-height: 40px;
+        padding: 0 16px;
+        border: 2px solid #3f6f57;
+        border-radius: 20px;
+        background: #5f9a7c;
+        color: #fbf4e8;
+        font: 600 14px/1 system-ui, sans-serif;
+      }
       .achievements {
         position: fixed;
         inset: 0;

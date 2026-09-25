@@ -41,7 +41,7 @@ test('pinch_whenTheFingersSpreadToTwiceTheirGap_bringsTheCameraToHalfItsDistance
 
 class GestureRoom {
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, () => {}, 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
+  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, () => {}, 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, settingsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
   readonly zoom = new CameraZoom()
   readonly gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: counterAt, aimPointAt: () => ({ x: 0, z: 0 }) }, () => {})
 }

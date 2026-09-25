@@ -36,6 +36,7 @@ export type RoomTapTarget =
   | { readonly kind: 'figurine'; readonly figurineId: string }
   | { readonly kind: 'roseBush' }
   | { readonly kind: 'medal' }
+  | { readonly kind: 'settingsGear' }
   | { readonly kind: 'nothing' }
 
 type WipeStroke = {
@@ -74,6 +75,7 @@ export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
   readonly debugMenuAsked: () => void
   readonly achievementsAsked: () => void
+  readonly settingsAsked: () => void
   readonly mayGrowAMiddleHand: () => boolean
   readonly keeperDied: () => void
 }
@@ -254,6 +256,7 @@ export class RoomPlay {
     this.forgetTheRoseBushTaps()
     if (target.kind !== 'item' || target.itemId !== this.tapsWithFullHands?.itemId) this.forgetTheTapsWithFullHands()
     if (target.kind === 'medal') return this.showTheAchievements()
+    if (target.kind === 'settingsGear') return this.showTheSettings()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
@@ -261,6 +264,11 @@ export class RoomPlay {
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)
     this.actAtCloseUp(target)
+  }
+
+  private showTheSettings(): void {
+    this.log('the gear on the wall shows the settings')
+    this.listener.settingsAsked()
   }
 
   private showTheAchievements(): void {

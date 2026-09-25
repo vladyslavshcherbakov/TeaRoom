@@ -152,6 +152,12 @@ export const englishTexts = {
   'heaterRanLong.2': 'Promise me you do this before we leave the house, too.',
   'heaterRanLong.3': '{kilowattHours} kWh for one kettle. The power plant sends its warmest regards.',
 
+  'settings.title': 'Settings',
+  'settings.coatColour': 'Body colour',
+  'settings.advanced': 'Advanced',
+  'settings.softShadowsInCorners': 'Soft shadows in corners',
+  'settings.softShadowsInCornersWarning': 'Makes the room look deeper, but the game may start to lag on some phones.',
+  'settings.close': 'Close',
   'achievements.title': 'Achievements',
   'achievements.reset': 'Reset',
   'achievements.resetAgain': 'Tap again to reset',

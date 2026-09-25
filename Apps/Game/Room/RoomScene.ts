@@ -1,4 +1,8 @@
 import * as THREE from 'three'
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
+import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
@@ -23,6 +27,9 @@ import { furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
+import type { CoatColour, RoomSettings } from './RoomSettings.ts'
+import { SettingsStore } from './SettingsStore.ts'
+import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { Achievements } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
@@ -55,6 +62,8 @@ const transmissionResolutionShare = 0.5
 const firstPersonSettleSeconds = 1.5
 const fieldOfViewSettleSeconds = 0.35
 const secondsBetweenKeepingTheVisit = 2
+const ambientOcclusionRadiusMetres = 0.35
+const ambientOcclusionStrength = 0.85
 
 export type RoomArrival = {
   readonly place: RoomPlace
@@ -79,6 +88,10 @@ export class RoomScene {
   private readonly play: RoomPlay
   private readonly room: RoomModel
   private readonly walker: WalkerModel
+  private readonly settingsStore: SettingsStore
+  private readonly settingsScreen: SettingsScreen
+  private settings: RoomSettings
+  private softShadowsInCorners: EffectComposer | null = null
   private readonly carried: CarriedItems
   private readonly sipButton: SipButton
   private readonly pourControls: PourControls
@@ -137,6 +150,7 @@ export class RoomScene {
         this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout })
       },
       achievementsAsked: () => this.achievementsList.show(this.achievements.unlocked),
+      settingsAsked: () => this.settingsScreen.show(this.settings),
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       keeperDied: () => {
         this.hasTheKeeperDied = true
@@ -169,7 +183,12 @@ export class RoomScene {
     this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout) })
     this.garden = new Garden(materials)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
+    this.settingsStore = new SettingsStore(log)
+    this.settings = this.settingsStore.load()
+    this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn) })
+    this.walker.paintTheBody(this.settings.coatColour)
     this.fitToWindow()
+    this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
     this.listenToPresses()
     window.addEventListener('resize', () => this.fitToWindow())
@@ -263,6 +282,25 @@ export class RoomScene {
     if (reason !== null) this.log(`the visit is saved because ${reason}`)
   }
 
+  private coatColourChosen(colour: CoatColour): void {
+    this.settings = { ...this.settings, coatColour: colour }
+    this.settingsStore.keep(this.settings)
+    this.walker.paintTheBody(colour)
+    this.log(`the body is painted ${colour} from the settings`)
+  }
+
+  private softShadowsInCornersChosen(isOn: boolean): void {
+    this.settings = { ...this.settings, hasSoftShadowsInCorners: isOn }
+    this.settingsStore.keep(this.settings)
+    this.showSoftShadowsInCorners(isOn)
+    this.log(`soft shadows in corners are turned ${isOn ? 'on' : 'off'} from the settings`)
+  }
+
+  private showSoftShadowsInCorners(isOn: boolean): void {
+    this.softShadowsInCorners?.dispose()
+    this.softShadowsInCorners = isOn ? softShadowsInCornersOf(this.renderer, this.scene, this.camera) : null
+  }
+
   private stickLayoutChosen(layout: StickLayout): void {
     this.stickLayout = layout
     this.log(`the sticks are laid out as ${layout} from the debug menu`)
@@ -303,7 +341,8 @@ export class RoomScene {
     this.renderer.clear()
     this.camera.layers.set(roomLayers.room)
     this.camera.layers.enable(roomLayers.untappableRoom)
-    this.renderer.render(this.scene, this.camera)
+    if (this.softShadowsInCorners !== null) this.softShadowsInCorners.render()
+    else this.renderer.render(this.scene, this.camera)
     this.renderer.clearDepth()
     this.camera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, this.camera)
@@ -366,6 +405,7 @@ export class RoomScene {
     const width = window.innerWidth
     const height = window.innerHeight
     this.renderer.setSize(width, height)
+    this.softShadowsInCorners?.setSize(width, height)
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
   }
@@ -398,6 +438,7 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }
   if ('isRoseBush' in tag) return { kind: 'roseBush' }
   if ('isMedal' in tag) return { kind: 'medal' }
+  if ('isSettingsGear' in tag) return { kind: 'settingsGear' }
   const upwardNormal = hit.face?.normal.clone().transformDirection(hit.object.matrixWorld).y ?? 0
   if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }
   return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: hit.point.x, y: hit.point.y, z: hit.point.z } }
@@ -438,4 +479,18 @@ function reflectionsOfTheRoom(renderer: THREE.WebGLRenderer): THREE.Texture {
   const reflections = generator.fromScene(new RoomEnvironment(), reflectionsBlurSigma).texture
   generator.dispose()
   return reflections
+}
+
+function softShadowsInCornersOf(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera): EffectComposer {
+  const size = renderer.getSize(new THREE.Vector2())
+  const composer = new EffectComposer(renderer)
+  composer.setPixelRatio(renderer.getPixelRatio())
+  composer.setSize(size.x, size.y)
+  composer.addPass(new RenderPass(scene, camera))
+  const ambientOcclusion = new GTAOPass(scene, camera, size.x, size.y)
+  ambientOcclusion.updateGtaoMaterial({ radius: ambientOcclusionRadiusMetres })
+  ambientOcclusion.blendIntensity = ambientOcclusionStrength
+  composer.addPass(ambientOcclusion)
+  composer.addPass(new OutputPass())
+  return composer
 }
