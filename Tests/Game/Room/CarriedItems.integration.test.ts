@@ -71,9 +71,10 @@ test('fire_ofEveryShape_isDrawnExactlyWhenTheItemCanCharAndTheTableSaysHowFar', 
 })
 
 test('itemInTheSink_standsOnTheTopOfTheSinksFloorPlate', () => {
-  const sinkSpot = definitionIn(defaultCatalog, 'rooms', 'quietRoom').tap.sinkSpot
+  const tap = definitionIn(defaultCatalog, 'rooms', 'quietRoom').tap
 
-  assertNear(sinkSpot.y, sinkBasin.floorHeight + sinkBasin.plateMetres)
+  assert.ok(tap !== null, 'the quiet room has a tap')
+  assertNear(tap.sinkSpot.y, sinkBasin.floorHeight + sinkBasin.plateMetres)
 })
 
 test('heldItem_ofEveryShapeInEitherHand_staysInsideAPortraitPhoneScreen', () => {

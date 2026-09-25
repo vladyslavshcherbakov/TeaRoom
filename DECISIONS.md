@@ -118,6 +118,8 @@ The plan is in `docs/roadmap.md`.
 
 **UI tests run on WebKit and read the ritual log.** WebKit is the engine of iOS Safari, the game's main target. The tests read the `[ritual]` lines from the browser console instead of calling into the game, so the product carries no test hooks. `@playwright/test` is pinned to the version whose Chromium is preinstalled in the agent environment, so the same tests run there and in CI.
 
+**The game's tests are type-checked with the game, and `Apps/tsconfig.json` sets its own empty `exclude`.** `Tests/Game` builds Three.js views, which need the browser's types, so the root `tsconfig.json` leaves it out and `Apps/tsconfig.json` takes it in. A config that extends another inherits its `exclude`, so without its own the game's tests were type-checked by neither config, while Node still ran them.
+
 ### Scripts/ and .github/
 
 **Both pages are built by Vite.** The room at the root of the site and the bench under `/bench/` are two Vite builds from `Scripts/build.sh`, with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build. Rejected: building the bench with the TypeScript compiler alone, because two build tools for two pages would be two pipelines to keep working.
