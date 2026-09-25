@@ -1,6 +1,6 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import { judgeOffering } from '../Judgement/OfferingJudgement.ts'
-import { judgeTaste } from '../Judgement/TasteJudgement.ts'
+import { isFatalStraightFromTheCaddy, judgeTaste } from '../Judgement/TasteJudgement.ts'
 import { isEmpty, splitLiquid } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
@@ -13,7 +13,7 @@ import {
   vesselDefinitionOf,
   type Draft,
 } from './Draft.ts'
-import { isKeeperAt, isWithinReach, ritualPlaceOf, whereTheKeeperStands } from './Reach.ts'
+import { caddyItemId, isKeeperAt, isWithinReach, ritualPlaceOf, whereTheKeeperStands } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
 const sipMl = 20
@@ -36,6 +36,9 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
       `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}; ${describeLiquid(cup)} left`,
   )
   draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict, cupHeldLeaves })
+  if (cup.id !== caddyItemId || !isFatalStraightFromTheCaddy(verdict)) return
+  note(draft, `the keeper sipped ${verdict.strength} tea straight from the caddy, and it killed them`)
+  draft.events.push({ type: 'keeperDied', cupId: cup.id })
 }
 
 export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void {

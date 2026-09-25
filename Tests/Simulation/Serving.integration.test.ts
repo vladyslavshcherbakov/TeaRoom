@@ -118,3 +118,29 @@ test('offering_emptiesTheWholeCupIntoTheSaucer', () => {
 
   assert.equal(ritual.vessel('cup1').liquid.volumeMl, 0)
 })
+
+test('keeper_whenSippingTeaOfExtremeStrengthStraightFromTheCaddy_dies', () => {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(80)
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+  ritual.pour('kettle', 'caddy', 10)
+  ritual.wait(10)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'caddy' })
+
+  assert.deepEqual(eventsOfType(events, 'keeperDied'), [{ type: 'keeperDied', cupId: 'caddy' }])
+})
+
+test('keeper_whenSippingTheCaddysTeaFromABowl_lives', () => {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(80)
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+  ritual.pour('kettle', 'caddy', 10)
+  ritual.wait(10)
+  ritual.pour('caddy', 'cup1', 3)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
+
+  assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'extreme')
+  assert.deepEqual(eventsOfType(events, 'keeperDied'), [])
+})

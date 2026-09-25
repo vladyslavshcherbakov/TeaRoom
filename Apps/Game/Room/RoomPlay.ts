@@ -1,6 +1,5 @@
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
-import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
@@ -71,12 +70,10 @@ const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const tapsWithFullHandsThatGrowAMiddleHand = 10
 const fullTurnDegrees = 360
-const deadlyStrengthsFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
 export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester' | 'everythingOnTheShelf'
 
-export type TeaTasted = Extract<RitualEvent, { readonly type: 'teaTasted' }>
 
 export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: number }
 
@@ -285,9 +282,8 @@ export class RoomPlay {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
     const events = this.ritual.dispatch({ type: 'tasteCup', cupId })
-    const sip = events.find((event): event is TeaTasted => event.type === 'teaTasted')
-    if (cupId !== caddyItemId || sip === undefined || !deadlyStrengthsFromTheCaddy.has(sip.verdict.strength)) return
-    this.log(`the keeper sipped ${sip.verdict.strength} tea straight from the caddy, and it killed them`)
+    if (!events.some((event) => event.type === 'keeperDied')) return
+    this.log(`the sip from ${cupId} killed the keeper, so the room shows it`)
     this.listener.keeperDied()
   }
 

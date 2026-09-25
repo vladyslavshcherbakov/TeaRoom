@@ -16,6 +16,11 @@ const extremeStrengthFrom = 98
 const noticeableBitternessFrom = 25
 const highBitternessFrom = 45
 const overbrewedBitternessFrom = 70
+const strengthsThatKillStraightFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
+
+export function isFatalStraightFromTheCaddy(verdict: TasteVerdict): boolean {
+  return strengthsThatKillStraightFromTheCaddy.has(verdict.strength)
+}
 
 export function judgeTaste(sip: Liquid, tea: TeaDefinition): TasteVerdict {
   const temperature = temperatureOf(sip)
