@@ -103,7 +103,7 @@ export const englishTexts = {
   'smoulderingClothTaken.4': 'Sure, let it burn. We will just buy another house, as we always do.',
   'spoonCrumbled.1': 'And there goes our only spoon. No spoon, no leaves. Hot water it is, then.',
   'spoonCrumbled.2': 'Ash. That was bamboo a minute ago. Lovely trick. Now make it come back.',
-  'spoonCrumbled.3': 'Well, that settles the tea for today. Try getting leaves out of the caddy with your fingers.',
+  'spoonCrumbled.3': 'Well, that settles the tea for today. We still have excellent hot water, at least.',
   'spoonCrumbled.4': 'Poor little spoon. It scooped so faithfully, and now it is a pinch of ash. 😭',
   'tooHotToHold.1': 'And then what? Juggle a glowing thermos? Bold plan. No.',
   'tooHotToHold.2': "Blister my palm and ruin a lovely day? I'll pass, thanks.",
