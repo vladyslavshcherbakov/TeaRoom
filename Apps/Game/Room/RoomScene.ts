@@ -20,6 +20,7 @@ import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { captionLinesFor, roomRemarkLine } from './RoomTexts.ts'
+import { tapTargetAmong } from './TapTargetAmong.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
 import { daylightAt, firstHourAfterSunrise, hoursAfter } from './Sky/DaylightCycle.ts'
@@ -187,12 +188,8 @@ export class RoomScene {
     this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes]
     const hits = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
-    const [nearest] = hits
-    if (nearest === undefined) return { kind: 'nothing' }
-    const target = tapTargetOf(nearest)
-    if (target.kind !== 'hand' || !isAForgivingTouchArea(nearest.object) || target.handIndex !== this.play.chosenHandIndex) return target
-    const behind = hits.map(tapTargetOf).find((hitTarget) => hitTarget.kind !== 'hand' && hitTarget.kind !== 'nothing')
-    return behind !== undefined && this.play.canTheChosenItemActOn(behind) ? behind : target
+    const nearestFirst = hits.map((hit) => ({ target: tapTargetOf(hit), isForgivingTouchArea: isAForgivingTouchArea(hit.object) }))
+    return tapTargetAmong(nearestFirst, this.play.chosenHandIndex, (target) => this.play.canTheChosenItemActOn(target))
   }
 
   private fitToWindow(): void {
