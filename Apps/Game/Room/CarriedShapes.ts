@@ -57,6 +57,6 @@ export function layoutOf(state: DeepReadonly<SessionState>, itemId: string): Car
 }
 
 export function isTheLidOpen(state: DeepReadonly<SessionState>, itemId: string): boolean {
-  const hasALid = layoutOf(state, itemId)?.lid !== null
-  return hasALid && state.vessels[itemId]?.isLidOpen === true
+  const lid = layoutOf(state, itemId)?.lid ?? null
+  return lid !== null && state.vessels[itemId]?.isLidOpen === true
 }
