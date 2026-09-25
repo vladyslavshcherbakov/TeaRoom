@@ -13,6 +13,8 @@ export type FittedSavedState =
 
 type Shape = { readonly [key: string]: unknown }
 
+type SaveMigration = (saved: Shape) => { readonly migrated: Shape; readonly change: string } | null
+
 const leavesShape: Leaves = dryLeaves('', 0)
 const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
 const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false, hasRunOntoAnItem: false }
@@ -21,18 +23,24 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto]
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
   if (savedVersion !== sessionStateVersion) return { kind: 'doesNotFit', problems: [`the saved state is version ${savedVersion}, the game reads version ${sessionStateVersion}`] }
   if (!isShape(saved)) return { kind: 'doesNotFit', problems: ['the saved state is not an object'] }
   const changes: string[] = []
-  const savedWithEveryHand = withWhatTheHeaterAndTheTapRanOnto(withClothsById(withTheMiddleHand(saved, changes), changes), changes)
-  const roomId = savedWithEveryHand['roomId']
+  const savedInTodaysShape = migrationsOldestFirst.reduce((shape, migrate) => {
+    const migration = migrate(shape)
+    if (migration === null) return shape
+    changes.push(migration.change)
+    return migration.migrated
+  }, saved)
+  const roomId = savedInTodaysShape['roomId']
   if (typeof roomId !== 'string' || catalog.rooms[roomId] === undefined) return { kind: 'doesNotFit', problems: [`the saved room ${String(roomId)} is not in the catalog`] }
   const fresh = initialSessionState(catalog, roomId)
-  const problems = shapeProblemsOf(fresh, savedWithEveryHand)
+  const problems = shapeProblemsOf(fresh, savedInTodaysShape)
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
-  const state = structuredClone(savedWithEveryHand) as SessionState
+  const state = structuredClone(savedInTodaysShape) as SessionState
   changes.push(...fitTheVessels(state, fresh), ...fitTheCloths(state, fresh), ...fitTheFigurines(state, fresh))
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
   problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
@@ -176,31 +184,37 @@ function dropPuddlesOnLostPlaces(state: SessionState, places: ReadonlySet<string
   return changes
 }
 
-function withTheMiddleHand(saved: Shape, changes: string[]): Shape {
+function withTheMiddleHand(saved: Shape): ReturnType<SaveMigration> {
   const keeper = saved['keeper']
-  if (!isShape(keeper) || !Array.isArray(keeper['hands']) || keeper['hands'].length !== 2) return saved
-  changes.push('the keeper, saved before the middle hand existed, gets an empty one that has not grown')
-  return { ...saved, keeper: { ...keeper, hands: [...keeper['hands'], null], hasAMiddleHand: false } }
+  if (!isShape(keeper) || !Array.isArray(keeper['hands']) || keeper['hands'].length !== 2) return null
+  return {
+    migrated: { ...saved, keeper: { ...keeper, hands: [...keeper['hands'], null], hasAMiddleHand: false } },
+    change: 'the keeper, saved before the middle hand existed, gets an empty one that has not grown',
+  }
 }
 
-function withClothsById(saved: Shape, changes: string[]): Shape {
+function withClothsById(saved: Shape): ReturnType<SaveMigration> {
   const cloth = saved['cloth']
-  if (!isShape(cloth) || saved['cloths'] !== undefined) return saved
-  changes.push(`the one cloth of a save from before a room could hold several becomes the cloth "${clothIdOfSavesWithOneCloth}"`)
+  if (!isShape(cloth) || saved['cloths'] !== undefined) return null
   const savedWithoutTheOneCloth = Object.fromEntries(Object.entries(saved).filter(([key]) => key !== 'cloth'))
-  return { ...savedWithoutTheOneCloth, cloths: { [clothIdOfSavesWithOneCloth]: { ...cloth, id: clothIdOfSavesWithOneCloth } } }
+  return {
+    migrated: { ...savedWithoutTheOneCloth, cloths: { [clothIdOfSavesWithOneCloth]: { ...cloth, id: clothIdOfSavesWithOneCloth } } },
+    change: `the one cloth of a save from before a room could hold several becomes the cloth "${clothIdOfSavesWithOneCloth}"`,
+  }
 }
 
-function withWhatTheHeaterAndTheTapRanOnto(saved: Shape, changes: string[]): Shape {
+function withWhatTheHeaterAndTheTapRanOnto(saved: Shape): ReturnType<SaveMigration> {
   const heater = saved['heater']
   const sink = saved['sink']
   const heaterWithItsRecord = isShape(heater) && heater['secondsHeatedByItemId'] === undefined ? { ...heater, secondsHeatedByItemId: {} } : heater
   const runningWater = isShape(sink) ? sink['runningWater'] : undefined
   const hasRunOntoAnItem = isShape(sink) && sink['itemIdInside'] !== null
   const sinkWithItsRecord = isShape(sink) && isShape(runningWater) && runningWater['hasRunOntoAnItem'] === undefined ? { ...sink, runningWater: { ...runningWater, hasRunOntoAnItem } } : sink
-  if (heaterWithItsRecord === heater && sinkWithItsRecord === sink) return saved
-  changes.push(`a save from before the heater and the tap remembered what they ran onto starts remembering now${sinkWithItsRecord === sink ? '' : `, and its running tap counts as having run onto ${hasRunOntoAnItem ? 'the item in the sink' : 'nothing'}`}`)
-  return { ...saved, heater: heaterWithItsRecord, sink: sinkWithItsRecord }
+  if (heaterWithItsRecord === heater && sinkWithItsRecord === sink) return null
+  return {
+    migrated: { ...saved, heater: heaterWithItsRecord, sink: sinkWithItsRecord },
+    change: `a save from before the heater and the tap remembered what they ran onto starts remembering now${sinkWithItsRecord === sink ? '' : `, and its running tap counts as having run onto ${hasRunOntoAnItem ? 'the item in the sink' : 'nothing'}`}`,
+  }
 }
 
 function isShape(value: unknown): value is Shape {
