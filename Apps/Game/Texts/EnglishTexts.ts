@@ -54,7 +54,7 @@ export const englishTexts = {
   'sip.weak.4': 'Gentle… too gentle.',
   'sip.rich.1': 'Rich and deep. Lovely.',
   'sip.rich.2': 'Full and round. Oh, that is good.',
-  'sip.rich.3': 'Deep as the evening. Lovely.',
+  'sip.rich.3': 'Deep as the evening, and just as calm.',
   'sip.rich.4': 'Rich enough to lean on.',
   'sip.coolingButGood.1': 'Good, though it is cooling.',
   'sip.coolingButGood.2': 'Still good. Drink it before it goes.',
@@ -63,7 +63,7 @@ export const englishTexts = {
   'sip.justRight.1': 'Ahh… just right.',
   'sip.justRight.2': 'Mm. Exactly this.',
   'sip.justRight.3': 'That is the one.',
-  'sip.justRight.4': 'Warm, clear, kind. Just right.',
+  'sip.justRight.4': 'Warm, clear, kind. I could sit with this all day.',
 
   'spill.1': 'Oops… some for the table.',
   'spill.2': 'The table wanted a sip too.',
@@ -82,7 +82,7 @@ export const englishTexts = {
 
   'caddyKeptOffTheHeater.1': 'If these were coffee beans, maybe. This tea was roasted long ago and is ready to drink. Shoo.',
   'caddyKeptOffTheHeater.2': 'The leaves are dry enough, thank you. Nobody ordered tea toast.',
-  'caddyKeptOffTheHeater.3': 'The leaves would like to stay leaves, not turn into charcoal.',
+  'caddyKeptOffTheHeater.3': 'Charcoal is not a tea. These leaves would like to stay leaves.',
   'caddyKeptOffTheHeater.4': 'The caddy has lived a quiet life on the shelf. It does not need a sauna.',
   'caddyWashedOut.1': 'Lovely. And what exactly are we drinking now? The view?',
   'caddyWashedOut.2': 'The next tea delivery is a week away. Enjoy your hot water until then.',
@@ -128,13 +128,13 @@ export const englishTexts = {
 
   'tapRanLong.1': '{litres} litres straight down the drain. The river sends its thanks.',
   'tapRanLong.2': 'That was {litres} litres for the sink. It has never been this hydrated.',
-  'tapRanLong.3': '{litres} litres, gone. Somewhere a water meter is dancing.',
+  'tapRanLong.3': 'Gone, all {litres} litres of it. The water meter is dancing.',
   'tapRanLong.4': 'The tap poured {litres} litres into nothing. Very generous of us.',
 
   'heaterRanLong.1': 'The meter says {kilowattHours} kWh. The tea says thank you. The wallet says nothing.',
   'heaterRanLong.2': 'That much electricity would have bought a whole tin of good tea. Ah well, the water is hot.',
   'heaterRanLong.3': 'Off at last. Promise me you do this before we leave the house, too.',
-  'heaterRanLong.4': '{kilowattHours} kWh for one kettle. Somewhere a power plant is proud of us.',
+  'heaterRanLong.4': '{kilowattHours} kWh for one kettle. The power plant sends its warmest regards.',
 
   'offering.glow': '{figurine} glows softly.',
   'offering.subtle': '{figurine} seems pleased.',
