@@ -9,6 +9,7 @@ import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
 import type { CarriedModelMaterials } from '../../../Apps/Game/Room/Views/Carried/ItemParts.ts'
 import { overflowSideFromTheGaugeRadians, overflowStreamRadiusMetres } from '../../../Apps/Game/Room/Views/Carried/WaterStreams.ts'
 import type { SurfaceMaterials } from '../../../Apps/Game/Room/Views/RoomMaterials.ts'
+import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
@@ -52,6 +53,17 @@ test('openLid_ofEveryShape_isDrawnNoWiderThanThePlaceKeptForItBesideTheItem', ()
     const drawnRadius = horizontalRadiusOf(model.lid, model)
 
     assert.ok(drawnRadius <= lyingLid.lyingRadiusMetres + drawingToleranceMetres, `${model.itemId}'s lid is ${drawnRadius.toFixed(4)} m wide, ${lyingLid.lyingRadiusMetres} m is kept for it`)
+  }
+})
+
+test('fire_ofEveryShape_isDrawnExactlyWhenTheItemCanCharAndTheTableSaysHowFar', () => {
+  const ritual = new TestRitual(defaultCatalog, 'quietRoom')
+  const charringByItem = tableViewState(ritual.state, defaultCatalog).charringByItem
+
+  for (const model of modelsInTheQuietRoom()) {
+    const hasFire = model.look.fire !== null
+    assert.equal(model.charTo !== null, hasFire, model.itemId)
+    assert.equal(charringByItem[model.itemId] !== undefined, hasFire, model.itemId)
   }
 })
 
@@ -110,7 +122,7 @@ function vesselModelsInTheQuietRoom(): CarriedModel[] {
 
 function plainMaterials(): CarriedModelMaterials {
   const plain = (): THREE.MeshStandardMaterial => new THREE.MeshStandardMaterial({ side: THREE.DoubleSide })
-  const room: SurfaceMaterials = { materialFor: plain, unsharedMaterialFor: plain }
+  const room: SurfaceMaterials = { materialFor: plain, unsharedMaterialFor: plain, colourOf: () => new THREE.Color() }
   return { room, claySeenFromInside: plain(), touchPad: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }), cloth: plain() }
 }
 

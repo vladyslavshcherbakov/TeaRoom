@@ -7,6 +7,7 @@ export type CarriedShapeLook = {
   readonly steamRisesAboveTheSpout: boolean
   readonly looseLeaves: LooseLeavesLook | null
   readonly soakedLeaves: SoakedLeavesLook | null
+  readonly fire: FireLook | null
 }
 
 export type LooseLeavesLook = {
@@ -19,4 +20,10 @@ export type SoakedLeavesLook = {
   readonly pile: LeafPileSize
   readonly floatHeightAt: (fillShare: number) => number
   readonly areSeenOnlyOnWaterUnderAnOpenLid: boolean
+}
+
+export type FireLook = {
+  readonly flameAt: { readonly x: number; readonly y: number; readonly z: number }
+  readonly embersAround: { readonly x: number; readonly y: number; readonly z: number }
+  readonly emberSpreadMetres: { readonly x: number; readonly z: number }
 }

@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedModel } from './CarriedModel.ts'
-import { charTheCloth } from './RumpledClothGeometry.ts'
+import type { FireLook } from './CarriedShapeLook.ts'
+import type { CharTo } from './ItemParts.ts'
 
 const puffCount = 5
 const puffRadiusMetres = 0.022
@@ -11,7 +12,6 @@ const smokeRiseMetresPerSecond = 0.07
 const columnMetres = 0.26
 const smallestPuffScale = 0.5
 const smokeDriftMetres = 0.03
-const flameOnTheFold = new THREE.Vector3(0.035, 0.012, -0.01)
 const flameRadiusMetres = 0.012
 const flameHeightMetres = 0.04
 const flameCoreShare = 0.55
@@ -20,8 +20,6 @@ const puffsByHeating: Readonly<Record<TableViewState.Heating, number>> = { none:
 const flickerDepth = 0.2
 const emberCount = 14
 const emberRadiusMetres = 0.0035
-const emberSpreadMetres = 0.07
-const emberAboveTheClothMetres = 0.006
 const goldenAngleRadians = 2.4
 const emberPulsesPerSecond = 3
 const dimmestEmberScale = 0.6
@@ -29,19 +27,23 @@ const embersFromHeating: ReadonlySet<TableViewState.Heating> = new Set(['smoulde
 const smokeGrowsFasterThanSteam = 1.6
 
 export class ItemFire {
+  private readonly item: CarriedModel
+  private readonly look: FireLook
+  private readonly charTo: CharTo
   private readonly steam: THREE.Material
   private readonly smoke: THREE.Material
   private readonly puffs: readonly THREE.Mesh[]
   private readonly flame = new THREE.Group()
   private readonly embers: readonly THREE.Mesh[]
-  private readonly charredColour: THREE.Color
   private shownCharring = 0
   readonly meshes: readonly THREE.Object3D[]
 
-  constructor(materials: RoomMaterials) {
+  constructor(materials: SurfaceMaterials, item: CarriedModel, look: FireLook, charTo: CharTo) {
+    this.item = item
+    this.look = look
+    this.charTo = charTo
     this.steam = materials.materialFor('steam')
     this.smoke = materials.materialFor('smoke')
-    this.charredColour = materials.colourOf('charredCloth')
     this.puffs = Array.from({ length: puffCount }, () => new THREE.Mesh(new THREE.SphereGeometry(puffRadiusMetres, 8, 6), this.smoke))
     const outerFlame = new THREE.Mesh(new THREE.ConeGeometry(flameRadiusMetres, flameHeightMetres, 10), materials.materialFor('flame'))
     const flameCore = new THREE.Mesh(new THREE.ConeGeometry(flameRadiusMetres * flameCoreShare, flameHeightMetres * flameCoreShare, 8), materials.materialFor('flameCore'))
@@ -53,32 +55,37 @@ export class ItemFire {
     this.meshes = [...this.puffs, ...this.embers, this.flame]
   }
 
-  show(cloth: CarriedModel | undefined, heating: TableViewState.Heating, timeSeconds: number): void {
-    const isShown = cloth !== undefined && heating !== 'none' && cloth.root.visible && !cloth.isHeldInView
+  show(table: TableViewState, timeSeconds: number): void {
+    const charring = table.charringByItem[this.item.itemId]
+    this.char(charring?.charring ?? 0)
+    const heating = charring?.heating ?? 'none'
+    const isShown = heating !== 'none' && this.item.root.visible && !this.item.isHeldInView
     this.flame.visible = isShown && heating === 'burning'
     this.puffs.forEach((puff, index) => (puff.visible = isShown && index < puffsByHeating[heating]))
     const areEmbersShown = isShown && embersFromHeating.has(heating)
     this.embers.forEach((ember) => (ember.visible = areEmbersShown))
-    if (!isShown || cloth === undefined) return
-    if (areEmbersShown) this.glowEmbers(cloth, timeSeconds)
-    const rootOfTheFlame = cloth.root.localToWorld(flameOnTheFold.clone())
+    if (!isShown) return
+    if (areEmbersShown) this.glowEmbers(timeSeconds)
+    const { x, y, z } = this.look.flameAt
+    const rootOfTheFlame = this.item.root.localToWorld(new THREE.Vector3(x, y, z))
     if (this.flame.visible) this.flicker(rootOfTheFlame, timeSeconds)
     this.risePuffs(rootOfTheFlame, heating, timeSeconds)
   }
 
-  char(cloth: CarriedModel | undefined, charring: number): void {
-    if (cloth === undefined || charring === this.shownCharring) return
+  private char(charring: number): void {
+    if (charring === this.shownCharring) return
     this.shownCharring = charring
-    cloth.root.traverse((part) => {
-      if (part instanceof THREE.Mesh) charTheCloth(part.geometry, charring, this.charredColour)
-    })
+    this.charTo(charring)
   }
 
-  private glowEmbers(cloth: CarriedModel, timeSeconds: number): void {
+  private glowEmbers(timeSeconds: number): void {
+    const { embersAround, emberSpreadMetres } = this.look
     this.embers.forEach((ember, index) => {
       const angle = index * goldenAngleRadians
-      const reach = emberSpreadMetres * Math.sqrt((index + 0.5) / emberCount) * this.shownCharring
-      ember.position.copy(cloth.root.localToWorld(new THREE.Vector3(Math.cos(angle) * reach, emberAboveTheClothMetres, Math.sin(angle) * reach)))
+      const reachShare = Math.sqrt((index + 0.5) / emberCount) * this.shownCharring
+      const x = embersAround.x + Math.cos(angle) * reachShare * emberSpreadMetres.x
+      const z = embersAround.z + Math.sin(angle) * reachShare * emberSpreadMetres.z
+      ember.position.copy(this.item.root.localToWorld(new THREE.Vector3(x, embersAround.y, z)))
       ember.scale.setScalar(dimmestEmberScale + (1 - dimmestEmberScale) * Math.abs(Math.sin(timeSeconds * emberPulsesPerSecond + index * goldenAngleRadians)))
     })
   }

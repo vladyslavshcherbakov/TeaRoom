@@ -30,7 +30,7 @@ export class CarriedItems {
   private readonly models: CarriedModel[]
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
-  private readonly clothFire: ItemFire
+  private readonly fires: readonly ItemFire[]
   private readonly heaterSpot: Spot
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   readonly root = new THREE.Group()
@@ -49,8 +49,8 @@ export class CarriedItems {
       this.tappableMeshes.push(model.root)
     }
     this.waterStreams = new WaterStreams(materials, sinkSpot)
-    this.clothFire = new ItemFire(materials)
-    this.root.add(...this.waterStreams.meshes, ...this.clothFire.meshes, this.chosenGlow.mesh)
+    this.fires = this.models.flatMap((model) => (model.look.fire === null || model.charTo === null ? [] : [new ItemFire(materials, model, model.look.fire, model.charTo)]))
+    this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), this.chosenGlow.mesh)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
   }
 
@@ -58,9 +58,7 @@ export class CarriedItems {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) showContentsOf(model, scene, this.heaterSpot)
     this.clothMaterial.color.copy(this.clothColourFor(scene.table))
-    const clothModel = this.models.find((model) => model.itemId === clothItemId)
-    this.clothFire.show(clothModel, scene.table.clothHeating, scene.timeSeconds)
-    this.clothFire.char(clothModel, scene.table.clothCharring)
+    for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
     this.waterStreams.show(scene, this.models)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
     this.chosenGlow.show(scene, this.models)

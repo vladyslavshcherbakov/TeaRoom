@@ -5,7 +5,7 @@ import { caddyShapeLook } from './CaddyParts.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { clothShapeLook } from './ClothParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
-import type { CarriedModelMaterials, GlowingShell, HeldInViewLook, LiquidLevel, LiquidVolumeAt, PointDownTheSide } from './ItemParts.ts'
+import type { CarriedModelMaterials, CharTo, GlowingShell, HeldInViewLook, LiquidLevel, LiquidVolumeAt, PointDownTheSide } from './ItemParts.ts'
 import { kettleShapeLook } from './KettleParts.ts'
 import type { LeafPile } from './LeafPile.ts'
 import { spoonShapeLook } from './SpoonParts.ts'
@@ -37,6 +37,7 @@ export type CarriedModel = {
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
   readonly glowingShell: GlowingShell | null
+  readonly charTo: CharTo | null
   tagKey: string
   layer: number
   isHeldInView: boolean
@@ -109,6 +110,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     puffs,
     heldInViewLook: parts.heldInViewLook,
     glowingShell: parts.glowingShell,
+    charTo: parts.charTo,
     tagKey: '',
     layer: 0,
     isHeldInView: false,

@@ -137,7 +137,7 @@ test('clothOnAWorkingHeater_burnsInStagesAsItChars', () => {
   ] as const
 
   for (const [charring, heating] of rows) {
-    assert.equal(tableViewState(stateWithTheDryClothOnAWorkingHeater(charring), catalog).clothHeating, heating, `charring ${charring}`)
+    assert.equal(tableViewState(stateWithTheDryClothOnAWorkingHeater(charring), catalog).charringByItem.cloth?.heating, heating, `charring ${charring}`)
   }
 })
 

@@ -45,6 +45,7 @@ export const thermosShapeLook: CarriedShapeLook = {
   steamRisesAboveTheSpout: false,
   looseLeaves: null,
   soakedLeaves: null,
+  fire: null,
 }
 
 function thermosParts(materials: SurfaceMaterials): ItemParts {
@@ -86,6 +87,7 @@ function thermosParts(materials: SurfaceMaterials): ItemParts {
     glowingShell,
     gaugeWater: null,
     kettleWater: null,
+    charTo: null,
   }
 }
 

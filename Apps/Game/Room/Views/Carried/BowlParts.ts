@@ -79,6 +79,7 @@ export const bowlShapeLook: CarriedShapeLook = {
     floatHeightAt: (fillShare) => bowlLiquidLevel(fillShare).heightMetres,
     areSeenOnlyOnWaterUnderAnOpenLid: false,
   },
+  fire: null,
 }
 
 function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
@@ -101,6 +102,7 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
     glowingShell: null,
     gaugeWater: null,
     kettleWater: null,
+    charTo: null,
   }
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')

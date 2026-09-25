@@ -5,8 +5,7 @@ export type TableViewState = {
   readonly spoonFillShare: number
   readonly clothWetShare: number
   readonly clothTeaStain: number
-  readonly clothCharring: number
-  readonly clothHeating: TableViewState.Heating
+  readonly charringByItem: Readonly<Record<string, TableViewState.Charring>>
   readonly puddles: readonly TableViewState.Puddle[]
 }
 
@@ -15,6 +14,11 @@ export declare namespace TableViewState {
   type SurfaceMotion = 'still' | 'shimmering' | 'simmering' | 'boiling'
   type Heating = 'none' | 'steaming' | 'warming' | 'smoking' | 'scorching' | 'smouldering' | 'burning'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed'
+
+  type Charring = {
+    readonly charring: number
+    readonly heating: Heating
+  }
 
   type Puddle = {
     readonly placeId: string

@@ -75,7 +75,7 @@ export type Surface =
   | 'poppyHeart'
   | 'sunflowerHeart'
 
-export type SurfaceMaterials = Pick<RoomMaterials, 'materialFor' | 'unsharedMaterialFor'>
+export type SurfaceMaterials = Pick<RoomMaterials, 'materialFor' | 'unsharedMaterialFor' | 'colourOf'>
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',

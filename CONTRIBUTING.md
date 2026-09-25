@@ -56,7 +56,7 @@ A new shape of carried item, such as a teapot:
 
 1. Add it to `CarriedShape` in `Room/CarriedShapes.ts`, map its vessel definition or tool to it, and give it a layout in `layoutByShape`.
 2. Add its parts file in `Room/Views/Carried/` with its `CarriedShapeLook`, and register the look in `lookByShape` in `CarriedModel.ts`. The compiler lists every entry that is still missing.
-3. Run the tests. `Tests/Game/Room/CarriedItems.integration.test.ts` builds every item of the room and checks that it stays above the surface while aimed, that its open lid fits the place kept for it, that it stays on a phone's screen when held, and that its overflow runs down its wall.
+3. Run the tests. `Tests/Game/Room/CarriedItems.integration.test.ts` builds every item of the room and checks that it stays above the surface while aimed, that its open lid fits the place kept for it, that it stays on a phone's screen when held, that its overflow runs down its wall, and that it has a fire exactly when it can char.
 
 ### Adding a mechanic
 

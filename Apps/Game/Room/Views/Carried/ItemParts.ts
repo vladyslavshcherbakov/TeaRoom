@@ -14,11 +14,14 @@ export type ItemParts = {
   readonly glowingShell: GlowingShell | null
   readonly gaugeWater: GaugeStrip | null
   readonly kettleWater: THREE.Mesh | null
+  readonly charTo: CharTo | null
 }
 
 export type PointDownTheSide = { readonly distance: number; readonly height: number }
 
 export type LiquidLevel = (fillShare: number) => { readonly heightMetres: number; readonly radiusMetres: number }
+
+export type CharTo = (charring: number) => void
 
 export type LiquidVolumeAt = (surfaceHeightMetres: number) => THREE.BufferGeometry
 

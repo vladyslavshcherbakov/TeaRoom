@@ -25,6 +25,7 @@ export const kettleShapeLook: CarriedShapeLook = {
     floatHeightAt: kettleWaterHeightAt,
     areSeenOnlyOnWaterUnderAnOpenLid: true,
   },
+  fire: null,
 }
 
 function kettleParts(materials: CarriedModelMaterials): ItemParts {
@@ -56,6 +57,7 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
     glowingShell: null,
     gaugeWater: gauge.water,
     kettleWater,
+    charTo: null,
   }
 }
 
