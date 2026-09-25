@@ -10,7 +10,7 @@ test('sun_atSunrise_standsLowInTheEast', () => {
   assert.equal(daylight.warmth, 1)
 })
 
-test('sun_atNoon_standsHighestAndWhitest', () => {
+test('sun_atNoon_standsHighestAndLeastOrange', () => {
   const daylight = daylightAt(6)
 
   assert.ok(Math.abs(daylight.sunPosition.x) < 1e-9, `x ${daylight.sunPosition.x}`)

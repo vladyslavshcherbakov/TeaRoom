@@ -14,9 +14,9 @@ const sunHighestMetres = 8
 const sunLowestMetres = 0.8
 const sunBehindTheWindowMetres = -6
 const faintestSunShare = 0.25
-const brightestSunIntensity = 2.6
+const brightestSunIntensity = 2.1
 const faintestSkyIntensity = 1.1
-const brightestSkyIntensity = 1.7
+const brightestSkyIntensity = 1.45
 
 export function hoursAfter(hoursSinceSunrise: number, realSeconds: number): number {
   const hours = hoursSinceSunrise + realSeconds / realSecondsPerDaylightHour

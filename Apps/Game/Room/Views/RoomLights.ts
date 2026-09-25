@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 import type { Daylight } from '../Sky/DaylightCycle.ts'
 
-const noonSun = new THREE.Color('#fff4e4')
+const noonSun = new THREE.Color('#ffe4bd')
 const horizonSun = new THREE.Color('#ff9a55')
-const noonSky = new THREE.Color('#f2f6ff')
+const noonSky = new THREE.Color('#f7e6cf')
 const horizonSky = new THREE.Color('#ffd6b8')
 const groundBounce = '#c9a27a'
 const fillColour = '#dfe8ff'
