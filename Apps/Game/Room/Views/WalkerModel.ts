@@ -19,6 +19,11 @@ export class WalkerModel {
     this.root.traverse((part) => (part.castShadow = true))
   }
 
+  get shadowPose(): string {
+    const { position, rotation } = this.root
+    return this.root.visible ? `walker ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)} ${rotation.y.toFixed(3)}` : 'walker hidden'
+  }
+
   show(walk: Walk, timeSeconds: number): void {
     const bob = isWalking(walk) ? Math.abs(Math.sin(timeSeconds * stepsPerSecond * Math.PI)) * bobHeightMetres : 0
     this.root.position.set(walk.position.x, bob, walk.position.z)

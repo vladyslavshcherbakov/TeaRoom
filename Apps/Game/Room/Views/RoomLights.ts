@@ -35,6 +35,11 @@ export class RoomLights {
     for (const light of this.lights) light.layers.enableAll()
   }
 
+  get sunPose(): string {
+    const { position } = this.sun
+    return `sun ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)}`
+  }
+
   show(daylight: Daylight): void {
     this.sun.position.set(daylight.sunPosition.x, daylight.sunPosition.y, daylight.sunPosition.z)
     this.sun.color.copy(noonSun).lerp(horizonSun, daylight.warmth)

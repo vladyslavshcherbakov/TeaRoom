@@ -61,6 +61,7 @@ export class RoomScene {
   private readonly zoom = new CameraZoom()
   private readonly gestures: RoomGestures
   private readonly roomLights = new RoomLights()
+  private shadowPoseLastDrawn = ''
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number) {
     this.session = session
@@ -71,6 +72,7 @@ export class RoomScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFShadowMap
+    this.renderer.shadowMap.autoUpdate = false
     this.renderer.transmissionResolutionScale = transmissionResolutionShare
     this.renderer.autoClear = false
     this.renderer.setClearColor(backgroundColour)
@@ -133,15 +135,16 @@ export class RoomScene {
   }
 
   private render(): void {
+    const shadowPose = `${this.roomLights.sunPose} | ${this.walker.shadowPose} | ${this.carried.shadowCastersPose()}`
+    this.renderer.shadowMap.needsUpdate = shadowPose !== this.shadowPoseLastDrawn
+    this.shadowPoseLastDrawn = shadowPose
     this.renderer.clear()
     this.camera.layers.set(roomLayers.room)
     this.camera.layers.enable(roomLayers.untappableRoom)
     this.renderer.render(this.scene, this.camera)
     this.renderer.clearDepth()
-    this.renderer.shadowMap.autoUpdate = false
     this.camera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, this.camera)
-    this.renderer.shadowMap.autoUpdate = true
     this.camera.layers.set(roomLayers.room)
   }
 

@@ -65,6 +65,13 @@ export class CarriedItems {
     this.chosenGlow.show(scene, this.models)
   }
 
+  shadowCastersPose(): string {
+    return this.models
+      .filter((model) => model.castsShadow && model.root.visible)
+      .map((model) => `${model.itemId} ${model.layer} ${poseOf(model.root)}`)
+      .join('; ')
+  }
+
   private clothColourFor(table: TableViewState): THREE.Color {
     const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), table.clothTeaStain)
     const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), table.clothWetShare)
@@ -168,4 +175,9 @@ function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {
   const x = walk.position.x + Math.cos(heading) * side + Math.sin(heading) * handForwardMetres
   const z = walk.position.z - Math.sin(heading) * side + Math.cos(heading) * handForwardMetres
   return new THREE.Vector3(x, handHeightMetres, z)
+}
+
+function poseOf(object: THREE.Object3D): string {
+  const { position, rotation } = object
+  return [position.x, position.y, position.z, rotation.x, rotation.y, rotation.z].map((value) => value.toFixed(3)).join(' ')
 }
