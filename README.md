@@ -54,6 +54,12 @@ Scripts/build.sh
 
 `Scripts/build.sh` builds the room into `dist/`.
 
+```sh
+Scripts/build-artifact.sh
+```
+
+`Scripts/build-artifact.sh` builds the room without any logging into `dist-artifact/TeaCeremony.html`: one file with the page, its styles and its script, as a Claude artifact takes it. Claude publishes that file to the same artifact each time.
+
 ## Deploy
 
 GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `Scripts/test.sh`, `Scripts/test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages at <https://vladyslavshcherbakov.github.io/TeaRoom/>.

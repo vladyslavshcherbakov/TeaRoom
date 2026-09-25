@@ -15,6 +15,7 @@ const shuffledVesselDefinitionId = 'teaBowl'
 const largestVoiceSeed = 1_000_000
 const fewestHeaterItemsBeforeTheTesterJoke = 4
 const millisecondsInASecond = 1000
+const silentBuildMode = 'silent'
 
 document.title = text('page.title')
 
@@ -22,15 +23,9 @@ const roomElement = document.getElementById('room')
 if (roomElement === null) throw new Error('the page has no #room element to draw into')
 const container: HTMLElement = roomElement
 
-const roomLog = (message: string): void => console.info(`${new Date().toISOString()} INFO [room] ${message}`)
-const ritualLog = {
-  write: (line: LogLine): void => {
-    const text = `${new Date().toISOString()} ${line.level.toUpperCase()} [ritual] ${line.message}`
-    if (line.level === 'error') console.error(text)
-    else if (line.level === 'debug') console.debug(text)
-    else console.info(text)
-  },
-}
+const isBuiltToBePublishedSilently = import.meta.env.MODE === silentBuildMode
+const roomLog = isBuiltToBePublishedSilently ? (): void => {} : (message: string): void => console.info(`${new Date().toISOString()} INFO [room] ${message}`)
+const ritualLog = isBuiltToBePublishedSilently ? { write: (): void => {} } : { write: writeToTheConsole }
 
 const catalog = catalogWithBowlsShuffled()
 const visitStore = new VisitStore(roomLog)
@@ -107,4 +102,11 @@ function catalogWithBowlsShuffled(): Catalog {
   const shelfOrder = shuffledRoom.vessels.filter((vessel) => vessel.definitionId === shuffledVesselDefinitionId).map((vessel) => `${vessel.id} at ${vessel.startsAt.placeId} (${vessel.startsAt.y}, ${vessel.startsAt.z})`)
   roomLog(`the bowls stand in a random order: ${shelfOrder.join(', ')}`)
   return { ...defaultCatalog, rooms: { ...defaultCatalog.rooms, [roomId]: shuffledRoom } }
+}
+
+function writeToTheConsole(line: LogLine): void {
+  const stampedLine = `${new Date().toISOString()} ${line.level.toUpperCase()} [ritual] ${line.message}`
+  if (line.level === 'error') console.error(stampedLine)
+  else if (line.level === 'debug') console.debug(stampedLine)
+  else console.info(stampedLine)
 }
