@@ -28,7 +28,7 @@ A presentation opens a room with `RitualSession.open(catalog, roomId, log, isDev
 
 ### The game
 
-`Apps/Game/Room` is the walkable 3D room in Three.js, served at the site's root. `Apps/Game/Table/TablePresenter.ts` turns the ritual's state into what the room shows: fill, liquor colour, steam, brew stage, the cloth's wetness, stain and charring. `Table/TeaLooks.ts` holds how each tea looks. `Apps/Game/Texts/EnglishTexts.ts` holds every text the player reads, and `Table/TableTexts.ts` and `Room/RoomTexts.ts` turn the simulation's ids into its keys. `RoomTexts.ts` also decides which events and room remarks become a caption.
+`Apps/Game/Room` is the walkable 3D room in Three.js, served at the site's root. `Apps/Game/Table/TablePresenter.ts` turns the ritual's state into what the room shows: fill, liquor colour, steam, brew stage, the cloth's wetness, stain and charring. `Table/TeaLooks.ts` holds how each tea looks. `Apps/Game/Texts/EnglishTexts.ts` holds every text the player reads, and `Table/TableTexts.ts` and `Room/RoomTexts.ts` turn the simulation's ids into its keys. `RoomTexts.ts` also decides which events and room remarks become a caption, and remembers which jokes were told this visit so none is told twice.
 
 In the room:
 

@@ -22,14 +22,22 @@ export function phraseVariantFor(phrase: string, voiceSeed: number): PhraseVaria
   return phraseVariantAmong(phrase, voiceSeed, phraseVariants) as PhraseVariant
 }
 
-export function phraseVariantAmong(phrase: string, voiceSeed: number, variantCount: number): number {
+export function phraseVariantsOf(phrase: string): number {
+  let variants = 0
+  while (isTextKey(`${phrase}.${variants + 1}`)) variants += 1
+  return variants
+}
+
+export function phraseLineAtTurn(phrase: string, voiceSeed: number, turn: number, values: Readonly<Record<string, string>> = {}): string {
+  const variants = phraseVariantsOf(phrase)
+  const variant = ((phraseVariantAmong(phrase, voiceSeed, variants) - 1 + turn - 1) % variants) + 1
+  return textWith(`${phrase}.${variant}` as TextKey, values)
+}
+
+function phraseVariantAmong(phrase: string, voiceSeed: number, variantCount: number): number {
   let hash = 2166136261 ^ voiceSeed
   for (const character of phrase) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619)
   return ((hash >>> 0) % variantCount) + 1
-}
-
-export function phraseVariantAtTurn(phrase: string, voiceSeed: number, turn: number): PhraseVariant {
-  return ((((phraseVariantFor(phrase, voiceSeed) - 1 + turn - 1) % phraseVariants) + 1) as PhraseVariant)
 }
 
 function isTextKey(key: string): key is TextKey {

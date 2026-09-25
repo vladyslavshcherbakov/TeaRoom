@@ -21,7 +21,7 @@ import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
 import { furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
-import { captionLinesFor, obituaryLine, roomRemarkLine } from './RoomTexts.ts'
+import { RoomTexts } from './RoomTexts.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
@@ -58,7 +58,7 @@ export class RoomScene {
   private readonly session: RitualSession
   private readonly catalog: Catalog
   private readonly log: RoomLog
-  private readonly voiceSeed: number
+  private readonly texts: RoomTexts
   private readonly shareThroughTheTimeOfDay: number
   private readonly play: RoomPlay
   private readonly room: RoomModel
@@ -87,7 +87,7 @@ export class RoomScene {
     this.session = session
     this.catalog = catalog
     this.log = log
-    this.voiceSeed = voiceSeed
+    this.texts = new RoomTexts(voiceSeed, log)
     this.shareThroughTheTimeOfDay = shareThroughTheTimeOfDay
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -105,11 +105,11 @@ export class RoomScene {
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
     this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
-      remarked: (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]),
+      remarked: (remark) => this.caption.show(this.texts.remarkLines(remark)),
       debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
       keeperDied: (fatalSip) => {
         this.caption.hide()
-        this.youDied.show(captionLinesFor([fatalSip], this.voiceSeed).join(' '), obituaryLine(this.voiceSeed))
+        this.youDied.show(this.texts.captionLinesFor([fatalSip], this.session.state.elapsedSeconds).join(' '), this.texts.obituaryLine())
       },
     })
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
@@ -233,7 +233,7 @@ export class RoomScene {
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
-    this.caption.show(captionLinesFor(events, this.voiceSeed))
+    this.caption.show(this.texts.captionLinesFor(events, this.session.state.elapsedSeconds))
     return events
   }
 

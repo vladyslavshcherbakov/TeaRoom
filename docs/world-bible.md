@@ -57,7 +57,9 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 **Humour from seriousness.** Jokes come from treating a small ritual with enormous gravity. The voice is dry, never a meme. A parody of another game is allowed only where the room itself is the joke, as with YOU DIED.
 
-**The world answers a strange act.** A bowl held over the heater, a third thing reached for with full hands, the figurines on the sill tapped from afar: the keeper answers each in one line, never with silence. A second try gets a different line.
+**The world answers a strange act.** A bowl held over the heater, a third thing reached for with full hands, the figurines on the sill tapped from afar: the keeper answers each in one line. A second try gets a different line.
+
+**A joke is told once.** The keeper never repeats a joke in a visit. When every line of one kind has been said, the keeper keeps quiet about it until the next visit. A joke about the cloth is told once a visit. A small spill may get a line, but not every spill does, so the keeper does not comment on every slip.
 
 **Experiments are welcome, and the experimenter is teased once.** Things put on the working heater burn as they would: the cloth steams, smokes, smoulders and catches fire in stages, the spoon chars black and crumbles to ash when taken. The player may test the whole room this way. After four or five different things tried on the working heater, the keeper teases the tester once a visit, and never again that day. Putting every last thing away on the shelf earns one line about tidiness in the same way.
 

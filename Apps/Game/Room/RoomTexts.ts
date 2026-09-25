@@ -3,69 +3,105 @@ import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
-import { phraseVariantAmong, phraseVariantAtTurn, phraseVariantFor, text, textOrFallback, textWith } from '../Texts/Texts.ts'
+import { phraseLineAtTurn, phraseVariantFor, phraseVariantsOf, text, textOrFallback, textWith } from '../Texts/Texts.ts'
+import type { RoomLog } from './RoomNavigator.ts'
 import type { RoomRemark } from './RoomPlay.ts'
 
 const spillTheKeeperRemarksOnMl = 5
+const spillRemarksApartSeconds = 120
 const tapRanLongFromSeconds = 120
 const heaterRanLongFromSeconds = 120
 const millilitresInALitre = 1000
-const heaterTesterVariants = 6
-const tapRanLongVariants = 2
-const heaterRanLongVariants = 3
+const onceAVisit = 1
 
-type HeaterTesterVariant = 1 | 2 | 3 | 4 | 5 | 6
-type TapRanLongVariant = 1 | 2
-type HeaterRanLongVariant = 1 | 2 | 3
+export class RoomTexts {
+  private readonly voiceSeed: number
+  private readonly log: RoomLog
+  private readonly timesSaid = new Map<string, number>()
+  private spillsRemarkedOn = 0
+  private lastSpillRemarkedOnAtSeconds: number | null = null
 
-export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
-  return events.flatMap((event) => captionLinesOf(event, voiceSeed))
-}
+  constructor(voiceSeed: number, log: RoomLog) {
+    this.voiceSeed = voiceSeed
+    this.log = log
+  }
 
-export function obituaryLine(voiceSeed: number): string {
-  return text(`obituary.${phraseVariantFor('obituary', voiceSeed)}`)
-}
+  captionLinesFor(events: readonly RitualEvent[], elapsedSeconds: number): readonly string[] {
+    return events.flatMap((event) => this.captionLinesOf(event, elapsedSeconds))
+  }
 
-export function roomRemarkLine(remark: RoomRemark, voiceSeed: number): string {
-  if (remark.kind === 'heaterTester') return text(`heaterTester.${phraseVariantAmong('heaterTester', voiceSeed, heaterTesterVariants) as HeaterTesterVariant}`)
-  return text(`${remark.kind}.${phraseVariantAtTurn(remark.kind, voiceSeed, remark.timesTapped)}`)
-}
+  remarkLines(remark: RoomRemark): readonly string[] {
+    return this.linesOnTurn(remark.kind, remark.timesTapped, phraseVariantsOf(remark.kind), {})
+  }
 
-function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[] {
-  switch (event.type) {
-    case 'teaTasted':
-      return [sipText(event.verdict, event.cupHeldLeaves, voiceSeed)]
-    case 'pourFinished':
-      return event.spilledMl >= spillTheKeeperRemarksOnMl ? [text(`spill.${phraseVariantFor('spill', voiceSeed)}`)] : []
-    case 'actionRefused':
-      return event.reason === 'tooHotToHold' ? [text(`tooHotToHold.${phraseVariantFor('tooHotToHold', voiceSeed)}`)] : []
-    case 'heaterSwitchedOff':
-      return event.onSeconds >= heaterRanLongFromSeconds ? [heaterEnergyLine(event.kilowattHoursUsed, voiceSeed)] : []
-    case 'tapTurnedOff':
-      return event.openSeconds >= tapRanLongFromSeconds ? [drainedLitresLine(event.drainedMl, voiceSeed)] : []
-    case 'clothTakenOffTheHeater':
-      return event.charring >= smoulderingFromCharring ? [text(`smoulderingClothTaken.${phraseVariantFor('smoulderingClothTaken', voiceSeed)}`)] : []
-    case 'spoonCrumbled':
-      return [text(`spoonCrumbled.${phraseVariantFor('spoonCrumbled', voiceSeed)}`)]
-    case 'lastLeavesWashedOut':
-      return event.vesselId === caddyItemId ? [text(`caddyWashedOut.${phraseVariantFor('caddyWashedOut', voiceSeed)}`)] : []
-    case 'burntClothWashedBackToNew':
-      return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
-    case 'figurineAcceptedTea':
-      return [offeringResponseText(event.figurineId, event.response)]
-    default:
+  obituaryLine(): string {
+    return text(`obituary.${phraseVariantFor('obituary', this.voiceSeed)}`)
+  }
+
+  private captionLinesOf(event: RitualEvent, elapsedSeconds: number): readonly string[] {
+    switch (event.type) {
+      case 'teaTasted':
+        return [sipText(event.verdict, event.cupHeldLeaves, this.voiceSeed)]
+      case 'pourFinished':
+        return event.spilledMl >= spillTheKeeperRemarksOnMl ? this.spillLines(elapsedSeconds) : []
+      case 'actionRefused':
+        return event.reason === 'tooHotToHold' ? this.joke('tooHotToHold') : []
+      case 'heaterSwitchedOff':
+        return event.onSeconds >= heaterRanLongFromSeconds ? this.joke('heaterRanLong', { kilowattHours: kilowattHoursText(event.kilowattHoursUsed) }) : []
+      case 'tapTurnedOff':
+        return event.openSeconds >= tapRanLongFromSeconds ? this.joke('tapRanLong', { litres: litresText(event.drainedMl) }) : []
+      case 'clothTakenOffTheHeater':
+        return event.charring >= smoulderingFromCharring ? this.saidUpTo('smoulderingClothTaken', onceAVisit) : []
+      case 'spoonCrumbled':
+        return this.joke('spoonCrumbled')
+      case 'lastLeavesWashedOut':
+        return event.vesselId === caddyItemId ? this.joke('caddyWashedOut') : []
+      case 'burntClothWashedBackToNew':
+        return this.saidUpTo('burntClothWashed', onceAVisit)
+      case 'figurineAcceptedTea':
+        return [offeringResponseText(event.figurineId, event.response)]
+      default:
+        return []
+    }
+  }
+
+  private joke(phrase: string, values: Readonly<Record<string, string>> = {}): readonly string[] {
+    return this.saidUpTo(phrase, phraseVariantsOf(phrase), values)
+  }
+
+  private saidUpTo(phrase: string, timesAVisit: number, values: Readonly<Record<string, string>> = {}): readonly string[] {
+    const turn = (this.timesSaid.get(phrase) ?? 0) + 1
+    const lines = this.linesOnTurn(phrase, turn, timesAVisit, values)
+    if (lines.length > 0) this.timesSaid.set(phrase, turn)
+    return lines
+  }
+
+  private linesOnTurn(phrase: string, turn: number, timesAVisit: number, values: Readonly<Record<string, string>>): readonly string[] {
+    if (turn > timesAVisit) {
+      this.log(`the keeper keeps quiet about ${phrase}: said ${timesAVisit} times this visit already, and a joke is never told twice`)
       return []
+    }
+    return [phraseLineAtTurn(phrase, this.voiceSeed, turn, values)]
+  }
+
+  private spillLines(elapsedSeconds: number): readonly string[] {
+    const lastAtSeconds = this.lastSpillRemarkedOnAtSeconds
+    if (lastAtSeconds !== null && elapsedSeconds - lastAtSeconds < spillRemarksApartSeconds) {
+      this.log(`the keeper keeps quiet about a spill: the last one was remarked on ${Math.round(elapsedSeconds - lastAtSeconds)} s ago, less than ${spillRemarksApartSeconds} s`)
+      return []
+    }
+    this.lastSpillRemarkedOnAtSeconds = elapsedSeconds
+    this.spillsRemarkedOn += 1
+    return [phraseLineAtTurn('spill', this.voiceSeed, this.spillsRemarkedOn)]
   }
 }
 
-function drainedLitresLine(drainedMl: number, voiceSeed: number): string {
-  const litres = String(Number((drainedMl / millilitresInALitre).toFixed(1)))
-  return textWith(`tapRanLong.${phraseVariantAmong('tapRanLong', voiceSeed, tapRanLongVariants) as TapRanLongVariant}`, { litres })
+function litresText(drainedMl: number): string {
+  return String(Number((drainedMl / millilitresInALitre).toFixed(1)))
 }
 
-function heaterEnergyLine(kilowattHoursUsed: number, voiceSeed: number): string {
-  const kilowattHours = String(Number(kilowattHoursUsed.toFixed(2)))
-  return textWith(`heaterRanLong.${phraseVariantAmong('heaterRanLong', voiceSeed, heaterRanLongVariants) as HeaterRanLongVariant}`, { kilowattHours })
+function kilowattHoursText(kilowattHoursUsed: number): string {
+  return String(Number(kilowattHoursUsed.toFixed(2)))
 }
 
 function offeringResponseText(figurineId: string, response: OfferingResponse): string {
