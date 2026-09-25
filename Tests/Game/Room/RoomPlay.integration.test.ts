@@ -1081,7 +1081,7 @@ class RoomVisit {
     this.session.dispatch({ type: 'putDown', itemId: 'spoon', spot: { placeId: 'shelf', x: -2.75, y: 0.07, z: -0.45 } })
   }
 
-    holdTheCaddyWithColdTapWater(): void {
+  holdTheCaddyWithColdTapWater(): void {
     this.carryFromTheShelf('caddy')
     this.walkTo('counter')
     this.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
