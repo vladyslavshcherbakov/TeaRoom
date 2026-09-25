@@ -8,8 +8,5 @@ rm -rf dist
 echo "Building the room into dist/"
 npx --no-install vite build Apps/Game/Room --base ./ --outDir ../../../dist --emptyOutDir --logLevel warn
 
-echo "Building the ritual bench into dist/bench/"
-npx --no-install vite build Apps/Bench --base ./ --outDir ../../dist/bench --emptyOutDir --logLevel warn
-
 touch dist/.nojekyll
 echo "Built dist/: $(find dist -type f | wc -l | tr -d ' ') files"

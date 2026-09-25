@@ -14,6 +14,8 @@ The plan is in `docs/roadmap.md`.
 
 **Three.js and Vite are pinned to exact versions, and CI installs from the lockfile.** A game's feel depends on the renderer's timing and input handling, so an update is a deliberate change with its own commit, not a side effect of a fresh install.
 
+**No debug page next to the game.** The ritual bench drove the simulation with plain buttons and showed the log on a page. Nobody used it: the rules are checked by integration tests, the room by playing it, and the history by the log with its world report. It only had to be fixed after each change to the simulation. The log is read in the browser's console.
+
 **No haptics on iPhone.** iOS Safari does not implement the Vibration API, and the checkbox-switch workaround is reported to stop working from iOS 26.5. Haptics stay a progressive enhancement for browsers that have the API.
 
 ### Shared/Simulation/
@@ -28,7 +30,7 @@ The plan is in `docs/roadmap.md`.
 
 **Cooling is applied before heating in a step.** Heating caps at boiling, so cooling after it would keep a working kettle forever just below 100 °C.
 
-**The simulation logs every decision, and the presentation decides where the lines go.** Events say what happened. The log says why: the temperature a judgement was made at, the value a refusal was decided on, what a pour left behind. Handlers collect lines in the draft, so the core stays free of side effects, and `RitualSession` writes them to an injected `RitualLog`. Each line carries the simulated time to the millisecond, and the sink adds the wall-clock time. The bench shows the log on the page, because Safari's console on an iPhone needs a Mac to open. Rejected: logging from the presentation by reading events, because the presentation never sees the values that decided the outcome.
+**The simulation logs every decision, and the presentation decides where the lines go.** Events say what happened. The log says why: the temperature a judgement was made at, the value a refusal was decided on, what a pour left behind. Handlers collect lines in the draft, so the core stays free of side effects, and `RitualSession` writes them to an injected `RitualLog`. Each line carries the simulated time to the millisecond, and the sink adds the wall-clock time. Rejected: logging from the presentation by reading events, because the presentation never sees the values that decided the outcome.
 
 **The world reports what changes every 5 s of simulated time, with rates over the next second.** Events and decisions alone left the history of a ritual without its numbers: how fast a bowl cooled with its lid open or closed, how the strength grew, how the cloth dried. The rates come from stepping a copy of the world one second ahead, so they are exactly what the rules will do, and no rule has to report itself. The lines are detail lines, since they come often. Only what is changing is reported, and a still room says so in one line.
 
@@ -118,10 +120,6 @@ The plan is in `docs/roadmap.md`.
 
 **Every surface's look is decided in one class.** `RoomMaterials` maps each surface name to a material. Paintings and generated textures replace a colour there without touching the models.
 
-### Apps/Bench/
-
-**The ritual bench stays next to the game.** It drives the simulation with plain controls and shows the log on the page, which is the quickest way to check a rule on a phone without playing through the scene.
-
 ### Tests/
 
 **Tests run on Node's built-in runner, with TypeScript run directly by Node.** The core needs no packages at all, and Node 22.18 strips types on its own. The only development packages are TypeScript for type-checking and `@types/node`. Rejected: Vitest, because it adds a toolchain for what `node --test` already does. Vite builds the pages and does not run the tests.
@@ -132,7 +130,7 @@ The plan is in `docs/roadmap.md`.
 
 ### Scripts/ and .github/
 
-**Both pages are built by Vite.** The room at the root of the site and the bench under `/bench/` are two Vite builds from `Scripts/build.sh`, with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build. Rejected: building the bench with the TypeScript compiler alone, because two build tools for two pages would be two pipelines to keep working.
+**The room is built by Vite.** `Scripts/build.sh` builds it to the root of the site with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build.
 
 **GitHub Actions tests every push and deploys to Pages from the default branch.** The workflow reads the default branch from the event instead of naming `main`, so it keeps working if the default branch is renamed. Action versions are the Node 24 majors (`checkout@v5`, `setup-node@v5`, `upload-pages-artifact@v5`, `deploy-pages@v5`), because GitHub is removing the Node 20 runtime from its runners in September 2026. A new push to a branch cancels the run still going for the same branch, because only the newest commit is worth testing and deploying, and the older run wastes minutes.
 
@@ -152,6 +150,5 @@ The plan is in `docs/roadmap.md`.
 
 - Which languages the game's text ships in. The user answers it.
 - Whether a separate teapot joins the MVP, or the kettle stays the brewing vessel. The user answers it.
-- Whether the bench stays published after 1.0. The user answers it.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.

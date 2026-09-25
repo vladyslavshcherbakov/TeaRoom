@@ -2,7 +2,7 @@
 
 A small, calm ritual game for the mobile browser. You heat water, brew tea, pour it, offer some to the tea figurines, taste it, tidy up and stay for a while. Nothing is won or lost.
 
-Play it on a phone: <https://vladyslavshcherbakov.github.io/TeaRoom/>. The ritual bench, a debug page over the simulation, is at <https://vladyslavshcherbakov.github.io/TeaRoom/bench/>.
+Play it on a phone: <https://vladyslavshcherbakov.github.io/TeaRoom/>.
 
 The design is in [docs/game-design.md](docs/game-design.md), and how the game behaves is in [docs/](docs). The plan up to 1.0 is in [docs/roadmap.md](docs/roadmap.md). How to change the code is in [CONTRIBUTING.md](CONTRIBUTING.md), and the reasons behind it and the open questions are in [DECISIONS.md](DECISIONS.md).
 
@@ -15,7 +15,6 @@ The design is in [docs/game-design.md](docs/game-design.md), and how the game be
 | `Apps/Game/Room/` | The walkable room in Three.js: layout, paths, camera and models. Served at the site's root. |
 | `Apps/Game/Table/` | The presenter that turns the ritual's state into what vessels show, how each tea looks, and the tea's texts. |
 | `Apps/Game/Texts/` | Every text the player reads, as keys and values. |
-| `Apps/Bench/` | The ritual bench: a debug page over the simulation. |
 | `Tests/` | Integration, unit and browser tests, mirroring `Shared/` and `Apps/`. |
 | `Scripts/` | The build and test scripts that CI runs too. |
 | `docs/` | How the game behaves, and the plan. |
@@ -43,10 +42,9 @@ Scripts/test-ui.sh
 
 ```sh
 npx vite Apps/Game/Room --host
-npx vite Apps/Bench --host
 ```
 
-Each command prints an address that a phone on the same network can open.
+The command prints an address that a phone on the same network can open.
 
 ## Build
 
@@ -54,7 +52,7 @@ Each command prints an address that a phone on the same network can open.
 Scripts/build.sh
 ```
 
-`Scripts/build.sh` builds the room into `dist/` and the bench into `dist/bench/`.
+`Scripts/build.sh` builds the room into `dist/`.
 
 ## Deploy
 

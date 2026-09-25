@@ -10,7 +10,7 @@ A change is done when the commands in the README sections "Test" and "Build" pas
 
 The layers are `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
-`Apps/Game` is the game, and `Apps/Bench` is the ritual bench, a debug page over the simulation. Both are type-checked by `Apps/tsconfig.json`, together with the game's tests in `Tests/Game`, and built by Vite from `Scripts/build.sh`. The root `tsconfig.json` type-checks `Shared` and the other tests without the browser's types, so the simulation cannot reach the DOM.
+`Apps/Game` is the game. It is type-checked by `Apps/tsconfig.json`, together with the game's tests in `Tests/Game`, and built by Vite from `Scripts/build.sh`. The root `tsconfig.json` type-checks `Shared` and the other tests without the browser's types, so the simulation cannot reach the DOM.
 
 External dependencies: Three.js for the room, pinned in `package.json`. Vite, TypeScript, Playwright and `@types` packages for development. The simulation imports none of them.
 
@@ -82,7 +82,7 @@ The reference mechanic is pouring: `Physics/Pouring.ts`, `Ritual/PouringCommands
 - Every action on an item first checks that it is within reach through `Ritual/Reach.ts`. Every action with the spoon or the cloth checks that it is in a hand, except soaking up a puddle, where the cloth lies on the surface. Offering checks that the keeper stands at the ritual place, and wiping that the keeper stands at a place with a puddle. A new action gets the same checks.
 - Every id the simulation looks up in the catalog is checked by `problemsOpeningRoom` in `Definitions/CatalogProblems.ts`. A new reference between definitions gets a check there.
 - Every decision writes a log line where it is taken: `note(draft, ...)` for the story, `noteDetail(draft, ...)` for frequent raw input such as tilt changes. `refuse` logs by itself. Every 5 s of simulated time, and on a return after an absence, `Ritual/WorldReport.ts` writes a detail line for each thing that is changing, with its rates over the next second: a vessel's volume, temperature, strength, bitterness, leaves and metal heat, the heater's energy, the tap's water, the cloth, the spoon and the puddles. A new living value gets a place in that report. The simulation never writes to the console. `RitualSession` passes the lines to the `RitualLog` it was given.
-- Text the player reads is not in the simulation. The simulation emits ids, and the presentation turns them into words. Every such word lives in `Apps/Game/Texts/EnglishTexts.ts` as a key and a value, read through `Texts.ts`. The bench keeps its own labels.
+- Text the player reads is not in the simulation. The simulation emits ids, and the presentation turns them into words. Every such word lives in `Apps/Game/Texts/EnglishTexts.ts` as a key and a value, read through `Texts.ts`.
 
 ## Tests
 
