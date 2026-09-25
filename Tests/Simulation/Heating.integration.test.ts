@@ -392,3 +392,23 @@ test('thermos_onAHeaterThatIsOff_staysCoolAndCanBePickedUp', () => {
   assert.equal(events.some((event) => event.type === 'pickedUp'), true, JSON.stringify(events))
   assert.equal(ritual.vessel('thermos').shellHeat, 0)
 })
+
+test('thermos_onAWorkingHeater_announcesOnceThatItsMetalGlowsTooHotToHold', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const events = ritual.wait(30)
+
+  assert.deepEqual(eventsOfType(events, 'metalGlowsTooHotToHold'), [{ type: 'metalGlowsTooHotToHold', vesselId: 'thermos' }])
+})
+
+test('kettle_leftOnAWorkingHeaterUntilItsWaterIsGone_announcesOnceThatItBoiledDry', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const events = ritual.wait(600)
+
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle' }])
+})

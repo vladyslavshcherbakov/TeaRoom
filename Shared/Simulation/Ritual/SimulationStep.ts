@@ -54,9 +54,14 @@ function heatOrCoolMetalShells(draft: Draft, seconds: number): void {
     const wasTooHotToHold = isTooHotToHold(vessel.shellHeat)
     vessel.shellHeat = shellHeatAfter(vessel.shellHeat, heater.isOn && heater.itemIdOnTop === vessel.id, seconds)
     const isNowTooHotToHold = isTooHotToHold(vessel.shellHeat)
-    if (!wasTooHotToHold && isNowTooHotToHold) note(draft, `${vessel.id}'s metal glows too hot to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
+    if (!wasTooHotToHold && isNowTooHotToHold) glowTooHotToHold(draft, vessel)
     if (wasTooHotToHold && !isNowTooHotToHold) note(draft, `${vessel.id}'s metal has cooled enough to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
   }
+}
+
+function glowTooHotToHold(draft: Draft, vessel: VesselState): void {
+  note(draft, `${vessel.id}'s metal glows too hot to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
+  draft.events.push({ type: 'metalGlowsTooHotToHold', vesselId: vessel.id })
 }
 
 function heatTheClothOnTheHeater(draft: Draft, seconds: number): void {
@@ -86,7 +91,9 @@ function noteBoilingAway(draft: Draft, vesselId: string, mlPerSecond: number, vo
     draft.state.heater.hasAnnouncedBoilingAway = true
     note(draft, `${vesselId} boils, its water boils away at ${mlPerSecond} ml/s`)
   }
-  if (volumeMlLeft === 0) note(draft, `${vesselId} boiled dry on the heater`)
+  if (volumeMlLeft > 0) return
+  note(draft, `${vesselId} boiled dry on the heater`)
+  draft.events.push({ type: 'boiledDry', vesselId })
 }
 
 function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatureC: number): void {

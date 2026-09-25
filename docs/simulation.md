@@ -22,11 +22,11 @@ The keeper stands at one place, or at none while walking. An item is within reac
 
 ## Heat
 
-A vessel on a working heater gains `degreesPerSecondPerLitre × 1000 / volume` degrees per second, up to 100 °C. Less water heats faster. Water that has reached the boil on a working heater boils away at the heater's `boilingAwayMlPerSecond`, 3 ml/s for the electric plate, so half a minute of boiling takes a ninth of a full kettle, until it is lifted off, switched off or boiled dry.
+A vessel on a working heater gains `degreesPerSecondPerLitre × 1000 / volume` degrees per second, up to 100 °C. Less water heats faster. Water that has reached the boil on a working heater boils away at the heater's `boilingAwayMlPerSecond`, 3 ml/s for the electric plate, so half a minute of boiling takes a ninth of a full kettle, until it is lifted off, switched off or boiled dry. A vessel that boils dry says so once with `boiledDry`.
 
 Every vessel closes a share of the gap to the room's temperature each second: `coolingPerSecond`, multiplied by the lid's `coolingMultiplierWhenOpen` while its lid is open. The thermos keeps heat far better than the kettle, and an open lid loses it faster. Cooling is applied before heating, so a vessel on a working heater still reaches boiling.
 
-A vessel with a metal shell, the thermos, may stand on the heater too. On a working heater its metal heats to red in 20 seconds, and off a working heater it cools back in a minute. From a fifth of red heat it is too hot to hold, and picking it up, opening its lid and closing it are refused with `tooHotToHold`.
+A vessel with a metal shell, the thermos, may stand on the heater too. On a working heater its metal heats to red in 20 seconds, and off a working heater it cools back in a minute. From a fifth of red heat it is too hot to hold, which it says once with `metalGlowsTooHotToHold`, and picking it up, opening its lid and closing it are refused with `tooHotToHold`.
 
 When the water on the heater first reaches the lower edge of the chosen tea's good range, the core announces it once per switch-on. This is the moment for two faint haptic pulses where the device has them.
 

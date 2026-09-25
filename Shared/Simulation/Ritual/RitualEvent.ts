@@ -97,6 +97,8 @@ export type RitualEvent =
   | { readonly type: 'clothLaidInThePuddle' }
   | { readonly type: 'burntClothWashedBackToNew' }
   | { readonly type: 'spoonCrumbled'; readonly gramsLost: number }
+  | { readonly type: 'boiledDry'; readonly vesselId: string }
+  | { readonly type: 'metalGlowsTooHotToHold'; readonly vesselId: string }
   | { readonly type: 'clothTakenOffTheHeater'; readonly charring: number }
   | { readonly type: 'ritualFinished' }
   | { readonly type: 'roomLeft' }
