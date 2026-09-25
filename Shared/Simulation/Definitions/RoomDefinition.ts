@@ -7,7 +7,7 @@ export type Spot = {
   readonly z: number
 }
 
-export type TableVessel = {
+export type RoomVessel = {
   readonly id: string
   readonly definitionId: string
   readonly initialWaterMl: number
@@ -31,7 +31,7 @@ export type RoomDefinition = {
   readonly heaterId: string
   readonly heaterSpot: Spot
   readonly tap: TapDefinition | null
-  readonly vessels: readonly TableVessel[]
+  readonly vessels: readonly RoomVessel[]
   readonly figurineIds: readonly string[]
   readonly caddyGrams: number
   readonly caddyStartsAt: Spot
