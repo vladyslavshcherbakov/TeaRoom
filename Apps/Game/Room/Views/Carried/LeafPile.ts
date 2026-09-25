@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { LeafShape, TeaLook } from '../../../Table/TeaLooks.ts'
 import { seededRandom } from '../../SeededRandom.ts'
+import { clampedToShare } from '../../../../../Shared/Simulation/Physics/ClampedToShare.ts'
 
 export type LeafPileSize = {
   readonly leafCount: number
@@ -29,7 +30,7 @@ export class LeafPile {
   }
 
   showFill(share: number): void {
-    const shownCount = Math.round(this.leafCount * Math.min(1, Math.max(0, share)))
+    const shownCount = Math.round(this.leafCount * clampedToShare(share))
     this.mesh.count = shownCount
     this.mesh.visible = shownCount > 0
   }

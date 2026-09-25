@@ -2,6 +2,7 @@ import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition
 import type { FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import type { RitualPort } from './RoomPlay.ts'
+import { clampedToShare } from '../../../Shared/Simulation/Physics/ClampedToShare.ts'
 
 export type AimedPourView = {
   readonly sourceId: string
@@ -139,7 +140,7 @@ export class AimedPour {
   private shareOfTheStreamOver(target: PourTarget): number {
     const distance = Math.hypot(this.spout.x - target.spot.x, this.spout.z - target.spot.z)
     const share = (target.openingRadiusMetres + streamRadiusMetres - distance) / (2 * streamRadiusMetres)
-    return Math.min(1, Math.max(0, share))
+    return clampedToShare(share)
   }
 }
 

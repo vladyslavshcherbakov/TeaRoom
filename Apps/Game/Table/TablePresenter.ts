@@ -9,6 +9,7 @@ import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly
 import type { ClothState, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
+import { clampedToShare } from '../../../Shared/Simulation/Physics/ClampedToShare.ts'
 
 const waterColour = '#c9e3f0'
 const overbrewedColour = '#2b1a10'
@@ -146,7 +147,7 @@ function surfaceMotionAt(temperatureC: number): TableViewState.SurfaceMotion {
 }
 
 function share(amount: number, whole: number): number {
-  return Math.min(1, Math.max(0, amount / whole))
+  return clampedToShare(amount / whole)
 }
 
 function mixColours(from: string, to: string, shareOfTo: number): string {

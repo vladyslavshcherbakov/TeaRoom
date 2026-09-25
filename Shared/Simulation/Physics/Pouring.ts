@@ -1,5 +1,6 @@
 import type { VesselDefinition } from '../Definitions/VesselDefinition.ts'
 import { mixLiquids, splitLiquid, type Liquid } from './Liquid.ts'
+import { clampedToShare } from './ClampedToShare.ts'
 
 export type StreamLanding = {
   readonly source: Liquid
@@ -21,7 +22,7 @@ export function tiltWhereTheStreamSplashes(sourceDefinition: VesselDefinition, t
 
 function flowShareAtTilt(tiltDegrees: number): number {
   const share = (tiltDegrees - tiltWhereWaterStartsDegrees) / (tiltOfFullFlowDegrees - tiltWhereWaterStartsDegrees)
-  return Math.min(1, Math.max(0, share))
+  return clampedToShare(share)
 }
 
 export function pourStream(
@@ -36,7 +37,7 @@ export function pourStream(
   const { taken: stream, left: sourceAfter } = splitLiquid(source, flowShare * sourceDefinition.maxPourMlPerSecond * seconds)
   const streamMlPerSecond = flowShare * sourceDefinition.maxPourMlPerSecond
   const splashedShare = target !== null && streamMlPerSecond > target.definition.takesAStreamOfUpToMlPerSecond ? splashedShareOfFastFlow : 0
-  const reachingTargetMl = target === null ? 0 : stream.volumeMl * clampToShare(streamOnTargetFraction) * (1 - splashedShare)
+  const reachingTargetMl = target === null ? 0 : stream.volumeMl * clampedToShare(streamOnTargetFraction) * (1 - splashedShare)
   const roomLeftMl = target === null ? 0 : Math.max(0, target.definition.capacityMl - target.liquid.volumeMl)
   const landedMl = Math.min(reachingTargetMl, roomLeftMl)
   const overflowedMl = reachingTargetMl - landedMl
@@ -47,8 +48,4 @@ export function pourStream(
     spilledMl: stream.volumeMl - landedMl,
     overflowedMl,
   }
-}
-
-function clampToShare(value: number): number {
-  return Math.min(1, Math.max(0, value))
 }

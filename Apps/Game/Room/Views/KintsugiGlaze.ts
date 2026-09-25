@@ -1,4 +1,5 @@
 import { bowlProfile } from './Carried/BowlProfile.ts'
+import { clampedToShare } from '../../../../Shared/Simulation/Physics/ClampedToShare.ts'
 
 const canvasWidth = 1024
 const canvasHeight = 512
@@ -118,8 +119,8 @@ function paintEveryPixel(context: CanvasRenderingContext2D, colourAt: (x: number
 }
 
 function mixed(from: Rgb, to: Rgb, share: number): Rgb {
-  const clamped = Math.min(1, Math.max(0, share))
-  return [from[0] + (to[0] - from[0]) * clamped, from[1] + (to[1] - from[1]) * clamped, from[2] + (to[2] - from[2]) * clamped]
+  const boundedShare = clampedToShare(share)
+  return [from[0] + (to[0] - from[0]) * boundedShare, from[1] + (to[1] - from[1]) * boundedShare, from[2] + (to[2] - from[2]) * boundedShare]
 }
 
 function clouds(x: number, y: number, across: number): number {

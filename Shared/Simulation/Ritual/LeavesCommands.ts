@@ -1,6 +1,7 @@
 import type { CommandOfType } from './Command.ts'
 import { isClosedAgainstFilling, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { caddyItemId, isWithinReach, whereIs } from './Reach.ts'
+import { clampedToShare } from '../Physics/ClampedToShare.ts'
 
 export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void {
   const spoon = draft.state.spoon
@@ -12,7 +13,7 @@ export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void
   const gramsInTheCaddy = caddy.leaves?.grams ?? 0
   if (caddy.leaves === null || gramsInTheCaddy <= 0) return refuse(draft, command, 'caddyIsEmpty')
   if (spoon.grams >= spoon.capacityGrams) return refuse(draft, command, 'spoonIsFull', `spoon holds ${spoon.grams.toFixed(1)} g`)
-  const depth = Math.min(1, Math.max(0, command.depth))
+  const depth = clampedToShare(command.depth)
   const grams = Math.min(spoon.capacityGrams * depth, spoon.capacityGrams - spoon.grams, gramsInTheCaddy)
   caddy.leaves = gramsInTheCaddy - grams > 0 ? { ...caddy.leaves, grams: gramsInTheCaddy - grams } : null
   spoon.grams += grams

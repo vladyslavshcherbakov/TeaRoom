@@ -1,4 +1,5 @@
 import type { TimeOfDay } from '../../../../Shared/Simulation/Definitions/Atmosphere.ts'
+import { clampedToShare } from '../../../../Shared/Simulation/Physics/ClampedToShare.ts'
 
 export type Daylight = {
   readonly sunPosition: { readonly x: number; readonly y: number; readonly z: number }
@@ -37,7 +38,7 @@ const hoursSinceSunriseWindows: Readonly<Record<TimeOfDay, HoursWindow>> = {
 
 export function hoursSinceSunriseFor(timeOfDay: TimeOfDay, shareThroughTheWindow: number): number {
   const { earliest, latest } = hoursSinceSunriseWindows[timeOfDay]
-  return earliest + (latest - earliest) * Math.min(1, Math.max(0, shareThroughTheWindow))
+  return earliest + (latest - earliest) * clampedToShare(shareThroughTheWindow)
 }
 
 export function daylightAt(hoursSinceSunrise: number): Daylight {

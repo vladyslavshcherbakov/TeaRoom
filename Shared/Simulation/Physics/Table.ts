@@ -1,3 +1,5 @@
+import { clampedToShare } from './ClampedToShare.ts'
+
 const evaporationMlPerSecond = 0.1
 const slowStrokeCmPerSecond = 50
 const fastStrokeCmPerSecond = 200
@@ -63,7 +65,7 @@ export function mlSoakedUp(tableWetMl: number, clothWetMl: number, seconds: numb
 }
 
 export function wetMlAfterWiping(wetMl: number, strokeSpeedCmPerSecond: number, coveredFraction: number): number {
-  const coverage = Math.min(1, Math.max(0, coveredFraction))
+  const coverage = clampedToShare(coveredFraction)
   return wetMl * (1 - strokeEfficiency(strokeSpeedCmPerSecond)) ** coverage
 }
 
