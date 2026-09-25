@@ -6,6 +6,8 @@ export const faceFeatures = ['nose', 'eyes', 'ears', 'afro'] as const
 
 export type FaceFeature = (typeof faceFeatures)[number]
 
+export const faceFeaturesOfANewGame: readonly [FaceFeature, ...FaceFeature[]] = ['nose', 'eyes', 'ears']
+
 export type RoomSettings = {
   readonly coatColour: CoatColour
   readonly hasSoftShadowsInCorners: boolean

@@ -7,7 +7,7 @@ import { text } from '../Texts/Texts.ts'
 import { arrangementOfANewGame, describeArrangement, quietRoomArrangementOf, type RoomArrangement } from './RoomArrangement.ts'
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
-import { faceFeatures } from './RoomSettings.ts'
+import { faceFeaturesOfANewGame } from './RoomSettings.ts'
 import { hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
@@ -71,8 +71,8 @@ function enterAnew(notice: string | null): void {
   const teaId = Object.keys(catalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })
-  const faceOfANewGame = faceFeatures[Math.floor(Math.random() * faceFeatures.length)] ?? 'nose'
-  roomLog(`the keeper of this new game has ${faceOfANewGame}, chosen at random`)
+  const faceOfANewGame = faceFeaturesOfANewGame[Math.floor(Math.random() * faceFeaturesOfANewGame.length)] ?? faceFeaturesOfANewGame[0]
+  roomLog(`the keeper of this new game has ${faceOfANewGame}, chosen at random from ${faceFeaturesOfANewGame.join(', ')}, and hair is left for the player to find in the settings`)
   enterTheRoom(opening.session, catalog, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false, faceOfANewGame, arrangement })
 }
 
