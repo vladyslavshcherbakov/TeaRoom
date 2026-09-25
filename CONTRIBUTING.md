@@ -37,8 +37,8 @@ In the room:
 - `Room/RoomGestures.ts` tells taps, strokes, pinches and the aiming finger apart before they reach `RoomPlay`.
 - `Room/Placement.ts` decides whether an item fits where the player tapped.
 - None of these knows Three.js.
-- `Room/Walking/` finds paths on the floor grid and moves the walker. `Room/Camera/` computes where the camera looks and keeps the zooms.
-- `Room/Views/` builds the meshes. `RoomModel.ts` builds the room. `CarriedItems.ts` builds the items the keeper can carry, placed from the ritual's state every frame and, in a close-up, held in the corners of the view, with their parts in `Views/Carried/`: the meshes, what an item holds, the water streams, the chosen glow and the cloth's fire. `SipButton.ts`, `PourControls.ts` and `RoomCaption.ts` are the controls and the caption.
+- `Room/Walking/` finds paths on the floor grid and moves the walker. `Room/Camera/` computes where the camera looks and keeps the zooms. `Room/Sky/` computes where the sun stands at each hour of the day.
+- `Room/Views/` builds the meshes. `RoomModel.ts` builds the room. `CarriedItems.ts` builds the items the keeper can carry, placed from the ritual's state every frame and, in a close-up, held in the corners of the view, with their parts in `Views/Carried/`: the meshes, what an item holds, the water streams, the chosen glow and the cloth's fire. `SipButton.ts`, `PourControls.ts` and `RoomCaption.ts` are the controls and the caption, and `RoomLights.ts` lights the room from the sun's place.
 - `Room/Views/RoomMaterials.ts` is the one place that decides how each surface looks. Paintings and generated textures, such as `KoiPainting.ts` and `LotusPainting.ts`, are drawn on canvases and used there.
 - `Views/RoomLayers.ts` names the render layers.
 - `RoomScene.ts` renders, raycasts and forwards pointer events to `RoomGestures`. `RoomMain.ts` opens the ritual session.
