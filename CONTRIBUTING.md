@@ -22,7 +22,7 @@ Before designing a new feature, read `docs/world-bible.md`. It holds the lore, t
 - `State/` is the mutable-inside, readonly-outside `SessionState`.
 - `Physics/` holds pure functions over small values: liquid, heat, pouring, brewing, the tap, the table and the cloth.
 - `Judgement/` holds pure decision tables: water, taste, offering.
-- `Ritual/` holds commands, events and handlers, the fixed-step `SimulationStep`, and `RitualSession`, the only object a presentation talks to.
+- `Ritual/` holds commands, events and handlers, the fixed-step `SimulationStep`, and `RitualSession`, the only object a presentation talks to. `Ritual/ItemKinds.ts` holds how each kind of carried item behaves, a vessel, the spoon or a cloth: whether it may sit on the heater, what the working heater does to it, what the running tap does to it or whether it is kept out of the sink, and what happens as it is taken into a hand or lifted out of the sink. Each kind's answers live in its own rules file, such as `Ritual/ClothRules.ts`, and the handlers and the step ask `rulesFor` and never branch on the kind themselves.
 
 A presentation opens a room with `RitualSession.open(catalog, roomId, log, isDevelopmentBuild)`, shows a quiet screen when the room is `unavailable`, calls `session.dispatch(command)` for each player decision and `session.advance(seconds)` once per frame, renders `session.state`, and reacts to the returned events. It never writes state.
 
@@ -51,6 +51,11 @@ A tea, a vessel, a figurine or a room:
 
 1. Add the definition to the matching file in `Shared/Content/` and register it in `DefaultCatalog.ts`.
 2. Run the tests. `Tests/Content/DefaultCatalog.unit.test.ts` runs `problemsOpeningRoom` over every room, and `Tests/Content/TeaBalance.integration.test.ts` brews every tea by the book.
+
+A new kind of carried item, one that is not a vessel, the spoon or a cloth:
+
+1. Add it to `ItemKind` in `Ritual/ItemKinds.ts`, teach `itemKindOf` to recognise it, and add its rules file with its `ItemKindRules`. The compiler lists every answer that is still missing.
+2. Give it a shape in the room, as below.
 
 A new shape of carried item, such as a teapot:
 

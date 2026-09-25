@@ -1,19 +1,16 @@
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
-import { water } from '../Physics/Liquid.ts'
-import { clothWetMlAfterWringing } from '../Physics/Table.ts'
-import type { ClothState, RunningWaterState } from '../State/SessionState.ts'
+import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { emptyTheHand, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
-
-const itemsKeptOutOfTheSink: ReadonlySet<string> = new Set([spoonItemId])
+import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
+import { rulesFor } from './ItemKinds.ts'
+import { emptyTheHand, isKeeperAt, locationOfItem, moveItem, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'>): void {
   const tap = tapOf(draft)
   if (tap === null) return refuse(draft, command, 'noTapInThisRoom')
   const location = locationOfItem(draft, command.itemId)
   if (location === undefined) return refuse(draft, command, 'unknownItem')
-  if (itemsKeptOutOfTheSink.has(command.itemId)) return refuse(draft, command, 'cannotGoInTheSink')
+  if (rulesFor(draft.state, command.itemId)?.runTheTapOnto === null) return refuse(draft, command, 'cannotGoInTheSink')
   if (location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `${command.itemId} is ${whereIs(location)}`)
   if (!isKeeperAt(draft, tap.sinkSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the sink is at the ${tap.sinkSpot.placeId}`)
   const occupant = draft.state.sink.itemIdInside
@@ -59,9 +56,7 @@ export function liftOutOfTheSink(draft: Draft, itemId: string): void {
   const sink = draft.state.sink
   if (sink.itemIdInside !== itemId) return
   sink.itemIdInside = null
-  const cloth = draft.state.cloths[itemId]
-  if (cloth !== undefined) wringOutTheCloth(draft, cloth)
-  if (sink.hasRunOverTheItemInside) pourAwayTheRinseWater(draft, itemId)
+  rulesFor(draft.state, itemId)?.liftOutOfTheSink(draft, itemId)
   sink.hasRunOverTheItemInside = false
   const runningWater = sink.runningWater
   if (runningWater === null) return note(draft, `${itemId} lifted out of the sink, the tap is closed`)
@@ -91,23 +86,6 @@ function runningWaterOver(draft: Draft, itemId: string | null, runningBefore: Ru
     isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel),
     hasRunOntoAnItem: (runningBefore?.hasRunOntoAnItem ?? false) || itemId !== null,
   }
-}
-
-function pourAwayTheRinseWater(draft: Draft, itemId: string): void {
-  const vessel = draft.state.vessels[itemId]
-  if (vessel === undefined || !vesselDefinitionOf(draft, vessel).isDrinkable) return
-  note(draft, `${itemId} was rinsed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
-  vessel.liquid = water(0, vessel.liquid.temperatureC)
-}
-
-function wringOutTheCloth(draft: Draft, cloth: ClothState): void {
-  const wetMlBefore = cloth.wetMl
-  cloth.wetMl = clothWetMlAfterWringing(cloth.wetMl)
-  note(draft, `${cloth.id} is wrung out as it leaves the sink: ${wetMlBefore.toFixed(1)} → ${cloth.wetMl.toFixed(1)} ml`)
-  if (!cloth.wasBurntBeforeWashing) return
-  cloth.wasBurntBeforeWashing = false
-  note(draft, `${cloth.id} came out of the sink as new, though it was burnt when it went in`)
-  draft.events.push({ type: 'burntClothWashedBackToNew', clothId: cloth.id })
 }
 
 function describeWhatStandsInTheSink(draft: Draft): string {

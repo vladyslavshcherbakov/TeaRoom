@@ -5,12 +5,10 @@ import { isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
 import { liftOffTheHeater } from './HeatingCommands.ts'
 import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
-import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { emptyTheHand, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
-import { howTheSpoonChars, isBurning } from '../Physics/Charring.ts'
+import { emptyTheHand, middleHandIndex, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { rulesFor } from './ItemKinds.ts'
 import { isCoolEnoughToHold, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isWithinTheKeepersReach, wasRefusedByAnyOf } from './ItemRefusals.ts'
-import { percent } from './Percent.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
@@ -29,10 +27,8 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((itemId) => itemId !== null).join(' and ')}`)
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
-  if (command.itemId === spoonItemId && isBurning(draft.state.spoon.charring, howTheSpoonChars)) return crumbleTheSpoon(draft)
+  if (rulesFor(draft.state, command.itemId)?.takeIntoAHand(draft, command.itemId) === 'crumbled') return
   draft.state.keeper.hands[handIndex] = command.itemId
-  const cloth = draft.state.cloths[command.itemId]
-  if (cloth !== undefined) liftTheClothOutOfThePuddle(draft, cloth)
   liftOutOfTheSink(draft, command.itemId)
   moveItem(draft, command.itemId, { kind: 'inHand', handIndex })
   note(draft, `picked up ${command.itemId}, which was ${whereItWas}, into hand ${handIndex}`)
@@ -66,15 +62,6 @@ export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
   moveItem(draft, command.itemId, { kind: 'onSurface', spot: command.spot })
   note(draft, `put ${command.itemId} down on the ${command.spot.placeId} at (${command.spot.x.toFixed(2)}, ${command.spot.y.toFixed(2)}, ${command.spot.z.toFixed(2)})`)
   draft.events.push({ type: 'putDown', itemId: command.itemId, spot: command.spot })
-}
-
-function crumbleTheSpoon(draft: Draft): void {
-  const spoon = draft.state.spoon
-  const gramsLost = spoon.grams
-  note(draft, `the spoon, ${percent(spoon.charring)} charred, crumbles to ash as it is taken, and ${gramsLost.toFixed(2)} g of leaves on it are lost`)
-  spoon.grams = 0
-  spoon.location = { kind: 'gone' }
-  draft.events.push({ type: 'spoonCrumbled', gramsLost })
 }
 
 function freeHandOf(draft: Draft): HandIndex | null {

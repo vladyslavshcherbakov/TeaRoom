@@ -1,0 +1,101 @@
+import { definitionIn } from '../Definitions/Catalog.ts'
+import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
+import { heatLiquid, liquidBoiledAway } from '../Physics/Heat.ts'
+import { water } from '../Physics/Liquid.ts'
+import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
+import type { RunningWaterState, VesselState } from '../State/SessionState.ts'
+import { chosenTea, describeLiquid, isClosedAgainstFilling, note, vesselDefinitionOf, type Draft } from './Draft.ts'
+import type { ItemKindRules } from './ItemKinds.ts'
+import { drain } from './RunningWater.ts'
+
+export const vesselRules: ItemKindRules = {
+  canSitOnTheHeater: (draft, itemId) => {
+    const vessel = draft.state.vessels[itemId]
+    return vessel !== undefined && vesselDefinitionOf(draft, vessel).canSitOnHeater
+  },
+  describeOnTheHeater: (draft, itemId) => {
+    const vessel = draft.state.vessels[itemId]
+    return vessel === undefined ? itemId : describeLiquid(vessel)
+  },
+  heatOnTheWorkingHeater: (draft, itemId, seconds) => withTheVessel(draft, itemId, (vessel) => heatTheVessel(draft, vessel, seconds)),
+  takeOffTheHeater: () => undefined,
+  runTheTapOnto: (draft, itemId, runningWater, tap, seconds) => withTheVessel(draft, itemId, (vessel) => fillTheVessel(draft, vessel, runningWater, tap, seconds)),
+  liftOutOfTheSink: (draft, itemId) => withTheVessel(draft, itemId, (vessel) => pourAwayTheRinseWaterIfItRanOver(draft, vessel)),
+  takeIntoAHand: () => 'whole',
+}
+
+function withTheVessel(draft: Draft, itemId: string, act: (vessel: VesselState) => void): void {
+  const vessel = draft.state.vessels[itemId]
+  if (vessel !== undefined) act(vessel)
+}
+
+function heatTheVessel(draft: Draft, vessel: VesselState, seconds: number): void {
+  const heaterDefinition = definitionIn(draft.catalog, 'heaters', draft.state.heater.definitionId)
+  const heated = heatLiquid(vessel.liquid, heaterDefinition, seconds)
+  vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
+  announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
+  if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)
+}
+
+function noteBoilingAway(draft: Draft, vesselId: string, mlPerSecond: number, volumeMlLeft: number): void {
+  if (!draft.state.heater.hasAnnouncedBoilingAway) {
+    draft.state.heater.hasAnnouncedBoilingAway = true
+    note(draft, `${vesselId} boils, its water boils away at ${mlPerSecond} ml/s`)
+  }
+  if (volumeMlLeft > 0) return
+  note(draft, `${vesselId} boiled dry on the heater`)
+  draft.events.push({ type: 'boiledDry', vesselId })
+}
+
+function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatureC: number): void {
+  const tea = chosenTea(draft)
+  if (tea === null || draft.state.heater.hasAnnouncedTargetTemperature) return
+  if (temperatureC < tea.water.good.lowestC) return
+  draft.state.heater.hasAnnouncedTargetTemperature = true
+  note(draft, `${vesselId} reached the good range of ${tea.id} at ${temperatureC.toFixed(1)} °C while heating`)
+  draft.events.push({ type: 'targetTemperatureReached', vesselId })
+}
+
+function fillTheVessel(draft: Draft, vessel: VesselState, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {
+  const isRunningOverTheLid = isClosedAgainstFilling(draft, vessel)
+  if (isRunningOverTheLid !== runningWater.isRunningOverTheLid) {
+    runningWater.isRunningOverTheLid = isRunningOverTheLid
+    note(draft, isRunningOverTheLid ? `${vessel.id} lid closed under the tap, the water runs over it into the drain` : `${vessel.id} lid open under the tap, the water runs in`)
+  }
+  if (isRunningOverTheLid) {
+    drain(runningWater, tap.flowMlPerSecond * seconds)
+    return
+  }
+  const capacityMl = vesselDefinitionOf(draft, vessel).capacityMl
+  const fill = fillFromTap(vessel.liquid, capacityMl, tap, seconds)
+  vessel.liquid = fill.liquid
+  runningWater.filledMl += fill.filledMl
+  drain(runningWater, fill.overflowedMl)
+  if (fill.overflowedMl > 0) {
+    draft.state.sink.hasRunOverTheItemInside = true
+    washTheLeavesOut(draft, vessel, fill.overflowedMl, capacityMl)
+  }
+  if (fill.overflowedMl > 0 && !runningWater.hasOverflowed) {
+    runningWater.hasOverflowed = true
+    note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the drain`)
+    draft.events.push({ type: 'vesselOverflowed', vesselId: vessel.id })
+  }
+}
+
+function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: number, capacityMl: number): void {
+  if (vessel.leaves === null) return
+  const grams = leafGramsLeftAfterRunningOver(vessel.leaves.grams, overflowedMl, capacityMl)
+  if (grams > 0) {
+    vessel.leaves = { ...vessel.leaves, grams }
+    return
+  }
+  vessel.leaves = null
+  note(draft, `the running water washed the last leaves out of ${vessel.id}, which holds ${describeLiquid(vessel)}`)
+  draft.events.push({ type: 'lastLeavesWashedOut', vesselId: vessel.id })
+}
+
+function pourAwayTheRinseWaterIfItRanOver(draft: Draft, vessel: VesselState): void {
+  if (!draft.state.sink.hasRunOverTheItemInside || !vesselDefinitionOf(draft, vessel).isDrinkable) return
+  note(draft, `${vessel.id} was rinsed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
+  vessel.liquid = water(0, vessel.liquid.temperatureC)
+}

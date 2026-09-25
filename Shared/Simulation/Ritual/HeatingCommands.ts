@@ -2,22 +2,22 @@ import { definitionIn } from '../Definitions/Catalog.ts'
 import { judgeWater, type WaterJudgement } from '../Judgement/WaterJudgement.ts'
 import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
-import { chosenTea, describeLiquid, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { chosenTea, describeLiquid, note, refuse, type Draft } from './Draft.ts'
+import { rulesFor } from './ItemKinds.ts'
 import { isKnown, isNotBeingPoured, isNotBurntAway, isWithinTheKeepersReach, wasRefusedByAnyOf, type ItemCheck } from './ItemRefusals.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { emptyTheHand, heaterSpotOf, isACloth, isKeeperAt, locationOfItem, moveItem, spoonItemId, whereTheKeeperStands } from './Reach.ts'
-import { percent } from './Percent.ts'
+import { emptyTheHand, heaterSpotOf, isKeeperAt, locationOfItem, moveItem, whereTheKeeperStands } from './Reach.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
-  if (wasRefusedByAnyOf(draft, command, itemId, [isKnown, isNotBurntAway, canSitOnTheHeaterCheck, isTheHeaterFree, isNotBeingPoured, isTheKeeperAtTheHeater, isWithinTheKeepersReach])) return
+  if (wasRefusedByAnyOf(draft, command, itemId, [isKnown, isNotBurntAway, canSitOnTheHeater, isTheHeaterFree, isNotBeingPoured, isTheKeeperAtTheHeater, isWithinTheKeepersReach])) return
   const heaterSpot = heaterSpotOf(draft)
   const location = locationOfItem(draft, itemId)
   if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
   liftOutOfTheSink(draft, itemId)
   moveItem(draft, itemId, { kind: 'onSurface', spot: heaterSpot })
   draft.state.heater.itemIdOnTop = itemId
-  note(draft, `placed on heater: ${describeWhatSitsOnTheHeater(draft, itemId)}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)
+  note(draft, `placed on heater: ${rulesFor(draft.state, itemId)?.describeOnTheHeater(draft, itemId) ?? itemId}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)
   draft.events.push({ type: 'placedOnHeater', itemId })
 }
 
@@ -26,10 +26,7 @@ export function liftOffTheHeater(draft: Draft, itemId: string): void {
   if (!draft.state.heater.isOn) note(draft, `${itemId} lifted off a heater that was off, water not judged`)
   draft.state.heater.itemIdOnTop = null
   draft.events.push({ type: 'takenOffHeater', itemId, waterJudgement })
-  const cloth = draft.state.cloths[itemId]
-  if (cloth === undefined) return
-  note(draft, `${cloth.id} is taken off the heater ${percent(cloth.charring)} charred`)
-  draft.events.push({ type: 'clothTakenOffTheHeater', clothId: cloth.id, charring: cloth.charring })
+  rulesFor(draft.state, itemId)?.takeOffTheHeater(draft, itemId)
 }
 
 export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeaterOn'>): void {
@@ -87,7 +84,7 @@ function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
   return judgement
 }
 
-const canSitOnTheHeaterCheck: ItemCheck = (draft, itemId) => (canSitOnTheHeater(draft, itemId) ? null : { reason: 'cannotSitOnHeater', values: '' })
+const canSitOnTheHeater: ItemCheck = (draft, itemId) => (rulesFor(draft.state, itemId)?.canSitOnTheHeater(draft, itemId) === true ? null : { reason: 'cannotSitOnHeater', values: '' })
 
 const isTheHeaterFree: ItemCheck = (draft) => {
   const occupant = draft.state.heater.itemIdOnTop
@@ -97,19 +94,4 @@ const isTheHeaterFree: ItemCheck = (draft) => {
 const isTheKeeperAtTheHeater: ItemCheck = (draft) => {
   const heaterPlaceId = heaterSpotOf(draft).placeId
   return isKeeperAt(draft, heaterPlaceId) ? null : { reason: 'notAtThatPlace', values: `${whereTheKeeperStands(draft)}, the heater is at the ${heaterPlaceId}` }
-}
-
-function canSitOnTheHeater(draft: Draft, itemId: string): boolean {
-  const vessel = draft.state.vessels[itemId]
-  if (vessel !== undefined) return vesselDefinitionOf(draft, vessel).canSitOnHeater
-  return isACloth(draft.state, itemId) || itemId === spoonItemId
-}
-
-function describeWhatSitsOnTheHeater(draft: Draft, itemId: string): string {
-  const vessel = draft.state.vessels[itemId]
-  if (vessel !== undefined) return describeLiquid(vessel)
-  if (itemId === spoonItemId) return `the spoon, ${percent(draft.state.spoon.charring)} charred`
-  const cloth = draft.state.cloths[itemId]
-  if (cloth === undefined) return itemId
-  return `${cloth.id} holding ${cloth.wetMl.toFixed(1)} ml, ${percent(cloth.charring)} charred`
 }
