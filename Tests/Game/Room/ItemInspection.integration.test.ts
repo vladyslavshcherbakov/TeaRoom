@@ -17,19 +17,19 @@ const inTheMiddle: ScreenPoint = { x: 195, y: 420 }
 const nearTheTop: ScreenPoint = { x: 195, y: 100 }
 const startingPitchRadians = 0.55
 
-test('heldItem_whenPressedStillForOneAndAHalfSeconds_isInspected', () => {
+test('heldItem_whenPressedStillForOneSecond_isInspected', () => {
   const room = new InspectingRoom()
   room.gestures.fingerDown(1, onTheFirstHand)
 
-  room.holdFor(1.5)
+  room.holdFor(1)
 
   assert.equal(room.play.inspectionView?.itemId, 'bowl1')
 })
 
-test('heldItem_whenReleasedBeforeOneAndAHalfSeconds_isNotInspectedAndItsHandIsChosenAsByATap', () => {
+test('heldItem_whenReleasedBeforeOneSecond_isNotInspectedAndItsHandIsChosenAsByATap', () => {
   const room = new InspectingRoom()
   room.gestures.fingerDown(1, onTheFirstHand)
-  room.holdFor(1.375)
+  room.holdFor(0.875)
 
   room.gestures.fingerUp(1)
 
@@ -42,7 +42,7 @@ test('heldItem_whenTheFingerDriftsTwelvePixelsWhileHeld_isInspected', () => {
   room.gestures.fingerDown(1, onTheFirstHand)
   room.gestures.fingerMoved(1, { x: onTheFirstHand.x + 12, y: onTheFirstHand.y })
 
-  room.holdFor(1.5)
+  room.holdFor(1)
 
   assert.equal(room.play.inspectionView?.itemId, 'bowl1')
 })
@@ -52,7 +52,7 @@ test('heldItem_whenTheFingerMovesThirteenPixelsWhileHeld_isNotInspected', () => 
   room.gestures.fingerDown(1, onTheFirstHand)
   room.gestures.fingerMoved(1, { x: onTheFirstHand.x + 13, y: onTheFirstHand.y })
 
-  room.holdFor(1.5)
+  room.holdFor(1)
 
   assert.equal(room.play.inspectionView, null)
 })
@@ -62,7 +62,7 @@ test('heldItem_whenASecondFingerTouchesWhileHeld_isNotInspected', () => {
   room.gestures.fingerDown(1, onTheFirstHand)
   room.gestures.fingerDown(2, nearTheTop)
 
-  room.holdFor(1.5)
+  room.holdFor(1)
 
   assert.equal(room.play.inspectionView, null)
 })
@@ -70,7 +70,7 @@ test('heldItem_whenASecondFingerTouchesWhileHeld_isNotInspected', () => {
 test('pressThatInspects_whenTheFingerLifts_isNotATapAndChoosesNoHand', () => {
   const room = new InspectingRoom()
   room.gestures.fingerDown(1, onTheSecondHand)
-  room.holdFor(1.5)
+  room.holdFor(1)
 
   room.gestures.fingerUp(1)
 
@@ -143,7 +143,7 @@ test('inspectedItem_whenDraggedAHundredPixelsAcross_turnsOneRadianAroundItself',
 test('inspectedItem_whenTheHoldingFingerDragsFiftyPixelsDown_tipsHalfARadianTowardsTheViewer', () => {
   const room = new InspectingRoom()
   room.gestures.fingerDown(1, onTheFirstHand)
-  room.holdFor(1.5)
+  room.holdFor(1)
 
   room.gestures.fingerMoved(1, { x: onTheFirstHand.x, y: onTheFirstHand.y + 50 })
 
@@ -208,7 +208,7 @@ class InspectingRoom {
 
   inspect(point: ScreenPoint): void {
     this.gestures.fingerDown(1, point)
-    this.holdFor(1.5)
+    this.holdFor(1)
     this.gestures.fingerUp(1)
     if (this.play.inspectionView === null) throw new Error(`nothing is inspected after a hold at (${point.x}, ${point.y}):\n${this.logLines.join('\n')}`)
   }
