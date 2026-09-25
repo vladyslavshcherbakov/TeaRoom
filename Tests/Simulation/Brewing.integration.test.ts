@@ -4,19 +4,6 @@ import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
-function ritualWithTeaSteepingAt(waterC: number): TestRitual {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0.05 }))
-  ritual.heatKettleTo(waterC)
-  ritual.addLeavesToKettle(5)
-  return ritual
-}
-
-function tasteFromCup(ritual: TestRitual) {
-  ritual.pour('kettle', 'cup1', 9)
-  ritual.waitUntilCupCoolsTo('cup1', 60)
-  return eventsOfType(ritual.do({ type: 'tasteCup', cupId: 'cup1' }), 'teaTasted')[0]?.verdict
-}
-
 test('tea_whenSteepedForTheIdealTimeInGoodWater_tastesBalancedAndSoft', () => {
   const ritual = ritualWithTeaSteepingAt(80)
   ritual.wait(60)
@@ -243,3 +230,16 @@ test('spoon_lyingOnTheTable_scoopsNothingUntilItIsTaken', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'notInHand' }])
   assert.equal(ritual.vessel('caddy').leaves?.grams, 50)
 })
+
+function ritualWithTeaSteepingAt(waterC: number): TestRitual {
+  const ritual = TestRitual.begun(testCatalog({ cup: 0.05 }))
+  ritual.heatKettleTo(waterC)
+  ritual.addLeavesToKettle(5)
+  return ritual
+}
+
+function tasteFromCup(ritual: TestRitual) {
+  ritual.pour('kettle', 'cup1', 9)
+  ritual.waitUntilCupCoolsTo('cup1', 60)
+  return eventsOfType(ritual.do({ type: 'tasteCup', cupId: 'cup1' }), 'teaTasted')[0]?.verdict
+}

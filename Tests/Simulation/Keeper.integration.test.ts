@@ -3,10 +3,6 @@ import test from 'node:test'
 import { testHouseCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
-function houseRitual(): TestRitual {
-  return TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
-}
-
 const onTheTable = { placeId: 'table', x: 0.5, y: 0.4, z: -1 }
 
 test('cup_whenPickedUpWhereTheKeeperStands_goesIntoTheFirstFreeHand', () => {
@@ -218,3 +214,7 @@ test('middleHand_forAThermosTooHotToTake_doesNotGrow', () => {
   assert.equal(ritual.state.keeper.hasAMiddleHand, false)
   assert.deepEqual(ritual.state.keeper.hands, ['kettle', 'cup1', null])
 })
+
+function houseRitual(): TestRitual {
+  return TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+}

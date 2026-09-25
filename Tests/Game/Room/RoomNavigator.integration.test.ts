@@ -9,23 +9,6 @@ const frameSeconds = 1 / 60
 const teaTable = furnitureWithId(quietRoomLayout, 'teaTable')
 const [teaTableFront, teaTableWindowSide] = teaTable.sides
 
-function roomWithLog() {
-  const logLines: string[] = []
-  return { navigator: new RoomNavigator(quietRoomLayout, (message) => logLines.push(message)), logLines }
-}
-
-function walkUntilStill(navigator: RoomNavigator, onEachFrame: (position: FloorPoint) => void = () => {}): void {
-  for (let frame = 0; frame < 60 * 30 && isWalking(navigator.walk); frame += 1) {
-    navigator.advance(frameSeconds)
-    onEachFrame(navigator.walk.position)
-  }
-}
-
-function isInsideTeaTable(point: FloorPoint): boolean {
-  const { footprint } = teaTable
-  return Math.abs(point.x - footprint.x) < footprint.width / 2 && Math.abs(point.z - footprint.z) < footprint.depth / 2
-}
-
 test('walker_whenTheFloorIsTapped_walksThereAndStops', () => {
   const { navigator } = roomWithLog()
 
@@ -181,3 +164,20 @@ test('walker_whenTheVisitLeftThemAtTheTeaTableWindowSideCloseUp_startsShowingItF
 
   assert.deepEqual(navigator.closeUpInView, teaTableWindowSide?.closeUp)
 })
+
+function roomWithLog() {
+  const logLines: string[] = []
+  return { navigator: new RoomNavigator(quietRoomLayout, (message) => logLines.push(message)), logLines }
+}
+
+function walkUntilStill(navigator: RoomNavigator, onEachFrame: (position: FloorPoint) => void = () => {}): void {
+  for (let frame = 0; frame < 60 * 30 && isWalking(navigator.walk); frame += 1) {
+    navigator.advance(frameSeconds)
+    onEachFrame(navigator.walk.position)
+  }
+}
+
+function isInsideTeaTable(point: FloorPoint): boolean {
+  const { footprint } = teaTable
+  return Math.abs(point.x - footprint.x) < footprint.width / 2 && Math.abs(point.z - footprint.z) < footprint.depth / 2
+}

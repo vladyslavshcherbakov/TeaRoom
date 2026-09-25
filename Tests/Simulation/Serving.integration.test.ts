@@ -4,22 +4,6 @@ import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
-function ritualWithTeaInCups(steepSeconds: number, cupIds = ['cup1', 'cup2']): TestRitual {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
-  ritual.heatKettleTo(80)
-  ritual.addLeavesToKettle(5)
-  ritual.wait(steepSeconds)
-  for (const cupId of cupIds) ritual.pour('kettle', cupId, 9)
-  return ritual
-}
-
-function ritualWithTeaBoiledAgainInCup1(): TestRitual {
-  const ritual = ritualWithTeaInCups(60, [])
-  ritual.heatKettleTo(100)
-  ritual.pour('kettle', 'cup1', 3)
-  return ritual
-}
-
 test('sip_ofPlainWater_tastesOfNoTea', () => {
   const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
   ritual.heatKettleTo(80)
@@ -144,3 +128,19 @@ test('keeper_whenSippingTheCaddysTeaFromABowl_lives', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'extreme')
   assert.deepEqual(eventsOfType(events, 'keeperDied'), [])
 })
+
+function ritualWithTeaInCups(steepSeconds: number, cupIds = ['cup1', 'cup2']): TestRitual {
+  const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(5)
+  ritual.wait(steepSeconds)
+  for (const cupId of cupIds) ritual.pour('kettle', cupId, 9)
+  return ritual
+}
+
+function ritualWithTeaBoiledAgainInCup1(): TestRitual {
+  const ritual = ritualWithTeaInCups(60, [])
+  ritual.heatKettleTo(100)
+  ritual.pour('kettle', 'cup1', 3)
+  return ritual
+}

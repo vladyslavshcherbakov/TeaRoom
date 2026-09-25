@@ -9,23 +9,6 @@ import { TestRitual } from '../../Support/TestRitual.ts'
 
 const catalog = testCatalog()
 
-function ritualState(): SessionState {
-  return structuredClone(TestRitual.begun(catalog).state) as SessionState
-}
-
-function stateWithLiquid(vesselId: string, liquid: Partial<Liquid>, isLidOpen = false): SessionState {
-  const state = ritualState()
-  const vessel = state.vessels[vesselId]
-  if (vessel === undefined) throw new Error(`the test room has no vessel "${vesselId}"`)
-  vessel.liquid = { ...vessel.liquid, volumeMl: 100, ...liquid }
-  vessel.isLidOpen = isLidOpen
-  return state
-}
-
-function vesselView(state: SessionState, vesselId: string) {
-  return tableViewState(state, catalog).vessels[vesselId]
-}
-
 test('steam_risesWithTheWaterTemperature', () => {
   const rows = [
     [59, 'none'],
@@ -173,24 +156,6 @@ test('liquor_whenBrewed_isLessSeeThroughThanWater', () => {
   assert.ok(water < tea, `water ${water}, tea ${tea}`)
 })
 
-function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
-  const state = ritualState()
-  state.heater.isOn = true
-  state.heater.itemIdOnTop = 'cloth'
-  const cloth = state.cloths['cloth']
-  if (cloth === undefined) throw new Error('the test room lost its cloth')
-  cloth.charring = charring
-  return state
-}
-
-function stateWithTheSpoonOnAWorkingHeater(charring: number): SessionState {
-  const state = ritualState()
-  state.heater.isOn = true
-  state.heater.itemIdOnTop = 'spoon'
-  state.spoon.charring = charring
-  return state
-}
-
 test('soakedLeaves_growTwoPerGramUpToTwelve', () => {
   const rows = [
     [0.2, 1],
@@ -214,3 +179,38 @@ test('soakedLeaves_inAnEmptyBowl_stayInIt', () => {
 
   assert.deepEqual(tableViewState(state, catalog).vessels['cup1']?.soakedLeaves, { teaId: 'testGreen', count: 6 })
 })
+
+function ritualState(): SessionState {
+  return structuredClone(TestRitual.begun(catalog).state) as SessionState
+}
+
+function stateWithLiquid(vesselId: string, liquid: Partial<Liquid>, isLidOpen = false): SessionState {
+  const state = ritualState()
+  const vessel = state.vessels[vesselId]
+  if (vessel === undefined) throw new Error(`the test room has no vessel "${vesselId}"`)
+  vessel.liquid = { ...vessel.liquid, volumeMl: 100, ...liquid }
+  vessel.isLidOpen = isLidOpen
+  return state
+}
+
+function vesselView(state: SessionState, vesselId: string) {
+  return tableViewState(state, catalog).vessels[vesselId]
+}
+
+function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
+  const state = ritualState()
+  state.heater.isOn = true
+  state.heater.itemIdOnTop = 'cloth'
+  const cloth = state.cloths['cloth']
+  if (cloth === undefined) throw new Error('the test room lost its cloth')
+  cloth.charring = charring
+  return state
+}
+
+function stateWithTheSpoonOnAWorkingHeater(charring: number): SessionState {
+  const state = ritualState()
+  state.heater.isOn = true
+  state.heater.itemIdOnTop = 'spoon'
+  state.spoon.charring = charring
+  return state
+}

@@ -49,19 +49,6 @@ test('heater_whenTheRitualFinishesWhileItWorks_saysTheKeeperDidNotSwitchItOff', 
   assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, false)
 })
 
-function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitual {
-  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
-  ritual.do({ type: 'switchHeaterOn' })
-  return ritual
-}
-
-function ritualWithTheSpoonOnAWorkingHeater(): TestRitual {
-  const ritual = TestRitual.begun()
-  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
-  ritual.do({ type: 'switchHeaterOn' })
-  return ritual
-}
-
 test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
 
@@ -493,3 +480,16 @@ test('secondCloth_takenOffTheHeaterBurning_isNamedInTheEvent', () => {
 
   assert.deepEqual(eventsOfType(events, 'clothTakenOffTheHeater').map((event) => event.clothId), ['cloth2'])
 })
+
+function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitual {
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+  return ritual
+}
+
+function ritualWithTheSpoonOnAWorkingHeater(): TestRitual {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
+  ritual.do({ type: 'switchHeaterOn' })
+  return ritual
+}

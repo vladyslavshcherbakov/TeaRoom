@@ -4,13 +4,6 @@ import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { problemsOpeningRoom } from '../../Shared/Simulation/Definitions/CatalogProblems.ts'
 import { testCatalog } from '../Support/TestCatalog.ts'
 
-function catalogWithRoomChanges(changes: Partial<Catalog['rooms'][string]>): Catalog {
-  const catalog = testCatalog()
-  const room = catalog.rooms.testRoom
-  if (room === undefined) throw new Error('the test catalog lost its room')
-  return { ...catalog, rooms: { testRoom: { ...room, ...changes } } }
-}
-
 test('contentProblems_whenTheRoomIsMissing_nameTheRoom', () => {
   assert.deepEqual(problemsOpeningRoom(testCatalog(), 'attic'), ['room "attic" is not in the catalog'])
 })
@@ -82,3 +75,10 @@ test('room_withAClothSharingAnIdWithAVessel_isRefusedNamingThatCloth', () => {
 
   assert.deepEqual(problems, ['room "testRoom" gives the cloth "cup1" an id another item has'])
 })
+
+function catalogWithRoomChanges(changes: Partial<Catalog['rooms'][string]>): Catalog {
+  const catalog = testCatalog()
+  const room = catalog.rooms.testRoom
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  return { ...catalog, rooms: { testRoom: { ...room, ...changes } } }
+}

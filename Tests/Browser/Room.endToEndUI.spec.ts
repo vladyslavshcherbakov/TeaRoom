@@ -1,13 +1,12 @@
 import { expect, test, type Page } from '@playwright/test'
 
-function roomLog(page: Page): { lines: string[]; errors: string[] } {
-  const record = { lines: [] as string[], errors: [] as string[] }
-  page.on('console', (message) => {
-    if (message.text().includes('[room]')) record.lines.push(message.text())
-  })
-  page.on('pageerror', (error) => record.errors.push(error.message))
-  return record
-}
+const floorSharesToTry = [
+  [0.3, 0.5],
+  [0.35, 0.45],
+  [0.6, 0.55],
+  [0.4, 0.58],
+] as const
+
 
 test('room_whenTheFloorInFrontOfTheWalkerIsTapped_answersTheTap', async ({ page }) => {
   const log = roomLog(page)
@@ -70,6 +69,15 @@ test('room_withAVisitSavedByAnIncompatibleVersion_saysTheVisitWasLost', async ({
   await expect(page.locator('.caption')).toContainText('did not survive')
 })
 
+function roomLog(page: Page): { lines: string[]; errors: string[] } {
+  const record = { lines: [] as string[], errors: [] as string[] }
+  page.on('console', (message) => {
+    if (message.text().includes('[room]')) record.lines.push(message.text())
+  })
+  page.on('pageerror', (error) => record.errors.push(error.message))
+  return record
+}
+
 async function walkSomewhereOnTheFloor(page: Page, lines: readonly string[]): Promise<void> {
   const viewport = page.viewportSize()
   if (viewport === null) throw new Error('the page has no viewport')
@@ -80,10 +88,3 @@ async function walkSomewhereOnTheFloor(page: Page, lines: readonly string[]): Pr
   }
   throw new Error('no tap on the floor made the walker walk')
 }
-
-const floorSharesToTry = [
-  [0.3, 0.5],
-  [0.35, 0.45],
-  [0.6, 0.55],
-  [0.4, 0.58],
-] as const
