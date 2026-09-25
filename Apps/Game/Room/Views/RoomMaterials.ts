@@ -12,6 +12,7 @@ import { paintTeaCharacter } from './TeaCharacterPainting.ts'
 import { paintGreenMarble } from './MarbleGlaze.ts'
 import { paintTemperBands } from './TemperBands.ts'
 import { paintSakuraOverFuji } from './ThermosPainting.ts'
+import { paintToad } from './ToadPainting.ts'
 import { paintYixingClay } from './YixingClay.ts'
 
 export type Surface =
@@ -72,6 +73,7 @@ export type Surface =
   | 'medalRibbon'
   | 'clearGlassHeldInView'
   | 'koiPainting'
+  | 'toadPainting'
   | 'prophecyInscription'
   | 'lotusPainting'
   | 'heronPainting'
@@ -86,7 +88,12 @@ export type Surface =
   | 'poppyHeart'
   | 'sunflowerHeart'
 
-export type SurfaceMaterials = Pick<RoomMaterials, 'materialFor' | 'unsharedMaterialFor' | 'colourOf'>
+export type SurfaceMaterials = Pick<RoomMaterials, 'materialFor' | 'unsharedMaterialFor' | 'colourOf' | 'bowlIdWithTheToadUnderneath'>
+
+export type BowlPaintings = {
+  readonly koiPond: KoiPond
+  readonly bowlIdWithTheToadUnderneath: string
+}
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -146,6 +153,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   medalRibbon: '#a8392e',
   clearGlassHeldInView: '#26302c',
   koiPainting: '#ffffff',
+  toadPainting: '#ffffff',
   prophecyInscription: '#ffffff',
   lotusPainting: '#ffffff',
   heronPainting: '#ffffff',
@@ -190,10 +198,12 @@ export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
   private readonly reflections: THREE.Texture | null
   private readonly koiPond: KoiPond
+  readonly bowlIdWithTheToadUnderneath: string
 
-  constructor(reflections: THREE.Texture | null, koiPond: KoiPond) {
+  constructor(reflections: THREE.Texture | null, bowlPaintings: BowlPaintings) {
     this.reflections = reflections
-    this.koiPond = koiPond
+    this.koiPond = bowlPaintings.koiPond
+    this.bowlIdWithTheToadUnderneath = bowlPaintings.bowlIdWithTheToadUnderneath
   }
 
   materialFor(surface: Surface): THREE.Material {
@@ -222,6 +232,7 @@ export class RoomMaterials {
     if (surface === 'thermosPainting') return this.thermosPaintingMaterial()
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoiPond(this.koiPond))
+    if (surface === 'toadPainting') return paintingMaterial(paintToad())
     if (surface === 'prophecyInscription') return paintingMaterial(paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')]))
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'heronPainting') return paintingMaterial(paintHeron())

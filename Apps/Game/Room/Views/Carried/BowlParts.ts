@@ -5,6 +5,7 @@ import { lotusPaintingAspect } from '../LotusPainting.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import type { Surface, SurfaceMaterials } from '../RoomMaterials.ts'
 import { teaCharacterPaintingAspect } from '../TeaCharacterPainting.ts'
+import { toadPaintingAspect } from '../ToadPainting.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { bowlInsideProfile, bowlOutsideWall, bowlProfile, bowlRimTop, bowlUndersideAndFoot } from './BowlProfile.ts'
 import { liquidBelowTheRimMetres, overflowOverTheLipMetres, type ItemParts, type PointDownTheSide } from './ItemParts.ts'
@@ -27,6 +28,9 @@ type BowlLook = {
 }
 
 const paintingAboveTheGlazeMetres = 0.0004
+const toadPaintingWidthMetres = 0.076
+const undersideInsideTheFootHeightMetres = 0.003
+const whiteGlazes: ReadonlySet<Surface> = new Set(['whiteGlaze', 'pearlGlaze'])
 const paintingSegmentsAlong = 48
 const fewestPaintingSegmentsAcross = 8
 const bowlSegmentsAround = 64
@@ -67,6 +71,8 @@ const bowlLookById: Readonly<Record<string, BowlLook>> = {
   bowl10: { ...plainBowl, glaze: 'yixingClay', liquidTint: '#a8683f', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
 
+export const whiteBowlIds: readonly string[] = Object.entries(bowlLookById).flatMap(([bowlId, look]) => (whiteGlazes.has(look.glaze) ? [bowlId] : []))
+
 const pointsDownTheBowl: readonly PointDownTheSide[] = [
   { distance: bowlRimTop.x - overflowOverTheLipMetres, height: bowlRimTop.y + overflowOverTheLipMetres },
   ...[...bowlOutsideWall].reverse().map((point) => ({ distance: point.x + overflowOverTheLipMetres, height: point.y })),
@@ -92,6 +98,7 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
   const body = new THREE.Mesh(bowlGeometryWith(look.relief), glazed)
   const meshes: THREE.Object3D[] = [body]
   if (look.painting !== null) meshes.push(paintedOnTheBottom(materials, look.painting))
+  if (materials.bowlIdWithTheToadUnderneath === itemId) meshes.push(toadPaintedUnderneath(materials))
   if (look.isRimGilded) meshes.push(gildedRim(materials))
   const bowl: ItemParts = {
     meshes,
@@ -212,6 +219,15 @@ function paintedOnTheBottom(materials: SurfaceMaterials, painting: BottomPaintin
   paintingMesh.renderOrder = 1
   paintingMesh.castShadow = false
   return paintingMesh
+}
+
+function toadPaintedUnderneath(materials: SurfaceMaterials): THREE.Mesh {
+  const toad = new THREE.Mesh(new THREE.PlaneGeometry(toadPaintingWidthMetres, toadPaintingWidthMetres / toadPaintingAspect), materials.materialFor('toadPainting'))
+  toad.rotation.x = Math.PI / 2
+  toad.position.y = undersideInsideTheFootHeightMetres - paintingAboveTheGlazeMetres
+  toad.renderOrder = 1
+  toad.castShadow = false
+  return toad
 }
 
 function bowlInsideRadiusAt(height: number): number {

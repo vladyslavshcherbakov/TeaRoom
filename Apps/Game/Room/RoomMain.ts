@@ -11,6 +11,7 @@ import { faceFeaturesOfANewGame } from './RoomSettings.ts'
 import { hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
+import { whiteBowlIds } from './Views/Carried/BowlParts.ts'
 import { koiPonds } from './Views/KoiPond.ts'
 import { VisitStore, type SavedVisit } from './VisitStore.ts'
 
@@ -93,7 +94,9 @@ function enterTheRoom(session: RitualSession, catalog: Catalog, arrival: RoomArr
   roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the working heater, chosen at random for this visit`)
   const koiPond = koiPonds[Math.floor(Math.random() * koiPonds.length)] ?? 'oneKoi'
   roomLog(`the white bowl shows the koi pond ${koiPond}, chosen at random for this visit`)
-  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, koiPond, arrival, visitStore)
+  const bowlIdWithTheToadUnderneath = whiteBowlIds[Math.floor(Math.random() * whiteBowlIds.length)] ?? ''
+  roomLog(`the three-legged toad is painted under ${bowlIdWithTheToadUnderneath}, chosen at random from ${whiteBowlIds.join(', ')} for this visit`)
+  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, visitStore)
 }
 
 function showTheQuietScreen(): void {
