@@ -5,6 +5,7 @@ import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.t
 import { text } from '../Texts/Texts.ts'
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
+import { faceFeatures } from './RoomSettings.ts'
 import { hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
@@ -50,7 +51,7 @@ function offerToContinue(visit: SavedVisit): void {
       const awaySeconds = Math.max(0, (Date.now() - visit.savedAtMilliseconds) / millisecondsInASecond)
       roomLog(`the player continues the visit saved ${awaySeconds.toFixed(0)} s ago`)
       const events = resuming.session.returnAfter(awaySeconds)
-      enterTheRoom(resuming.session, { place: visit.place, camera: visit.camera, events, notice: null, continuesAVisit: true })
+      enterTheRoom(resuming.session, { place: visit.place, camera: visit.camera, events, notice: null, continuesAVisit: true, faceOfANewGame: null })
     },
     startedOver: () => {
       visitStore.forget('the player starts over')
@@ -65,7 +66,9 @@ function enterAnew(notice: string | null): void {
   const teaId = Object.keys(catalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })
-  enterTheRoom(opening.session, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false })
+  const faceOfANewGame = faceFeatures[Math.floor(Math.random() * faceFeatures.length)] ?? 'nose'
+  roomLog(`the keeper of this new game has ${faceOfANewGame}, chosen at random`)
+  enterTheRoom(opening.session, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false, faceOfANewGame })
 }
 
 function enterTheRoom(session: RitualSession, arrival: RoomArrival): void {

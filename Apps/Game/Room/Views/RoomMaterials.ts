@@ -42,6 +42,8 @@ export type Surface =
   | 'sky'
   | 'walkerCoat'
   | 'walkerSkin'
+  | 'walkerEye'
+  | 'walkerHair'
   | 'cushion'
   | 'puddle'
   | 'gaugeGlass'
@@ -112,6 +114,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   sky: '#f2a36b',
   walkerCoat: '#3f7f8f',
   walkerSkin: '#f1c9a5',
+  walkerEye: '#221a16',
+  walkerHair: '#2b1d15',
   cushion: '#d4735e',
   puddle: '#9c6a44',
   gaugeGlass: '#f4f8f9',

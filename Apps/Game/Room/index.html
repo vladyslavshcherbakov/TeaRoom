@@ -304,6 +304,23 @@
       .settings-swatch[aria-pressed='true'] {
         border-color: #5a3a26;
       }
+      .settings-faces {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .settings-face {
+        min-height: 40px;
+        border: 2px solid rgba(90, 58, 38, 0.3);
+        border-radius: 20px;
+        background: transparent;
+        color: #5a3a26;
+        font: 600 14px/1 system-ui, sans-serif;
+      }
+      .settings-face[aria-pressed='true'] {
+        border-color: #5a3a26;
+        background: rgba(90, 58, 38, 0.12);
+      }
       .settings-toggle {
         display: flex;
         gap: 10px;

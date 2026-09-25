@@ -27,7 +27,7 @@ import type { CameraPose, FloorPoint } from './RoomLayout.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
-import type { CoatColour, RoomSettings } from './RoomSettings.ts'
+import type { CoatColour, FaceFeature, RoomSettings } from './RoomSettings.ts'
 import { SettingsStore } from './SettingsStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
@@ -74,6 +74,7 @@ export type RoomArrival = {
   readonly events: readonly RitualEvent[]
   readonly notice: string | null
   readonly continuesAVisit: boolean
+  readonly faceOfANewGame: FaceFeature | null
 }
 
 export class RoomScene {
@@ -189,11 +190,12 @@ export class RoomScene {
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
     this.settingsStore = new SettingsStore(log)
     this.settings = this.settingsStore.load()
-    this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn), frameRateShownChosen: (isShown) => this.frameRateShownChosen(isShown) })
+    this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn), frameRateShownChosen: (isShown) => this.frameRateShownChosen(isShown), faceFeatureChosen: (feature) => this.faceFeatureChosen(feature) })
     this.frameRateCounter = new FrameRateCounter(container)
     new FullScreenButton(container, log)
     this.frameRateCounter.show(this.settings.isFrameRateShown)
     this.walker.paintTheBody(this.settings.coatColour)
+    this.showTheFaceOfThisGame(arrival.faceOfANewGame)
     this.fitToWindow()
     this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
@@ -303,6 +305,22 @@ export class RoomScene {
     this.settingsStore.keep(this.settings)
     this.showSoftShadowsInCorners(isOn)
     this.log(`soft shadows in corners are turned ${isOn ? 'on' : 'off'} from the settings`)
+  }
+
+  private showTheFaceOfThisGame(faceOfANewGame: FaceFeature | null): void {
+    if (faceOfANewGame !== null) {
+      this.settings = { ...this.settings, faceFeature: faceOfANewGame }
+      this.settingsStore.keep(this.settings)
+      this.log(`a new game shows the face with ${faceOfANewGame}`)
+    }
+    this.walker.showTheFace(this.settings.faceFeature)
+  }
+
+  private faceFeatureChosen(feature: FaceFeature): void {
+    this.settings = { ...this.settings, faceFeature: feature }
+    this.settingsStore.keep(this.settings)
+    this.walker.showTheFace(feature)
+    this.log(`the face shows ${feature} from the settings`)
   }
 
   private frameRateShownChosen(isShown: boolean): void {
