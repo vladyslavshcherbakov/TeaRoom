@@ -158,7 +158,7 @@ export const englishTexts = {
   'settings.face.nose': 'Nose',
   'settings.face.eyes': 'Eyes',
   'settings.face.ears': 'Ears',
-  'settings.face.afro': 'Afro',
+  'settings.face.afro': 'Hair',
   'settings.advanced': 'Advanced',
   'settings.softShadowsInCorners': 'Soft shadows in corners',
   'settings.softShadowsInCornersWarning': 'Makes the room look deeper, but the game may start to lag on some phones.',
