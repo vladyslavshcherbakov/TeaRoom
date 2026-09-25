@@ -23,7 +23,7 @@ import { captionLinesFor, roomRemarkLine } from './RoomTexts.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
-import { daylightAt, firstHourAfterSunrise, hoursAfter } from './Sky/DaylightCycle.ts'
+import { daylightFor } from './Sky/DaylightCycle.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomLights } from './Views/RoomLights.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
@@ -58,7 +58,6 @@ export class RoomScene {
   private readonly zoom = new CameraZoom()
   private readonly gestures: RoomGestures
   private readonly roomLights = new RoomLights()
-  private hoursSinceSunrise = firstHourAfterSunrise
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number) {
     this.session = session
@@ -103,8 +102,7 @@ export class RoomScene {
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
     this.caption.advance(seconds)
-    this.hoursSinceSunrise = hoursAfter(this.hoursSinceSunrise, seconds)
-    this.roomLights.show(daylightAt(this.hoursSinceSunrise))
+    this.roomLights.show(daylightFor(this.session.state.atmosphere.timeOfDay))
     const isWalkerShown = this.play.view.kind !== 'closeUp'
     this.walker.show(this.play.walk, this.clock.elapsedTime)
     this.walker.root.visible = isWalkerShown

@@ -1,4 +1,5 @@
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { text } from '../Texts/Texts.ts'
@@ -30,6 +31,13 @@ if (opening.kind === 'unavailable') {
   quiet.textContent = text('room.unavailable')
   container.append(quiet)
 } else {
+  const timesOfDay = definitionIn(defaultCatalog, 'rooms', roomId).timesOfDay
+  const timeOfDay = timesOfDay[Math.floor(Math.random() * timesOfDay.length)]
+  if (timeOfDay === undefined) roomLog(`the room offers no time of day, so the light stays at ${opening.session.state.atmosphere.timeOfDay}`)
+  else {
+    roomLog(`the room opens at ${timeOfDay}, chosen at random from ${timesOfDay.join(', ')}`)
+    opening.session.dispatch({ type: 'chooseAtmosphere', timeOfDay, weather: opening.session.state.atmosphere.weather })
+  }
   const teaId = Object.keys(defaultCatalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })

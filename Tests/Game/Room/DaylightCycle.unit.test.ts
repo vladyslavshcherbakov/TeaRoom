@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { daylightAt, hoursAfter } from '../../../Apps/Game/Room/Sky/DaylightCycle.ts'
+import { daylightAt, daylightFor } from '../../../Apps/Game/Room/Sky/DaylightCycle.ts'
 
 test('sun_atSunrise_standsLowInTheEast', () => {
   const daylight = daylightAt(0)
@@ -25,10 +25,23 @@ test('sun_atSunset_standsLowInTheWest', () => {
   assert.ok(daylight.warmth > 0.99, `warmth ${daylight.warmth}`)
 })
 
-test('daylightHour_passesInNinetyRealSeconds', () => {
-  assert.equal(hoursAfter(1, 90), 2)
+test('daylight_atDawn_comesLowFromTheEastAndWarm', () => {
+  const daylight = daylightFor('dawn')
+
+  assert.ok(daylight.sunPosition.x > 7, `x ${daylight.sunPosition.x}`)
+  assert.ok(daylight.warmth > 0.7, `warmth ${daylight.warmth}`)
 })
 
-test('daylight_afterSunset_beginsAgainAtSunrise', () => {
-  assert.equal(hoursAfter(11.5, 90), 0.5)
+test('daylight_byDay_comesFromHighAboveAndAlmostWhite', () => {
+  const daylight = daylightFor('day')
+
+  assert.ok(daylight.sunPosition.y > 7.5, `y ${daylight.sunPosition.y}`)
+  assert.ok(daylight.warmth < 0.05, `warmth ${daylight.warmth}`)
+})
+
+test('daylight_atSunset_comesLowFromTheWestAndWarm', () => {
+  const daylight = daylightFor('sunset')
+
+  assert.ok(daylight.sunPosition.x < -7, `x ${daylight.sunPosition.x}`)
+  assert.ok(daylight.warmth > 0.7, `warmth ${daylight.warmth}`)
 })

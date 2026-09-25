@@ -1,6 +1,6 @@
-export const daylightHours = 12
-export const realSecondsPerDaylightHour = 90
-export const firstHourAfterSunrise = 1
+import type { TimeOfDay } from '../../../../Shared/Simulation/Definitions/Atmosphere.ts'
+
+const daylightHours = 12
 
 export type Daylight = {
   readonly sunPosition: { readonly x: number; readonly y: number; readonly z: number }
@@ -18,9 +18,10 @@ const brightestSunIntensity = 2.1
 const faintestSkyIntensity = 1.1
 const brightestSkyIntensity = 1.45
 
-export function hoursAfter(hoursSinceSunrise: number, realSeconds: number): number {
-  const hours = hoursSinceSunrise + realSeconds / realSecondsPerDaylightHour
-  return hours % daylightHours
+const hoursSinceSunriseAt: Readonly<Record<TimeOfDay, number>> = { dawn: 0.8, morning: 2.5, day: 5.5, sunset: 11.2, dusk: 11.7, night: 11.9 }
+
+export function daylightFor(timeOfDay: TimeOfDay): Daylight {
+  return daylightAt(hoursSinceSunriseAt[timeOfDay])
 }
 
 export function daylightAt(hoursSinceSunrise: number): Daylight {
