@@ -190,9 +190,11 @@ export class RoomMaterials {
       map: colours,
       metalnessMap: surface,
       roughnessMap: surface,
+      clearcoatMap: surface,
       metalness: 1,
       roughness: 1,
       clearcoat: 0.6,
+      clearcoatRoughness: 0.1,
       envMap: this.reflections,
       envMapIntensity: 1.4,
     })

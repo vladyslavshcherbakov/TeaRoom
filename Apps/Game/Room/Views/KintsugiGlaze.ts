@@ -2,11 +2,28 @@ import { bowlProfile } from './Carried/BowlProfile.ts'
 
 const canvasWidth = 1024
 const canvasHeight = 512
-const glazeBlue = '#2b54a0'
-const deepGlazeBlue = '#1d3b78'
+const lapisBlue: Rgb = [2, 6, 38]
+const paleRunBlue: Rgb = [39, 85, 190]
+const bareClay: Rgb = [82, 50, 27]
+const darkClay: Rgb = [40, 23, 13]
+const glazeRoughness = 0.08
+const clayRoughness = 0.9
+const bareClayUpToProfileIndex = 3.2
+const bareClayEdgeWobblePx = 6
+const bareClayEdgeWavelengthPx = 30
+const glazeCloudsAcross = 8
+const glazeCloudShare = 0.2
+const runWavelengthPx = 9
+const runLengthWavelengthPx = 23
+const shortestRunPx = 20
+const runLengthSpreadPx = 120
+const runsFromShare = 0.5
+const runFullStrengthShare = 0.75
+const thinGlazeAtTheRimPx = 10
+const lapisShowingThroughShare = 0.15
+const paleRunShare = 0.75
 const goldEdge = '#b9892c'
 const goldMiddle = '#f2cf73'
-const glazeSurface = 'rgb(0, 90, 0)'
 const goldSurface = 'rgb(0, 35, 255)'
 const seamWidthMetres = 0.0022
 const seamHighlightWidthMetres = 0.0008
@@ -29,6 +46,7 @@ type DiscPoint = { readonly x: number; readonly y: number }
 type SurfacePoint = { readonly turn: number; readonly shareToTheCentre: number }
 type Side = 'inside' | 'outside'
 type CanvasPoint = { readonly x: number; readonly y: number }
+type Rgb = readonly [number, number, number]
 
 export type KintsugiGlaze = {
   readonly colours: HTMLCanvasElement
@@ -41,6 +59,8 @@ const rimIndex = bowlProfile.reduce((highest, point, index) => (point.y > (bowlP
 const rimLength = profileLengths[rimIndex] ?? 0
 const insideLength = profileLength - rimLength
 const discRadius = insideLength
+const rimY = canvasPointAt(0, rimLength).y
+const footY = (1 - bareClayUpToProfileIndex / (bowlProfile.length - 1)) * canvasHeight
 
 export function paintKintsugi(): KintsugiGlaze {
   const cracks = cracksOfTheBreak()
@@ -51,12 +71,7 @@ export function paintKintsugi(): KintsugiGlaze {
 function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[]): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
   if (context === null) return canvas
-  const glaze = context.createLinearGradient(0, 0, 0, canvasHeight)
-  glaze.addColorStop(0, deepGlazeBlue)
-  glaze.addColorStop(0.5, glazeBlue)
-  glaze.addColorStop(1, deepGlazeBlue)
-  context.fillStyle = glaze
-  context.fillRect(0, 0, canvasWidth, canvasHeight)
+  paintEveryPixel(context, (x, y) => (isBareClayAt(x, y) ? mixed(bareClay, darkClay, clouds(x, y, glazeCloudsAcross * 3)) : ruriGlazeAt(x, y)))
   fillSeams(context, cracks, seamWidthMetres, goldEdge)
   fillPatch(context, patch, goldMiddle, goldEdge)
   fillSeams(context, cracks, seamHighlightWidthMetres, goldMiddle)
@@ -66,11 +81,76 @@ function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly
 function paintSurface(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[]): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
   if (context === null) return canvas
-  context.fillStyle = glazeSurface
-  context.fillRect(0, 0, canvasWidth, canvasHeight)
+  paintEveryPixel(context, (x, y) => (isBareClayAt(x, y) ? [0, Math.round(255 * clayRoughness), 0] : [255, Math.round(255 * glazeRoughness), 0]))
   fillSeams(context, cracks, seamWidthMetres, goldSurface)
   fillPatch(context, patch, goldSurface, goldSurface)
   return canvas
+}
+
+function ruriGlazeAt(x: number, y: number): Rgb {
+  const run = valueNoise(x / runWavelengthPx, 0.5, canvasWidth / runWavelengthPx)
+  const runLength = shortestRunPx + runLengthSpreadPx * valueNoise(x / runLengthWavelengthPx, 7.5, canvasWidth / runLengthWavelengthPx) ** 2
+  const fromTheRim = Math.abs(y - rimY)
+  const runStrength = run > runsFromShare ? Math.min(1, (run - runsFromShare) / (runFullStrengthShare - runsFromShare)) : 0
+  const runShare = runStrength * Math.sqrt(Math.max(0, 1 - fromTheRim / runLength))
+  const thinAtTheRim = Math.exp(-fromTheRim / thinGlazeAtTheRimPx)
+  return mixed(lapisBlue, paleRunBlue, lapisShowingThroughShare + glazeCloudShare * clouds(x, y, glazeCloudsAcross) + paleRunShare * Math.max(runShare, thinAtTheRim))
+}
+
+function isBareClayAt(x: number, y: number): boolean {
+  const wobble = bareClayEdgeWobblePx * valueNoise(x / bareClayEdgeWavelengthPx, 3, canvasWidth / bareClayEdgeWavelengthPx)
+  return y > footY - wobble
+}
+
+function paintEveryPixel(context: CanvasRenderingContext2D, colourAt: (x: number, y: number) => Rgb): void {
+  const image = context.createImageData(canvasWidth, canvasHeight)
+  for (let y = 0; y < canvasHeight; y += 1) {
+    for (let x = 0; x < canvasWidth; x += 1) {
+      const [red, green, blue] = colourAt(x, y)
+      const index = (y * canvasWidth + x) * 4
+      image.data[index] = red
+      image.data[index + 1] = green
+      image.data[index + 2] = blue
+      image.data[index + 3] = 255
+    }
+  }
+  context.putImageData(image, 0, 0)
+}
+
+function mixed(from: Rgb, to: Rgb, share: number): Rgb {
+  const clamped = Math.min(1, Math.max(0, share))
+  return [from[0] + (to[0] - from[0]) * clamped, from[1] + (to[1] - from[1]) * clamped, from[2] + (to[2] - from[2]) * clamped]
+}
+
+function clouds(x: number, y: number, across: number): number {
+  let sum = 0
+  let weight = 0.5
+  let frequency = across
+  for (let octave = 0; octave < 4; octave += 1) {
+    sum += weight * valueNoise((x / canvasWidth) * frequency, (y / canvasHeight) * frequency, frequency)
+    weight /= 2
+    frequency *= 2
+  }
+  return sum / 0.9375
+}
+
+function valueNoise(x: number, y: number, period: number): number {
+  const cellX = Math.floor(x)
+  const cellY = Math.floor(y)
+  const alongX = smoothed(x - cellX)
+  const alongY = smoothed(y - cellY)
+  const wrapped = (cell: number) => ((cell % period) + period) % period
+  const topLeft = pseudoRandom(wrapped(cellX) * 157 + cellY * 311)
+  const topRight = pseudoRandom(wrapped(cellX + 1) * 157 + cellY * 311)
+  const bottomLeft = pseudoRandom(wrapped(cellX) * 157 + (cellY + 1) * 311)
+  const bottomRight = pseudoRandom(wrapped(cellX + 1) * 157 + (cellY + 1) * 311)
+  const top = topLeft + (topRight - topLeft) * alongX
+  const bottom = bottomLeft + (bottomRight - bottomLeft) * alongX
+  return top + (bottom - top) * alongY
+}
+
+function smoothed(share: number): number {
+  return share * share * (3 - 2 * share)
 }
 
 function newCanvas(): { canvas: HTMLCanvasElement; context: CanvasRenderingContext2D | null } {
