@@ -26,7 +26,6 @@ const faucetPostAboveTheSpoutMetres = 0.04
 const faucetTouchAreaWidthMetres = 0.2
 const faucetTouchAreaAboveTheCounterMetres = 0.12
 const faucetTouchAreaBeyondTheFaucetMetres = 0.08
-const sinkPlateMetres = 0.004
 const reachOfFurnitureMetres = 0.35
 const heaterGlowColour = new THREE.Color('#e0603a')
 const heaterGlowIntensity = 0.8
@@ -229,13 +228,13 @@ export class RoomModel {
     const { x, z, width, depth, floorHeight } = sinkBasin
     const wallHeight = counterHeight - floorHeight
     const wallY = floorHeight + wallHeight / 2
-    const floor = this.plainBox('sinkHollow', width, sinkPlateMetres, depth, { x, y: floorHeight + sinkPlateMetres / 2, z })
+    const floor = this.plainBox('sinkHollow', width, sinkBasin.plateMetres, depth, { x, y: floorHeight + sinkBasin.plateMetres / 2, z })
     return [
       floor,
-      this.plainBox('sinkWall', width, wallHeight, sinkPlateMetres, { x, y: wallY, z: z - depth / 2 + sinkPlateMetres / 2 }),
-      this.plainBox('sinkWall', width, wallHeight, sinkPlateMetres, { x, y: wallY, z: z + depth / 2 - sinkPlateMetres / 2 }),
-      this.plainBox('sinkWall', sinkPlateMetres, wallHeight, depth, { x: x - width / 2 + sinkPlateMetres / 2, y: wallY, z }),
-      this.plainBox('sinkWall', sinkPlateMetres, wallHeight, depth, { x: x + width / 2 - sinkPlateMetres / 2, y: wallY, z }),
+      this.plainBox('sinkWall', width, wallHeight, sinkBasin.plateMetres, { x, y: wallY, z: z - depth / 2 + sinkBasin.plateMetres / 2 }),
+      this.plainBox('sinkWall', width, wallHeight, sinkBasin.plateMetres, { x, y: wallY, z: z + depth / 2 - sinkBasin.plateMetres / 2 }),
+      this.plainBox('sinkWall', sinkBasin.plateMetres, wallHeight, depth, { x: x - width / 2 + sinkBasin.plateMetres / 2, y: wallY, z }),
+      this.plainBox('sinkWall', sinkBasin.plateMetres, wallHeight, depth, { x: x + width / 2 - sinkBasin.plateMetres / 2, y: wallY, z }),
     ]
   }
 

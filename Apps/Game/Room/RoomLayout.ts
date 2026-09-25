@@ -84,7 +84,7 @@ export function puddleRadiusMetres(puddleShare: number): number {
 }
 
 export const faucetSpout: WorldPoint = { x: -1.45, y: 1.3, z: -2.72 }
-export const sinkBasin = { placeId: 'counter', x: -1.45, z: -2.68, width: 0.36, depth: 0.34, floorHeight: 0.82 }
+export const sinkBasin = { placeId: 'counter', x: -1.45, z: -2.68, width: 0.36, depth: 0.34, floorHeight: 0.816, plateMetres: 0.004 }
 
 export const itemSpots: readonly ItemSpot[] = [
   { id: 'faucet', shape: 'faucet', position: { x: -1.45, y: 0.9, z: -2.9 } },

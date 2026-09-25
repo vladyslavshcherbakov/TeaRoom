@@ -3,6 +3,7 @@ import test from 'node:test'
 import * as THREE from 'three'
 import { steepestTiltDegrees } from '../../../Apps/Game/Room/AimedPour.ts'
 import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
+import { sinkBasin } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Views/Carried/CarriedModel.ts'
 import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
@@ -11,7 +12,9 @@ import { overflowSideFromTheGaugeRadians, overflowStreamRadiusMetres } from '../
 import type { SurfaceMaterials } from '../../../Apps/Game/Room/Views/RoomMaterials.ts'
 import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
 
 const teaTableTopMetres = 0.42
@@ -65,6 +68,12 @@ test('fire_ofEveryShape_isDrawnExactlyWhenTheItemCanCharAndTheTableSaysHowFar', 
     assert.equal(model.charTo !== null, hasFire, model.itemId)
     assert.equal(charringByItem[model.itemId] !== undefined, hasFire, model.itemId)
   }
+})
+
+test('itemInTheSink_standsOnTheTopOfTheSinksFloorPlate', () => {
+  const sinkSpot = definitionIn(defaultCatalog, 'rooms', 'quietRoom').tap.sinkSpot
+
+  assertNear(sinkSpot.y, sinkBasin.floorHeight + sinkBasin.plateMetres)
 })
 
 test('heldItem_ofEveryShapeInEitherHand_staysInsideAPortraitPhoneScreen', () => {
