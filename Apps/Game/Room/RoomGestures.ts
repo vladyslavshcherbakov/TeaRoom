@@ -44,6 +44,15 @@ type InspectionPinch = {
   readonly magnificationAtStart: number
 }
 
+type Touch =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'pressing'; readonly start: ScreenPoint; hold: Hold | null }
+  | { readonly kind: 'pinching'; readonly pinch: Pinch }
+  | { readonly kind: 'aiming'; readonly finger: AimingFinger }
+  | { readonly kind: 'pinchingTheInspectedItem'; readonly pinch: InspectionPinch }
+
+const noTouch: Touch = { kind: 'none' }
+
 const tapSlopPixels = 12
 const holdSecondsThatInspectAnItem = 1
 
@@ -54,11 +63,7 @@ export class RoomGestures {
   private readonly log: RoomLog
   private readonly fingersOnTheRoom = new Map<number, ScreenPoint>()
   private readonly fingersOnTheInspectedItem = new Map<number, FingerOnTheInspectedItem>()
-  private pressStart: ScreenPoint | null = null
-  private pinch: Pinch | null = null
-  private aimingFinger: AimingFinger | null = null
-  private hold: Hold | null = null
-  private inspectionPinch: InspectionPinch | null = null
+  private touch: Touch = noTouch
 
   constructor(play: RoomPlay, zoom: CameraZoom, screen: ScreenReader, log: RoomLog) {
     this.play = play
@@ -73,35 +78,37 @@ export class RoomGestures {
     this.fingersOnTheRoom.set(pointerId, point)
     if (this.fingersOnTheRoom.size === 2) return this.startPinching()
     if (this.fingersOnTheRoom.size > 2) return
-    this.pressStart = point
+    const press = { kind: 'pressing', start: point, hold: null } satisfies Touch
+    this.touch = press
     const target = this.screen.tapTargetAt(point)
     this.play.pressStarted(target)
     const heldHandIndex = this.play.handHoldingWhatIsPressed(target)
-    if (heldHandIndex !== null) this.startHolding(pointerId, heldHandIndex)
+    if (heldHandIndex !== null) this.startHolding(press, pointerId, heldHandIndex)
   }
 
   fingerMoved(pointerId: number, point: ScreenPoint): void {
-    if (pointerId === this.aimingFinger?.pointerId) return this.aimingFingerMoved(this.aimingFinger, point)
+    const touch = this.touch
+    if (touch.kind === 'aiming' && pointerId === touch.finger.pointerId) return this.aimingFingerMoved(touch.finger, point)
     const fingerOnTheInspectedItem = this.fingersOnTheInspectedItem.get(pointerId)
     if (fingerOnTheInspectedItem !== undefined) return this.inspectingFingerMoved(fingerOnTheInspectedItem, point)
     if (this.fingersOnTheRoom.has(pointerId)) this.fingersOnTheRoom.set(pointerId, point)
-    if (this.pinch !== null) return this.keepPinching(this.pinch)
-    const start = this.pressStart
-    if (start === null) return
-    const distanceFromTheStart = distanceBetween(start, point)
+    if (touch.kind === 'pinching') return this.keepPinching(touch.pinch)
+    if (touch.kind !== 'pressing') return
+    const distanceFromTheStart = distanceBetween(touch.start, point)
     if (distanceFromTheStart <= tapSlopPixels) return
-    this.cancelTheHold(`the finger moved ${Math.round(distanceFromTheStart)} px`)
+    this.cancelTheHold(touch, `the finger moved ${Math.round(distanceFromTheStart)} px`)
     this.play.pressMovedAway()
     this.play.pressMovedOver(this.screen.tapTargetAt(point))
   }
 
   fingerUp(pointerId: number): void {
-    if (pointerId === this.aimingFinger?.pointerId) return this.aimingFingerUp(this.aimingFinger)
+    const touch = this.touch
+    if (touch.kind === 'aiming' && pointerId === touch.finger.pointerId) return this.aimingFingerUp(touch.finger)
     if (this.fingersOnTheInspectedItem.has(pointerId)) return this.inspectingFingerUp(pointerId)
     this.fingersOnTheRoom.delete(pointerId)
-    if (this.pinch !== null && this.fingersOnTheRoom.size < 2) this.stopPinching()
-    this.cancelTheHold(`the finger lifted before ${holdSecondsThatInspectAnItem} s, so the press is a tap`)
-    this.pressStart = null
+    if (touch.kind === 'pinching' && this.fingersOnTheRoom.size < 2) this.stopPinching()
+    if (touch.kind === 'pressing') this.cancelTheHold(touch, `the finger lifted before ${holdSecondsThatInspectAnItem} s, so the press is a tap`)
+    if (touch.kind === 'pressing' || touch.kind === 'pinching') this.touch = noTouch
     this.play.pressEnded()
   }
 
@@ -112,31 +119,31 @@ export class RoomGestures {
   }
 
   advance(seconds: number): void {
-    const hold = this.hold
+    const touch = this.touch
+    const hold = touch.kind === 'pressing' ? touch.hold : null
     if (hold === null) return
     hold.heldSeconds += seconds
     if (hold.heldSeconds < holdSecondsThatInspectAnItem) return
-    this.hold = null
     this.inspectFromTheHold(hold)
   }
 
-  private startHolding(pointerId: number, handIndex: HandIndex): void {
-    this.hold = { pointerId, handIndex, heldSeconds: 0 }
+  private startHolding(press: Extract<Touch, { kind: 'pressing' }>, pointerId: number, handIndex: HandIndex): void {
+    press.hold = { pointerId, handIndex, heldSeconds: 0 }
     this.log(`hold on hand ${handIndex} started: ${holdSecondsThatInspectAnItem} s held still inspects its item`)
   }
 
-  private cancelTheHold(reason: string): void {
-    const hold = this.hold
+  private cancelTheHold(press: Extract<Touch, { kind: 'pressing' }>, reason: string): void {
+    const hold = press.hold
     if (hold === null) return
-    this.hold = null
+    press.hold = null
     this.log(`hold on hand ${hold.handIndex} cancelled after ${hold.heldSeconds.toFixed(1)} s: ${reason}`)
   }
 
   private inspectFromTheHold(hold: Hold): void {
+    this.touch = noTouch
     const fingerPoint = this.fingersOnTheRoom.get(hold.pointerId)
     if (fingerPoint === undefined) return this.log(`hold on hand ${hold.handIndex} ended with no finger of it on the screen, nothing is inspected`)
     this.fingersOnTheRoom.delete(hold.pointerId)
-    this.pressStart = null
     this.play.handPressHeld(hold.handIndex, hold.heldSeconds)
     if (this.play.inspectionView === null) return
     this.fingersOnTheInspectedItem.set(hold.pointerId, { start: fingerPoint, last: fingerPoint, mayBeATap: false })
@@ -152,7 +159,7 @@ export class RoomGestures {
     const previous = finger.last
     finger.last = point
     if (distanceBetween(finger.start, point) > tapSlopPixels) finger.mayBeATap = false
-    if (this.inspectionPinch !== null) return this.keepPinchingTheInspectedItem(this.inspectionPinch)
+    if (this.touch.kind === 'pinchingTheInspectedItem') return this.keepPinchingTheInspectedItem(this.touch.pinch)
     if (this.fingersOnTheInspectedItem.size > 1) return
     this.play.inspectionTurnedBy({ x: point.x - previous.x, y: point.y - previous.y })
   }
@@ -160,7 +167,7 @@ export class RoomGestures {
   private inspectingFingerUp(pointerId: number): void {
     const finger = this.fingersOnTheInspectedItem.get(pointerId)
     this.fingersOnTheInspectedItem.delete(pointerId)
-    if (this.inspectionPinch !== null && this.fingersOnTheInspectedItem.size < 2) this.stopPinchingTheInspectedItem()
+    if (this.touch.kind === 'pinchingTheInspectedItem' && this.fingersOnTheInspectedItem.size < 2) this.stopPinchingTheInspectedItem()
     if (finger === undefined || !finger.mayBeATap) return
     this.play.inspectionTapped(this.screen.tapTargetAt(finger.start))
   }
@@ -168,7 +175,7 @@ export class RoomGestures {
   private startPinchingTheInspectedItem(): void {
     for (const finger of this.fingersOnTheInspectedItem.values()) finger.mayBeATap = false
     const magnificationAtStart = this.play.inspectionView?.magnification ?? 1
-    this.inspectionPinch = { fingerGapAtStart: this.gapBetweenFingersOnTheInspectedItem(), magnificationAtStart }
+    this.touch = { kind: 'pinchingTheInspectedItem', pinch: { fingerGapAtStart: this.gapBetweenFingersOnTheInspectedItem(), magnificationAtStart } }
   }
 
   private keepPinchingTheInspectedItem(pinch: InspectionPinch): void {
@@ -176,7 +183,7 @@ export class RoomGestures {
   }
 
   private stopPinchingTheInspectedItem(): void {
-    this.inspectionPinch = null
+    this.touch = noTouch
     this.play.inspectionPinchEnded()
   }
 
@@ -185,8 +192,8 @@ export class RoomGestures {
   }
 
   private startPinching(): void {
-    this.cancelTheHold('a second finger touched the screen')
-    this.pinch = { fingerGapAtStart: gapBetweenTheFirstTwoOf([...this.fingersOnTheRoom.values()]), distanceShareAtStart: this.zoom.distanceShare }
+    if (this.touch.kind === 'pressing') this.cancelTheHold(this.touch, 'a second finger touched the screen')
+    this.touch = { kind: 'pinching', pinch: { fingerGapAtStart: gapBetweenTheFirstTwoOf([...this.fingersOnTheRoom.values()]), distanceShareAtStart: this.zoom.distanceShare } }
     this.play.pressMovedAway()
   }
 
@@ -195,13 +202,13 @@ export class RoomGestures {
   }
 
   private stopPinching(): void {
-    this.pinch = null
+    this.touch = noTouch
     this.log(`pinched the camera to ${this.zoom.distanceShare.toFixed(2)} of its distance in the ${this.play.view.kind} view`)
   }
 
   private aimingFingerDown(pointerId: number, point: ScreenPoint): void {
-    if (this.aimingFinger !== null) return this.log(`finger ${pointerId} ignored: another finger already aims the pour`)
-    this.aimingFinger = { pointerId, start: point, hasMoved: false }
+    if (this.touch.kind === 'aiming') return this.log(`finger ${pointerId} ignored: another finger already aims the pour`)
+    this.touch = { kind: 'aiming', finger: { pointerId, start: point, hasMoved: false } }
     this.play.pourFingerDown(this.screen.aimPointAt(point))
   }
 
@@ -211,7 +218,7 @@ export class RoomGestures {
   }
 
   private aimingFingerUp(finger: AimingFinger): void {
-    this.aimingFinger = null
+    this.touch = noTouch
     if (finger.hasMoved) return this.play.pourFingerUp()
     this.play.aimingTapped(this.screen.tapTargetAt(finger.start))
   }
