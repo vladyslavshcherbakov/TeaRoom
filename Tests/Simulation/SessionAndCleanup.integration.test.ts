@@ -220,7 +220,7 @@ test('cloth_whileLyingInThePuddle_soaksUpHalfAMillilitreASecond', () => {
 
   ritual.wait(10)
 
-  assertNear(wetMlOnEveryPlace(ritual.state), wetMlBeforeSoaking - 5 - 0.5)
+  assertNear(wetMlOnEveryPlace(ritual.state), wetMlBeforeSoaking - 5 - 1)
   assertNear(ritual.state.cloth.wetMl, 5 - 1)
 })
 
@@ -243,7 +243,7 @@ test('cloth_whenLiftedOutOfThePuddle_stopsSoakingIt', () => {
 
   ritual.wait(10)
 
-  assertNear(wetMlOnEveryPlace(ritual.state), wetMlWhenLifted - 0.5)
+  assertNear(wetMlOnEveryPlace(ritual.state), wetMlWhenLifted - 1)
 })
 
 test('cloth_whenItSoaksUpSpilledTea_isStained', () => {
