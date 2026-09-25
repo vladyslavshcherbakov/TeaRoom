@@ -264,6 +264,18 @@ test('cloth_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
   assert.equal(room.state.heater.itemIdOnTop, 'cloth')
 })
 
+test('spoon_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
+  const room = new RoomVisit()
+  room.walkTo('teaTable')
+  room.takeAndChoose('spoon')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'heater' })
+
+  assert.equal(room.state.heater.itemIdOnTop, 'spoon')
+})
+
 test('kettle_whenPutDownAtTheSinksEdge_staysInHand', () => {
   const room = new RoomVisit()
   room.walkTo('counter')

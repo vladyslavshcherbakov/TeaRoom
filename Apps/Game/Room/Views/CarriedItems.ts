@@ -11,6 +11,7 @@ import { aimOver } from './Carried/AimedVessel.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
+import { CrumblingAsh } from './Carried/CrumblingAsh.ts'
 import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidth, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
@@ -31,6 +32,7 @@ export class CarriedItems {
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
   private readonly fires: readonly ItemFire[]
+  private readonly ash: CrumblingAsh
   private readonly heaterSpot: Spot
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   readonly root = new THREE.Group()
@@ -50,7 +52,8 @@ export class CarriedItems {
     }
     this.waterStreams = new WaterStreams(materials, sinkSpot)
     this.fires = this.models.flatMap((model) => (model.look.fire === null || model.charTo === null ? [] : [new ItemFire(materials, model, model.look.fire, model.charTo)]))
-    this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), this.chosenGlow.mesh)
+    this.ash = new CrumblingAsh(materials)
+    this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), ...this.ash.meshes, this.chosenGlow.mesh)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
   }
 
@@ -59,6 +62,7 @@ export class CarriedItems {
     for (const model of this.models) showContentsOf(model, scene, this.heaterSpot)
     this.clothMaterial.color.copy(this.clothColourFor(scene.table))
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
+    this.ash.show(scene.timeSeconds)
     this.waterStreams.show(scene, this.models)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
     this.chosenGlow.show(scene, this.models)
@@ -81,6 +85,7 @@ export class CarriedItems {
     const location = itemLocationIn(scene.state, model.itemId)
     if (location === undefined) return
     if (location.kind === 'gone') {
+      if (model.root.visible) this.ash.crumble(model.root, scene.timeSeconds)
       model.root.visible = false
       return
     }

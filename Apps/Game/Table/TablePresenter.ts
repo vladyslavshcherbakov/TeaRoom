@@ -3,7 +3,8 @@ import type { TeaDefinition } from '../../../Shared/Simulation/Definitions/TeaDe
 import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/VesselDefinition.ts'
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
-import { clothItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { spoonCrumblesFromCharring } from '../../../Shared/Simulation/Physics/Heat.ts'
+import { clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
@@ -27,7 +28,7 @@ const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
 export const smoulderingFromCharring = 0.5
-const burningFromCharring = 0.8
+const clothBurnsFromCharring = 0.8
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
@@ -43,7 +44,10 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
     clothTeaStain: state.cloth.teaStain,
-    charringByItem: { [clothItemId]: { charring: state.cloth.charring, heating: clothHeatingOf(state) } },
+    charringByItem: {
+      [clothItemId]: { charring: state.cloth.charring, heating: clothHeatingOf(state) },
+      [spoonItemId]: { charring: state.spoon.charring, heating: spoonHeatingOf(state) },
+    },
     puddles: Object.entries(state.puddles).map(([placeId, puddle]) => ({ placeId, spilledAround: puddle.spilledAround === null ? null : { x: puddle.spilledAround.x, y: puddle.spilledAround.y, z: puddle.spilledAround.z }, share: puddleShareOf(puddle.wetMl) })),
   }
 }
@@ -53,13 +57,25 @@ export function puddleShareOf(wetMl: number): number {
 }
 
 function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {
-  if (!state.heater.isOn || state.heater.itemIdOnTop !== clothItemId) return 'none'
+  if (!isOnAWorkingHeater(state, clothItemId)) return 'none'
   if (state.cloth.wetMl > 0) return 'steaming'
-  const charring = state.cloth.charring
+  return heatingAsItChars(state.cloth.charring, clothBurnsFromCharring)
+}
+
+function spoonHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {
+  if (!isOnAWorkingHeater(state, spoonItemId)) return 'none'
+  return heatingAsItChars(state.spoon.charring, spoonCrumblesFromCharring)
+}
+
+function isOnAWorkingHeater(state: DeepReadonly<SessionState>, itemId: string): boolean {
+  return state.heater.isOn && state.heater.itemIdOnTop === itemId
+}
+
+function heatingAsItChars(charring: number, burnsFromCharring: number): TableViewState.Heating {
   if (charring < smokingFromCharring) return 'warming'
   if (charring < scorchingFromCharring) return 'smoking'
   if (charring < smoulderingFromCharring) return 'scorching'
-  if (charring < burningFromCharring) return 'smouldering'
+  if (charring < burnsFromCharring) return 'smouldering'
   return 'burning'
 }
 

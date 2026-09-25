@@ -28,6 +28,8 @@ export type Surface =
   | 'wetCloth'
   | 'teaStainedCloth'
   | 'charredCloth'
+  | 'charredBamboo'
+  | 'ash'
   | 'smoke'
   | 'flame'
   | 'flameCore'
@@ -94,6 +96,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   wetCloth: '#8a7c68',
   teaStainedCloth: '#f2dc96',
   charredCloth: '#2e2520',
+  charredBamboo: '#1c1714',
+  ash: '#77716b',
   smoke: '#5f5a57',
   flame: '#ff8a2a',
   flameCore: '#ffe07a',

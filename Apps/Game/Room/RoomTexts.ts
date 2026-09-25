@@ -32,6 +32,8 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return event.openSeconds >= tapRanLongFromSeconds ? [drainedLitresLine(event.drainedMl, voiceSeed)] : []
     case 'clothTakenOffTheHeater':
       return event.charring >= smoulderingFromCharring ? [text(`smoulderingClothTaken.${phraseVariantFor('smoulderingClothTaken', voiceSeed)}`)] : []
+    case 'spoonCrumbled':
+      return [text(`spoonCrumbled.${phraseVariantFor('spoonCrumbled', voiceSeed)}`)]
     case 'burntClothWashedBackToNew':
       return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
     case 'figurineAcceptedTea':

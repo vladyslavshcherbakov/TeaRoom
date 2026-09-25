@@ -141,6 +141,29 @@ test('clothOnAWorkingHeater_burnsInStagesAsItChars', () => {
   }
 })
 
+test('spoonOnAWorkingHeater_burnsFromTheCharringWhereItWouldCrumble', () => {
+  const rows = [
+    [0, 'warming'],
+    [0.035, 'smoking'],
+    [0.2, 'scorching'],
+    [0.5, 'smouldering'],
+    [0.8, 'burning'],
+  ] as const
+
+  for (const [charring, heating] of rows) {
+    assert.equal(tableViewState(stateWithTheSpoonOnAWorkingHeater(charring), catalog).charringByItem.spoon?.heating, heating, `charring ${charring}`)
+  }
+})
+
+test('spoon_offTheHeater_showsNoHeatingButKeepsItsCharring', () => {
+  const state = ritualState()
+  state.spoon.charring = 0.4
+
+  const charring = tableViewState(state, catalog).charringByItem.spoon
+
+  assert.deepEqual(charring, { charring: 0.4, heating: 'none' })
+})
+
 test('liquor_whenBrewed_isLessSeeThroughThanWater', () => {
   const water = vesselView(stateWithLiquid('cup1', { strength: 0 }), 'cup1')?.liquorOpacity ?? 1
   const tea = vesselView(stateWithLiquid('cup1', { strength: 60 }), 'cup1')?.liquorOpacity ?? 0
@@ -153,6 +176,14 @@ function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
   state.heater.isOn = true
   state.heater.itemIdOnTop = 'cloth'
   state.cloth.charring = charring
+  return state
+}
+
+function stateWithTheSpoonOnAWorkingHeater(charring: number): SessionState {
+  const state = ritualState()
+  state.heater.isOn = true
+  state.heater.itemIdOnTop = 'spoon'
+  state.spoon.charring = charring
   return state
 }
 

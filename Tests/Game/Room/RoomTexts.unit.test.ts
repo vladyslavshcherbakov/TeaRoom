@@ -34,6 +34,13 @@ test('caption_ofAClothTakenOffTheHeaterBeforeItSmoulders_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.49 }], 7), [])
 })
 
+test('caption_ofASpoonThatCrumbled_teachesALesson', () => {
+  const lines = captionLinesFor([{ type: 'spoonCrumbled', gramsLost: 2 }], 7)
+
+  assert.equal(lines.length, 1)
+  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('spoonCrumbled.') && line === lines[0]), lines.join(' / '))
+})
+
 test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 7), [])
 })
