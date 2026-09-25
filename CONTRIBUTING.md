@@ -93,7 +93,7 @@ The reference mechanic is pouring: `Physics/Pouring.ts`, `Ritual/PouringCommands
 
 - Integration tests run the real `RitualSession` over `Tests/Support/TestCatalog.ts`, whose round numbers make expected values checkable by hand. Its vessels do not cool unless a test asks for cooling.
 - Content tests run the real catalog.
-- Room tests in `Tests/Game/Room/` drive `RoomNavigator` and `RoomPlay` with taps and presses, `RoomPlay` over a real session in the quiet room.
+- Room tests in `Tests/Game/Room/` drive `RoomNavigator` and `RoomPlay` with taps and presses, `RoomPlay` over a real session in the quiet room through `Tests/Support/TestRoom.ts`, one file for each feature of the room. `onTopOf` there names a place on a piece of furniture from the quiet room's layout.
 - Unit tests are written only for a decision table that has stopped moving.
 - End-to-end UI tests in `Tests/Browser/` play the built site with Playwright on iPhone WebKit and Android Chromium, and read the logs from the console, so the game needs no test hooks.
 - CI runs `Scripts/test.sh` and `Scripts/test-ui.sh` on every push and pull request.

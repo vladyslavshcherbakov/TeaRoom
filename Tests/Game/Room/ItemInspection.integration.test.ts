@@ -1,16 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { CameraZoom } from '../../../Apps/Game/Room/Camera/CameraZoom.ts'
-import { RoomGestures, type ScreenPoint } from '../../../Apps/Game/Room/RoomGestures.ts'
-import { RoomPlay, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
-import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import type { ScreenPoint } from '../../../Apps/Game/Room/RoomGestures.ts'
+import type { RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import type { HandIndex } from '../../../Shared/Simulation/State/SessionState.ts'
 import { assertNear } from '../../Support/Assertions.ts'
-import { TestRitual } from '../../Support/TestRitual.ts'
-import { quietRoomLayout, type FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { TestRoom } from '../../Support/TestRoom.ts'
+import type { FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
 
-const frameSeconds = 1 / 8
-const longestWalkSeconds = 30
 const onTheFirstHand: ScreenPoint = { x: 60, y: 780 }
 const onTheSecondHand: ScreenPoint = { x: 330, y: 780 }
 const onTheFirstHandsLid: ScreenPoint = { x: 60, y: 700 }
@@ -199,20 +195,11 @@ test('inspectedItem_whenTheWheelTurnsFarUp_growsToThreeTimesItsSizeAndTheCameraS
   assert.equal(room.zoom.distanceShare, 1)
 })
 
-class InspectingRoom {
-  readonly logLines: string[] = []
-  readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, quietRoomLayout, (line) => this.logLines.push(line), 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, settingsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
-  readonly zoom = new CameraZoom()
-  readonly gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: () => ({ x: 0, z: 0 }) }, (line) => this.logLines.push(line))
-
+class InspectingRoom extends TestRoom {
   constructor(furnitureId: FurnitureId = 'shelf', itemIdsToHold: readonly string[] = ['bowl1', 'bowl2']) {
+    super({ screen: (room) => ({ tapTargetAt: (point) => tapTargetAt(room, point), aimPointAt: () => ({ x: 0, z: 0 }) }) })
     this.walkTo(furnitureId)
-    for (const itemId of itemIdsToHold) this.ritual.session.dispatch({ type: 'pickUp', itemId })
-  }
-
-  holdFor(seconds: number): void {
-    for (let heldSeconds = 0; heldSeconds < seconds; heldSeconds += frameSeconds) this.gestures.advance(frameSeconds)
+    for (const itemId of itemIdsToHold) this.session.dispatch({ type: 'pickUp', itemId })
   }
 
   inspect(point: ScreenPoint): void {
@@ -240,25 +227,18 @@ class InspectingRoom {
     this.gestures.fingerUp(2)
     this.gestures.fingerUp(1)
   }
-
-  private walkTo(furnitureId: FurnitureId): void {
-    this.play.pressStarted({ kind: 'furniture', furnitureId })
-    this.play.pressEnded()
-    for (let elapsed = 0; elapsed < longestWalkSeconds && this.play.view.kind !== 'closeUp'; elapsed += frameSeconds) this.play.advance(frameSeconds)
-    assert.deepEqual(this.play.view, { kind: 'closeUp', furnitureId }, this.logLines.join('\n'))
-  }
-
-  private tapTargetAt(point: ScreenPoint): RoomTapTarget {
-    const inspectedHandIndex = this.play.inspectionView?.handIndex ?? null
-    if (isAt(point, inTheMiddle) && inspectedHandIndex !== null) return { kind: 'hand', handIndex: inspectedHandIndex }
-    const firstHandsItemId = this.ritual.state.keeper.hands[0] ?? null
-    if (isAt(point, onTheFirstHandsLid) && firstHandsItemId !== null) return { kind: 'lid', itemId: firstHandsItemId }
-    const handIndex: HandIndex | null = isAt(point, onTheFirstHand) ? 0 : isAt(point, onTheSecondHand) ? 1 : null
-    if (handIndex !== null && handIndex !== inspectedHandIndex) return { kind: 'hand', handIndex }
-    return { kind: 'floor', point: { x: 0, z: 0 } }
-  }
 }
 
 function isAt(point: ScreenPoint, place: ScreenPoint): boolean {
   return point.x === place.x && point.y === place.y
+}
+
+function tapTargetAt(room: TestRoom, point: ScreenPoint): RoomTapTarget {
+  const inspectedHandIndex = room.play.inspectionView?.handIndex ?? null
+  if (isAt(point, inTheMiddle) && inspectedHandIndex !== null) return { kind: 'hand', handIndex: inspectedHandIndex }
+  const firstHandsItemId = room.ritual.state.keeper.hands[0] ?? null
+  if (isAt(point, onTheFirstHandsLid) && firstHandsItemId !== null) return { kind: 'lid', itemId: firstHandsItemId }
+  const handIndex: HandIndex | null = isAt(point, onTheFirstHand) ? 0 : isAt(point, onTheSecondHand) ? 1 : null
+  if (handIndex !== null && handIndex !== inspectedHandIndex) return { kind: 'hand', handIndex }
+  return { kind: 'floor', point: { x: 0, z: 0 } }
 }
