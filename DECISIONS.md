@@ -32,9 +32,7 @@ The plan is in `docs/roadmap.md`.
 
 **A refused command is an event, not an exception.** A player trying to pour from a closed thermos is part of play, and the presentation answers it materially with a spring-back. Rejected: throwing, because a gesture would need a try block and a missed catch would stop the game.
 
-**The gods judge the water when it meets the leaves, and the first drinkable sip, once per ritual.** Judging each heater switch-off would reward switching the heater on and off. The water that meets the leaves is the water the tea is made with. A sip that is too hot to drink is not judged, because the player is supposed to wait.
-
-**No single moment costs the gods more than 3 points.** The GDD requires that mistakes lower the mood slightly and never reset it.
+**The ritual has no gods yet.** The game is only brewing tea for now. The gods' mood, remarks and plaque are a future feature in `docs/game-design.md` and the roadmap, and their rules are designed together with the plaque that shows them. Rejected: keeping a mood that nothing on screen shows, because its rules could not be judged by playing.
 
 **Boiling water boils away, and only on a working heater.** A kettle forgotten on the heater loses its water slowly, so leaving it there has a visible cost that grows with time: half a minute of boiling takes a ninth of a full kettle. The rate belongs to the heater, as the heat does. A vessel leaves the heater only by being picked up, which also judges the water, so there is one way off the plate.
 
@@ -49,8 +47,6 @@ The plan is in `docs/roadmap.md`.
 ### Apps/Game/
 
 **The architecture skills' MVVM is mapped, not copied.** The scene plays the view and the view model at once: it forwards taps as commands and draws the state it is given. The presenter from those skills is `Table/TablePresenter.ts`, a pure mapping from state to presentation cues: fill, colour, steam and the water's motion. Rejected: view models per object, because a game loop that redraws every frame has no binding problem for them to solve.
-
-**The game names the gods only at an offering.** Brewing, spilling and tasting are plain acts, and a remark from the gods after each one gave away the room's mystery at once. The simulation still keeps the gods' mood and emits their remarks, and the room shows a remark only together with a figurine's response to an offering. The bench shows every remark, because it is a debug page.
 
 ### Apps/Game/Texts/
 

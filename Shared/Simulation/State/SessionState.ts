@@ -90,11 +90,6 @@ export type PuddleState = {
   spilledAround: Spot | null
 }
 
-export type GodsJudgementsMade = {
-  water: boolean
-  firstSip: boolean
-}
-
 export type SessionState = {
   phase: Phase
   elapsedSeconds: number
@@ -111,6 +106,4 @@ export type SessionState = {
   sink: SinkState
   figurines: Record<string, FigurineState>
   puddles: Record<string, PuddleState>
-  godsSatisfaction: number
-  godsJudgementsMade: GodsJudgementsMade
 }

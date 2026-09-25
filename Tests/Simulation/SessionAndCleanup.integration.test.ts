@@ -56,16 +56,6 @@ test('atmosphere_whenNotOfferedByTheRoom_isRefused', () => {
   assert.deepEqual(ritual.state.atmosphere, { timeOfDay: 'sunset', weather: 'rain' })
 })
 
-test('spill_whenLarge_theGodsPromiseToTellNoOne', () => {
-  const ritual = TestRitual.begun()
-
-  const events = ritual.pour('kettle', null, 2.5)
-
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [
-    { type: 'godsMoodChanged', delta: -1, satisfaction: 49, remark: 'weWillTellNoOne' },
-  ])
-})
-
 test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
   const wipedSlowly = ritualWithSpillOnTheTable()
   const wipedFast = ritualWithSpillOnTheTable()
@@ -120,33 +110,13 @@ test('table_whenLeftAlone_driesByItself', () => {
   assert.equal(wetMlOnEveryPlace(ritual.state), 0)
 })
 
-test('ritual_whenFinishedWithADryTableAndClosedLids_pleasesTheGods', () => {
+test('ritual_whenFinished_letsTheRoomRest', () => {
   const ritual = TestRitual.begun()
 
   const events = ritual.do({ type: 'finishRitual' })
 
-  assert.deepEqual(events, [
-    { type: 'godsMoodChanged', delta: 2, satisfaction: 52, remark: 'appreciateTheCalm' },
-    { type: 'ritualFinished' },
-  ])
+  assert.deepEqual(events, [{ type: 'ritualFinished' }])
   assert.equal(ritual.state.phase, 'resting')
-})
-
-test('ritual_whenFinishedWithAWetTable_leavesTheGodsWhereTheyWere', () => {
-  const ritual = ritualWithSpillOnTheTable()
-
-  const events = ritual.do({ type: 'finishRitual' })
-
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [])
-})
-
-test('ritual_whenFinishedWithTheCaddyOpen_leavesTheGodsWhereTheyWere', () => {
-  const ritual = TestRitual.begun()
-  ritual.do({ type: 'openCaddy' })
-
-  const events = ritual.do({ type: 'finishRitual' })
-
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [])
 })
 
 test('ritual_whenFinishedWithTheHeaterOn_switchesItOff', () => {

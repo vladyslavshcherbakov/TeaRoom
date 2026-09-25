@@ -2,7 +2,7 @@
 
 These are the rules the simulation core follows. The numbers that differ per tea, vessel, heater, figurine or room live in the content definitions under `Shared/Content/`. The numbers that are the same everywhere are named constants next to the rule that uses them.
 
-Units: temperature in °C, volume in millilitres, leaves in grams, time in seconds. Strength, bitterness, the gods' satisfaction and a figurine's satisfaction run from 0 to 100.
+Units: temperature in °C, volume in millilitres, leaves in grams, time in seconds. Strength, bitterness and a figurine's satisfaction run from 0 to 100.
 
 ## Time
 
@@ -32,7 +32,7 @@ When the water on the heater first reaches the lower edge of the chosen tea's go
 
 ## Judging water
 
-Each tea defines an ideal temperature, a good range and a wider acceptable range. Water is `ideal` inside the good range, `slightlyCool` or `slightlyHot` between the good and acceptable ranges, and `tooCool` or `tooHot` outside them. Switching the heater off, or lifting the kettle off a working heater, reports this judgement. The gods judge the water only once per ritual, at the moment leaves and water first meet, because that is the water the tea is actually made with.
+Each tea defines an ideal temperature, a good range and a wider acceptable range. Water is `ideal` inside the good range, `slightlyCool` or `slightlyHot` between the good and acceptable ranges, and `tooCool` or `tooHot` outside them. Switching the heater off, or lifting the kettle off a working heater, reports this judgement.
 
 ## Pouring
 
@@ -78,32 +78,11 @@ A sip takes 20 ml, and it says whether the bowl held leaves. The verdict has fou
 
 A bowl set before a figurine goes entirely into its saucer. Each figurine accepts one offering per ritual. The figurine's satisfaction changes by 4 for any tea, plus 4 per point of its hidden affinity for that tea, plus 4 when the strength is in its preferred range, minus 4 when the bitterness is 45 or more. Near-plain water earns 1. The figurine answers with `glow` from 12, `subtle` from 6, and `barely` below that.
 
-## The gods
-
-The gods start at 50 in 0.1. Persistence arrives in 0.9.
-
-| Moment | Change | Remark |
-|---|---|---|
-| Water meets leaves, `ideal` | +3 | `temperatureIsPerfect` |
-| Water meets leaves, slightly off | 0 | `pretendNotToNotice` |
-| Water meets leaves, too far off | −1 | `understandProbably` |
-| First sip with a `contentSigh` | +4 | `pleasedWithTheTea` |
-| First sip with a `shrug` | 0 | `pretendNotToNotice` |
-| First sip with a `grimace` | −1 | `understandProbably` |
-| First sip with a `strongGrimace` | −2 | `veryOverbrewed` |
-| First sip too hot to drink | nothing yet: the next sip is the first | — |
-| A pour that spilled 5 ml or more | −1 | `weWillTellNoOne` |
-| An offering the figurine liked | + half its satisfaction gain, rounded up | `acceptTheOffering` |
-| An offering that gained the figurine nothing | 0 | `understandProbably` |
-| Finishing with a dry table and every lid closed | +2 | `appreciateTheCalm` |
-
-No single moment costs more than 3 points, and the value stays between 0 and 100.
-
 ## The table
 
 Spilled liquid makes a puddle on the place where it falls: around the vessel it was poured at when that vessel stands on a surface, otherwise where the keeper stands. Each place has its own puddle, and a puddle that dries up is gone. The wet area evaporates at 0.1 ml per second, so a full puddle of 30 ml dries by itself in five minutes. A wipe over the whole table removes 80% of the wetness when the stroke is 50 cm/s or slower, 30% at 200 cm/s or faster, and a share in between for speeds in between. A wipe over a part of the table removes `1 − (1 − that share)^part`, so many short wipes remove as much as one long wipe over the same area. The puddle has a tea strength, mixed by volume from every spill. The cloth takes in the water it wipes up, and tea stains it: 20 ml of the strongest tea stain it fully, and weaker tea or less of it stains it in proportion. A clean cloth dries at 0.1 ml per second, and a fully stained one at 0.03 ml per second, with a stain in between drying in between. A cloth in the sink under the running tap loses a full stain in 3 seconds and soaks up the tap water, up to the 40 ml it holds. The keeper wrings it out as it leaves the sink, down to 8 ml.
 
-The cloth may lie on the heater, like the kettle. On a working heater a wet cloth steams dry at 2 ml per second, and a dry one chars, fully in a minute. Charring stops when the heater is off or the cloth is lifted, and what is charred stays charred. The tap washes a full charring out in 5 seconds, and the cloth is as good as new. The gods do not care about the cloth. A cloth laid down in the puddle soaks it up at 0.5 ml per second while it lies there. It stops when the puddle is gone, when it holds 40 ml, or when it is picked up. The presentation says when the cloth lands in the puddle with `soakUpThePuddle`, because only the room knows where the puddle is. The command needs the cloth lying on a place's surface, the keeper there, and a puddle on that place.
+The cloth may lie on the heater, like the kettle. On a working heater a wet cloth steams dry at 2 ml per second, and a dry one chars, fully in a minute. Charring stops when the heater is off or the cloth is lifted, and what is charred stays charred. The tap washes a full charring out in 5 seconds, and the cloth is as good as new. A cloth laid down in the puddle soaks it up at 0.5 ml per second while it lies there. It stops when the puddle is gone, when it holds 40 ml, or when it is picked up. The presentation says when the cloth lands in the puddle with `soakUpThePuddle`, because only the room knows where the puddle is. The command needs the cloth lying on a place's surface, the keeper there, and a puddle on that place.
 
 ## Phases
 

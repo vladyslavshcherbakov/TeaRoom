@@ -1,12 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { remarkText, sipText } from '../../../Apps/Game/Table/TableTexts.ts'
+import { sipText } from '../../../Apps/Game/Table/TableTexts.ts'
 import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
-
-test('godsRemark_readsAsADeadpanLine', () => {
-  assert.equal(remarkText('weWillTellNoOne'), 'We will tell no one.')
-  assert.equal(remarkText('pretendNotToNotice'), 'The gods pretend not to notice.')
-})
 
 test('sipLine_answersTheVerdictWithOneOfItsFeelingsPhrases', () => {
   const rows = [

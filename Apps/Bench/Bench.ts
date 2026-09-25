@@ -252,8 +252,8 @@ class RitualBench {
   }
 
   private sessionSummary(): string {
-    const { phase, atmosphere, teaId, godsSatisfaction, elapsedSeconds } = this.session.state
-    return `${phase} · ${teaId ?? 'no tea'} · ${atmosphere.timeOfDay}, ${atmosphere.weather} · gods ${godsSatisfaction} · ${elapsedSeconds.toFixed(0)} s`
+    const { phase, atmosphere, teaId, elapsedSeconds } = this.session.state
+    return `${phase} · ${teaId ?? 'no tea'} · ${atmosphere.timeOfDay}, ${atmosphere.weather} · ${elapsedSeconds.toFixed(0)} s`
   }
 
   private vesselSummary(vesselId: string): string {

@@ -1,14 +1,13 @@
 import type { OfferingResponse } from '../../../Shared/Simulation/Judgement/OfferingJudgement.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
-import { remarkText, sipText } from '../Table/TableTexts.ts'
+import { sipText } from '../Table/TableTexts.ts'
 import { phraseVariantAtTurn, phraseVariantFor, text, textOrFallback, textWith } from '../Texts/Texts.ts'
 import type { RoomRemark } from './RoomPlay.ts'
 
 const spillTheKeeperRemarksOnMl = 5
 
 export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
-  const isAnOffering = events.some((event) => event.type === 'figurineAcceptedTea')
-  return events.flatMap((event) => (event.type === 'godsMoodChanged' && !isAnOffering ? [] : captionLinesOf(event, voiceSeed)))
+  return events.flatMap((event) => captionLinesOf(event, voiceSeed))
 }
 
 export function roomRemarkLine(remark: RoomRemark, voiceSeed: number): string {
@@ -27,8 +26,6 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
     case 'figurineAcceptedTea':
       return [offeringResponseText(event.figurineId, event.response)]
-    case 'godsMoodChanged':
-      return [remarkText(event.remark)]
     default:
       return []
   }

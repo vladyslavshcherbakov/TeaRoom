@@ -21,7 +21,7 @@ Before designing a new feature, read `docs/world-bible.md`. It holds the lore, t
 - `Definitions/` are the content types and the `Catalog`. Look definitions up with `definitionIn`.
 - `State/` is the mutable-inside, readonly-outside `SessionState`.
 - `Physics/` holds pure functions over small values: liquid, heat, pouring, brewing, the tap, the table and the cloth.
-- `Judgement/` holds pure decision tables: water, taste, offering, the gods.
+- `Judgement/` holds pure decision tables: water, taste, offering.
 - `Ritual/` holds commands, events and handlers, the fixed-step `SimulationStep`, and `RitualSession`, the only object a presentation talks to.
 
 A presentation opens a room with `RitualSession.open(catalog, roomId, log, isDevelopmentBuild)`, shows a quiet screen when the room is `unavailable`, calls `session.dispatch(command)` for each player decision and `session.advance(seconds)` once per frame, renders `session.state`, and reacts to the returned events. It never writes state.
@@ -70,7 +70,6 @@ The reference mechanic is pouring: `Physics/Pouring.ts`, `Ritual/PouringCommands
 - The simulation never reads the clock, randomness, the DOM or any browser API. Time arrives through `advance`. Randomness, when it comes, is a seeded source passed in.
 - The simulation only advances in fixed steps of `RitualSession.simulationStepSeconds`. A rule never multiplies by a frame's duration.
 - Every refusal is an `actionRefused` event with a reason. A handler never throws for a player mistake and never ignores a command silently.
-- A gods judgement that should happen once per ritual is guarded by `godsJudgementsMade`.
 - Source files use only erasable TypeScript syntax: no enums, namespaces or constructor parameter properties. Relative imports end in `.ts`.
 - Every action on an item first checks that it is within reach through `Ritual/Reach.ts`. Every action with the spoon or the cloth checks that it is in a hand, except soaking up a puddle, where the cloth lies on the surface. Offering checks that the keeper stands at the ritual place, and wiping that the keeper stands at a place with a puddle. A new action gets the same checks.
 - Every id the simulation looks up in the catalog is checked by `problemsOpeningRoom` in `Definitions/CatalogProblems.ts`. A new reference between definitions gets a check there.

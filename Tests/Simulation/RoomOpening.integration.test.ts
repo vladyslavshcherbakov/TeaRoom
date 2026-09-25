@@ -29,5 +29,5 @@ test('room_whenItsContentIsSound_opensAndLogsWhatIsOnTheTable', () => {
   const opening = RitualSession.open(testCatalog(), 'testRoom', log, false)
 
   assert.equal(opening.kind, 'opened')
-  assert.deepEqual(log.messagesAt('info'), ['t=0.000s session opened in testRoom with kettle, thermos, cup1, cup2, cup3, gods at 50'])
+  assert.deepEqual(log.messagesAt('info'), ['t=0.000s session opened in testRoom with kettle, thermos, cup1, cup2, cup3'])
 })

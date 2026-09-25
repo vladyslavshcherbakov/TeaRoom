@@ -1,7 +1,6 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
-import { godsVerdictOnFirstSip, godsVerdictOnOffering } from '../Judgement/GodsMood.ts'
 import { judgeOffering } from '../Judgement/OfferingJudgement.ts'
-import { judgeTaste, type TasteVerdict } from '../Judgement/TasteJudgement.ts'
+import { judgeTaste } from '../Judgement/TasteJudgement.ts'
 import { isEmpty, splitLiquid } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
@@ -9,7 +8,6 @@ import {
   chosenTea,
   describeLiquid,
   isInvolvedInPour,
-  letTheGodsJudge,
   note,
   refuse,
   vesselDefinitionOf,
@@ -38,7 +36,6 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
       `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}`,
   )
   draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict, cupHeldLeaves })
-  letTheGodsJudgeTheFirstSip(draft, verdict.reaction)
 }
 
 export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void {
@@ -61,15 +58,6 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   figurine.satisfaction = Math.min(100, Math.max(0, figurine.satisfaction + offering.satisfactionDelta))
   note(draft, `${figurine.id} satisfaction ${satisfactionBefore} → ${figurine.satisfaction}, response ${offering.response}`)
   draft.events.push({ type: 'figurineAcceptedTea', figurineId: figurine.id, response: offering.response })
-  letTheGodsJudge(draft, godsVerdictOnOffering(offering))
-}
-
-function letTheGodsJudgeTheFirstSip(draft: Draft, reaction: TasteVerdict['reaction']): void {
-  if (draft.state.godsJudgementsMade.firstSip) return note(draft, 'the gods already judged a sip this ritual')
-  const godsVerdict = godsVerdictOnFirstSip(reaction)
-  if (godsVerdict === null) return note(draft, 'the sip was too hot to judge, the gods wait for the next one')
-  draft.state.godsJudgementsMade.firstSip = true
-  letTheGodsJudge(draft, godsVerdict)
 }
 
 function refusalToServe(draft: Draft, cup: VesselState): RefusalReason | null {

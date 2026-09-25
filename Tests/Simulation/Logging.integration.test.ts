@@ -46,15 +46,3 @@ test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
   assert.ok(ritual.log.messagesAt('debug').some((message) => message.endsWith('pour tilted to 30.0°, 50% on target')))
   assert.ok(!ritual.log.messagesAt('info').some((message) => message.includes('pour tilted')))
 })
-
-test('secondBrewingWater_isLoggedAsNotJudgedByTheGodsAgain', () => {
-  const ritual = TestRitual.begun()
-  ritual.heatKettleTo(80)
-  ritual.addLeavesToKettle(5)
-  ritual.pour('kettle', 'cup1', 50)
-  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
-
-  ritual.pour('cup1', 'kettle', 10)
-
-  assert.ok(ritual.log.messagesAt('info').some((message) => message.endsWith('the gods already judged the brewing water this ritual')))
-})

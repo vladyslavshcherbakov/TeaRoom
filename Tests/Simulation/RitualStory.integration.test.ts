@@ -1,11 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { initialGodsSatisfaction } from '../../Shared/Simulation/State/InitialState.ts'
 import type { RitualEvent } from '../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
-test('clumsyRitual_overheatedThenWaitedThenOversteeped_stillEndsWithTheGodsNoLessContent', () => {
+test('clumsyRitual_overheatedThenWaitedThenOversteeped_isTastedAndOfferedWithoutARefusal', () => {
   const ritual = TestRitual.begun(testCatalog({ kettle: 0.003, thermos: 0.0004, cup: 0.02 }))
   const events: RitualEvent[] = []
 
@@ -29,8 +28,4 @@ test('clumsyRitual_overheatedThenWaitedThenOversteeped_stillEndsWithTheGodsNoLes
   assert.ok(['grimace', 'strongGrimace'].includes(eventsOfType(events, 'teaTasted')[0]?.verdict.reaction ?? 'none'))
   assert.equal(eventsOfType(events, 'figurineAcceptedTea').length, 1)
   assert.deepEqual(eventsOfType(events, 'actionRefused'), [])
-  assert.ok(
-    ritual.state.godsSatisfaction >= initialGodsSatisfaction,
-    `the gods fell to ${ritual.state.godsSatisfaction} from ${initialGodsSatisfaction}`,
-  )
 })

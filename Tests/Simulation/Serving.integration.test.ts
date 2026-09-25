@@ -24,18 +24,7 @@ test('sip_ofPlainWater_tastesOfNoTea', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'none')
 })
 
-test('firstSip_whenTheTeaIsGood_pleasesTheGods', () => {
-  const ritual = ritualWithTeaInCups(60)
-  ritual.waitUntilCupCoolsTo('cup1', 60)
-
-  const events = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
-
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [
-    { type: 'godsMoodChanged', delta: 4, satisfaction: 57, remark: 'pleasedWithTheTea' },
-  ])
-})
-
-test('firstSip_whenTooHot_waitsForItToCoolAndLeavesTheGodsForLater', () => {
+test('sip_whenTooHot_waitsForItToCoolAndIsEnjoyedLater', () => {
   const ritual = ritualWithTeaInCups(60, ['cup1'])
 
   const tooHotEvents = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
@@ -43,29 +32,7 @@ test('firstSip_whenTooHot_waitsForItToCoolAndLeavesTheGodsForLater', () => {
   const laterEvents = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
 
   assert.equal(eventsOfType(tooHotEvents, 'teaTasted')[0]?.verdict.reaction, 'waitsForItToCool')
-  assert.deepEqual(eventsOfType(tooHotEvents, 'godsMoodChanged'), [])
-  assert.equal(eventsOfType(laterEvents, 'godsMoodChanged')[0]?.remark, 'pleasedWithTheTea')
-})
-
-test('firstSip_whenTheTeaIsVeryOverbrewed_costsTheGodsTwoPoints', () => {
-  const ritual = ritualWithTeaInCups(300)
-  ritual.waitUntilCupCoolsTo('cup1', 60)
-
-  const events = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
-
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [
-    { type: 'godsMoodChanged', delta: -2, satisfaction: 51, remark: 'veryOverbrewed' },
-  ])
-})
-
-test('secondSip_whateverItTastesLike_leavesTheGodsAlone', () => {
-  const ritual = ritualWithTeaInCups(60)
-  ritual.waitUntilCupCoolsTo('cup1', 60)
-  ritual.do({ type: 'tasteCup', cupId: 'cup1' })
-
-  const events = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
-
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [])
+  assert.equal(eventsOfType(laterEvents, 'teaTasted')[0]?.verdict.reaction, 'contentSigh')
 })
 
 test('sip_takesTwentyMillilitresFromTheCup', () => {
@@ -92,16 +59,13 @@ test('tasting_fromTheKettle_isRefused', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'tasteCup', reason: 'notDrinkable' }])
 })
 
-test('figurine_whenOfferedATeaItLikesAtItsPreferredStrength_glowsAndPleasesTheGods', () => {
+test('figurine_whenOfferedATeaItLikesAtItsPreferredStrength_glows', () => {
   const ritual = ritualWithTeaInCups(60)
 
   const events = ritual.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'toad' })
 
   assert.deepEqual(eventsOfType(events, 'figurineAcceptedTea'), [
     { type: 'figurineAcceptedTea', figurineId: 'toad', response: 'glow' },
-  ])
-  assert.deepEqual(eventsOfType(events, 'godsMoodChanged'), [
-    { type: 'godsMoodChanged', delta: 6, satisfaction: 59, remark: 'acceptTheOffering' },
   ])
 })
 

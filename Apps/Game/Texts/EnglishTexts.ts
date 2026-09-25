@@ -84,15 +84,6 @@ export const englishTexts = {
   'tooHotToHold.3': "You have your quirks, and I like them. This one I'll sit out.",
   'tooHotToHold.4': "It's literally glowing. Even the thermos is telling you no.",
 
-  'gods.temperatureIsPerfect': 'The temperature is perfect. The gods are content.',
-  'gods.pretendNotToNotice': 'The gods pretend not to notice.',
-  'gods.understandProbably': 'The gods understand. Probably.',
-  'gods.pleasedWithTheTea': 'The gods are pleased.',
-  'gods.veryOverbrewed': 'Oversteeped. Very oversteeped.',
-  'gods.weWillTellNoOne': 'We will tell no one.',
-  'gods.acceptTheOffering': 'The offering is accepted.',
-  'gods.appreciateTheCalm': 'The gods appreciate the calm.',
-
   'offering.glow': '{figurine} glows softly.',
   'offering.subtle': '{figurine} seems pleased.',
   'offering.barely': '{figurine} barely notices.',

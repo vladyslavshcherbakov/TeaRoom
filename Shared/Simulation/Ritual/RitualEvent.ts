@@ -1,7 +1,6 @@
 import type { Atmosphere } from '../Definitions/Atmosphere.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { HandIndex } from '../State/SessionState.ts'
-import type { GodsRemark } from '../Judgement/GodsMood.ts'
 import type { OfferingResponse } from '../Judgement/OfferingJudgement.ts'
 import type { TasteVerdict } from '../Judgement/TasteJudgement.ts'
 import type { WaterJudgement } from '../Judgement/WaterJudgement.ts'
@@ -88,12 +87,6 @@ export type RitualEvent =
   | { readonly type: 'brewStarted'; readonly vesselId: string; readonly waterJudgement: WaterJudgement }
   | { readonly type: 'teaTasted'; readonly cupId: string; readonly verdict: TasteVerdict; readonly cupHeldLeaves: boolean }
   | { readonly type: 'figurineAcceptedTea'; readonly figurineId: string; readonly response: OfferingResponse }
-  | {
-      readonly type: 'godsMoodChanged'
-      readonly delta: number
-      readonly satisfaction: number
-      readonly remark: GodsRemark
-    }
   | { readonly type: 'tableWiped'; readonly wetMlLeft: number }
   | { readonly type: 'clothLaidInThePuddle' }
   | { readonly type: 'burntClothWashedBackToNew' }

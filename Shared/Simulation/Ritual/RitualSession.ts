@@ -36,7 +36,7 @@ export class RitualSession {
     this.log = log
     this.currentState = initialSessionState(catalog, roomId)
     const vesselIds = Object.keys(this.currentState.vessels).join(', ')
-    this.write('info', `session opened in ${roomId} with ${vesselIds}, gods at ${this.currentState.godsSatisfaction}`)
+    this.write('info', `session opened in ${roomId} with ${vesselIds}`)
   }
 
   static open(catalog: Catalog, roomId: string, log: RitualLog, isDevelopmentBuild: boolean): RoomOpening {

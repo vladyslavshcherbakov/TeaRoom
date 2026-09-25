@@ -1,8 +1,7 @@
-import { godsVerdictOnBrewingWater } from '../Judgement/GodsMood.ts'
 import { judgeWater } from '../Judgement/WaterJudgement.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
-import { chosenTea, describeLiquid, letTheGodsJudge, note, type Draft } from './Draft.ts'
+import { chosenTea, describeLiquid, note, type Draft } from './Draft.ts'
 
 export function startOrEndBrews(draft: Draft): void {
   for (const vessel of Object.values(draft.state.vessels)) {
@@ -22,9 +21,6 @@ function startBrew(draft: Draft, vessel: VesselState): void {
   const waterJudgement = judgeWater(vessel.liquid.temperatureC, tea)
   note(draft, `brew started: ${vessel.leaves.grams.toFixed(2)} g of ${tea.id} in ${describeLiquid(vessel)}, water judged ${waterJudgement}`)
   draft.events.push({ type: 'brewStarted', vesselId: vessel.id, waterJudgement })
-  if (draft.state.godsJudgementsMade.water) return note(draft, 'the gods already judged the brewing water this ritual')
-  draft.state.godsJudgementsMade.water = true
-  letTheGodsJudge(draft, godsVerdictOnBrewingWater(waterJudgement))
 }
 
 function endBrew(draft: Draft, vessel: VesselState): void {

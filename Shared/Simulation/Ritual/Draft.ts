@@ -1,7 +1,6 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { TeaDefinition } from '../Definitions/TeaDefinition.ts'
 import type { VesselDefinition } from '../Definitions/VesselDefinition.ts'
-import { godsSatisfactionAfter, type GodsVerdict } from '../Judgement/GodsMood.ts'
 import type { SessionState, VesselState } from '../State/SessionState.ts'
 import type { Command } from './Command.ts'
 import type { RefusalReason, RitualEvent } from './RitualEvent.ts'
@@ -43,16 +42,6 @@ export function refuse(draft: Draft, command: Command, reason: RefusalReason, de
   draft.events.push({ type: 'actionRefused', command: type, reason })
 }
 
-export function letTheGodsJudge(draft: Draft, verdict: GodsVerdict | null): void {
-  if (verdict === null) return
-  const before = draft.state.godsSatisfaction
-  draft.state.godsSatisfaction = godsSatisfactionAfter(before, verdict)
-  const delta = draft.state.godsSatisfaction - before
-  const softening = delta === verdict.delta ? '' : `, asked for ${signed(verdict.delta)}`
-  note(draft, `gods ${before} → ${draft.state.godsSatisfaction} (${signed(delta)}${softening}): ${verdict.remark}`)
-  draft.events.push({ type: 'godsMoodChanged', delta, satisfaction: draft.state.godsSatisfaction, remark: verdict.remark })
-}
-
 export function describeLiquid(vessel: VesselState): string {
   const { volumeMl, temperatureC, strength, bitterness } = vessel.liquid
   return `${vessel.id} ${volumeMl.toFixed(1)} ml at ${temperatureC.toFixed(1)} °C, strength ${strength.toFixed(0)}, bitterness ${bitterness.toFixed(0)}`
@@ -73,8 +62,4 @@ export function chosenTea(draft: Draft): TeaDefinition | null {
 export function isInvolvedInPour(draft: Draft, vesselId: string): boolean {
   const pour = draft.state.pour
   return pour !== null && (pour.sourceId === vesselId || pour.targetId === vesselId)
-}
-
-function signed(delta: number): string {
-  return delta >= 0 ? `+${delta}` : String(delta)
 }

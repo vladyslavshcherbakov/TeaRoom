@@ -1,11 +1,8 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
-import { godsVerdictOnFinishing } from '../Judgement/GodsMood.ts'
 import type { CommandOfType } from './Command.ts'
-import { letTheGodsJudge, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
-
-const tableCountsAsDryBelowMl = 1
 
 export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>): void {
   if (draft.catalog.teas[command.teaId] === undefined) {
@@ -37,20 +34,14 @@ export function finishRitual(draft: Draft): void {
     draft.events.push({ type: 'heaterSwitchedOff', waterJudgement: null })
   }
   const openLids = openLidsOf(draft)
-  const wetMl = wetMlOnEveryPlace(draft.state)
-  const isTidy = wetMl < tableCountsAsDryBelowMl && openLids.length === 0
-  note(
-    draft,
-    `ritual finished: ${wetMl.toFixed(1)} ml wet on every place, open lids: ${openLids.join(', ') || 'none'}, ${isTidy ? 'tidy' : 'not tidy'}`,
-  )
-  letTheGodsJudge(draft, godsVerdictOnFinishing(isTidy))
+  note(draft, `ritual finished: ${wetMlOnEveryPlace(draft.state).toFixed(1)} ml wet on every place, open lids: ${openLids.join(', ') || 'none'}`)
   draft.state.phase = 'resting'
   draft.events.push({ type: 'ritualFinished' })
 }
 
 export function leaveRoom(draft: Draft): void {
   draft.state.phase = 'ended'
-  note(draft, `room left after ${draft.state.elapsedSeconds.toFixed(1)} s, gods at ${draft.state.godsSatisfaction}`)
+  note(draft, `room left after ${draft.state.elapsedSeconds.toFixed(1)} s`)
   draft.events.push({ type: 'roomLeft' })
 }
 

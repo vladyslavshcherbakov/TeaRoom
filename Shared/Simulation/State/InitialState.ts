@@ -3,8 +3,6 @@ import type { RoomDefinition } from '../Definitions/RoomDefinition.ts'
 import { water } from '../Physics/Liquid.ts'
 import type { FigurineState, SessionState, VesselState } from './SessionState.ts'
 
-export const initialGodsSatisfaction = 50
-
 export function initialSessionState(catalog: Catalog, roomId: string): SessionState {
   const room = definitionIn(catalog, 'rooms', roomId)
   return {
@@ -23,8 +21,6 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     sink: { itemIdInside: null, runningWater: null, hasRunOverTheItemInside: false },
     figurines: figurinesOnTheShelf(room),
     puddles: {},
-    godsSatisfaction: initialGodsSatisfaction,
-    godsJudgementsMade: { water: false, firstSip: false },
   }
 }
 
