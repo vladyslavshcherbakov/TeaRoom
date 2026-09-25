@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { heronPaintingAspect } from '../HeronPainting.ts'
-import { koiPaintingAspect } from '../KoiPainting.ts'
+import { koiPondAspect, koiPondWidthMetres } from '../KoiPond.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import type { Surface, SurfaceMaterials } from '../RoomMaterials.ts'
@@ -55,7 +55,7 @@ const liquidTakesOnTheBowlsColourShare = 0.6
 const plainBowl = { relief: 'smooth', isRimGilded: false, painting: null } as const
 const porcelainBowl: BowlLook = { ...plainBowl, glaze: 'porcelain', liquidTint: '#f7f2e8' }
 const bowlLookById: Readonly<Record<string, BowlLook>> = {
-  bowl1: { ...plainBowl, glaze: 'whiteGlaze', liquidTint: '#eef5ff', painting: { surface: 'koiPainting', lengthMetres: 0.07, aspect: koiPaintingAspect, turnRadians: 0.6 } },
+  bowl1: { ...plainBowl, glaze: 'whiteGlaze', liquidTint: '#eef5ff', painting: { surface: 'koiPainting', lengthMetres: koiPondWidthMetres, aspect: koiPondAspect, turnRadians: 0 } },
   bowl2: { ...plainBowl, glaze: 'pearlGlaze', liquidTint: '#fbe6ec', painting: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 } },
   bowl3: { ...plainBowl, glaze: 'skyBlueGlaze', liquidTint: '#9fd0ea' },
   bowl4: { ...plainBowl, glaze: 'blueGlaze', liquidTint: '#4a6fbd' },

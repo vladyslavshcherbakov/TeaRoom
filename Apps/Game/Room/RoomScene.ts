@@ -32,6 +32,7 @@ import { SettingsStore } from './SettingsStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
 import { FullScreenButton } from './Views/FullScreenButton.ts'
+import type { KoiPond } from './Views/KoiPond.ts'
 import { Achievements } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
@@ -120,7 +121,7 @@ export class RoomScene {
   private secondsSinceTheVisitWasKept = 0
   private hasTheKeeperDied = false
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, arrival: RoomArrival, visitStore: VisitStore) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, koiPond: KoiPond, arrival: RoomArrival, visitStore: VisitStore) {
     this.session = session
     this.catalog = catalog
     this.log = log
@@ -164,7 +165,7 @@ export class RoomScene {
       },
     }, arrival.place)
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
-    const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer))
+    const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer), koiPond)
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)

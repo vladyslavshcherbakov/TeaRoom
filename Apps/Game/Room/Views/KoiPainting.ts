@@ -12,8 +12,6 @@ const scaleSpacing = 15
 const scaleRadius = 10
 const skinCentre = '#fcfaf6'
 const skinEdge = '#e2ddd6'
-const redCentre = '#d8341c'
-const redEdge = '#b4261a'
 const finColour = 'rgba(250, 243, 234, 0.92)'
 const finEdgeColour = 'rgba(150, 118, 96, 0.35)'
 const finRayColour = 'rgba(176, 132, 104, 0.45)'
@@ -22,7 +20,11 @@ const scaleOnRed = 'rgba(90, 16, 8, 0.28)'
 const outlineColour = 'rgba(96, 74, 60, 0.35)'
 const eyeColour = '#1a1210'
 
-export const koiPaintingAspect = canvasWidth / canvasHeight
+export type KoiMarkings = {
+  readonly centreColour: string
+  readonly edgeColour: string
+  readonly patches: readonly RedPatch[]
+}
 
 type RedPatch = {
   readonly x: number
@@ -33,14 +35,29 @@ type RedPatch = {
   readonly seed: number
 }
 
-const redPatches: readonly RedPatch[] = [
-  { x: 872, y: midline, radiusX: 40, radiusY: 32, wobble: 0.08, seed: 1 },
-  { x: 715, y: midline - 8, radiusX: 92, radiusY: 72, wobble: 0.16, seed: 2 },
-  { x: 530, y: midline + 12, radiusX: 78, radiusY: 50, wobble: 0.18, seed: 3 },
-  { x: 395, y: midline - 4, radiusX: 44, radiusY: 22, wobble: 0.2, seed: 4 },
+export const redKoi: KoiMarkings = {
+  centreColour: '#d8341c',
+  edgeColour: '#b4261a',
+  patches: [
+    { x: 872, y: midline, radiusX: 40, radiusY: 32, wobble: 0.08, seed: 1 },
+    { x: 715, y: midline - 8, radiusX: 92, radiusY: 72, wobble: 0.16, seed: 2 },
+    { x: 530, y: midline + 12, radiusX: 78, radiusY: 50, wobble: 0.18, seed: 3 },
+    { x: 395, y: midline - 4, radiusX: 44, radiusY: 22, wobble: 0.2, seed: 4 },
+  ],
+}
+
+const secondKoiPatches: readonly RedPatch[] = [
+  { x: 880, y: midline + 6, radiusX: 34, radiusY: 26, wobble: 0.1, seed: 5 },
+  { x: 760, y: midline + 14, radiusX: 70, radiusY: 58, wobble: 0.2, seed: 6 },
+  { x: 610, y: midline - 16, radiusX: 96, radiusY: 56, wobble: 0.15, seed: 7 },
+  { x: 430, y: midline + 6, radiusX: 38, radiusY: 20, wobble: 0.22, seed: 8 },
 ]
 
-export function paintKoi(): HTMLCanvasElement {
+export const orangeKoi: KoiMarkings = { centreColour: '#f58a24', edgeColour: '#dd6414', patches: secondKoiPatches }
+
+export const secondRedKoi: KoiMarkings = { centreColour: '#c9281c', edgeColour: '#a31d14', patches: secondKoiPatches }
+
+export function paintKoi(markings: KoiMarkings): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
@@ -50,7 +67,7 @@ export function paintKoi(): HTMLCanvasElement {
     paintFin(context, 760, side, 1)
     paintFin(context, 548, side, 0.62)
   }
-  paintBody(context)
+  paintBody(context, markings)
   paintDorsalFin(context)
   paintHead(context)
   paintTail(context)
@@ -75,7 +92,7 @@ function bodyPath(context: CanvasRenderingContext2D): void {
   context.closePath()
 }
 
-function paintBody(context: CanvasRenderingContext2D): void {
+function paintBody(context: CanvasRenderingContext2D, markings: KoiMarkings): void {
   context.save()
   bodyPath(context)
   const across = context.createLinearGradient(0, midline - widestHalfWidth, 0, midline + widestHalfWidth)
@@ -85,8 +102,8 @@ function paintBody(context: CanvasRenderingContext2D): void {
   context.fillStyle = across
   context.fill()
   context.clip()
-  for (const patch of redPatches) paintRedPatch(context, patch)
-  paintScales(context)
+  for (const patch of markings.patches) paintRedPatch(context, patch, markings)
+  paintScales(context, markings.patches)
   paintRoundness(context)
   context.restore()
   bodyPath(context)
@@ -95,7 +112,7 @@ function paintBody(context: CanvasRenderingContext2D): void {
   context.stroke()
 }
 
-function paintRedPatch(context: CanvasRenderingContext2D, patch: RedPatch): void {
+function paintRedPatch(context: CanvasRenderingContext2D, patch: RedPatch, markings: KoiMarkings): void {
   context.beginPath()
   const points = 48
   for (let index = 0; index <= points; index += 1) {
@@ -107,18 +124,18 @@ function paintRedPatch(context: CanvasRenderingContext2D, patch: RedPatch): void
     else context.lineTo(x, y)
   }
   const glow = context.createRadialGradient(patch.x, patch.y, 0, patch.x, patch.y, Math.max(patch.radiusX, patch.radiusY))
-  glow.addColorStop(0, redCentre)
-  glow.addColorStop(1, redEdge)
+  glow.addColorStop(0, markings.centreColour)
+  glow.addColorStop(1, markings.edgeColour)
   context.fillStyle = glow
   context.fill()
 }
 
-function paintScales(context: CanvasRenderingContext2D): void {
+function paintScales(context: CanvasRenderingContext2D, patches: readonly RedPatch[]): void {
   context.lineWidth = 1.6
   for (let x = scalesFromX; x < scalesToX; x += scaleSpacing) {
     const rowShift = Math.round((x - peduncleX) / scaleSpacing) % 2 === 0 ? 0 : scaleSpacing / 2
     for (let y = midline - widestHalfWidth + rowShift; y < midline + widestHalfWidth; y += scaleSpacing) {
-      context.strokeStyle = isOnARedPatch(x, y) ? scaleOnRed : scaleOnWhite
+      context.strokeStyle = isOnARedPatch(x, y, patches) ? scaleOnRed : scaleOnWhite
       context.beginPath()
       context.arc(x, y, scaleRadius, Math.PI * 0.55, Math.PI * 1.45)
       context.stroke()
@@ -126,8 +143,8 @@ function paintScales(context: CanvasRenderingContext2D): void {
   }
 }
 
-function isOnARedPatch(x: number, y: number): boolean {
-  return redPatches.some((patch) => ((x - patch.x) / patch.radiusX) ** 2 + ((y - patch.y) / patch.radiusY) ** 2 < 1)
+function isOnARedPatch(x: number, y: number, patches: readonly RedPatch[]): boolean {
+  return patches.some((patch) => ((x - patch.x) / patch.radiusX) ** 2 + ((y - patch.y) / patch.radiusY) ** 2 < 1)
 }
 
 function paintRoundness(context: CanvasRenderingContext2D): void {

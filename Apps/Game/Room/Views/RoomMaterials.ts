@@ -4,7 +4,7 @@ import { weaveCloth } from './ClothWeave.ts'
 import { paintCrackle } from './CrackleGlaze.ts'
 import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
-import { paintKoi } from './KoiPainting.ts'
+import { paintKoiPond, type KoiPond } from './KoiPond.ts'
 import { paintLotus } from './LotusPainting.ts'
 import { paintProphecyInscription } from './ProphecyInscription.ts'
 import { paintTeaCharacter } from './TeaCharacterPainting.ts'
@@ -180,9 +180,11 @@ const glazePaintings: Partial<Record<Surface, () => HTMLCanvasElement>> = { emer
 export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
   private readonly reflections: THREE.Texture | null
+  private readonly koiPond: KoiPond
 
-  constructor(reflections: THREE.Texture | null) {
+  constructor(reflections: THREE.Texture | null, koiPond: KoiPond) {
     this.reflections = reflections
+    this.koiPond = koiPond
   }
 
   materialFor(surface: Surface): THREE.Material {
@@ -210,7 +212,7 @@ export class RoomMaterials {
     if (surface === 'aluminium') return this.aluminiumMaterial(color)
     if (surface === 'thermosPainting') return this.thermosPaintingMaterial()
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
-    if (surface === 'koiPainting') return paintingMaterial(paintKoi())
+    if (surface === 'koiPainting') return paintingMaterial(paintKoiPond(this.koiPond))
     if (surface === 'prophecyInscription') return paintingMaterial(paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')]))
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'heronPainting') return paintingMaterial(paintHeron())

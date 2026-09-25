@@ -8,6 +8,7 @@ import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
+import { koiPonds } from './Views/KoiPond.ts'
 import { VisitStore, type SavedVisit } from './VisitStore.ts'
 
 const roomId = 'quietRoom'
@@ -82,7 +83,9 @@ function enterTheRoom(session: RitualSession, arrival: RoomArrival): void {
   roomLog(`the light stands ${hoursSinceSunrise.toFixed(1)} hours after sunrise, chosen at random within ${session.state.atmosphere.timeOfDay}`)
   const heaterItemsBeforeTheTesterJoke = fewestHeaterItemsBeforeTheTesterJoke + Math.floor(Math.random() * 2)
   roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the working heater, chosen at random for this visit`)
-  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, arrival, visitStore)
+  const koiPond = koiPonds[Math.floor(Math.random() * koiPonds.length)] ?? 'oneKoi'
+  roomLog(`the white bowl shows the koi pond ${koiPond}, chosen at random for this visit`)
+  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, koiPond, arrival, visitStore)
 }
 
 function showTheQuietScreen(): void {
