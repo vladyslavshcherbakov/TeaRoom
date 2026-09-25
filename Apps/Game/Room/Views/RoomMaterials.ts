@@ -16,6 +16,7 @@ export type Surface =
   | 'wall'
   | 'wood'
   | 'darkWood'
+  | 'bamboo'
   | 'clay'
   | 'porcelain'
   | 'steel'
@@ -81,6 +82,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   wall: '#f4e7d2',
   wood: '#c98e5a',
   darkWood: '#8f5a3a',
+  bamboo: '#e6c67a',
   clay: '#b8643c',
   porcelain: '#f7f2e8',
   steel: '#7d97a3',
