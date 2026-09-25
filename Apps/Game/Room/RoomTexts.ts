@@ -11,8 +11,12 @@ const tapRanLongFromSeconds = 120
 const heaterRanLongFromSeconds = 120
 const millilitresInALitre = 1000
 const heaterTesterVariants = 6
+const tapRanLongVariants = 2
+const heaterRanLongVariants = 3
 
 type HeaterTesterVariant = 1 | 2 | 3 | 4 | 5 | 6
+type TapRanLongVariant = 1 | 2
+type HeaterRanLongVariant = 1 | 2 | 3
 
 export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
   return events.flatMap((event) => captionLinesOf(event, voiceSeed))
@@ -56,12 +60,12 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
 
 function drainedLitresLine(drainedMl: number, voiceSeed: number): string {
   const litres = String(Number((drainedMl / millilitresInALitre).toFixed(1)))
-  return textWith(`tapRanLong.${phraseVariantFor('tapRanLong', voiceSeed)}`, { litres })
+  return textWith(`tapRanLong.${phraseVariantAmong('tapRanLong', voiceSeed, tapRanLongVariants) as TapRanLongVariant}`, { litres })
 }
 
 function heaterEnergyLine(kilowattHoursUsed: number, voiceSeed: number): string {
   const kilowattHours = String(Number(kilowattHoursUsed.toFixed(2)))
-  return textWith(`heaterRanLong.${phraseVariantFor('heaterRanLong', voiceSeed)}`, { kilowattHours })
+  return textWith(`heaterRanLong.${phraseVariantAmong('heaterRanLong', voiceSeed, heaterRanLongVariants) as HeaterRanLongVariant}`, { kilowattHours })
 }
 
 function offeringResponseText(figurineId: string, response: OfferingResponse): string {
