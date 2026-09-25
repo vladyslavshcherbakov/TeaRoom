@@ -4,7 +4,7 @@ import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJud
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
-import { caddyItemId, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { caddyItemId, carriedItemIdsIn, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -62,7 +62,7 @@ const roseBushTapsThatOpenTheDebugMenu = 10
 const deadlyStrengthsFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
-export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester'
+export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester' | 'everythingOnTheShelf'
 
 export type TeaTasted = Extract<RitualEvent, { readonly type: 'teaTasted' }>
 
@@ -439,6 +439,19 @@ export class RoomPlay {
     const events = this.ritual.dispatch({ type: 'putDown', itemId, spot })
     this.letGoOfTheChoiceUnlessRefused(events)
     if (itemId === clothItemId && this.ritual.state.cloth.location.kind === 'onSurface') this.soakUpThePuddleIfTheClothLandsInIt(furnitureId, point)
+    if (furnitureId === 'shelf') this.remarkOnceWhenEverythingIsOnTheShelf(itemId)
+  }
+
+  private remarkOnceWhenEverythingIsOnTheShelf(lastItemId: string): void {
+    if (this.timesRemarked.has('everythingOnTheShelf')) return
+    const state = this.ritual.state
+    const itemIdsElsewhere = carriedItemIdsIn(state).filter((itemId) => {
+      const location = itemLocationIn(state, itemId)
+      return location !== undefined && location.kind !== 'gone' && !(location.kind === 'onSurface' && location.spot.placeId === 'shelf')
+    })
+    if (itemIdsElsewhere.length > 0) return
+    this.remark('everythingOnTheShelf')
+    this.log(`${lastItemId} was the last thing put on the shelf, everything is put away, remarked once for this visit`)
   }
 
   private soakUpThePuddleIfTheClothLandsInIt(furnitureId: FurnitureId, point: WorldPoint): void {

@@ -108,6 +108,10 @@ export const englishTexts = {
   'heaterTester.4': 'Who would have thought this would become the most popular feature of the tea room.',
   'heaterTester.5': 'This is exactly the behaviour I expected from you.',
   'heaterTester.6': 'We are renaming ourselves Fire Room. Or The Fireplace. Send in your suggestions.',
+  'everythingOnTheShelf.1': 'Everything on the shelf. This house has never been so tidy.',
+  'everythingOnTheShelf.2': 'Every last thing put away. Is this a hobby, or should I be a little worried?',
+  'everythingOnTheShelf.3': 'All on the shelf. Are you quite sure they are in the right order?',
+  'everythingOnTheShelf.4': 'Very neat. Had it been up to me, I would have arranged it all quite differently.',
 
   'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',

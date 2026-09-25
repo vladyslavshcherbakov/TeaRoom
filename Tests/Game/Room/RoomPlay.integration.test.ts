@@ -769,6 +769,33 @@ test('heaterTester_whenTheHeaterIsOff_isNeverTeased', () => {
   ])
 })
 
+test('shelf_whenTheLastThingIsPutOnIt_isRemarkedOnOnce', () => {
+  const room = new RoomVisit()
+  room.putEverythingButTheClothOnTheShelf()
+  room.walkTo('teaTable')
+  room.takeAndChoose('cloth')
+  room.walkTo('shelf')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'surface', furnitureId: 'shelf', point: { x: -2.75, y: 1.22, z: 1.05 } })
+  room.takeAndChoose('cloth')
+  room.tap({ kind: 'surface', furnitureId: 'shelf', point: { x: -2.75, y: 1.22, z: 1.05 } })
+
+  assert.equal(room.state.cloth.location.kind, 'onSurface')
+  assert.deepEqual(room.remarks, [{ kind: 'everythingOnTheShelf', timesTapped: 1 }])
+})
+
+test('shelf_withTheClothStillOnTheTeaTable_isNotRemarkedOn', () => {
+  const room = new RoomVisit()
+  room.putEverythingButTheClothOnTheShelf()
+  room.walkTo('shelf')
+  room.takeAndChoose('caddy')
+
+  room.tap({ kind: 'surface', furnitureId: 'shelf', point: { x: -2.75, y: 1.22, z: 1.05 } })
+
+  assert.deepEqual(room.remarks, [])
+})
+
 test('thirdItem_whenBothHandsAreFull_isRemarkedOn', () => {
   const room = new RoomVisit()
   room.carryFromTheShelf('bowl1', 'caddy')
@@ -975,7 +1002,21 @@ class RoomVisit {
     this.tap({ kind: 'hand', handIndex: this.state.keeper.hands[0] === 'caddy' ? 0 : 1 })
   }
 
-  holdTheCaddyWithColdTapWater(): void {
+  putEverythingButTheClothOnTheShelf(): void {
+    const onTheTopShelf = (z: number): Spot => ({ placeId: 'shelf', x: -2.75, y: 1.22, z })
+    this.walkTo('counter')
+    this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
+    this.walkTo('shelf')
+    this.session.dispatch({ type: 'putDown', itemId: 'kettle', spot: onTheTopShelf(0.3) })
+    this.session.dispatch({ type: 'putDown', itemId: 'thermos', spot: onTheTopShelf(0.7) })
+    this.walkTo('teaTable')
+    this.session.dispatch({ type: 'pickUp', itemId: 'spoon' })
+    this.walkTo('shelf')
+    this.session.dispatch({ type: 'putDown', itemId: 'spoon', spot: { placeId: 'shelf', x: -2.75, y: 0.07, z: -0.45 } })
+  }
+
+    holdTheCaddyWithColdTapWater(): void {
     this.carryFromTheShelf('caddy')
     this.walkTo('counter')
     this.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
