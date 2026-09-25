@@ -8,6 +8,7 @@ import { paintLotus } from './LotusPainting.ts'
 import { paintTeaCharacter } from './TeaCharacterPainting.ts'
 import { paintGreenMarble } from './MarbleGlaze.ts'
 import { paintTemperBands } from './TemperBands.ts'
+import { paintSakuraOverFuji } from './ThermosPainting.ts'
 import { paintYixingClay } from './YixingClay.ts'
 
 export type Surface =
@@ -19,6 +20,8 @@ export type Surface =
   | 'porcelain'
   | 'steel'
   | 'thermosInside'
+  | 'thermosPainting'
+  | 'aluminium'
   | 'caddyGreen'
   | 'cloth'
   | 'wetCloth'
@@ -71,6 +74,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   porcelain: '#f7f2e8',
   steel: '#7d97a3',
   thermosInside: '#3f4b50',
+  thermosPainting: '#ffffff',
+  aluminium: '#aab0b5',
   caddyGreen: '#5f9a7c',
   cloth: '#ffffff',
   wetCloth: '#8a7c68',
@@ -156,6 +161,8 @@ export class RoomMaterials {
     if (surface === 'blueGlaze') return this.kintsugiMaterial()
     if (surface === 'glass') return this.glassMaterial(color)
     if (surface === 'gildedRim') return this.goldMaterial(color)
+    if (surface === 'aluminium') return this.aluminiumMaterial(color)
+    if (surface === 'thermosPainting') return this.thermosPaintingMaterial()
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
@@ -218,6 +225,17 @@ export class RoomMaterials {
       envMap: this.reflections,
       envMapIntensity: 1.2,
     })
+  }
+
+  private aluminiumMaterial(color: string): THREE.MeshPhysicalMaterial {
+    return new THREE.MeshPhysicalMaterial({ color, metalness: 0.8, roughness: 0.5, envMap: this.reflections, envMapIntensity: 0.55 })
+  }
+
+  private thermosPaintingMaterial(): THREE.MeshPhysicalMaterial {
+    const texture = new THREE.CanvasTexture(paintSakuraOverFuji())
+    texture.colorSpace = THREE.SRGBColorSpace
+    texture.anisotropy = paintingSharpness
+    return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.35, clearcoat: 0.8, envMap: this.reflections, envMapIntensity: 0.8 })
   }
 
   private goldMaterial(color: string): THREE.MeshPhysicalMaterial {
