@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { itemLocationIn } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
-import { isTheLidOpen } from '../../CarriedShapes.ts'
+import { isTheLidOpen, layoutOf } from '../../CarriedShapes.ts'
 import { openLidOffsetBeside, type Surroundings } from '../../Placement.ts'
 import type { FloorPoint } from '../../RoomLayout.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
@@ -21,9 +21,7 @@ type Wave = {
 }
 
 const lidLyingOnTheSurfaceMetres = 0.015
-const ajarLidSideMetres = 0.045
-const ajarLidRiseMetres = 0.02
-const ajarLidTiltRadians = 0.5
+const openLidSwungPastUprightRadians = (105 * Math.PI) / 180
 const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const steamStartsAboveTheOpeningMetres = 0.04
@@ -53,7 +51,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   const isOpen = isTheLidOpen(scene.state, model.itemId)
   const isStandingOutsideTheSink = itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface' && scene.state.sink.itemIdInside !== model.itemId
   const lyingLidOffset = isOpen && isStandingOutsideTheSink ? openLidOffsetBeside(model.itemId, scene.state, surroundings) : null
-  if (model.lid !== null) placeLid(model, model.lid, isOpen, lyingLidOffset)
+  if (model.lid !== null) placeLid(model, model.lid, isOpen, lyingLidOffset, layoutOf(scene.state, model.itemId)?.lid?.lyingRadiusMetres ?? 0)
   if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
   if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)
@@ -196,7 +194,7 @@ function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vec
   return [...(model.look.steamRisesAboveTheSpout ? [aboveTheSpout] : []), ...(isOpenToTheAir ? [aboveTheOpening] : [])]
 }
 
-function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, lyingOffset: FloorPoint | null): void {
+function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, lyingOffset: FloorPoint | null, lidRadiusMetres: number): void {
   lid.position.copy(model.lidClosedPosition)
   lid.rotation.set(0, 0, 0)
   if (!isOpen) return
@@ -204,7 +202,7 @@ function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, lyi
     lid.position.set(lyingOffset.x, lidLyingOnTheSurfaceMetres, lyingOffset.z)
     return
   }
-  lid.position.x -= ajarLidSideMetres
-  lid.position.y += ajarLidRiseMetres
-  lid.rotation.z = ajarLidTiltRadians
+  lid.position.x -= lidRadiusMetres * (1 - Math.cos(openLidSwungPastUprightRadians))
+  lid.position.y += lidRadiusMetres * Math.sin(openLidSwungPastUprightRadians)
+  lid.rotation.z = openLidSwungPastUprightRadians
 }
