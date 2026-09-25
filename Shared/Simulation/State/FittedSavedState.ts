@@ -3,7 +3,7 @@ import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { Leaves } from '../Physics/Brewing.ts'
 import { water } from '../Physics/Liquid.ts'
 import { initialSessionState } from './InitialState.ts'
-import type { FigurineState, ItemLocation, PourState, PuddleState, RunningWaterState, SessionState, VesselState } from './SessionState.ts'
+import type { ClothState, FigurineState, ItemLocation, PourState, PuddleState, RunningWaterState, SessionState, VesselState } from './SessionState.ts'
 
 export const sessionStateVersion = 1
 
@@ -19,19 +19,21 @@ const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceO
 const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, location: { kind: 'gone' } }
 const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
+const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
+const clothIdOfSavesWithOneCloth = 'cloth'
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
   if (savedVersion !== sessionStateVersion) return { kind: 'doesNotFit', problems: [`the saved state is version ${savedVersion}, the game reads version ${sessionStateVersion}`] }
   if (!isShape(saved)) return { kind: 'doesNotFit', problems: ['the saved state is not an object'] }
   const changes: string[] = []
-  const savedWithEveryHand = withTheMiddleHand(saved, changes)
+  const savedWithEveryHand = withClothsById(withTheMiddleHand(saved, changes), changes)
   const roomId = savedWithEveryHand['roomId']
   if (typeof roomId !== 'string' || catalog.rooms[roomId] === undefined) return { kind: 'doesNotFit', problems: [`the saved room ${String(roomId)} is not in the catalog`] }
   const fresh = initialSessionState(catalog, roomId)
   const problems = shapeProblemsOf(fresh, savedWithEveryHand)
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
   const state = structuredClone(savedWithEveryHand) as SessionState
-  changes.push(...fitTheVessels(state, fresh), ...fitTheFigurines(state, fresh))
+  changes.push(...fitTheVessels(state, fresh), ...fitTheCloths(state, fresh), ...fitTheFigurines(state, fresh))
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
   problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
   if (state.teaId !== null && catalog.teas[state.teaId] === undefined) problems.push(`the saved tea ${state.teaId} is not in the catalog`)
@@ -41,13 +43,14 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
 }
 
 function shapeProblemsOf(fresh: SessionState, saved: Shape): string[] {
-  const problems = shapeProblems({ ...fresh, vessels: {}, figurines: {}, puddles: {} }, saved, 'state')
+  const problems = shapeProblems({ ...fresh, vessels: {}, cloths: {}, figurines: {}, puddles: {} }, saved, 'state')
   if (problems.length > 0) return problems
   const savedState = saved as SessionState
   for (const [id, vessel] of Object.entries(savedState.vessels)) {
     problems.push(...shapeProblems(vesselShape, vessel, `state.vessels.${id}`))
     if (vessel.leaves !== null) problems.push(...shapeProblems(leavesShape, vessel.leaves, `state.vessels.${id}.leaves`))
   }
+  for (const [id, cloth] of Object.entries(savedState.cloths)) problems.push(...shapeProblems(clothShape, cloth, `state.cloths.${id}`))
   for (const [id, figurine] of Object.entries(savedState.figurines)) problems.push(...shapeProblems(figurineShape(id), figurine, `state.figurines.${id}`))
   for (const [placeId, puddle] of Object.entries(savedState.puddles)) problems.push(...shapeProblems(puddleShape, puddle, `state.puddles.${placeId}`))
   if (savedState.pour !== null) problems.push(...shapeProblems(pourShape, savedState.pour, 'state.pour'))
@@ -86,7 +89,7 @@ function locationProblems(owner: string, location: ItemLocation): string[] {
 }
 
 function handProblemsOf(state: SessionState): string[] {
-  const itemIds = new Set([...Object.keys(state.vessels), 'spoon', 'cloth'])
+  const itemIds = new Set([...Object.keys(state.vessels), 'spoon', ...Object.keys(state.cloths)])
   return state.keeper.hands.flatMap((itemId, handIndex) => (itemId === null || itemIds.has(itemId) ? [] : [`hand ${handIndex} holds ${itemId}, which the room does not have`]))
 }
 
@@ -95,7 +98,11 @@ function placeProblemsOf(state: SessionState, places: ReadonlySet<string>): stri
 }
 
 function locationsIn(state: SessionState): [string, ItemLocation][] {
-  return [...Object.values(state.vessels).map((vessel): [string, ItemLocation] => [vessel.id, vessel.location]), ['spoon', state.spoon.location], ['cloth', state.cloth.location]]
+  return [
+    ...Object.values(state.vessels).map((vessel): [string, ItemLocation] => [vessel.id, vessel.location]),
+    ['spoon', state.spoon.location],
+    ...Object.values(state.cloths).map((cloth): [string, ItemLocation] => [cloth.id, cloth.location]),
+  ]
 }
 
 function fitTheVessels(state: SessionState, fresh: SessionState): string[] {
@@ -116,12 +123,32 @@ function fitTheVessels(state: SessionState, fresh: SessionState): string[] {
 
 function forgetTheVessel(state: SessionState, vesselId: string): void {
   delete state.vessels[vesselId]
-  const [firstHand, secondHand, middleHand] = state.keeper.hands
-  state.keeper.hands = [firstHand === vesselId ? null : firstHand, secondHand === vesselId ? null : secondHand, middleHand === vesselId ? null : middleHand]
-  if (middleHand === vesselId) state.keeper.hasAMiddleHand = false
-  if (state.heater.itemIdOnTop === vesselId) state.heater.itemIdOnTop = null
-  if (state.sink.itemIdInside === vesselId) state.sink.itemIdInside = null
+  letGoOfTheItem(state, vesselId)
   if (state.pour !== null && (state.pour.sourceId === vesselId || state.pour.targetId === vesselId)) state.pour = null
+}
+
+function fitTheCloths(state: SessionState, fresh: SessionState): string[] {
+  const changes: string[] = []
+  for (const id of Object.keys(state.cloths)) {
+    if (fresh.cloths[id] !== undefined) continue
+    delete state.cloths[id]
+    letGoOfTheItem(state, id)
+    changes.push(`the cloth ${id} is no longer in the room and is left out`)
+  }
+  for (const cloth of Object.values(fresh.cloths)) {
+    if (state.cloths[cloth.id] !== undefined) continue
+    state.cloths[cloth.id] = cloth
+    changes.push(`the cloth ${cloth.id} is new in the room and lies at its place on the ${cloth.location.kind === 'onSurface' ? cloth.location.spot.placeId : 'floor'}`)
+  }
+  return changes
+}
+
+function letGoOfTheItem(state: SessionState, itemId: string): void {
+  const [firstHand, secondHand, middleHand] = state.keeper.hands
+  state.keeper.hands = [firstHand === itemId ? null : firstHand, secondHand === itemId ? null : secondHand, middleHand === itemId ? null : middleHand]
+  if (middleHand === itemId) state.keeper.hasAMiddleHand = false
+  if (state.heater.itemIdOnTop === itemId) state.heater.itemIdOnTop = null
+  if (state.sink.itemIdInside === itemId) state.sink.itemIdInside = null
 }
 
 function fitTheFigurines(state: SessionState, fresh: SessionState): string[] {
@@ -154,6 +181,14 @@ function withTheMiddleHand(saved: Shape, changes: string[]): Shape {
   if (!isShape(keeper) || !Array.isArray(keeper['hands']) || keeper['hands'].length !== 2) return saved
   changes.push('the keeper, saved before the middle hand existed, gets an empty one that has not grown')
   return { ...saved, keeper: { ...keeper, hands: [...keeper['hands'], null], hasAMiddleHand: false } }
+}
+
+function withClothsById(saved: Shape, changes: string[]): Shape {
+  const cloth = saved['cloth']
+  if (!isShape(cloth) || saved['cloths'] !== undefined) return saved
+  changes.push(`the one cloth of a save from before a room could hold several becomes the cloth "${clothIdOfSavesWithOneCloth}"`)
+  const savedWithoutTheOneCloth = Object.fromEntries(Object.entries(saved).filter(([key]) => key !== 'cloth'))
+  return { ...savedWithoutTheOneCloth, cloths: { [clothIdOfSavesWithOneCloth]: { ...cloth, id: clothIdOfSavesWithOneCloth } } }
 }
 
 function isShape(value: unknown): value is Shape {

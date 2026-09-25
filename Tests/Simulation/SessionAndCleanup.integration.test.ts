@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
-import { testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlAt, wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
@@ -62,8 +62,8 @@ test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
   wipedSlowly.do({ type: 'pickUp', itemId: 'cloth' })
   wipedFast.do({ type: 'pickUp', itemId: 'cloth' })
 
-  wipedSlowly.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-  wipedFast.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 300, coveredFraction: 1 })
+  wipedSlowly.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  wipedFast.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 300, coveredFraction: 1 })
 
   assert.ok(wetMlOnEveryPlace(wipedSlowly.state) < 6, `slow wipe left ${wetMlOnEveryPlace(wipedSlowly.state)} ml`)
   assert.ok(wetMlOnEveryPlace(wipedFast.state) > 15, `fast wipe left ${wetMlOnEveryPlace(wipedFast.state)} ml`)
@@ -75,9 +75,9 @@ test('table_whenWipedInTwoHalves_driesAsMuchAsInOneStroke', () => {
   wipedOnce.do({ type: 'pickUp', itemId: 'cloth' })
   wipedInHalves.do({ type: 'pickUp', itemId: 'cloth' })
 
-  wipedOnce.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-  wipedInHalves.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 0.5 })
-  wipedInHalves.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 0.5 })
+  wipedOnce.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  wipedInHalves.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 0.5 })
+  wipedInHalves.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 0.5 })
 
   assertNear(wetMlOnEveryPlace(wipedInHalves.state), wetMlOnEveryPlace(wipedOnce.state))
 })
@@ -87,19 +87,19 @@ test('cloth_whenItWipesTheTable_takesInTheWaterItWipedUp', () => {
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   const wetMlBeforeWiping = wetMlOnEveryPlace(ritual.state)
 
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
-  assertNear(ritual.state.cloth.wetMl, wetMlBeforeWiping * 0.8)
+  assertNear(ritual.cloth().wetMl, wetMlBeforeWiping * 0.8)
 })
 
 test('cloth_whenLeftWet_driesByItself', () => {
   const ritual = ritualWithSpillOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   ritual.wait(600)
 
-  assert.equal(ritual.state.cloth.wetMl, 0)
+  assert.equal(ritual.cloth().wetMl, 0)
 })
 
 test('table_whenLeftAlone_driesByItself', () => {
@@ -186,27 +186,27 @@ test('room_whenLeftAfterResting_stopsTheWorld', () => {
 test('cloth_whileLyingInThePuddle_soaksUpHalfAMillilitreASecond', () => {
   const ritual = ritualWithSpillOnTheTable()
   const wetMlBeforeSoaking = wetMlOnEveryPlace(ritual.state)
-  ritual.do({ type: 'soakUpThePuddle' })
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
   ritual.wait(10)
 
   assertNear(wetMlOnEveryPlace(ritual.state), wetMlBeforeSoaking - 5 - 1)
-  assertNear(ritual.state.cloth.wetMl, 5 - 1)
+  assertNear(ritual.cloth().wetMl, 5 - 1)
 })
 
 test('cloth_whenTheWholePuddleIsSoakedUp_stopsSoaking', () => {
   const ritual = ritualWithSpillOnTheTable()
-  ritual.do({ type: 'soakUpThePuddle' })
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
   ritual.wait(60)
 
   assert.equal(wetMlOnEveryPlace(ritual.state), 0)
-  assert.equal(ritual.state.cloth.isSoakingThePuddle, false)
+  assert.equal(ritual.cloth().isSoakingThePuddle, false)
 })
 
 test('cloth_whenLiftedOutOfThePuddle_stopsSoakingIt', () => {
   const ritual = ritualWithSpillOnTheTable()
-  ritual.do({ type: 'soakUpThePuddle' })
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
   ritual.wait(4)
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   const wetMlWhenLifted = wetMlOnEveryPlace(ritual.state)
@@ -218,65 +218,65 @@ test('cloth_whenLiftedOutOfThePuddle_stopsSoakingIt', () => {
 
 test('cloth_whenItSoaksUpSpilledTea_isStained', () => {
   const ritual = ritualWithTeaSpilledOnTheTable()
-  ritual.do({ type: 'soakUpThePuddle' })
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
   ritual.wait(10)
 
-  assert.ok(ritual.state.cloth.teaStain > 0, `stain ${ritual.state.cloth.teaStain}`)
+  assert.ok(ritual.cloth().teaStain > 0, `stain ${ritual.cloth().teaStain}`)
 })
 
 test('cloth_whenItSoaksUpSpilledWater_staysUnstained', () => {
   const ritual = ritualWithSpillOnTheTable()
-  ritual.do({ type: 'soakUpThePuddle' })
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
   ritual.wait(10)
 
-  assert.equal(ritual.state.cloth.teaStain, 0)
+  assert.equal(ritual.cloth().teaStain, 0)
 })
 
 test('cloth_whenClean_driesATenthOfAMillilitreASecond', () => {
   const ritual = ritualWithSpillOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-  const wetMlAfterWiping = ritual.state.cloth.wetMl
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  const wetMlAfterWiping = ritual.cloth().wetMl
 
   ritual.wait(10)
 
-  assertNear(ritual.state.cloth.wetMl, wetMlAfterWiping - 1)
+  assertNear(ritual.cloth().wetMl, wetMlAfterWiping - 1)
 })
 
 test('cloth_whenStainedWithTea_driesSlowerThanAClean', () => {
   const ritual = ritualWithTeaSpilledOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-  const wetMlAfterWiping = ritual.state.cloth.wetMl
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  const wetMlAfterWiping = ritual.cloth().wetMl
 
   ritual.wait(10)
 
-  assert.ok(wetMlAfterWiping - ritual.state.cloth.wetMl < 0.9, `${wetMlAfterWiping} → ${ritual.state.cloth.wetMl} ml, stain ${ritual.state.cloth.teaStain}`)
+  assert.ok(wetMlAfterWiping - ritual.cloth().wetMl < 0.9, `${wetMlAfterWiping} → ${ritual.cloth().wetMl} ml, stain ${ritual.cloth().teaStain}`)
 })
 
 test('cloth_whenWashedUnderTheTap_losesItsTeaStain', () => {
   const ritual = ritualWithTeaSpilledOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
   ritual.wait(10)
 
-  assert.equal(ritual.state.cloth.teaStain, 0)
+  assert.equal(ritual.cloth().teaStain, 0)
 })
 
 test('cloth_underTheTap_losesATenthOfAFullStainEachSecond', () => {
   const ritual = ritualWithTeaSpilledOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
-  const stainBeforeWashing = ritual.state.cloth.teaStain
+  const stainBeforeWashing = ritual.cloth().teaStain
 
   ritual.wait(1)
 
-  assertNear(stainBeforeWashing - ritual.state.cloth.teaStain, 0.1)
+  assertNear(stainBeforeWashing - ritual.cloth().teaStain, 0.1)
 })
 
 test('cloth_whenTakenOutOfTheSink_isWrungOutToEightMillilitres', () => {
@@ -287,14 +287,14 @@ test('cloth_whenTakenOutOfTheSink_isWrungOutToEightMillilitres', () => {
 
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
 
-  assert.equal(ritual.state.cloth.wetMl, 8)
+  assert.equal(ritual.cloth().wetMl, 8)
 })
 
 test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
   const ritual = ritualWithSpillOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
 
-  const events = ritual.do({ type: 'soakUpThePuddle' })
+  const events = ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'notAtThatPlace' }])
 })
@@ -302,7 +302,7 @@ test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
 test('puddle_whenTheTableIsDry_isNotSoakedUp', () => {
   const ritual = TestRitual.begun()
 
-  const events = ritual.do({ type: 'soakUpThePuddle' })
+  const events = ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'tableIsDry' }])
 })
@@ -311,7 +311,7 @@ test('table_withTheClothLyingOnIt_isNotWiped', () => {
   const ritual = ritualWithSpillOnTheTable()
   const wetMlBeforeWiping = wetMlOnEveryPlace(ritual.state)
 
-  const events = ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  const events = ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'notInHand' }])
   assert.equal(wetMlOnEveryPlace(ritual.state), wetMlBeforeWiping)
@@ -323,7 +323,7 @@ test('cloth_whenWipingWhereNothingIsSpilled_isRefused', () => {
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'standAt', placeId: 'counter' })
 
-  const events = ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  const events = ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'tableIsDry' }])
 })
@@ -378,7 +378,28 @@ test('puddleOnTheCounter_whenWipedThere_shrinks', () => {
   ritual.pour('kettle', null, 2.5)
   const wetMlBeforeWiping = wetMlAt(ritual.state, 'counter')
 
-  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   assert.ok(wetMlAt(ritual.state, 'counter') < wetMlBeforeWiping * 0.5, `${wetMlAt(ritual.state, 'counter')} ml of ${wetMlBeforeWiping} ml left`)
+})
+
+test('secondCloth_whenItWipesTheTable_takesTheWaterWhileTheFirstStaysDry', () => {
+  const ritual = TestRitual.begun(withASecondCloth(testCatalog()))
+  ritual.pour('kettle', null, 2.5)
+  ritual.do({ type: 'pickUp', itemId: 'cloth2' })
+
+  ritual.do({ type: 'wipeTable', clothId: 'cloth2', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assert.ok(ritual.cloth('cloth2').wetMl > 0, 'the second cloth stayed dry')
+  assert.equal(ritual.cloth('cloth').wetMl, 0)
+})
+
+test('wipe_withAClothLyingOnTheTable_isRefusedAsNotInHand', () => {
+  const ritual = TestRitual.begun(withASecondCloth(testCatalog()))
+  ritual.pour('kettle', null, 2.5)
+  ritual.do({ type: 'pickUp', itemId: 'cloth2' })
+
+  const events = ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'notInHand' }])
 })

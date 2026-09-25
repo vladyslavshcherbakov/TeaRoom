@@ -231,7 +231,7 @@ export class RoomScene {
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
     const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
-    this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothOnTheTableAt: this.play.clothOnTheTableAt, timeSeconds: this.clock.elapsedTime })
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime })
     this.room.showHeater(table.isHeaterOn)
     this.room.showPuddles(table.puddles)
     const isAiming = this.play.aimedPourView !== null

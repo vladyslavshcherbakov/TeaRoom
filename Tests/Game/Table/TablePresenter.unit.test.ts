@@ -177,7 +177,9 @@ function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
   const state = ritualState()
   state.heater.isOn = true
   state.heater.itemIdOnTop = 'cloth'
-  state.cloth.charring = charring
+  const cloth = state.cloths['cloth']
+  if (cloth === undefined) throw new Error('the test room lost its cloth')
+  cloth.charring = charring
   return state
 }
 

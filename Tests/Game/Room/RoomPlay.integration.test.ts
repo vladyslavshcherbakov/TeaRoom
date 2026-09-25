@@ -540,7 +540,7 @@ test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
   room.moveTheClothOverTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }], 5)
 
   assert.ok(wetMlOnEveryPlace(room.state) < wetMlBeforeTheStroke * 0.5, `${wetMlOnEveryPlace(room.state)} ml of ${wetMlBeforeTheStroke} ml left`)
-  assert.ok(room.state.cloth.wetMl > 0, 'the cloth stayed dry')
+  assert.ok((room.state.cloths['cloth']?.wetMl ?? 0) > 0, 'the cloth stayed dry')
 })
 
 test('table_whenStrokedWithTheClothAwayFromThePuddle_driesOnlyAsATableLeftAlone', () => {
@@ -594,7 +594,7 @@ test('cloth_whileTheTableIsPressedWithoutMoving_staysInTheHand', () => {
 
   room.play.pressStarted({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
 
-  assert.equal(room.play.clothOnTheTableAt, null)
+  assert.equal(room.play.clothWiping, null)
 })
 
 test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
@@ -604,7 +604,7 @@ test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
 
   room.moveTheClothOverTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 0.9, z: -1.4 }], 1)
 
-  assert.deepEqual(room.play.clothOnTheTableAt, { x: 0.9, y: onTheTeaTable.y, z: -1.4 })
+  assert.deepEqual(room.play.clothWiping, { clothId: 'cloth', at: { x: 0.9, y: onTheTeaTable.y, z: -1.4 } })
 })
 
 test('cloth_whenTheTeaTableIsTappedAwayFromThePuddle_isPutDownThereAndWipesNothing', () => {
@@ -616,7 +616,7 @@ test('cloth_whenTheTeaTableIsTappedAwayFromThePuddle_isPutDownThereAndWipesNothi
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { x: 1.45, y: onTheTeaTable.y, z: -1.7 } })
 
-  assert.equal(room.state.cloth.location.kind, 'onSurface')
+  assert.equal(room.state.cloths['cloth']?.location.kind, 'onSurface')
   assert.equal(wetMlOnEveryPlace(room.state), wetMlBeforeTheTap)
 })
 
@@ -628,8 +628,8 @@ test('cloth_whenPutDownInThePuddle_soaksItUpWhileItLies', () => {
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { x: 0.5, y: onTheTeaTable.y, z: -1.45 } })
 
-  assert.equal(room.state.cloth.location.kind, 'onSurface')
-  assert.equal(room.state.cloth.isSoakingThePuddle, true)
+  assert.equal(room.state.cloths['cloth']?.location.kind, 'onSurface')
+  assert.equal(room.state.cloths['cloth']?.isSoakingThePuddle, true)
 })
 
 test('chosenHand_whenTheKeeperLeavesTheCloseUp_isLetGo', () => {
@@ -781,7 +781,7 @@ test('shelf_whenTheLastThingIsPutOnIt_isRemarkedOnOnce', () => {
   room.takeAndChoose('cloth')
   room.tap({ kind: 'surface', furnitureId: 'shelf', point: { x: -2.75, y: 1.22, z: 1.05 } })
 
-  assert.equal(room.state.cloth.location.kind, 'onSurface')
+  assert.equal(room.state.cloths['cloth']?.location.kind, 'onSurface')
   assert.deepEqual(room.remarks, [{ kind: 'everythingOnTheShelf', timesTapped: 1 }])
 })
 

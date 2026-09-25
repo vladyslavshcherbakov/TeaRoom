@@ -1,10 +1,10 @@
 import * as THREE from 'three'
 import type { Spot } from '../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
-import { clothItemId, itemLocationIn, middleHandIndex } from '../../../../Shared/Simulation/Ritual/Reach.ts'
+import { itemLocationIn, middleHandIndex } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
-import type { ShapedItem } from '../CarriedShapes.ts'
+import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
 import type { WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { aimOver } from './Carried/AimedVessel.ts'
@@ -28,7 +28,7 @@ const everyHandIndex: readonly HandIndex[] = [0, 1, middleHandIndex]
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
-  private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
+  private readonly clothMaterialsByClothId = new Map<string, THREE.MeshStandardMaterial | THREE.MeshBasicMaterial>()
   private readonly models: CarriedModel[]
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
@@ -42,11 +42,9 @@ export class CarriedItems {
   constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, heaterSpot: Spot) {
     this.heaterSpot = heaterSpot
     this.materials = materials
-    this.clothMaterial = materials.unsharedMaterialFor('cloth')
     const claySeenFromInside = materials.unsharedMaterialFor('clay')
     claySeenFromInside.side = THREE.DoubleSide
-    const modelMaterials = { room: materials, claySeenFromInside, cloth: this.clothMaterial }
-    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, modelMaterials))
+    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, { room: materials, claySeenFromInside, cloth: this.clothMaterialFor(itemId, shape) }))
     for (const model of this.models) {
       this.root.add(model.root, ...model.puffs)
       this.tappableMeshes.push(model.root)
@@ -61,7 +59,7 @@ export class CarriedItems {
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) showContentsOf(model, scene, this.heaterSpot)
-    this.clothMaterial.color.copy(this.clothColourFor(scene.table))
+    for (const [clothId, material] of this.clothMaterialsByClothId) material.color.copy(this.clothColourFor(scene.table.cloths[clothId]))
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
     this.ash.show(scene.timeSeconds)
     this.waterStreams.show(scene, this.models)
@@ -76,9 +74,16 @@ export class CarriedItems {
       .join('; ')
   }
 
-  private clothColourFor(table: TableViewState): THREE.Color {
-    const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), table.clothTeaStain)
-    const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), table.clothWetShare)
+  private clothMaterialFor(itemId: string, shape: CarriedShape): THREE.Material {
+    if (shape !== 'cloth') return this.materials.materialFor('cloth')
+    const material = this.materials.unsharedMaterialFor('cloth')
+    this.clothMaterialsByClothId.set(itemId, material)
+    return material
+  }
+
+  private clothColourFor(cloth: TableViewState.Cloth | undefined): THREE.Color {
+    const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), cloth?.teaStain ?? 0)
+    const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), cloth?.wetShare ?? 0)
     return dryColour.multiply(wetDarkening)
   }
 
@@ -91,7 +96,7 @@ export class CarriedItems {
       return
     }
     const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
-    const wipingAt = model.itemId === clothItemId ? scene.clothOnTheTableAt : null
+    const wipingAt = scene.clothWiping?.clothId === model.itemId ? scene.clothWiping.at : null
     const heldInView = location.kind === 'inHand' && aim === null && wipingAt === null ? scene.heldInView : null
     moveToLayer(model, heldInView !== null ? roomLayers.heldInView : wipingAt !== null ? roomLayers.untappableRoom : roomLayers.room)
     this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
@@ -145,7 +150,7 @@ export class CarriedItems {
   private placeHandTouchArea(area: THREE.Mesh, handIndex: HandIndex, scene: CarriedItemsScene): void {
     const itemId = scene.state.keeper.hands[handIndex] ?? null
     const isPouringFromIt = itemId !== null && scene.state.pour?.sourceId === itemId
-    const isWipingWithIt = itemId === clothItemId && scene.clothOnTheTableAt !== null
+    const isWipingWithIt = itemId !== null && scene.clothWiping?.clothId === itemId
     area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt && !isWipingWithIt
     if (!area.visible || scene.heldInView === null) return
     const frame = heldInViewFrame(scene.heldInView, handIndex)

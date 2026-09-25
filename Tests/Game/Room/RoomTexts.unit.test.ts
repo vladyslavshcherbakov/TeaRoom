@@ -10,7 +10,7 @@ test('caption_ofAnOffering_namesTheFigurine', () => {
 })
 
 test('caption_ofABurntClothWashedBackToNew_marvelsAtTheWorld', () => {
-  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'burntClothWashedBackToNew' }], 0)
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }], 0)
 
   assert.equal(lines.length, 1)
   assert.ok(burntClothLines.includes(lines[0] ?? ''), lines.join(' / '))
@@ -24,14 +24,14 @@ test('caption_ofTakingAThermosTooHotToHold_warnsOfItsGlow', () => {
 })
 
 test('caption_ofASmoulderingClothTakenOffTheHeater_jokesAboutTheHouse', () => {
-  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.5 }], 0)
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth', charring: 0.5 }], 0)
 
   assert.equal(lines.length, 1)
   assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('smoulderingClothTaken.') && line === lines[0]), lines.join(' / '))
 })
 
 test('caption_ofAClothTakenOffTheHeaterBeforeItSmoulders_staysSilent', () => {
-  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.49 }], 0), [])
+  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth', charring: 0.49 }], 0), [])
 })
 
 test('caption_ofASpoonThatCrumbled_answersInOneLine', () => {
@@ -152,20 +152,38 @@ test('caption_ofTheTapTurnedOffAfterEveryLineWasSaid_staysSilent', () => {
 
 test('caption_ofASecondSmoulderingClothTakenOffTheHeater_staysSilent', () => {
   const texts = new RoomTexts(7, () => {})
-  texts.captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.5 }], 0)
+  texts.captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth', charring: 0.5 }], 0)
 
-  const secondLines = texts.captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.9 }], 300)
+  const secondLines = texts.captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth', charring: 0.9 }], 300)
 
   assert.deepEqual(secondLines, [])
 })
 
 test('caption_ofASecondBurntClothWashedBackToNew_staysSilent', () => {
   const texts = new RoomTexts(7, () => {})
-  texts.captionLinesFor([{ type: 'burntClothWashedBackToNew' }], 0)
+  texts.captionLinesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }], 0)
 
-  const secondLines = texts.captionLinesFor([{ type: 'burntClothWashedBackToNew' }], 300)
+  const secondLines = texts.captionLinesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }], 300)
 
   assert.deepEqual(secondLines, [])
+})
+
+test('caption_ofTheOtherClothTakenOffTheHeaterSmouldering_staysSilentAfterTheFirstClothsJoke', () => {
+  const texts = new RoomTexts(7, () => {})
+  texts.captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth', charring: 0.5 }], 0)
+
+  const otherClothLines = texts.captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth2', charring: 0.5 }], 300)
+
+  assert.deepEqual(otherClothLines, [])
+})
+
+test('caption_ofTheOtherBurntClothWashedBackToNew_staysSilentAfterTheFirstClothsJoke', () => {
+  const texts = new RoomTexts(7, () => {})
+  texts.captionLinesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }], 0)
+
+  const otherClothLines = texts.captionLinesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth2' }], 300)
+
+  assert.deepEqual(otherClothLines, [])
 })
 
 test('caption_ofASpillWithinTwoMinutesOfTheLastRemarkedSpill_staysSilent', () => {

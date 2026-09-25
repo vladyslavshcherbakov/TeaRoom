@@ -71,3 +71,14 @@ test('contentProblems_whenATeasGoodRangeLeavesItsAcceptableRange_nameTheTea', ()
     'tea "testGreen" water ranges are not nested around its ideal 80 °C',
   ])
 })
+
+test('room_withAClothSharingAnIdWithAVessel_isRefusedNamingThatCloth', () => {
+  const catalog = testCatalog()
+  const room = catalog.rooms['testRoom']
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  const clothAsACup = { id: 'cup1', startsAt: { placeId: 'table', x: 9, y: 0, z: 0 } }
+
+  const problems = problemsOpeningRoom({ ...catalog, rooms: { testRoom: { ...room, cloths: [...room.cloths, clothAsACup] } } }, 'testRoom')
+
+  assert.deepEqual(problems, ['room "testRoom" gives the cloth "cup1" an id another item has'])
+})

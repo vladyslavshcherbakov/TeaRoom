@@ -3,8 +3,7 @@ export type TableViewState = {
   readonly isHeaterOn: boolean
   readonly caddy: TableViewState.Caddy
   readonly spoonFillShare: number
-  readonly clothWetShare: number
-  readonly clothTeaStain: number
+  readonly cloths: Readonly<Record<string, TableViewState.Cloth>>
   readonly charringByItem: Readonly<Record<string, TableViewState.Charring>>
   readonly puddles: readonly TableViewState.Puddle[]
 }
@@ -18,6 +17,11 @@ export declare namespace TableViewState {
   type Charring = {
     readonly charring: number
     readonly heating: Heating
+  }
+
+  type Cloth = {
+    readonly wetShare: number
+    readonly teaStain: number
   }
 
   type Puddle = {

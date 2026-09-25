@@ -56,8 +56,8 @@ The simulation core receives one command per player decision and answers with ev
 | Tip leaves | with the spoon's hand chosen, tap the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |
 | Taste | choose the hand with a tea bowl, then tap Sip | `tasteCup` | `teaTasted` with a verdict and a reaction |
 | Offer | choose the hand with a tea bowl, then tap a figurine | `offerCup` | `figurineAcceptedTea` with a response |
-| Wipe | take the cloth, choose its hand, then stroke the tea table with a finger | `wipeTable` for every 2 cm of the stroke, with that piece's speed and covered share | `tableWiped` |
-| Soak | put the cloth down in the puddle on the tea table | `putDown`, then `soakUpThePuddle` | `putDown`, `clothLaidInThePuddle` |
+| Wipe | take the cloth, choose its hand, then stroke the tea table with a finger | `wipeTable` for every 2 cm of the stroke, with the cloth, that piece's speed and covered share | `tableWiped` |
+| Soak | put the cloth down in the puddle on the tea table | `putDown`, then `soakUpThePuddle` with the cloth | `putDown`, `clothLaidInThePuddle` with the cloth |
 | Finish | tap "Finish" | `finishRitual` | `ritualFinished` |
 | Leave | tap "Leave" while resting | `leaveRoom` | `roomLeft` |
 

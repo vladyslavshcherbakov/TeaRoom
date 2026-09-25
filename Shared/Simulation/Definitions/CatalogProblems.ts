@@ -1,7 +1,7 @@
 import type { Catalog } from './Catalog.ts'
 import type { RoomDefinition } from './RoomDefinition.ts'
 import type { TeaDefinition } from './TeaDefinition.ts'
-import { caddyItemId } from '../Ritual/Reach.ts'
+import { caddyItemId, spoonItemId } from '../Ritual/Reach.ts'
 
 export function problemsOpeningRoom(catalog: Catalog, roomId: string): string[] {
   const room = catalog.rooms[roomId]
@@ -28,6 +28,11 @@ function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
   for (const repeatedId of new Set(vesselIds.filter((id, index) => vesselIds.indexOf(id) !== index))) {
     problems.push(`room "${room.id}" repeats vessel id "${repeatedId}"`)
   }
+  const clothIds = room.cloths.map((cloth) => cloth.id)
+  const takenIds = new Set([...vesselIds, spoonItemId])
+  for (const clashingId of new Set(clothIds.filter((id, index) => clothIds.indexOf(id) !== index || takenIds.has(id)))) {
+    problems.push(`room "${room.id}" gives the cloth "${clashingId}" an id another item has`)
+  }
   for (const figurineId of room.figurineIds) {
     if (catalog.figurines[figurineId] === undefined) problems.push(`room "${room.id}" uses unknown figurine "${figurineId}"`)
   }
@@ -42,7 +47,7 @@ function problemsWithPlaces(room: RoomDefinition): string[] {
     { what: 'the heater stands at', placeId: room.heaterSpot.placeId },
     { what: 'the sink is at', placeId: room.tap?.sinkSpot.placeId ?? null },
     { what: 'the spoon starts at', placeId: room.spoonStartsAt.placeId },
-    { what: 'the cloth starts at', placeId: room.clothStartsAt.placeId },
+    ...room.cloths.map((cloth) => ({ what: `the cloth "${cloth.id}" starts at`, placeId: cloth.startsAt.placeId })),
     ...room.vessels.map((vessel) => ({ what: `"${vessel.id}" starts at`, placeId: vessel.startsAt.placeId })),
   ]
   return namedPlaces

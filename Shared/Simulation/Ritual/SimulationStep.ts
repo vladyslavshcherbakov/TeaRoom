@@ -7,10 +7,10 @@ import { pourStream, type StreamLanding } from '../Physics/Pouring.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
 import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
-import type { RunningWaterState, SessionState, VesselState } from '../State/SessionState.ts'
+import type { ClothState, RunningWaterState, SessionState, VesselState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, describeLiquid, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
-import { clothItemId, spoonItemId, tapOf } from './Reach.ts'
+import { spoonItemId, tapOf } from './Reach.ts'
 import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
@@ -31,7 +31,7 @@ export function stepTheWorld(draft: Draft, seconds: number): void {
   steepAllLeaves(draft, seconds)
   continueSoaking(draft, seconds)
   dryThePuddles(draft, seconds)
-  draft.state.cloth.wetMl = clothWetMlAfterDrying(draft.state.cloth.wetMl, draft.state.cloth.teaStain, seconds)
+  for (const cloth of Object.values(draft.state.cloths)) cloth.wetMl = clothWetMlAfterDrying(cloth.wetMl, cloth.teaStain, seconds)
   startOrEndBrews(draft)
   draft.state.elapsedSeconds += seconds
 }
@@ -66,15 +66,15 @@ function glowTooHotToHold(draft: Draft, vessel: VesselState): void {
 
 function heatTheClothOnTheHeater(draft: Draft, seconds: number): void {
   const heater = draft.state.heater
-  const cloth = draft.state.cloth
-  if (!heater.isOn || heater.itemIdOnTop !== clothItemId || cloth.charring === 1) return
+  const cloth = heater.itemIdOnTop === null ? undefined : draft.state.cloths[heater.itemIdOnTop]
+  if (!heater.isOn || cloth === undefined || cloth.charring === 1) return
   if (cloth.wetMl > 0) {
     cloth.wetMl = clothWetMlOnAHotPlate(cloth.wetMl, seconds)
-    if (cloth.wetMl === 0) note(draft, 'the cloth on the heater has steamed dry and starts to char')
+    if (cloth.wetMl === 0) note(draft, `${cloth.id} on the heater has steamed dry and starts to char`)
     return
   }
   cloth.charring = clothCharringOnAHotPlate(cloth.charring, seconds)
-  if (cloth.charring === 1) note(draft, 'the cloth on the heater is charred through')
+  if (cloth.charring === 1) note(draft, `${cloth.id} on the heater is charred through`)
 }
 
 function charTheSpoonOnTheHeater(draft: Draft, seconds: number): void {
@@ -147,7 +147,8 @@ function runTheTap(draft: Draft, seconds: number): void {
   const tap = tapOf(draft)
   if (runningWater === null || tap === null) return
   const itemId = draft.state.sink.itemIdInside
-  if (itemId === clothItemId) return washTheCloth(draft, runningWater, tap, seconds)
+  const clothInTheSink = itemId === null ? undefined : draft.state.cloths[itemId]
+  if (clothInTheSink !== undefined) return washTheCloth(draft, clothInTheSink, runningWater, tap, seconds)
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   if (vessel === undefined) {
     drain(runningWater, tap.flowMlPerSecond * seconds)
@@ -202,8 +203,7 @@ function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: numbe
   draft.events.push({ type: 'lastLeavesWashedOut', vesselId: vessel.id })
 }
 
-function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {
-  const cloth = draft.state.cloth
+function washTheCloth(draft: Draft, cloth: ClothState, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {
   const stainBefore = cloth.teaStain
   const wetMlBefore = cloth.wetMl
   const charringBefore = cloth.charring
@@ -212,10 +212,10 @@ function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDef
   cloth.wetMl = clothWetMlUnderTheTap(cloth.wetMl, tap.flowMlPerSecond, seconds)
   runningWater.filledMl += cloth.wetMl - wetMlBefore
   drain(runningWater, tap.flowMlPerSecond * seconds - (cloth.wetMl - wetMlBefore))
-  if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the tea is washed out of the cloth, it holds ${cloth.wetMl.toFixed(1)} ml`)
+  if (stainBefore > 0 && cloth.teaStain === 0) note(draft, `the tea is washed out of ${cloth.id}, it holds ${cloth.wetMl.toFixed(1)} ml`)
   if (charringBefore === 0 || cloth.charring > 0) return
   cloth.wasBurntBeforeWashing = true
-  note(draft, 'the charring is washed out of the cloth, it is as good as new')
+  note(draft, `the charring is washed out of ${cloth.id}, it is as good as new`)
 }
 
 function steepAllLeaves(draft: Draft, seconds: number): void {
@@ -238,15 +238,18 @@ function stirWithTheBoilIfItBoils(draft: Draft, vessel: VesselState): void {
 }
 
 function continueSoaking(draft: Draft, seconds: number): void {
-  const cloth = draft.state.cloth
+  for (const cloth of Object.values(draft.state.cloths)) continueSoakingWith(draft, cloth, seconds)
+}
+
+function continueSoakingWith(draft: Draft, cloth: ClothState, seconds: number): void {
   if (!cloth.isSoakingThePuddle) return
   const placeId = cloth.location.kind === 'onSurface' ? cloth.location.spot.placeId : null
   const puddle = placeId === null ? undefined : draft.state.puddles[placeId]
   const soakedMl = puddle === undefined ? 0 : mlSoakedUp(puddle.wetMl, cloth.wetMl, seconds)
-  if (puddle !== undefined) takeIntoTheCloth(draft, puddle, soakedMl)
+  if (puddle !== undefined) takeIntoTheCloth(cloth, puddle, soakedMl)
   const wetMlLeft = puddle?.wetMl ?? 0
   if (wetMlLeft > 0 && soakedMl > 0) return
   cloth.isSoakingThePuddle = false
-  const why = wetMlLeft === 0 ? 'the puddle is gone' : 'the cloth is soaked through'
-  note(draft, `the cloth stops soaking because ${why}: it holds ${cloth.wetMl.toFixed(2)} ml, the ${placeId ?? 'place'} is ${wetMlLeft.toFixed(2)} ml wet`)
+  const why = wetMlLeft === 0 ? 'the puddle is gone' : `${cloth.id} is soaked through`
+  note(draft, `${cloth.id} stops soaking because ${why}: it holds ${cloth.wetMl.toFixed(2)} ml, the ${placeId ?? 'place'} is ${wetMlLeft.toFixed(2)} ml wet`)
 }

@@ -98,11 +98,11 @@ export type RitualEvent =
   | { readonly type: 'teaTasted'; readonly cupId: string; readonly verdict: TasteVerdict; readonly cupHeldLeaves: boolean }
   | { readonly type: 'figurineAcceptedTea'; readonly figurineId: string; readonly response: OfferingResponse }
   | { readonly type: 'tableWiped'; readonly placeId: string; readonly wetMlLeft: number }
-  | { readonly type: 'clothLaidInThePuddle' }
-  | { readonly type: 'burntClothWashedBackToNew' }
+  | { readonly type: 'clothLaidInThePuddle'; readonly clothId: string }
+  | { readonly type: 'burntClothWashedBackToNew'; readonly clothId: string }
   | { readonly type: 'spoonCrumbled'; readonly gramsLost: number }
   | { readonly type: 'boiledDry'; readonly vesselId: string }
   | { readonly type: 'metalGlowsTooHotToHold'; readonly vesselId: string }
-  | { readonly type: 'clothTakenOffTheHeater'; readonly charring: number }
+  | { readonly type: 'clothTakenOffTheHeater'; readonly clothId: string; readonly charring: number }
   | { readonly type: 'ritualFinished' }
   | { readonly type: 'roomLeft' }

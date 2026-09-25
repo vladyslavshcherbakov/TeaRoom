@@ -4,9 +4,9 @@ import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/Ve
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { spoonCrumblesFromCharring } from '../../../Shared/Simulation/Physics/Heat.ts'
-import { caddyItemId, clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { caddyItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
-import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
+import type { ClothState, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
 
@@ -45,10 +45,9 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     isHeaterOn: state.heater.isOn,
     caddy: { isOpen: state.vessels[caddyItemId]?.isLidOpen === true, fillShare: share(state.vessels[caddyItemId]?.leaves?.grams ?? 0, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
-    clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
-    clothTeaStain: state.cloth.teaStain,
+    cloths: Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { wetShare: share(cloth.wetMl, clothSoakedAtMl), teaStain: cloth.teaStain }])),
     charringByItem: {
-      [clothItemId]: { charring: state.cloth.charring, heating: clothHeatingOf(state) },
+      ...Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { charring: cloth.charring, heating: clothHeatingOf(state, cloth) }])),
       [spoonItemId]: { charring: state.spoon.charring, heating: spoonHeatingOf(state) },
     },
     puddles: Object.entries(state.puddles).map(([placeId, puddle]) => ({ placeId, spilledAround: puddle.spilledAround === null ? null : { x: puddle.spilledAround.x, y: puddle.spilledAround.y, z: puddle.spilledAround.z }, share: puddleShareOf(puddle.wetMl) })),
@@ -59,10 +58,10 @@ export function puddleShareOf(wetMl: number): number {
   return share(wetMl, puddleFullAtMl)
 }
 
-function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {
-  if (!isOnAWorkingHeater(state, clothItemId)) return 'none'
-  if (state.cloth.wetMl > 0) return 'steaming'
-  return heatingAsItChars(state.cloth.charring, clothBurnsFromCharring)
+function clothHeatingOf(state: DeepReadonly<SessionState>, cloth: DeepReadonly<ClothState>): TableViewState.Heating {
+  if (!isOnAWorkingHeater(state, cloth.id)) return 'none'
+  if (cloth.wetMl > 0) return 'steaming'
+  return heatingAsItChars(cloth.charring, clothBurnsFromCharring)
 }
 
 function spoonHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {

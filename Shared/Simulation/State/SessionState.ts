@@ -42,6 +42,7 @@ export type SpoonState = {
 }
 
 export type ClothState = {
+  id: string
   wetMl: number
   teaStain: number
   charring: number
@@ -99,7 +100,7 @@ export type SessionState = {
   vessels: Record<string, VesselState>
   heater: HeaterState
   spoon: SpoonState
-  cloth: ClothState
+  cloths: Record<string, ClothState>
   pour: PourState | null
   sink: SinkState
   figurines: Record<string, FigurineState>

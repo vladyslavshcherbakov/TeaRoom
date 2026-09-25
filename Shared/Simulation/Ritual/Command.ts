@@ -23,8 +23,8 @@ export type Command =
   | { readonly type: 'tipSpoonInto'; readonly vesselId: string }
   | { readonly type: 'tasteCup'; readonly cupId: string }
   | { readonly type: 'offerCup'; readonly cupId: string; readonly figurineId: string }
-  | { readonly type: 'wipeTable'; readonly strokeSpeedCmPerSecond: number; readonly coveredFraction: number }
-  | { readonly type: 'soakUpThePuddle' }
+  | { readonly type: 'wipeTable'; readonly clothId: string; readonly strokeSpeedCmPerSecond: number; readonly coveredFraction: number }
+  | { readonly type: 'soakUpThePuddle'; readonly clothId: string }
   | { readonly type: 'finishRitual' }
   | { readonly type: 'leaveRoom' }
 

@@ -105,7 +105,7 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         caddyGrams: 50,
         spoonCapacityGrams: 5,
         spoonStartsAt: onTheTable(7),
-        clothStartsAt: onTheTable(8),
+        cloths: [{ id: 'cloth', startsAt: onTheTable(8) }],
       },
     },
   }
@@ -138,8 +138,14 @@ export function testHouseCatalog(): Catalog {
           { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: at('shelf', 3) },
         ],
         spoonStartsAt: at('table', 7),
-        clothStartsAt: at('table', 8),
+        cloths: [{ id: 'cloth', startsAt: at('table', 8) }],
       },
     },
   }
+}
+
+export function withASecondCloth(catalog: Catalog): Catalog {
+  const room = catalog.rooms['testRoom']
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, cloths: [...room.cloths, { id: 'cloth2', startsAt: { placeId: 'table', x: 11, y: 0, z: 0 } }] } } }
 }

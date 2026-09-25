@@ -45,6 +45,12 @@ export class TestRitual {
     return vessel
   }
 
+  cloth(id = 'cloth') {
+    const cloth = this.session.state.cloths[id]
+    if (cloth === undefined) throw new Error(`the test room has no cloth "${id}"`)
+    return cloth
+  }
+
   do(command: Command): readonly RitualEvent[] {
     return this.session.dispatch(command)
   }

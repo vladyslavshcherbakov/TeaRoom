@@ -20,6 +20,11 @@ export type TapDefinition = {
   readonly flowMlPerSecond: number
 }
 
+export type RoomCloth = {
+  readonly id: string
+  readonly startsAt: Spot
+}
+
 export type RoomDefinition = {
   readonly id: string
   readonly ambientTemperatureC: number
@@ -36,5 +41,5 @@ export type RoomDefinition = {
   readonly caddyGrams: number
   readonly spoonCapacityGrams: number
   readonly spoonStartsAt: Spot
-  readonly clothStartsAt: Spot
+  readonly cloths: readonly RoomCloth[]
 }

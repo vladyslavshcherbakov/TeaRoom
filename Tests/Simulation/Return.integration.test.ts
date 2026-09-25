@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('kettle_whenTheKeeperIsAwayAnHour_coolsToTheRoom', () => {
@@ -114,12 +114,12 @@ test('return_withTheSpoonHereAndTheCaddyFullAndDry_restocksNothing', () => {
 })
 
 test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
-  const savedState = TestRitual.begun().savedState as { cloth: Record<string, unknown> }
-  delete savedState.cloth['teaStain']
+  const savedState = TestRitual.begun().savedState as { cloths: Record<string, Record<string, unknown>> }
+  delete savedState.cloths['cloth']?.['teaStain']
 
   const resuming = RitualSession.resume(testCatalog(), savedState, 1, new RecordingLog(), true)
 
-  assert.deepEqual(resuming, { kind: 'savedStateDoesNotFit', problems: ['state.cloth.teaStain is not a number'] })
+  assert.deepEqual(resuming, { kind: 'savedStateDoesNotFit', problems: ['state.cloths.cloth.teaStain is not a number'] })
 })
 
 test('savedState_ofAnotherVersion_doesNotFit', () => {
@@ -176,4 +176,25 @@ test('savedState_withAnItemInTheMiddleHand_resumesWithTheMiddleHandHoldingIt', (
 
   assert.deepEqual(resumed.state.keeper, { placeId: 'table', hands: ['kettle', 'thermos', 'cup1'], hasAMiddleHand: true })
   assert.deepEqual(resumed.vessel('cup1').location, { kind: 'inHand', handIndex: 2 })
+})
+
+test('savedState_fromBeforeARoomCouldHoldSeveralCloths_resumesWithItsOneClothUnderTheIdCloth', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  const savedState = ritual.savedState as { cloth?: unknown; cloths?: Record<string, { id?: string }> }
+  savedState.cloth = Object.fromEntries(Object.entries(savedState.cloths?.['cloth'] ?? {}).filter(([key]) => key !== 'id'))
+  delete savedState.cloths
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.deepEqual(resumed.cloth().location, { kind: 'inHand', handIndex: 0 })
+  assert.deepEqual(resumed.state.keeper.hands, ['cloth', null, null])
+})
+
+test('savedState_whenTheRoomGainedASecondCloth_laysTheNewClothAtItsStart', () => {
+  const savedState = TestRitual.begun().savedState
+
+  const resumed = TestRitual.resumedFrom(savedState, withASecondCloth(testCatalog()))
+
+  assert.deepEqual(resumed.cloth('cloth2').location, { kind: 'onSurface', spot: { placeId: 'table', x: 11, y: 0, z: 0 } })
 })

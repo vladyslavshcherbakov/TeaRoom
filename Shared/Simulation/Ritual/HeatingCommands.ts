@@ -4,7 +4,7 @@ import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { clothItemId, emptyTheHand, heaterSpotOf, spoonItemId, isKeeperAt, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { emptyTheHand, heaterSpotOf, isACloth, isKeeperAt, isWithinReach, locationOfItem, moveItem, spoonItemId, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
@@ -31,10 +31,10 @@ export function liftOffTheHeater(draft: Draft, itemId: string): void {
   if (!draft.state.heater.isOn) note(draft, `${itemId} lifted off a heater that was off, water not judged`)
   draft.state.heater.itemIdOnTop = null
   draft.events.push({ type: 'takenOffHeater', itemId, waterJudgement })
-  if (itemId !== clothItemId) return
-  const charring = draft.state.cloth.charring
-  note(draft, `the cloth is taken off the heater ${(charring * 100).toFixed(0)}% charred`)
-  draft.events.push({ type: 'clothTakenOffTheHeater', charring })
+  const cloth = draft.state.cloths[itemId]
+  if (cloth === undefined) return
+  note(draft, `${cloth.id} is taken off the heater ${(cloth.charring * 100).toFixed(0)}% charred`)
+  draft.events.push({ type: 'clothTakenOffTheHeater', clothId: cloth.id, charring: cloth.charring })
 }
 
 export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeaterOn'>): void {
@@ -88,13 +88,14 @@ function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
 function canSitOnTheHeater(draft: Draft, itemId: string): boolean {
   const vessel = draft.state.vessels[itemId]
   if (vessel !== undefined) return vesselDefinitionOf(draft, vessel).canSitOnHeater
-  return itemId === clothItemId || itemId === spoonItemId
+  return isACloth(draft.state, itemId) || itemId === spoonItemId
 }
 
 function describeWhatSitsOnTheHeater(draft: Draft, itemId: string): string {
   const vessel = draft.state.vessels[itemId]
   if (vessel !== undefined) return describeLiquid(vessel)
   if (itemId === spoonItemId) return `the spoon, ${(draft.state.spoon.charring * 100).toFixed(0)}% charred`
-  const cloth = draft.state.cloth
-  return `the cloth holding ${cloth.wetMl.toFixed(1)} ml, ${(cloth.charring * 100).toFixed(0)}% charred`
+  const cloth = draft.state.cloths[itemId]
+  if (cloth === undefined) return itemId
+  return `${cloth.id} holding ${cloth.wetMl.toFixed(1)} ml, ${(cloth.charring * 100).toFixed(0)}% charred`
 }

@@ -3,7 +3,7 @@ import type { DeepReadonly } from '../../../../../Shared/Simulation/State/DeepRe
 import type { HandIndex, SessionState } from '../../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { AimedPourView } from '../../AimedPour.ts'
-import type { WorldPoint } from '../../RoomLayout.ts'
+import type { ClothWiping } from '../../RoomPlay.ts'
 import type { Walk } from '../../Walking/Walk.ts'
 
 export type CarriedItemsScene = {
@@ -12,7 +12,7 @@ export type CarriedItemsScene = {
   readonly walk: Walk
   readonly heldInView: HeldInView | null
   readonly aimedPour: AimedPourView | null
-  readonly clothOnTheTableAt: WorldPoint | null
+  readonly clothWiping: ClothWiping | null
   readonly timeSeconds: number
 }
 

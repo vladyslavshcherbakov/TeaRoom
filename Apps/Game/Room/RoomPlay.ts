@@ -4,7 +4,7 @@ import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJud
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
-import { caddyItemId, carriedItemIdsIn, clothItemId, itemLocationIn, middleHandIndex, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { caddyItemId, carriedItemIdsIn, isACloth, itemLocationIn, middleHandIndex, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -39,7 +39,13 @@ export type RoomTapTarget =
   | { readonly kind: 'settingsGear' }
   | { readonly kind: 'nothing' }
 
+export type ClothWiping = {
+  readonly clothId: string
+  readonly at: WorldPoint
+}
+
 type WipeStroke = {
+  readonly clothId: string
   readonly furnitureId: FurnitureId
   lengthMetres: number
   unwipedMetres: number
@@ -135,9 +141,9 @@ export class RoomPlay {
     return this.aimedPour?.view ?? null
   }
 
-  get clothOnTheTableAt(): WorldPoint | null {
-    const press = this.press
-    return press !== null && press.hasMovedAway ? (press.stroke?.lastPoint ?? null) : null
+  get clothWiping(): ClothWiping | null {
+    const stroke = this.press !== null && this.press.hasMovedAway ? this.press.stroke : null
+    return stroke === null ? null : { clothId: stroke.clothId, at: stroke.lastPoint }
   }
 
   canTheChosenItemActOn(target: RoomTapTarget): boolean {
@@ -427,7 +433,7 @@ export class RoomPlay {
     stroke.heldSecondsAtLastWipe = heldSeconds
     if (overThePuddle === 0 || puddleArea === 0) return
     const coveredFraction = Math.min(1, (overThePuddle * clothWipingWidthMetres) / puddleArea)
-    this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond, coveredFraction })
+    this.ritual.dispatch({ type: 'wipeTable', clothId: stroke.clothId, strokeSpeedCmPerSecond, coveredFraction })
   }
 
   private isTheClothOverThePuddleAt(furnitureId: FurnitureId, point: FloorPoint): boolean {
@@ -444,12 +450,13 @@ export class RoomPlay {
 
   private finishTheStroke(stroke: WipeStroke, heldSeconds: number): void {
     if (stroke.unwipedMetres > 0) this.wipeWhatTheStrokeCovered(stroke, heldSeconds)
-    this.log(`stroke with the cloth ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, ${stroke.metresOverThePuddle.toFixed(2)} m of it over the puddle, the ${stroke.furnitureId} is ${wetMlAt(this.ritual.state, stroke.furnitureId).toFixed(1)} ml wet`)
+    this.log(`stroke with ${stroke.clothId} ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, ${stroke.metresOverThePuddle.toFixed(2)} m of it over the puddle, the ${stroke.furnitureId} is ${wetMlAt(this.ritual.state, stroke.furnitureId).toFixed(1)} ml wet`)
   }
 
   private wipeStrokeStartingAt(target: RoomTapTarget): WipeStroke | null {
-    if (this.chosenItemId() !== clothItemId || target.kind !== 'surface') return null
-    return { furnitureId: target.furnitureId, lengthMetres: 0, unwipedMetres: 0, unwipedMetresOverThePuddle: 0, metresOverThePuddle: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
+    const clothId = this.chosenItemId()
+    if (clothId === null || !isACloth(this.ritual.state, clothId) || target.kind !== 'surface') return null
+    return { clothId, furnitureId: target.furnitureId, lengthMetres: 0, unwipedMetres: 0, unwipedMetresOverThePuddle: 0, metresOverThePuddle: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
   }
 
   private toggleHand(handIndex: HandIndex): void {
@@ -468,7 +475,7 @@ export class RoomPlay {
     if (refusal !== null) return this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}: ${refusal}`)
     const events = this.ritual.dispatch({ type: 'putDown', itemId, spot })
     this.letGoOfTheChoiceUnlessRefused(events)
-    if (itemId === clothItemId && this.ritual.state.cloth.location.kind === 'onSurface') this.soakUpThePuddleIfTheClothLandsInIt(furnitureId, point)
+    if (this.ritual.state.cloths[itemId]?.location.kind === 'onSurface') this.soakUpThePuddleIfTheClothLandsInIt(itemId, furnitureId, point)
     if (furnitureId === 'shelf') this.remarkOnceWhenEverythingIsOnTheShelf(itemId)
   }
 
@@ -484,14 +491,14 @@ export class RoomPlay {
     this.log(`${lastItemId} was the last thing put on the shelf, everything is put away, remarked once for this visit`)
   }
 
-  private soakUpThePuddleIfTheClothLandsInIt(furnitureId: FurnitureId, point: WorldPoint): void {
+  private soakUpThePuddleIfTheClothLandsInIt(clothId: string, furnitureId: FurnitureId, point: WorldPoint): void {
     const puddle = this.puddleOn(furnitureId)
-    if (puddle === null) return this.log(`the cloth goes down on the ${furnitureId}, where nothing is spilled`)
+    if (puddle === null) return this.log(`${clothId} goes down on the ${furnitureId}, where nothing is spilled`)
     const distanceToThePuddle = Math.hypot(point.x - puddle.centre.x, point.z - puddle.centre.z)
     const isInThePuddle = puddle.radiusMetres > 0 && distanceToThePuddle < puddle.radiusMetres + clothHalfWidthMetres
-    if (!isInThePuddle) return this.log(`the cloth goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddle.radiusMetres.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
-    this.log(`the cloth goes down in the puddle ${distanceToThePuddle.toFixed(2)} m from its centre`)
-    this.ritual.dispatch({ type: 'soakUpThePuddle' })
+    if (!isInThePuddle) return this.log(`${clothId} goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddle.radiusMetres.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
+    this.log(`${clothId} goes down in the puddle ${distanceToThePuddle.toFixed(2)} m from its centre`)
+    this.ritual.dispatch({ type: 'soakUpThePuddle', clothId })
   }
 
   private letGoOfTheChoiceUnlessRefused(events: readonly RitualEvent[]): void {

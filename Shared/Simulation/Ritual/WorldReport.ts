@@ -1,7 +1,7 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
-import type { ItemLocation, SessionState, VesselState } from '../State/SessionState.ts'
+import type { ClothState, ItemLocation, SessionState, VesselState } from '../State/SessionState.ts'
 import { noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 
@@ -79,13 +79,19 @@ function tapLines(state: SessionState): string[] {
 }
 
 function clothLines(now: SessionState, ahead: SessionState): string[] {
-  const cloth = now.cloth
-  const wetRate = ahead.cloth.wetMl - cloth.wetMl
-  const stainRate = ahead.cloth.teaStain - cloth.teaStain
-  const charringRate = ahead.cloth.charring - cloth.charring
+  return Object.values(now.cloths).flatMap((cloth) => {
+    const clothAhead = ahead.cloths[cloth.id]
+    return clothAhead === undefined ? [] : clothLinesFor(now, cloth, clothAhead)
+  })
+}
+
+function clothLinesFor(now: SessionState, cloth: ClothState, clothAhead: ClothState): string[] {
+  const wetRate = clothAhead.wetMl - cloth.wetMl
+  const stainRate = clothAhead.teaStain - cloth.teaStain
+  const charringRate = clothAhead.charring - cloth.charring
   if (![wetRate, stainRate, charringRate].some((rate) => Math.abs(rate) > smallestReportedChange)) return []
   return [
-    `the cloth ${where(now, 'cloth', cloth.location)}: holds ${cloth.wetMl.toFixed(2)} ml (${signed(wetRate, 3)} ml/s), ` +
+    `${cloth.id} ${where(now, cloth.id, cloth.location)}: holds ${cloth.wetMl.toFixed(2)} ml (${signed(wetRate, 3)} ml/s), ` +
       `tea stain ${percent(cloth.teaStain)} (${signedPercent(stainRate)}/s), charring ${percent(cloth.charring)} (${signedPercent(charringRate)}/s)`,
   ]
 }

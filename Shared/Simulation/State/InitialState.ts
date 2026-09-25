@@ -1,7 +1,7 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
-import type { RoomDefinition } from '../Definitions/RoomDefinition.ts'
+import type { RoomDefinition, Spot } from '../Definitions/RoomDefinition.ts'
 import { water } from '../Physics/Liquid.ts'
-import type { FigurineState, SessionState, VesselState } from './SessionState.ts'
+import type { ClothState, FigurineState, SessionState, VesselState } from './SessionState.ts'
 
 export function initialSessionState(catalog: Catalog, roomId: string): SessionState {
   const room = definitionIn(catalog, 'rooms', roomId)
@@ -15,7 +15,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     vessels: vesselsInTheRoom(room),
     heater: { definitionId: room.heaterId, isOn: false, switchedOnAtSeconds: 0, itemIdOnTop: null, hasAnnouncedTargetTemperature: false, hasAnnouncedBoilingAway: false },
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
-    cloth: { wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'onSurface', spot: room.clothStartsAt } },
+    cloths: clothsInTheRoom(room),
     pour: null,
     sink: { itemIdInside: null, runningWater: null, hasRunOverTheItemInside: false },
     figurines: figurinesOnTheShelf(room),
@@ -51,4 +51,12 @@ function firstOf<Value>(values: readonly Value[], room: RoomDefinition): Value {
   const first = values[0]
   if (first === undefined) throw new Error(`room "${room.id}" offers no atmosphere to start with`)
   return first
+}
+
+function clothsInTheRoom(room: RoomDefinition): Record<string, ClothState> {
+  return Object.fromEntries(room.cloths.map((cloth): [string, ClothState] => [cloth.id, newCloth(cloth.id, cloth.startsAt)]))
+}
+
+export function newCloth(id: string, startsAt: Spot): ClothState {
+  return { id, wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'onSurface', spot: startsAt } }
 }

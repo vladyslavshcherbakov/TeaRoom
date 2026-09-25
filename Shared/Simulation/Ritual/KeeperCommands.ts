@@ -7,7 +7,7 @@ import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { clothItemId, emptyTheHand, isWithinReach, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { emptyTheHand, isWithinReach, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 import { doesTheSpoonCrumble, isTooHotToHold } from '../Physics/Heat.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
@@ -35,7 +35,8 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
   if (command.itemId === spoonItemId && doesTheSpoonCrumble(draft.state.spoon.charring)) return crumbleTheSpoon(draft)
   draft.state.keeper.hands[handIndex] = command.itemId
-  if (command.itemId === clothItemId) liftTheClothOutOfThePuddle(draft)
+  const cloth = draft.state.cloths[command.itemId]
+  if (cloth !== undefined) liftTheClothOutOfThePuddle(draft, cloth)
   liftOutOfTheSink(draft, command.itemId)
   moveItem(draft, command.itemId, { kind: 'inHand', handIndex })
   note(draft, `picked up ${command.itemId} from the ${location.spot.placeId} into hand ${handIndex}`)
