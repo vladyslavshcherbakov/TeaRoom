@@ -38,6 +38,18 @@ test('caption_ofATapTurnedOffBeforeTwoMinutes_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 119, drainedMl: 4460 }], 7), [])
 })
 
+test('caption_ofAHeaterSwitchedOffAfterTwoMinutes_remarksOnTheEnergy', () => {
+  const lines = captionLinesFor([{ type: 'heaterSwitchedOff', waterJudgement: null, onSeconds: 120, kilowattHoursUsed: 0.0667 }], 7)
+
+  const energyLines = Object.entries(englishTexts).filter(([key]) => key.startsWith('heaterRanLong.')).map(([, line]) => line.replace('{kilowattHours}', '0.07'))
+  assert.equal(lines.length, 1)
+  assert.ok(energyLines.includes(lines[0] ?? ''), lines.join(' / '))
+})
+
+test('caption_ofAHeaterSwitchedOffBeforeTwoMinutes_staysSilent', () => {
+  assert.deepEqual(captionLinesFor([{ type: 'heaterSwitchedOff', waterJudgement: 'ideal', onSeconds: 119, kilowattHoursUsed: 0.066 }], 7), [])
+})
+
 test('remark_ofTheSillTappedTwice_changesItsLine', () => {
   const firstLine = roomRemarkLine({ kind: 'sillIsTheRoomsOwn', timesTapped: 1 }, 7)
 

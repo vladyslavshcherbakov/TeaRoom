@@ -89,6 +89,11 @@ export const englishTexts = {
   'tapRanLong.3': '{litres} litres, gone. Somewhere a water meter is dancing.',
   'tapRanLong.4': 'The tap poured {litres} litres into nothing. Very generous of us.',
 
+  'heaterRanLong.1': 'The meter says {kilowattHours} kWh. The tea says thank you. The wallet says nothing.',
+  'heaterRanLong.2': 'That much electricity would have bought a whole tin of good tea. Ah well, the water is hot.',
+  'heaterRanLong.3': 'Off at last. Promise me you do this before we leave the house, too.',
+  'heaterRanLong.4': '{kilowattHours} kWh for one kettle. Somewhere a power plant is proud of us.',
+
   'offering.glow': '{figurine} glows softly.',
   'offering.subtle': '{figurine} seems pleased.',
   'offering.barely': '{figurine} barely notices.',

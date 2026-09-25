@@ -6,6 +6,7 @@ import type { RoomRemark } from './RoomPlay.ts'
 
 const spillTheKeeperRemarksOnMl = 5
 const tapRanLongFromSeconds = 120
+const heaterRanLongFromSeconds = 120
 const millilitresInALitre = 1000
 
 export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
@@ -24,6 +25,8 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return event.spilledMl >= spillTheKeeperRemarksOnMl ? [text(`spill.${phraseVariantFor('spill', voiceSeed)}`)] : []
     case 'actionRefused':
       return event.reason === 'tooHotToHold' ? [text(`tooHotToHold.${phraseVariantFor('tooHotToHold', voiceSeed)}`)] : []
+    case 'heaterSwitchedOff':
+      return event.onSeconds >= heaterRanLongFromSeconds ? [heaterEnergyLine(event.kilowattHoursUsed, voiceSeed)] : []
     case 'tapTurnedOff':
       return event.openSeconds >= tapRanLongFromSeconds ? [drainedLitresLine(event.drainedMl, voiceSeed)] : []
     case 'burntClothWashedBackToNew':
@@ -38,6 +41,11 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
 function drainedLitresLine(drainedMl: number, voiceSeed: number): string {
   const litres = String(Number((drainedMl / millilitresInALitre).toFixed(1)))
   return textWith(`tapRanLong.${phraseVariantFor('tapRanLong', voiceSeed)}`, { litres })
+}
+
+function heaterEnergyLine(kilowattHoursUsed: number, voiceSeed: number): string {
+  const kilowattHours = String(Number(kilowattHoursUsed.toFixed(2)))
+  return textWith(`heaterRanLong.${phraseVariantFor('heaterRanLong', voiceSeed)}`, { kilowattHours })
 }
 
 function offeringResponseText(figurineId: string, response: OfferingResponse): string {

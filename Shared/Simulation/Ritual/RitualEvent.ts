@@ -68,7 +68,12 @@ export type RitualEvent =
   | { readonly type: 'placedOnHeater'; readonly itemId: string }
   | { readonly type: 'takenOffHeater'; readonly itemId: string; readonly waterJudgement: WaterJudgement | null }
   | { readonly type: 'heaterSwitchedOn' }
-  | { readonly type: 'heaterSwitchedOff'; readonly waterJudgement: WaterJudgement | null }
+  | {
+      readonly type: 'heaterSwitchedOff'
+      readonly waterJudgement: WaterJudgement | null
+      readonly onSeconds: number
+      readonly kilowattHoursUsed: number
+    }
   | { readonly type: 'targetTemperatureReached'; readonly vesselId: string }
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'vesselOverflowed'; readonly vesselId: string }

@@ -3,5 +3,6 @@ import type { HeaterDefinition } from '../Simulation/Definitions/HeaterDefinitio
 export const electricPlate: HeaterDefinition = {
   id: 'electricPlate',
   degreesPerSecondPerLitre: 1.5,
+  powerWatts: 2000,
   boilingAwayMlPerSecond: 3,
 }

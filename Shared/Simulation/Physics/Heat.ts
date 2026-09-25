@@ -6,11 +6,16 @@ const boilingPointC = 100
 const shellHeatsThroughSeconds = 20
 const shellCoolsDownSeconds = 60
 const shellTooHotToHoldFrom = 0.2
+const joulesInAKilowattHour = 3_600_000
 
 export function heatLiquid(liquid: Liquid, heater: HeaterDefinition, seconds: number): Liquid {
   if (isEmpty(liquid)) return liquid
   const risePerSecond = heater.degreesPerSecondPerLitre * (1000 / liquid.volumeMl)
   return { ...liquid, temperatureC: Math.min(boilingPointC, liquid.temperatureC + risePerSecond * seconds) }
+}
+
+export function kilowattHoursUsed(heater: HeaterDefinition, seconds: number): number {
+  return (heater.powerWatts * seconds) / joulesInAKilowattHour
 }
 
 export function liquidBoiledAway(liquid: Liquid, heater: HeaterDefinition, seconds: number): Liquid {

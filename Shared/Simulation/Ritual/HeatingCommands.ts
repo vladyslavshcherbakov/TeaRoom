@@ -1,4 +1,6 @@
+import { definitionIn } from '../Definitions/Catalog.ts'
 import { judgeWater, type WaterJudgement } from '../Judgement/WaterJudgement.ts'
+import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
@@ -34,6 +36,7 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
   if (draft.state.heater.isOn) return refuse(draft, command, 'heaterAlreadyOn')
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   draft.state.heater.isOn = true
+  draft.state.heater.switchedOnAtSeconds = draft.state.elapsedSeconds
   draft.state.heater.hasAnnouncedTargetTemperature = false
   draft.state.heater.hasAnnouncedBoilingAway = false
   note(draft, `heater switched on with ${draft.state.heater.itemIdOnTop ?? 'nothing'} on top`)
@@ -43,8 +46,16 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
 export function switchHeaterOff(draft: Draft, command: CommandOfType<'switchHeaterOff'>): void {
   if (!draft.state.heater.isOn) return refuse(draft, command, 'heaterAlreadyOff')
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
-  draft.state.heater.isOn = false
-  draft.events.push({ type: 'heaterSwitchedOff', waterJudgement: judgementOfWaterOnHeater(draft) })
+  switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft))
+}
+
+export function switchTheHeaterOff(draft: Draft, waterJudgement: WaterJudgement | null): void {
+  const heater = draft.state.heater
+  heater.isOn = false
+  const onSeconds = draft.state.elapsedSeconds - heater.switchedOnAtSeconds
+  const kilowattHours = kilowattHoursUsed(definitionIn(draft.catalog, 'heaters', heater.definitionId), onSeconds)
+  note(draft, `heater switched off after ${onSeconds.toFixed(1)} s on, ${kilowattHours.toFixed(3)} kWh used`)
+  draft.events.push({ type: 'heaterSwitchedOff', waterJudgement, onSeconds, kilowattHoursUsed: kilowattHours })
 }
 
 function isKeeperAtTheHeater(draft: Draft): boolean {

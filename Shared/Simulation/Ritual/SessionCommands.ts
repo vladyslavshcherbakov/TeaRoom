@@ -1,6 +1,7 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { switchTheHeaterOff } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
 
@@ -29,9 +30,8 @@ export function chooseAtmosphere(draft: Draft, command: CommandOfType<'chooseAtm
 export function finishRitual(draft: Draft): void {
   if (draft.state.pour !== null) finishPour(draft)
   if (draft.state.heater.isOn) {
-    draft.state.heater.isOn = false
     note(draft, 'heater switched off because the ritual finished')
-    draft.events.push({ type: 'heaterSwitchedOff', waterJudgement: null })
+    switchTheHeaterOff(draft, null)
   }
   const openLids = openLidsOf(draft)
   note(draft, `ritual finished: ${wetMlOnEveryPlace(draft.state).toFixed(1)} ml wet on every place, open lids: ${openLids.join(', ') || 'none'}`)

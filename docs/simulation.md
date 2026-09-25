@@ -30,6 +30,8 @@ A vessel with a metal shell, the thermos, may stand on the heater too. On a work
 
 When the water on the heater first reaches the lower edge of the chosen tea's good range, the core announces it once per switch-on. This is the moment for two faint haptic pulses where the device has them.
 
+Switching the heater off, by hand or by finishing the ritual, reports how long it was on since it was last switched on, and the energy it used: its `powerWatts` for that time, 2000 W for the electric plate.
+
 ## Judging water
 
 Each tea defines an ideal temperature, a good range and a wider acceptable range. Water is `ideal` inside the good range, `slightlyCool` or `slightlyHot` between the good and acceptable ranges, and `tooCool` or `tooHot` outside them. Switching the heater off, or lifting the kettle off a working heater, reports this judgement.
