@@ -5,6 +5,7 @@ import type { ClothState, ItemLocation, SessionState, VesselState } from '../Sta
 import { noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { percent } from './Percent.ts'
+import { spoonItemId, whereIs } from './Reach.ts'
 
 export const worldReportSeconds = 5
 
@@ -100,7 +101,7 @@ function clothLinesFor(now: SessionState, cloth: ClothState, clothAhead: ClothSt
 function spoonLines(now: SessionState, ahead: SessionState): string[] {
   const charringRate = ahead.spoon.charring - now.spoon.charring
   if (Math.abs(charringRate) <= smallestReportedChange) return []
-  return [`the spoon ${where(now, 'spoon', now.spoon.location)} with ${now.spoon.grams.toFixed(2)} g on it: charring ${percent(now.spoon.charring)} (${signedPercent(charringRate)}/s)`]
+  return [`the spoon ${where(now, spoonItemId, now.spoon.location)} with ${now.spoon.grams.toFixed(2)} g on it: charring ${percent(now.spoon.charring)} (${signedPercent(charringRate)}/s)`]
 }
 
 function puddleLines(now: SessionState, ahead: SessionState): string[] {
@@ -114,14 +115,7 @@ function puddleLines(now: SessionState, ahead: SessionState): string[] {
 function where(state: SessionState, itemId: string, location: ItemLocation): string {
   if (state.sink.itemIdInside === itemId) return 'in the sink'
   if (state.heater.itemIdOnTop === itemId) return `on the ${state.heater.isOn ? 'working' : 'cold'} heater`
-  switch (location.kind) {
-    case 'onSurface':
-      return `on the ${location.spot.placeId}`
-    case 'inHand':
-      return `in hand ${location.handIndex}`
-    case 'gone':
-      return 'gone'
-  }
+  return whereIs(location)
 }
 
 function signed(value: number, digits: number): string {

@@ -2,6 +2,8 @@ import type { Catalog } from '../Definitions/Catalog.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
 import { dryLeaves, type Leaves } from '../Physics/Brewing.ts'
 import { water } from '../Physics/Liquid.ts'
+import { carriedItemIdsIn, itemLocationIn } from '../Ritual/Reach.ts'
+import type { DeepReadonly } from './DeepReadonly.ts'
 import { initialSessionState } from './InitialState.ts'
 import type { ClothState, FigurineState, ItemLocation, PourState, PuddleState, RunningWaterState, SessionState, VesselState } from './SessionState.ts'
 
@@ -83,7 +85,7 @@ function figurineShape(id: string): FigurineState {
   return { id, satisfaction: 0, wasOfferedTeaThisRitual: false }
 }
 
-function locationProblems(owner: string, location: ItemLocation): string[] {
+function locationProblems(owner: string, location: DeepReadonly<ItemLocation>): string[] {
   switch (location.kind) {
     case 'onSurface':
       return shapeProblems(spotShape, location.spot, `${owner}'s spot`)
@@ -97,7 +99,7 @@ function locationProblems(owner: string, location: ItemLocation): string[] {
 }
 
 function handProblemsOf(state: SessionState): string[] {
-  const itemIds = new Set([...Object.keys(state.vessels), 'spoon', ...Object.keys(state.cloths)])
+  const itemIds = new Set(carriedItemIdsIn(state))
   return state.keeper.hands.flatMap((itemId, handIndex) => (itemId === null || itemIds.has(itemId) ? [] : [`hand ${handIndex} holds ${itemId}, which the room does not have`]))
 }
 
@@ -105,12 +107,11 @@ function placeProblemsOf(state: SessionState, places: ReadonlySet<string>): stri
   return locationsIn(state).flatMap(([owner, location]) => (location.kind === 'onSurface' && !places.has(location.spot.placeId) ? [`${owner} stands on ${location.spot.placeId}, which the room no longer has`] : []))
 }
 
-function locationsIn(state: SessionState): [string, ItemLocation][] {
-  return [
-    ...Object.values(state.vessels).map((vessel): [string, ItemLocation] => [vessel.id, vessel.location]),
-    ['spoon', state.spoon.location],
-    ...Object.values(state.cloths).map((cloth): [string, ItemLocation] => [cloth.id, cloth.location]),
-  ]
+function locationsIn(state: SessionState): [string, DeepReadonly<ItemLocation>][] {
+  return carriedItemIdsIn(state).flatMap((itemId): [string, DeepReadonly<ItemLocation>][] => {
+    const location = itemLocationIn(state, itemId)
+    return location === undefined ? [] : [[itemId, location]]
+  })
 }
 
 function fitTheVessels(state: SessionState, fresh: SessionState): string[] {
