@@ -1,4 +1,4 @@
-import { isACloth, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { itemKindOf } from '../../../Shared/Simulation/Ritual/ItemKinds.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 
@@ -17,10 +17,16 @@ const shapeByVesselDefinitionId: Readonly<Record<string, CarriedShape>> = {
 }
 
 export function carriedShapeOf(state: DeepReadonly<SessionState>, itemId: string): CarriedShape | undefined {
-  const vessel = state.vessels[itemId]
-  if (vessel !== undefined) return shapeByVesselDefinitionId[vessel.definitionId]
-  if (itemId === spoonItemId) return 'spoon'
-  return isACloth(state, itemId) ? 'cloth' : undefined
+  switch (itemKindOf(state, itemId)) {
+    case 'vessel':
+      return shapeByVesselDefinitionId[state.vessels[itemId]?.definitionId ?? '']
+    case 'spoon':
+      return 'spoon'
+    case 'cloth':
+      return 'cloth'
+    case undefined:
+      return undefined
+  }
 }
 
 export type FootprintCircle = { readonly x: number; readonly z: number; readonly radius: number; readonly restsOnTheSurface: boolean }
