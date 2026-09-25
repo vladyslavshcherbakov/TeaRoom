@@ -19,6 +19,11 @@ import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 
 const wallHeight = 2.6
 const wallThickness = 0.12
+const faucetPostAboveTheSpoutMetres = 0.04
+const sinkInsideWidthMetres = 0.36
+const sinkInsideDepthMetres = 0.28
+const sinkWallHeightMetres = 0.1
+const sinkWallThicknessMetres = 0.02
 const reachOfFurnitureMetres = 0.35
 const heaterGlowColour = new THREE.Color('#e0603a')
 const heaterGlowIntensity = 0.8
@@ -173,21 +178,43 @@ export class RoomModel {
 
   private faucet(base: WorldPoint): THREE.Object3D {
     const faucet = new THREE.Group()
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.05), this.materials.materialFor('steel'))
-    post.position.set(base.x, base.y + 0.18, base.z)
+    const postHeight = faucetSpout.y - base.y + faucetPostAboveTheSpoutMetres
+    const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, postHeight, 0.05), this.materials.materialFor('steel'))
+    post.position.set(base.x, base.y + postHeight / 2, base.z)
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, faucetSpout.z - base.z + 0.02), this.materials.materialFor('steel'))
     arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
     const sinkRim = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.012, 0.34), this.materials.materialFor('steel'))
     sinkRim.position.set(base.x, base.y + 0.006, faucetSpout.z + 0.02)
-    const sinkHollow = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.004, 0.28), this.materials.materialFor('sinkHollow'))
-    sinkHollow.position.set(base.x, base.y + 0.014, faucetSpout.z + 0.02)
+    const sinkHollow = new THREE.Mesh(new THREE.BoxGeometry(sinkInsideWidthMetres, 0.004, sinkInsideDepthMetres), this.materials.materialFor('sinkHollow'))
+    sinkHollow.position.set(base.x, base.y + 0.012, faucetSpout.z + 0.02)
     sinkRim.receiveShadow = true
     sinkHollow.receiveShadow = true
-    faucet.add(post, arm, sinkRim, sinkHollow)
+    faucet.add(post, arm, sinkRim, sinkHollow, ...this.sinkWalls({ x: base.x, y: base.y, z: faucetSpout.z + 0.02 }))
     post.castShadow = true
     arm.castShadow = true
     this.root.add(faucet)
     return faucet
+  }
+
+  private sinkWalls(floorCentre: WorldPoint): THREE.Mesh[] {
+    const wallY = floorCentre.y + sinkWallHeightMetres / 2
+    const halfWidth = sinkInsideWidthMetres / 2 + sinkWallThicknessMetres / 2
+    const halfDepth = sinkInsideDepthMetres / 2 + sinkWallThicknessMetres / 2
+    const outsideWidth = sinkInsideWidthMetres + 2 * sinkWallThicknessMetres
+    return [
+      this.sinkWall(outsideWidth, sinkWallThicknessMetres, { x: floorCentre.x, y: wallY, z: floorCentre.z - halfDepth }),
+      this.sinkWall(outsideWidth, sinkWallThicknessMetres, { x: floorCentre.x, y: wallY, z: floorCentre.z + halfDepth }),
+      this.sinkWall(sinkWallThicknessMetres, sinkInsideDepthMetres, { x: floorCentre.x - halfWidth, y: wallY, z: floorCentre.z }),
+      this.sinkWall(sinkWallThicknessMetres, sinkInsideDepthMetres, { x: floorCentre.x + halfWidth, y: wallY, z: floorCentre.z }),
+    ]
+  }
+
+  private sinkWall(width: number, depth: number, centre: WorldPoint): THREE.Mesh {
+    const wall = new THREE.Mesh(new THREE.BoxGeometry(width, sinkWallHeightMetres, depth), this.materials.materialFor('steel'))
+    wall.position.set(centre.x, centre.y, centre.z)
+    wall.castShadow = true
+    wall.receiveShadow = true
+    return wall
   }
 
   private figurine(spot: ItemSpot): THREE.Object3D {
