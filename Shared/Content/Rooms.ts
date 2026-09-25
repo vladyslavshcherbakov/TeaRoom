@@ -22,6 +22,7 @@ export const quietRoom: RoomDefinition = {
     { id: 'bowl6', definitionId: 'teaBowl', initialWaterMl: 0, startsAt: { placeId: 'shelf', x: -2.75, y: 0.07, z: 0.8 } },
     { id: 'bowl7', definitionId: 'teaBowl', initialWaterMl: 0, startsAt: { placeId: 'shelf', x: -2.75, y: 0.72, z: 1.15 } },
     { id: 'bowl8', definitionId: 'teaBowl', initialWaterMl: 0, startsAt: { placeId: 'shelf', x: -2.75, y: 0.07, z: 1.15 } },
+    { id: 'bowl9', definitionId: 'teaBowl', initialWaterMl: 0, startsAt: { placeId: 'shelf', x: -2.75, y: 0.72, z: -0.25 } },
   ],
   figurineIds: ['dragon', 'toad'],
   caddyGrams: 60,

@@ -51,6 +51,15 @@ type BottomPainting = {
   readonly turnRadians: number
 }
 
+type BowlRelief = 'smooth' | 'fluted' | 'hobnail'
+
+type BowlLook = {
+  readonly glaze: Surface
+  readonly relief: BowlRelief
+  readonly isRimGilded: boolean
+  readonly painting: BottomPainting | null
+}
+
 type ItemParts = {
   readonly meshes: THREE.Object3D[]
   readonly lid: THREE.Object3D | null
@@ -71,11 +80,21 @@ const paintingSegmentsAlong = 48
 const fewestPaintingSegmentsAcross = 8
 const bowlSegmentsAround = 64
 const flutedBowlSegmentsAround = 160
+const hobnailBowlSegmentsAround = 192
+const hobnailsAround = 22
+const hobnailRowSpacingMetres = 0.0085
+const hobnailsStartAboveTheFootMetres = 0.012
+const hobnailsEndBelowTheRimMetres = 0.008
+const hobnailRadiusMetres = 0.0037
+const hobnailHeightMetres = 0.0022
+const hobnailWallRadiusMetres = 0.075
+const gildedRimRadiusMetres = 0.0818
+const gildedRimTubeMetres = 0.0019
+const gildedRimHeightMetres = 0.0632
 const flutesAround = 16
 const fluteDepthShare = 0.025
 const flutesStartAboveTheFootMetres = 0.008
 const flutesFullAboveTheFootMetres = 0.02
-const flutedBowls: ReadonlySet<string> = new Set(['bowl8'])
 const bowlWallProfilePoints = 32
 const bowlInsideProfile = new THREE.SplineCurve([
   new THREE.Vector2(0, 0.009),
@@ -100,20 +119,18 @@ const bowlUndersideAndFoot = [
 ]
 const bowlRimTop = new THREE.Vector2(0.0815, 0.0635)
 const bowlProfile = [...bowlUndersideAndFoot, ...bowlOutsideWall, bowlRimTop, ...[...bowlInsideProfile].reverse()]
-const paintingOnTheBottomByBowlId: Readonly<Record<string, BottomPainting>> = {
-  bowl1: { surface: 'koiPainting', lengthMetres: 0.07, aspect: koiPaintingAspect, turnRadians: 0.6 },
-  bowl2: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 },
-  bowl5: { surface: 'heronPainting', lengthMetres: 0.064, aspect: heronPaintingAspect, turnRadians: 0 },
-}
-const glazeByBowlId: Readonly<Record<string, Surface>> = {
-  bowl1: 'whiteGlaze',
-  bowl2: 'pearlGlaze',
-  bowl3: 'skyBlueGlaze',
-  bowl4: 'blueGlaze',
-  bowl5: 'yellowGlaze',
-  bowl6: 'emeraldGlaze',
-  bowl7: 'temperGlaze',
-  bowl8: 'flutedGlass',
+const plainBowl = { relief: 'smooth', isRimGilded: false, painting: null } as const
+const porcelainBowl: BowlLook = { ...plainBowl, glaze: 'porcelain' }
+const bowlLookById: Readonly<Record<string, BowlLook>> = {
+  bowl1: { ...plainBowl, glaze: 'whiteGlaze', painting: { surface: 'koiPainting', lengthMetres: 0.07, aspect: koiPaintingAspect, turnRadians: 0.6 } },
+  bowl2: { ...plainBowl, glaze: 'pearlGlaze', painting: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 } },
+  bowl3: { ...plainBowl, glaze: 'skyBlueGlaze' },
+  bowl4: { ...plainBowl, glaze: 'blueGlaze' },
+  bowl5: { ...plainBowl, glaze: 'yellowGlaze', painting: { surface: 'heronPainting', lengthMetres: 0.064, aspect: heronPaintingAspect, turnRadians: 0 } },
+  bowl6: { ...plainBowl, glaze: 'emeraldGlaze' },
+  bowl7: { ...plainBowl, glaze: 'temperGlaze' },
+  bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted' },
+  bowl9: { ...plainBowl, glaze: 'glass', relief: 'hobnail', isRimGilded: true },
 }
 
 export function newCarriedModel(itemId: string, shape: CarriedShape, materials: CarriedModelMaterials): CarriedModel {
@@ -201,7 +218,7 @@ function partsOf(shape: CarriedShape, itemId: string, materials: CarriedModelMat
     case 'caddy':
       return caddyParts(materials.room)
     case 'bowl':
-      return bowlParts(materials.room, glazeByBowlId[itemId] ?? 'porcelain', paintingOnTheBottomByBowlId[itemId], flutedBowls.has(itemId))
+      return bowlParts(materials.room, bowlLookById[itemId] ?? porcelainBowl)
     case 'spoon':
       return spoonParts(materials.room)
     case 'cloth':
@@ -269,17 +286,67 @@ function clothParts(clothMaterial: THREE.Material): ItemParts {
   return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(clothLengthMetres / 2, 0.02, 0), rimHeight: 0.02, liquidRadius: null }
 }
 
-function bowlParts(materials: RoomMaterials, glaze: Surface, painting: BottomPainting | undefined, isFluted: boolean): ItemParts {
-  const glazed = materials.unsharedMaterialFor(glaze)
+function bowlParts(materials: RoomMaterials, look: BowlLook): ItemParts {
+  const glazed = materials.unsharedMaterialFor(look.glaze)
   glazed.side = THREE.DoubleSide
-  const body = new THREE.Mesh(isFluted ? flutedBowlGeometry() : new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround), glazed)
+  const body = new THREE.Mesh(bowlGeometryWith(look.relief), glazed)
   const meshes: THREE.Object3D[] = [body]
-  if (painting !== undefined) meshes.push(paintedOnTheBottom(materials, painting))
+  if (look.painting !== null) meshes.push(paintedOnTheBottom(materials, look.painting))
+  if (look.isRimGilded) meshes.push(gildedRim(materials))
   const bowl = { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
-  if (glaze !== 'flutedGlass') return bowl
+  if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
   clearGlass.side = THREE.DoubleSide
   return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass } }
+}
+
+function bowlGeometryWith(relief: BowlRelief): THREE.BufferGeometry {
+  switch (relief) {
+    case 'smooth':
+      return new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround)
+    case 'fluted':
+      return flutedBowlGeometry()
+    case 'hobnail':
+      return hobnailBowlGeometry()
+  }
+}
+
+function gildedRim(materials: RoomMaterials): THREE.Mesh {
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(gildedRimRadiusMetres, gildedRimTubeMetres, 8, 96), materials.materialFor('gildedRim'))
+  rim.rotation.x = Math.PI / 2
+  rim.position.y = gildedRimHeightMetres
+  return rim
+}
+
+function hobnailBowlGeometry(): THREE.BufferGeometry {
+  const geometry = new THREE.LatheGeometry(bowlProfile, hobnailBowlSegmentsAround)
+  const position = geometry.getAttribute('position')
+  const firstOutsidePoint = bowlUndersideAndFoot.length
+  const lastOutsidePoint = firstOutsidePoint + bowlOutsideWall.length - 1
+  for (let index = 0; index < position.count; index += 1) {
+    const pointInTheProfile = index % bowlProfile.length
+    if (pointInTheProfile < firstOutsidePoint || pointInTheProfile > lastOutsidePoint) continue
+    const x = position.getX(index)
+    const z = position.getZ(index)
+    const radius = Math.hypot(x, z)
+    const swell = 1 + hobnailSwellAt(Math.atan2(z, x), position.getY(index)) / radius
+    position.setXYZ(index, x * swell, position.getY(index), z * swell)
+  }
+  geometry.computeVertexNormals()
+  return geometry
+}
+
+function hobnailSwellAt(angle: number, height: number): number {
+  const rimHeight = bowlRimTop.y
+  if (height < hobnailsStartAboveTheFootMetres || height > rimHeight - hobnailsEndBelowTheRimMetres) return 0
+  const row = Math.round((height - hobnailsStartAboveTheFootMetres) / hobnailRowSpacingMetres)
+  const angleStep = (Math.PI * 2) / hobnailsAround
+  const rowTurn = row % 2 === 0 ? 0 : angleStep / 2
+  const nearestAngle = Math.round((angle - rowTurn) / angleStep) * angleStep + rowTurn
+  const acrossMetres = (angle - nearestAngle) * hobnailWallRadiusMetres
+  const alongMetres = height - (hobnailsStartAboveTheFootMetres + row * hobnailRowSpacingMetres)
+  const share = Math.hypot(acrossMetres, alongMetres) / hobnailRadiusMetres
+  return share >= 1 ? 0 : hobnailHeightMetres * Math.sqrt(1 - share * share)
 }
 
 function flutedBowlGeometry(): THREE.BufferGeometry {

@@ -49,7 +49,8 @@ export type Surface =
   | 'yellowGlaze'
   | 'emeraldGlaze'
   | 'temperGlaze'
-  | 'flutedGlass'
+  | 'glass'
+  | 'gildedRim'
   | 'clearGlassHeldInView'
   | 'koiPainting'
   | 'lotusPainting'
@@ -96,7 +97,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   yellowGlaze: '#f1cd55',
   emeraldGlaze: '#1f8a68',
   temperGlaze: '#7a6650',
-  flutedGlass: '#ffffff',
+  glass: '#ffffff',
+  gildedRim: '#e2b451',
   clearGlassHeldInView: '#eef7f2',
   koiPainting: '#ffffff',
   lotusPainting: '#ffffff',
@@ -141,7 +143,8 @@ export class RoomMaterials {
     if (surface === 'flame' || surface === 'flameCore' || surface === 'ember') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
     if (surface === 'temperGlaze') return this.temperGlazeMaterial(color)
     if (surface === 'blueGlaze') return this.kintsugiMaterial()
-    if (surface === 'flutedGlass') return this.glassMaterial(color)
+    if (surface === 'glass') return this.glassMaterial(color)
+    if (surface === 'gildedRim') return this.goldMaterial(color)
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
@@ -202,6 +205,10 @@ export class RoomMaterials {
       envMap: this.reflections,
       envMapIntensity: 1.2,
     })
+  }
+
+  private goldMaterial(color: string): THREE.MeshPhysicalMaterial {
+    return new THREE.MeshPhysicalMaterial({ color, metalness: 1, roughness: 0.18, envMap: this.reflections, envMapIntensity: 1.5 })
   }
 
   private glassMaterial(color: string): THREE.MeshPhysicalMaterial {
