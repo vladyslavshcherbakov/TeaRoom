@@ -11,6 +11,7 @@ import type { RitualEvent } from './RitualEvent.ts'
 import type { LogLevel, RitualLog } from './RitualLog.ts'
 import { returnAfterAbsence } from './ReturnAfterAbsence.ts'
 import { simulateStep } from './SimulationStep.ts'
+import { isTimeToReportTheWorld, worldReportOf } from './WorldReport.ts'
 
 export type RoomOpening =
   | { readonly kind: 'opened'; readonly session: RitualSession }
@@ -85,7 +86,9 @@ export class RitualSession {
     const events: RitualEvent[] = []
     this.secondsNotYetSimulated += seconds
     while (this.secondsNotYetSimulated >= RitualSession.simulationStepSeconds - RitualSession.roundingToleranceSeconds) {
+      const secondsBefore = this.currentState.elapsedSeconds
       events.push(...this.accept(simulateStep(this.currentState, RitualSession.simulationStepSeconds, this.catalog)))
+      if (isTimeToReportTheWorld(secondsBefore, this.currentState.elapsedSeconds)) this.accept(worldReportOf(this.currentState, this.catalog))
       this.secondsNotYetSimulated -= RitualSession.simulationStepSeconds
     }
     return events

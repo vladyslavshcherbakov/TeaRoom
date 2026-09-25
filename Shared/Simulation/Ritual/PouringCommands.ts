@@ -52,7 +52,8 @@ export function finishPour(draft: Draft): void {
   note(
     draft,
     `pour from ${pour.sourceId} into ${pour.targetId ?? 'the table'} finished: ` +
-      `${pour.pouredMl.toFixed(1)} ml landed, ${pour.spilledMl.toFixed(1)} ml spilled, ${wetMlOnEveryPlace(draft.state).toFixed(1)} ml wet on every place`,
+      `${pour.pouredMl.toFixed(1)} ml landed, ${pour.spilledMl.toFixed(1)} ml spilled, ${wetMlOnEveryPlace(draft.state).toFixed(1)} ml wet on every place; ` +
+      `now ${describeVesselById(draft, pour.sourceId)}${pour.targetId === null ? '' : ` and ${describeVesselById(draft, pour.targetId)}`}`,
   )
   draft.events.push({
     type: 'pourFinished',
@@ -76,4 +77,9 @@ function refusalToPour(draft: Draft, source: VesselState, target: VesselState | 
   if (target === null) return null
   if (isClosedAgainstFilling(draft, target)) return 'lidClosed'
   return null
+}
+
+function describeVesselById(draft: Draft, vesselId: string): string {
+  const vessel = draft.state.vessels[vesselId]
+  return vessel === undefined ? `${vesselId}, which is gone` : describeLiquid(vessel)
 }

@@ -49,7 +49,8 @@ export function turnTheTapOff(draft: Draft, command: CommandOfType<'turnTheTapOf
   note(
     draft,
     `tap closed over ${draft.state.sink.itemIdInside ?? 'the empty sink'}: ${runningWater.filledMl.toFixed(1)} ml went in, ${runningWater.drainedMl.toFixed(1)} ml down the drain; ` +
-      `open for ${openSeconds.toFixed(1)} s, ${runningWater.drainedSinceOpenedMl.toFixed(1)} ml down the drain since it opened`,
+      `open for ${openSeconds.toFixed(1)} s, ${runningWater.drainedSinceOpenedMl.toFixed(1)} ml down the drain since it opened` +
+      describeWhatStandsInTheSink(draft),
   )
   draft.events.push({ type: 'tapTurnedOff', openSeconds, drainedMl: runningWater.drainedSinceOpenedMl })
 }
@@ -106,4 +107,10 @@ function wringOutTheCloth(draft: Draft): void {
   cloth.wasBurntBeforeWashing = false
   note(draft, 'the cloth came out of the sink as new, though it was burnt when it went in')
   draft.events.push({ type: 'burntClothWashedBackToNew' })
+}
+
+function describeWhatStandsInTheSink(draft: Draft): string {
+  const itemId = draft.state.sink.itemIdInside
+  const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
+  return vessel === undefined ? '' : `; ${describeLiquid(vessel)}`
 }

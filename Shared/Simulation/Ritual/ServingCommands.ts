@@ -33,7 +33,7 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
     draft,
     `sipped ${sip.volumeMl.toFixed(1)} ml of ${tea.id} from ${cup.id}${cupHeldLeaves ? ', with leaves in it,' : ''} at ${sip.temperatureC.toFixed(1)} °C, ` +
       `strength ${sip.strength.toFixed(0)}, bitterness ${sip.bitterness.toFixed(0)}: ` +
-      `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}`,
+      `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}; ${describeLiquid(cup)} left`,
   )
   draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict, cupHeldLeaves })
 }

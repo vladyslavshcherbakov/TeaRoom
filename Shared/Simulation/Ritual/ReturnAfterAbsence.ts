@@ -5,6 +5,7 @@ import { note, outcomeOf, startDraft, type Draft, type Outcome } from './Draft.t
 import { finishPour } from './PouringCommands.ts'
 import { caddyItemId } from './Reach.ts'
 import { stepTheWorld } from './SimulationStep.ts'
+import { reportTheWorld } from './WorldReport.ts'
 
 export const absenceStepSeconds = 1
 export const longestLivedAbsenceSeconds = 12 * 60 * 60
@@ -19,6 +20,7 @@ export function returnAfterAbsence(state: SessionState, awaySeconds: number, cat
   }
   liveThroughTheAbsence(draft, awaySeconds)
   restockTheHouse(draft)
+  reportTheWorld(draft, 'the room on return')
   return outcomeOf(draft)
 }
 

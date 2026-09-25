@@ -46,3 +46,24 @@ test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
   assert.ok(ritual.log.messagesAt('debug').some((message) => message.endsWith('pour tilted to 30.0°, 50% on target')))
   assert.ok(!ritual.log.messagesAt('info').some((message) => message.includes('pour tilted')))
 })
+
+test('worldReport_whileTheKettleHeats_logsItsWaterAndHowFastItWarms', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  ritual.wait(6)
+
+  assert.ok(
+    ritual.log.messagesAt('debug').some((message) => message.includes('the room: kettle on the working heater, lid closed: 500.0 ml (+0.00 ml/s) at 40.2 °C (+4.000 °C/s)')),
+    ritual.log.messagesAt('debug').join('\n'),
+  )
+})
+
+test('worldReport_ofARoomWhereNothingChanges_saysTheRoomIsStill', () => {
+  const ritual = TestRitual.begun()
+
+  ritual.wait(6)
+
+  assert.ok(ritual.log.messagesAt('debug').some((message) => message.endsWith('the room: the room is still')), ritual.log.messagesAt('debug').join('\n'))
+})
