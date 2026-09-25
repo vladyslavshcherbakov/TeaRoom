@@ -53,7 +53,7 @@ export function puddleShareOf(wetMl: number): number {
   return share(wetMl, puddleFullAtMl)
 }
 
-function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.ClothHeating {
+function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {
   if (!state.heater.isOn || state.heater.itemIdOnTop !== clothItemId) return 'none'
   if (state.cloth.wetMl > 0) return 'steaming'
   const charring = state.cloth.charring

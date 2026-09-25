@@ -6,14 +6,14 @@ export type TableViewState = {
   readonly clothWetShare: number
   readonly clothTeaStain: number
   readonly clothCharring: number
-  readonly clothHeating: TableViewState.ClothHeating
+  readonly clothHeating: TableViewState.Heating
   readonly puddles: readonly TableViewState.Puddle[]
 }
 
 export declare namespace TableViewState {
   type SteamLevel = 'none' | 'wisps' | 'visible' | 'billowing'
   type SurfaceMotion = 'still' | 'shimmering' | 'simmering' | 'boiling'
-  type ClothHeating = 'none' | 'steaming' | 'warming' | 'smoking' | 'scorching' | 'smouldering' | 'burning'
+  type Heating = 'none' | 'steaming' | 'warming' | 'smoking' | 'scorching' | 'smouldering' | 'burning'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed'
 
   type Puddle = {

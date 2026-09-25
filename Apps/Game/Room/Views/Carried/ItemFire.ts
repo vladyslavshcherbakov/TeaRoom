@@ -16,7 +16,7 @@ const flameRadiusMetres = 0.012
 const flameHeightMetres = 0.04
 const flameCoreShare = 0.55
 const flickerPerSecond = 9
-const puffsByHeating: Readonly<Record<TableViewState.ClothHeating, number>> = { none: 0, steaming: puffCount, warming: 0, smoking: 2, scorching: 3, smouldering: puffCount, burning: puffCount }
+const puffsByHeating: Readonly<Record<TableViewState.Heating, number>> = { none: 0, steaming: puffCount, warming: 0, smoking: 2, scorching: 3, smouldering: puffCount, burning: puffCount }
 const flickerDepth = 0.2
 const emberCount = 14
 const emberRadiusMetres = 0.0035
@@ -25,10 +25,10 @@ const emberAboveTheClothMetres = 0.006
 const goldenAngleRadians = 2.4
 const emberPulsesPerSecond = 3
 const dimmestEmberScale = 0.6
-const embersFromHeating: ReadonlySet<TableViewState.ClothHeating> = new Set(['smouldering', 'burning'])
+const embersFromHeating: ReadonlySet<TableViewState.Heating> = new Set(['smouldering', 'burning'])
 const smokeGrowsFasterThanSteam = 1.6
 
-export class ClothFire {
+export class ItemFire {
   private readonly steam: THREE.Material
   private readonly smoke: THREE.Material
   private readonly puffs: readonly THREE.Mesh[]
@@ -53,7 +53,7 @@ export class ClothFire {
     this.meshes = [...this.puffs, ...this.embers, this.flame]
   }
 
-  show(cloth: CarriedModel | undefined, heating: TableViewState.ClothHeating, timeSeconds: number): void {
+  show(cloth: CarriedModel | undefined, heating: TableViewState.Heating, timeSeconds: number): void {
     const isShown = cloth !== undefined && heating !== 'none' && cloth.root.visible && !cloth.isHeldInView
     this.flame.visible = isShown && heating === 'burning'
     this.puffs.forEach((puff, index) => (puff.visible = isShown && index < puffsByHeating[heating]))
@@ -89,7 +89,7 @@ export class ClothFire {
     this.flame.scale.set(1, flicker, 1)
   }
 
-  private risePuffs(rootOfTheFlame: THREE.Vector3, heating: TableViewState.ClothHeating, timeSeconds: number): void {
+  private risePuffs(rootOfTheFlame: THREE.Vector3, heating: TableViewState.Heating, timeSeconds: number): void {
     const isSmoke = heating !== 'steaming'
     const risePerSecond = isSmoke ? smokeRiseMetresPerSecond : steamRiseMetresPerSecond
     this.puffs.forEach((puff, index) => {

@@ -11,7 +11,7 @@ import { aimOver } from './Carried/AimedVessel.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
-import { ClothFire } from './Carried/ClothFire.ts'
+import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidth, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
@@ -30,7 +30,7 @@ export class CarriedItems {
   private readonly models: CarriedModel[]
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
-  private readonly clothFire: ClothFire
+  private readonly clothFire: ItemFire
   private readonly heaterSpot: Spot
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   readonly root = new THREE.Group()
@@ -49,7 +49,7 @@ export class CarriedItems {
       this.tappableMeshes.push(model.root)
     }
     this.waterStreams = new WaterStreams(materials, sinkSpot)
-    this.clothFire = new ClothFire(materials)
+    this.clothFire = new ItemFire(materials)
     this.root.add(...this.waterStreams.meshes, ...this.clothFire.meshes, this.chosenGlow.mesh)
     this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
   }
