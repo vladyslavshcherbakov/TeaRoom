@@ -155,3 +155,27 @@ function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
   state.cloth.charring = charring
   return state
 }
+
+test('floatingLeaves_growTwoPerGramUpToTwelve', () => {
+  const rows = [
+    [0.2, 1],
+    [3, 6],
+    [6, 12],
+    [20, 12],
+  ] as const
+
+  for (const [grams, count] of rows) {
+    const state = stateWithLiquid('kettle', { volumeMl: 500 })
+    const kettle = state.vessels['kettle']
+    if (kettle !== undefined) kettle.leaves = { teaId: 'testGreen', grams, isSteeping: true, steepedSeconds: 0 }
+    assert.deepEqual(tableViewState(state, catalog).vessels['kettle']?.floatingLeaves, { teaId: 'testGreen', count }, `${grams} g`)
+  }
+})
+
+test('floatingLeaves_inAnEmptyKettle_areNotShown', () => {
+  const state = stateWithLiquid('kettle', { volumeMl: 0 })
+  const kettle = state.vessels['kettle']
+  if (kettle !== undefined) kettle.leaves = { teaId: 'testGreen', grams: 5, isSteeping: false, steepedSeconds: 0 }
+
+  assert.equal(tableViewState(state, catalog).vessels['kettle']?.floatingLeaves, null)
+})

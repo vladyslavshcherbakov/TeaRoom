@@ -5,6 +5,7 @@ export type LeafPileSize = {
   readonly leafCount: number
   readonly radiusMetres: number
   readonly heightMetres: number
+  readonly isLyingFlat: boolean
 }
 
 const shadeSpread = 0.35
@@ -53,7 +54,11 @@ function layOutLeaves(mesh: THREE.InstancedMesh, look: TeaLook, size: LeafPileSi
     const distanceFromCentre = Math.sqrt(nextRandom()) * size.radiusMetres
     const height = (index / size.leafCount) * size.heightMetres
     leaf.position.set(Math.cos(angle) * distanceFromCentre, height, Math.sin(angle) * distanceFromCentre)
-    leaf.rotation.set(nextRandom() * Math.PI, nextRandom() * Math.PI * 2, nextRandom() * Math.PI)
+    const tumble = nextRandom() * Math.PI
+    const turn = nextRandom() * Math.PI * 2
+    const roll = nextRandom() * Math.PI
+    if (size.isLyingFlat) leaf.rotation.set(0, turn, 0)
+    else leaf.rotation.set(tumble, turn, roll)
     leaf.scale.setScalar(smallestLeafScale + nextRandom() * leafScaleSpread)
     leaf.updateMatrix()
     mesh.setMatrixAt(index, leaf.matrix)

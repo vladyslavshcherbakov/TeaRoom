@@ -3,6 +3,7 @@ import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefi
 import { itemLocationIn } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
 import { openLidOffsetBeside } from '../../Placement.ts'
 import type { FloorPoint } from '../../RoomLayout.ts'
+import { mostFloatingLeaves } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
@@ -28,8 +29,11 @@ const smallestPuffScale = 0.6
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
-const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14 }
-const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01 }
+const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14, isLyingFlat: false }
+const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false }
+const leavesOnTheWater: LeafPileSize = { leafCount: mostFloatingLeaves, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true }
+const leavesAboveTheWaterMetres = 0.0015
+const leavesDriftRadiansPerSecond = 0.05
 const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
 const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
   still: { heightMetres: 0, tiltRadians: 0, wavesPerSecond: 0 },
@@ -48,6 +52,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, he
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
   if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)
   if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
+  if (model.floatingLeafHolder !== null && vessel !== undefined) showLeavesOnTheKettlesWater(model, model.floatingLeafHolder, vessel, wave, scene.timeSeconds)
   if (model.leafHolder !== null) showLeaves(model, model.leafHolder, scene)
   const puffsPerSource = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
   showSteam(model, steamSourcesOf(model, model.lid === null || isOpen), puffsPerSource, scene.timeSeconds)
@@ -118,12 +123,33 @@ function showWaterInGauge(gaugeWater: THREE.Mesh, vessel: TableViewState.Vessel,
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
-function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
+function showLeavesOnTheKettlesWater(model: CarriedModel, holder: THREE.Group, vessel: TableViewState.Vessel, wave: Wave, timeSeconds: number): void {
+  const floating = vessel.floatingLeaves
+  holder.visible = floating !== null && vessel.fillShare > 0 && vessel.isLidOpen === true
+  if (floating === null || !holder.visible) return
+  if (model.floatingLeaves === null || model.floatingLeaves.teaId !== floating.teaId) {
+    if (model.floatingLeaves !== null) holder.remove(model.floatingLeaves.pile.mesh)
+    const pile = new LeafPile(teaLookFor(floating.teaId), leavesOnTheWater)
+    pile.mesh.layers.set(model.layer)
+    holder.add(pile.mesh)
+    model.floatingLeaves = { pile, teaId: floating.teaId }
+  }
+  model.floatingLeaves.pile.showFill(floating.count / mostFloatingLeaves)
+  holder.position.y = kettleSurfaceHeight(vessel) + wave.riseMetres + leavesAboveTheWaterMetres
+  holder.rotation.set(wave.tiltXRadians, timeSeconds * leavesDriftRadiansPerSecond, wave.tiltZRadians)
+}
+
+function kettleSurfaceHeight(vessel: TableViewState.Vessel): number {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle, bottomInsideMetres, waterBelowTheOpeningMetres } = kettleShape
+  const openingHeight = bodyCentreMetres + bodyRadiusMetres * bodySquash * Math.cos(openingAngle)
+  return bottomInsideMetres + vessel.fillShare * (openingHeight - waterBelowTheOpeningMetres - bottomInsideMetres)
+}
+
+function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
+  const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
   water.visible = vessel.fillShare > 0 && vessel.isLidOpen === true
   const bodyHalfHeight = bodyRadiusMetres * bodySquash
-  const openingHeight = bodyCentreMetres + bodyHalfHeight * Math.cos(openingAngle)
-  const surfaceHeight = bottomInsideMetres + vessel.fillShare * (openingHeight - waterBelowTheOpeningMetres - bottomInsideMetres)
+  const surfaceHeight = kettleSurfaceHeight(vessel)
   const heightFromCentre = (surfaceHeight - bodyCentreMetres) / bodyHalfHeight
   water.position.y = surfaceHeight + wave.riseMetres
   water.rotation.set(-Math.PI / 2 + wave.tiltXRadians, 0, wave.tiltZRadians)

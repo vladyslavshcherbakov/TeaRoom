@@ -138,5 +138,4 @@ The plan is in `docs/roadmap.md`.
 - Whether a separate teapot joins the MVP, or the kettle stays the brewing vessel. The user answers it.
 - Whether the bench stays published after 1.0. The user answers it.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
-- Whether the leaves show inside the open kettle. The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.

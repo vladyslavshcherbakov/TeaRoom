@@ -31,6 +31,12 @@ export declare namespace TableViewState {
     readonly surfaceMotion: SurfaceMotion
     readonly brewStage: BrewStage
     readonly isLidOpen: boolean | null
+    readonly floatingLeaves: FloatingLeaves | null
+  }
+
+  type FloatingLeaves = {
+    readonly teaId: string
+    readonly count: number
   }
 
   type Caddy = {
