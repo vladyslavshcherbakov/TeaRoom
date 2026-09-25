@@ -122,6 +122,16 @@ test('kettle_withItsSpoutOverTheShelfsFrontEdge_fits', () => {
   assert.equal(refusal, null)
 })
 
+test('bowl_onTopOfTheShelf_hasNoRoom', () => {
+  const room = new RoomVisit()
+  room.walkTo('shelf')
+  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
+
+  const refusal = whyThereIsNoRoomFor('bowl1', spotOn('shelf', { x: -2.75, y: 1.72, z: 0.4 }), room.state, quietRoomSurroundings)
+
+  assert.equal(refusal, 'theTopTakesNoItems')
+})
+
 test('bowl_behindTheKettleAwayFromItsSpout_fits', () => {
   const room = new RoomVisit()
   room.walkTo('counter')

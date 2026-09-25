@@ -38,6 +38,7 @@ export type Furniture = {
   readonly id: FurnitureId
   readonly footprint: Footprint
   readonly height: number
+  readonly takesItemsOnItsTop: boolean
   readonly sides: readonly [FurnitureSide, ...FurnitureSide[]]
 }
 
@@ -103,6 +104,7 @@ export const kitchenBesideTheWindow: RoomLayout = {
       id: 'counter',
       footprint: { x: -1.8, z: -2.65, width: 2.2, depth: 0.7 },
       height: 0.9,
+      takesItemsOnItsTop: true,
       sides: [
         {
           name: 'front',
@@ -115,6 +117,7 @@ export const kitchenBesideTheWindow: RoomLayout = {
       id: 'shelf',
       footprint: { x: -2.75, z: 0.4, width: 0.5, depth: 1.8 },
       height: 1.7,
+      takesItemsOnItsTop: false,
       sides: [
         {
           name: 'front',
@@ -127,6 +130,7 @@ export const kitchenBesideTheWindow: RoomLayout = {
       id: 'teaTable',
       footprint: { x: 1, z: -1.55, width: 1.4, depth: 0.9 },
       height: 0.42,
+      takesItemsOnItsTop: true,
       sides: [
         {
           name: 'front',
@@ -163,6 +167,7 @@ export const kitchenFacingTheWindow: RoomLayout = {
       id: 'counter',
       footprint: { x: -1.45, z: -2.65, width: 2.2, depth: 0.7 },
       height: 0.9,
+      takesItemsOnItsTop: true,
       sides: [
         {
           name: 'front',
@@ -175,6 +180,7 @@ export const kitchenFacingTheWindow: RoomLayout = {
       id: 'shelf',
       footprint: { x: 1.8, z: -2.75, width: 1.8, depth: 0.5 },
       height: 1.7,
+      takesItemsOnItsTop: false,
       sides: [
         {
           name: 'front',
@@ -187,6 +193,7 @@ export const kitchenFacingTheWindow: RoomLayout = {
       id: 'teaTable',
       footprint: { x: -2.1, z: 0, width: 0.9, depth: 1.4 },
       height: 0.42,
+      takesItemsOnItsTop: true,
       sides: [
         {
           name: 'front',

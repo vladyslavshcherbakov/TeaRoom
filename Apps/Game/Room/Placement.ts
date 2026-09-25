@@ -16,7 +16,7 @@ export type Surroundings = {
   readonly heaterSpot: Spot
 }
 
-export type PlacementRefusal = 'offTheEdge' | 'somethingIsThere' | 'theHeaterIsThere' | 'theSinkIsThere'
+export type PlacementRefusal = 'offTheEdge' | 'theTopTakesNoItems' | 'somethingIsThere' | 'theHeaterIsThere' | 'theSinkIsThere'
 
 export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReadonly<SessionState>, surroundings: Surroundings): PlacementRefusal | null {
   const circles = footprintOf(state, itemId, spot)
@@ -41,6 +41,7 @@ function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: st
   for (const { spot, radius } of circles.filter((circle) => circle.restsOnTheSurface)) {
     const piece = layout.furniture.find((candidate) => candidate.id === spot.placeId)
     if (piece === undefined) return 'offTheEdge'
+    if (!piece.takesItemsOnItsTop && spot.y > piece.height - sameShelfBoardWithinMetres) return 'theTopTakesNoItems'
     const { footprint } = piece
     const isInsideTheTop = Math.abs(spot.x - footprint.x) <= footprint.width / 2 - radius && Math.abs(spot.z - footprint.z) <= footprint.depth / 2 - radius
     if (!isInsideTheTop) return 'offTheEdge'
