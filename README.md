@@ -4,11 +4,7 @@ A small, calm ritual game for the mobile browser. You heat water, brew tea, pour
 
 Play it on a phone: <https://vladyslavshcherbakov.github.io/TeaRoom/>. The ritual bench, a debug page over the simulation, is at <https://vladyslavshcherbakov.github.io/TeaRoom/bench/>.
 
-The design is in [docs/game-design.md](docs/game-design.md). The plan up to 1.0 is in [docs/roadmap.md](docs/roadmap.md).
-
-## Status
-
-Version 0.3 is done: the walkable 3D room with the whole ritual, from filling the kettle at the tap to wiping the tea table. The simulation and the ritual bench from 0.1 are done.
+The design is in [docs/game-design.md](docs/game-design.md), and how the game behaves is in [docs/](docs). The plan up to 1.0 is in [docs/roadmap.md](docs/roadmap.md). How to change the code is in [CONTRIBUTING.md](CONTRIBUTING.md), and the reasons behind it and the open questions are in [DECISIONS.md](DECISIONS.md).
 
 ## Project layout
 
@@ -21,7 +17,8 @@ Version 0.3 is done: the walkable 3D room with the whole ritual, from filling th
 | `Apps/Game/Texts/` | Every text the player reads, as keys and values. |
 | `Apps/Bench/` | The ritual bench: a debug page over the simulation. |
 | `Tests/` | Integration, unit and browser tests, mirroring `Shared/` and `Apps/`. |
-| `docs/` | How the game behaves. |
+| `Scripts/` | The build and test scripts that CI runs too. |
+| `docs/` | How the game behaves, and the plan. |
 
 ## Requirements
 
