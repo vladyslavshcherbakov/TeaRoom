@@ -14,6 +14,7 @@ export type ItemParts = {
   readonly glowingShell: GlowingShell | null
   readonly gaugeWater: GaugeStrip | null
   readonly kettleWater: THREE.Mesh | null
+  readonly liquidTint: THREE.Color | null
   readonly charTo: CharTo | null
 }
 

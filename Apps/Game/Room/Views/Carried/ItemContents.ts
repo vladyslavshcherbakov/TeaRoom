@@ -98,13 +98,14 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
   model.liquid.position.y = surfaceHeight
   model.liquid.scale.setScalar(radiusMetres)
   model.liquidMaterial.color.set(vessel.liquorColour)
+  if (model.liquidTint !== null) model.liquidMaterial.color.multiply(model.liquidTint)
   model.liquidMaterial.opacity = vessel.liquorOpacity
   if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel)
 }
 
 function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight: number, vessel: TableViewState.Vessel): void {
   volume.visible = vessel.fillShare > 0
-  if (volume.material instanceof THREE.MeshStandardMaterial) volume.material.color.set(vessel.liquorColour)
+  if (volume.material instanceof THREE.MeshStandardMaterial && model.liquidMaterial !== null) volume.material.color.copy(model.liquidMaterial.color)
   if (!volume.visible || model.liquidVolumeAt === null || model.liquidVolumeHeight === surfaceHeight) return
   model.liquidVolumeHeight = surfaceHeight
   volume.geometry.dispose()

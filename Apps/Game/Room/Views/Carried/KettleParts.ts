@@ -60,6 +60,7 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
     glowingShell: null,
     gaugeWater: gauge.water,
     kettleWater,
+    liquidTint: null,
     charTo: null,
   }
 }

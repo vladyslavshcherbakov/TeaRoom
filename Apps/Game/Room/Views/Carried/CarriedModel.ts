@@ -35,6 +35,7 @@ export type CarriedModel = {
   soakedLeaves: { readonly pile: LeafPile; readonly teaId: string } | null
   soakedLeavesTurn: { radians: number; atSeconds: number } | null
   readonly kettleWater: THREE.Mesh | null
+  readonly liquidTint: THREE.Color | null
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
   readonly glowingShell: GlowingShell | null
@@ -109,6 +110,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     soakedLeaves: null,
     soakedLeavesTurn: null,
     kettleWater: parts.kettleWater,
+    liquidTint: parts.liquidTint,
     puffs,
     heldInViewLook: parts.heldInViewLook,
     glowingShell: parts.glowingShell,

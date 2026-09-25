@@ -23,6 +23,7 @@ type BowlLook = {
   readonly relief: BowlRelief
   readonly isRimGilded: boolean
   readonly painting: BottomPainting | null
+  readonly liquidTint: string
 }
 
 const paintingAboveTheGlazeMetres = 0.0004
@@ -50,19 +51,20 @@ const flutesAround = 16
 const fluteDepthShare = 0.025
 const flutesStartAboveTheFootMetres = 0.008
 const flutesFullAboveTheFootMetres = 0.02
+const liquidTakesOnTheBowlsColourShare = 0.6
 const plainBowl = { relief: 'smooth', isRimGilded: false, painting: null } as const
-const porcelainBowl: BowlLook = { ...plainBowl, glaze: 'porcelain' }
+const porcelainBowl: BowlLook = { ...plainBowl, glaze: 'porcelain', liquidTint: '#f7f2e8' }
 const bowlLookById: Readonly<Record<string, BowlLook>> = {
-  bowl1: { ...plainBowl, glaze: 'whiteGlaze', painting: { surface: 'koiPainting', lengthMetres: 0.07, aspect: koiPaintingAspect, turnRadians: 0.6 } },
-  bowl2: { ...plainBowl, glaze: 'pearlGlaze', painting: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 } },
-  bowl3: { ...plainBowl, glaze: 'skyBlueGlaze' },
-  bowl4: { ...plainBowl, glaze: 'blueGlaze' },
-  bowl5: { ...plainBowl, glaze: 'yellowGlaze', painting: { surface: 'heronPainting', lengthMetres: 0.064, aspect: heronPaintingAspect, turnRadians: 0 } },
-  bowl6: { ...plainBowl, glaze: 'emeraldGlaze' },
-  bowl7: { ...plainBowl, glaze: 'temperGlaze' },
-  bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted' },
-  bowl9: { ...plainBowl, glaze: 'glass', relief: 'hobnail', isRimGilded: true },
-  bowl10: { ...plainBowl, glaze: 'yixingClay', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
+  bowl1: { ...plainBowl, glaze: 'whiteGlaze', liquidTint: '#eef5ff', painting: { surface: 'koiPainting', lengthMetres: 0.07, aspect: koiPaintingAspect, turnRadians: 0.6 } },
+  bowl2: { ...plainBowl, glaze: 'pearlGlaze', liquidTint: '#fbe6ec', painting: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 } },
+  bowl3: { ...plainBowl, glaze: 'skyBlueGlaze', liquidTint: '#9fd0ea' },
+  bowl4: { ...plainBowl, glaze: 'blueGlaze', liquidTint: '#4a6fbd' },
+  bowl5: { ...plainBowl, glaze: 'yellowGlaze', liquidTint: '#f1cd55', painting: { surface: 'heronPainting', lengthMetres: 0.064, aspect: heronPaintingAspect, turnRadians: 0 } },
+  bowl6: { ...plainBowl, glaze: 'emeraldGlaze', liquidTint: '#5fb08a' },
+  bowl7: { ...plainBowl, glaze: 'temperGlaze', liquidTint: '#b393cf' },
+  bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted', liquidTint: '#ffffff' },
+  bowl9: { ...plainBowl, glaze: 'glass', relief: 'hobnail', isRimGilded: true, liquidTint: '#fff1cc' },
+  bowl10: { ...plainBowl, glaze: 'yixingClay', liquidTint: '#a8683f', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
 
 const pointsDownTheBowl: readonly PointDownTheSide[] = [
@@ -103,6 +105,7 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
     glowingShell: null,
     gaugeWater: null,
     kettleWater: null,
+    liquidTint: new THREE.Color('#ffffff').lerp(new THREE.Color(look.liquidTint), liquidTakesOnTheBowlsColourShare),
     charTo: null,
   }
   if (look.glaze !== 'glass') return bowl

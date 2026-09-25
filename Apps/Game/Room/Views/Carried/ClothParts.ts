@@ -15,5 +15,5 @@ function clothParts(clothMaterial: THREE.Material, charredColour: THREE.Color): 
   const geometry = rumpledClothGeometry()
   const cloth = new THREE.Mesh(geometry, clothMaterial)
   const charTo = (charring: number): void => charTheCloth(geometry, charring, charredColour)
-  return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(clothLengthMetres / 2, 0.02, 0), rimHeight: 0.02, liquidLevel: null, liquidVolumeAt: null, pointsDownTheSide: null, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, charTo }
+  return { meshes: [cloth], lid: null, spoutTip: new THREE.Vector3(clothLengthMetres / 2, 0.02, 0), rimHeight: 0.02, liquidLevel: null, liquidVolumeAt: null, pointsDownTheSide: null, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, liquidTint: null, charTo }
 }
