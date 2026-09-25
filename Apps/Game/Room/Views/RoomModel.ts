@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { prophecyInscriptionAspect } from './ProphecyInscription.ts'
 import { touchAreaOf } from './RoomLayers.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
@@ -25,6 +26,8 @@ import type { TableViewState } from '../../Table/TableViewState.ts'
 const puddleSegments = 40
 const wallHeight = 2.6
 const wallThickness = 0.12
+const prophecyWidthMetres = 1.3
+const prophecyBelowTheSillMetres = 0.02
 const medalRadiusMetres = 0.13
 const medalThicknessMetres = 0.025
 const medalRibbonWidthMetres = 0.09
@@ -121,6 +124,11 @@ export class RoomModel {
     sky.position.set(centreX, sillHeight + height / 2, z - 0.3)
     this.root.add(sky)
     this.box('darkWood', 0.05, height, 0.06, { x: centreX, y: sillHeight + height / 2, z })
+    const inscriptionHeight = prophecyWidthMetres / prophecyInscriptionAspect
+    const inscription = new THREE.Mesh(new THREE.PlaneGeometry(prophecyWidthMetres, inscriptionHeight), this.materials.materialFor('prophecyInscription'))
+    inscription.position.set(centreX, sillHeight - prophecyBelowTheSillMetres - inscriptionHeight / 2, z - wallThickness / 2 - 0.002)
+    inscription.rotation.y = Math.PI
+    this.root.add(inscription)
   }
 
   private addMedal(): void {

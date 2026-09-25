@@ -162,6 +162,8 @@ export const englishTexts = {
   'frameRate.reading': '{framesPerSecond} fps',
   'fullScreen.enter': 'Full screen',
   'fullScreen.leave': 'Leave full screen',
+  'wall.prophecy.firstLine': 'The prophecy shall come true: one day a cherry pie',
+  'wall.prophecy.secondLine': 'will bring all this lore to life. Or not.',
   'achievements.title': 'Achievements',
   'achievements.reset': 'Reset',
   'achievements.resetAgain': 'Tap again to reset',

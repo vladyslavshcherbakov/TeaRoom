@@ -1,10 +1,12 @@
 import * as THREE from 'three'
+import { text } from '../../Texts/Texts.ts'
 import { weaveCloth } from './ClothWeave.ts'
 import { paintCrackle } from './CrackleGlaze.ts'
 import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
 import { paintKoi } from './KoiPainting.ts'
 import { paintLotus } from './LotusPainting.ts'
+import { paintProphecyInscription } from './ProphecyInscription.ts'
 import { paintTeaCharacter } from './TeaCharacterPainting.ts'
 import { paintGreenMarble } from './MarbleGlaze.ts'
 import { paintTemperBands } from './TemperBands.ts'
@@ -65,6 +67,7 @@ export type Surface =
   | 'medalRibbon'
   | 'clearGlassHeldInView'
   | 'koiPainting'
+  | 'prophecyInscription'
   | 'lotusPainting'
   | 'heronPainting'
   | 'teaCharacterPainting'
@@ -134,6 +137,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   medalRibbon: '#a8392e',
   clearGlassHeldInView: '#26302c',
   koiPainting: '#ffffff',
+  prophecyInscription: '#ffffff',
   lotusPainting: '#ffffff',
   heronPainting: '#ffffff',
   teaCharacterPainting: '#ffffff',
@@ -207,6 +211,7 @@ export class RoomMaterials {
     if (surface === 'thermosPainting') return this.thermosPaintingMaterial()
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
+    if (surface === 'prophecyInscription') return paintingMaterial(paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')]))
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'heronPainting') return paintingMaterial(paintHeron())
     if (surface === 'teaCharacterPainting') return paintingMaterial(paintTeaCharacter())
