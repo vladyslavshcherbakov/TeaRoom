@@ -145,3 +145,4 @@ The plan is in `docs/roadmap.md`.
 - Whether the bench stays published after 1.0. The user answers it.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.
+- Whether a loss such as the burnt spoon or the caddy washed clean carries over to the next visit once the world remembers visits, or each visit starts whole. The user answers it.

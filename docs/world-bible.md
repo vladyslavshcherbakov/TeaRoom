@@ -49,11 +49,27 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 **Mistakes are material.** A spill is a puddle. An oversteep is a grimace. A broken cup is shards in the bin. Nothing says WRONG.
 
+**One death, as a joke.** There is one exception to the rule above. Tea brewed in the caddy is a heap of leaves in a little water, and a sip of it straight from the tin kills the keeper: YOU DIED, in the manner of Dark Souls, with the keeper's last words and an obituary under it, and a button to start over. It punishes once, and it is a joke about games, never a verdict on the player.
+
 **No achievements, no score, no badges.** The reward for noticing is having noticed. Progress is visible only as the room changing.
 
 **A bottomless state machine.** The player should always have a reason to come back and learn the world a little deeper. Secrets open one at a time, over days and seasons, never all at once.
 
-**Humour from seriousness.** Jokes come from treating a small ritual with enormous gravity. The voice is dry, never a meme.
+**Humour from seriousness.** Jokes come from treating a small ritual with enormous gravity. The voice is dry, never a meme. A parody of another game is allowed only where the room itself is the joke, as with YOU DIED.
+
+**The world answers a strange act.** A bowl held over the heater, a third thing reached for with full hands, the figurines on the sill tapped from afar: the keeper answers each in one line, never with silence. A second try gets a different line.
+
+**Experiments are welcome, and the experimenter is teased once.** Things put on the working heater burn as they would: the cloth steams, smokes, smoulders and catches fire in stages, the spoon chars black and crumbles to ash when taken. The player may test the whole room this way. After four or five different things tried on the working heater, the keeper teases the tester once a visit, and never again that day. Putting every last thing away on the shelf earns one line about tidiness in the same way.
+
+**Tea behaves like tea, and it shows.** The rules are physical, and a watchful player sees them without a number. Leaves boiling on the heater brew twice as fast and spin in the water. Tea turns from pale to amber to black tar as it grows stronger. A glaze tints the water in its bowl. A stained cloth lightens as the tap rinses it. A narrow bowl fills slowly and a wide tin fast. A sip is too hot only in the first few seconds after a boiling pour, so only a hurried keeper burns their tongue.
+
+**Every container is a vessel.** The world follows its physics further than the player expects. The caddy holds water as well as leaves, and water poured into it brews the whole caddy at once. A folly carried to its end gets an answer to match.
+
+**Some damage heals, and some does not.** A burnt cloth washes back to new, and the keeper marvels at such a forgiving world. A burnt spoon is gone, and the keeper hints that tea can still be brewed without it. The caddy washed clean under the tap leaves the house without tea, and the keeper despairs of it.
+
+**The house notices waste.** A tap left running for minutes, or a heater left on, earns one dry line about the litres or the kilowatt-hours when it is finally turned off.
+
+**One voice per visit.** The keeper speaks with one voice for a whole visit: the same feeling gets the same words. Another visit may bring other words for it.
 
 **Everything is touched.** If an idea can be done with a button, find the gesture instead.
 
@@ -415,6 +431,12 @@ Lines the game may show. Each one is small, dry and appears rarely.
 - "The fish ask to pass on that the tea was lovely."
 - "The bear says it only came to sit with you. But thank you for the tea."
 - "Somehow the tea is cold. I wonder why."
+- "Sure, let it burn. We will just buy another house, as we always do."
+- "Magic sink! The burn is gone. I'm never leaving."
+- "Poor little spoon. It scooped so faithfully, and now it is a pinch of ash. 😭"
+- "Who would have thought this would become the most popular feature of the tea room."
+- "The next tea delivery is a week away. Enjoy your hot water until then."
+- "YOU DIED." Under it: "The keeper left us today, strong to the end, like their tea. In lieu of flowers, please send a smaller caddy."
 
 ## Secrets and their conditions
 
@@ -436,6 +458,11 @@ Each row is one secret. The condition is hidden state. The trace is what the pla
 | The sparrow's seed planted and watered with cold tea | A tea bush grows, and its leaves brew a tea no caddy holds. | The bird brought it from somewhere it trusts. |
 | The notebook's recipe drunk in her bowl, at the cat's hour, with the cat | A carp's shadow swims across the walls and dissolves. | The previous owner's spirit came to visit. |
 | The frog's stone dropped into the aquarium with a fish in it | The fish becomes a butterfly and flies away. | The frog paid for the tea. |
+| Four or five different things tried on the working heater in one visit | The keeper teases a tester, once that visit. | The house has seen this before. |
+| A burnt cloth washed in the sink | It comes out as new, and the keeper marvels. | This world forgives cloth. |
+| The spoon burnt to ash | The keeper hints that tea can be brewed without it. | The caddy is a vessel too. |
+| Tea brewed in the caddy and sipped from it | YOU DIED, the keeper's last words and an obituary. | A whole caddy of tea in one sip. |
+| Everything the keeper can carry put away on the shelf | One line about the tidiness of the house, once that visit. | The house notices order as it notices waste. |
 
 ## Chains of secrets
 
