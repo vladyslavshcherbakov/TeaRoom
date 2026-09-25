@@ -143,8 +143,7 @@ export const englishTexts = {
   'spoonCrumbled.4': 'Poor little spoon. It scooped so faithfully, and now it is a pinch of ash. 😭',
   'tooHotToHold.1': 'And then what? Juggle a glowing thermos? Bold plan. No.',
   'tooHotToHold.2': "Blister my palm and ruin a lovely day? I'll pass, thanks.",
-  'tooHotToHold.3': "You have your quirks, and I like them. This one I'll sit out.",
-  'tooHotToHold.4': "It's literally glowing. Even the thermos is telling you no.",
+  'tooHotToHold.3': "It's literally glowing. Even the thermos is telling you no.",
 
   'tapRanLong.1': '{litres} litres straight down the drain. The river sends its thanks.',
   'tapRanLong.2': 'That was {litres} litres for the sink. It has never been this hydrated.',
