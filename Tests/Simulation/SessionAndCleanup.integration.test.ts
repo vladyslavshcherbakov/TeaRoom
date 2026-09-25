@@ -262,9 +262,21 @@ test('cloth_whenWashedUnderTheTap_losesItsTeaStain', () => {
   ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
-  ritual.wait(3)
+  ritual.wait(10)
 
   assert.equal(ritual.state.cloth.teaStain, 0)
+})
+
+test('cloth_underTheTap_losesATenthOfAFullStainEachSecond', () => {
+  const ritual = ritualWithTeaSpilledOnTheTable()
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  ritual.do({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  const stainBeforeWashing = ritual.state.cloth.teaStain
+
+  ritual.wait(1)
+
+  assertNear(stainBeforeWashing - ritual.state.cloth.teaStain, 0.1)
 })
 
 test('cloth_whenTakenOutOfTheSink_isWrungOutToEightMillilitres', () => {
