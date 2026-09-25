@@ -84,7 +84,7 @@ export class RoomPlay {
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
   private readonly timesRemarked = new Map<RoomRemarkKind, number>()
-  private readonly itemsTriedOnTheHeater = new Set<string>()
+  private readonly itemsTriedOnTheWorkingHeater = new Set<string>()
   private roseBushTapsInARow = 0
 
   constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener) {
@@ -455,9 +455,9 @@ export class RoomPlay {
     if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
     const events = this.ritual.dispatch({ type: 'placeOnHeater', itemId })
     this.letGoOfTheChoiceUnlessRefused(events)
-    const isNewOnTheHeater = !this.itemsTriedOnTheHeater.has(itemId)
-    this.itemsTriedOnTheHeater.add(itemId)
-    if (isNewOnTheHeater && this.itemsTriedOnTheHeater.size === this.heaterItemsBeforeTheTesterJoke) return this.teaseTheHeaterTester(itemId)
+    const isNewOnTheWorkingHeater = this.ritual.state.heater.isOn && !this.itemsTriedOnTheWorkingHeater.has(itemId)
+    if (isNewOnTheWorkingHeater) this.itemsTriedOnTheWorkingHeater.add(itemId)
+    if (isNewOnTheWorkingHeater && this.itemsTriedOnTheWorkingHeater.size === this.heaterItemsBeforeTheTesterJoke) return this.teaseTheHeaterTester(itemId)
     const isKeptOff = events.some((event) => event.type === 'actionRefused' && event.reason === 'cannotSitOnHeater')
     const shape = carriedShapeOf(this.ritual.state, itemId)
     const remarkKind = isKeptOff && shape !== undefined ? remarkWhenKeptOffTheHeater[shape] : undefined
@@ -475,7 +475,7 @@ export class RoomPlay {
 
   private teaseTheHeaterTester(itemId: string): void {
     this.remark('heaterTester')
-    this.log(`${itemId} is the ${this.itemsTriedOnTheHeater.size}th different item tried on the heater, the tester is teased, once for this visit`)
+    this.log(`${itemId} is the ${this.itemsTriedOnTheWorkingHeater.size}th different item tried on the working heater, the tester is teased, once for this visit`)
   }
 
   private remark(kind: RoomRemarkKind): number {

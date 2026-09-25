@@ -696,6 +696,7 @@ test('heaterTester_onTheItemThatReachesTheVisitsCount_isTeasedInPlaceOfTheItemsO
   const room = new RoomVisit(2)
   room.carryFromTheShelf('bowl1', 'caddy')
   room.walkTo('counter')
+  room.tap({ kind: 'heaterSwitch' })
   room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'heater' })
   room.tap({ kind: 'hand', handIndex: 1 })
@@ -712,6 +713,7 @@ test('heaterTester_onceTeased_leavesEveryLaterTryToTheItemsOwnLine', () => {
   const room = new RoomVisit(2)
   room.carryFromTheShelf('bowl1', 'caddy')
   room.walkTo('counter')
+  room.tap({ kind: 'heaterSwitch' })
   room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'heater' })
   room.tap({ kind: 'hand', handIndex: 1 })
@@ -749,6 +751,22 @@ test('keeper_whenSippingColdTapWaterStraightFromTheCaddy_lives', () => {
 
   assert.equal(room.deathsSeen, 0)
   assertNear(mlBeforeTheSip - (room.state.vessels['caddy']?.liquid.volumeMl ?? 0), 20)
+})
+
+test('heaterTester_whenTheHeaterIsOff_isNeverTeased', () => {
+  const room = new RoomVisit(2)
+  room.carryFromTheShelf('bowl1', 'caddy')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'heater' })
+  room.tap({ kind: 'hand', handIndex: 1 })
+
+  room.tap({ kind: 'heater' })
+
+  assert.deepEqual(room.remarks, [
+    { kind: 'bowlKeptOffTheHeater', timesTapped: 1 },
+    { kind: 'caddyKeptOffTheHeater', timesTapped: 1 },
+  ])
 })
 
 test('thirdItem_whenBothHandsAreFull_isRemarkedOn', () => {

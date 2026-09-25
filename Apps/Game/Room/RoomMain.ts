@@ -51,7 +51,7 @@ if (opening.kind === 'unavailable') {
   const hoursSinceSunrise = hoursSinceSunriseFor(opening.session.state.atmosphere.timeOfDay, shareThroughTheTimeOfDay)
   roomLog(`the light stands ${hoursSinceSunrise.toFixed(1)} hours after sunrise, chosen at random within ${opening.session.state.atmosphere.timeOfDay}`)
   const heaterItemsBeforeTheTesterJoke = fewestHeaterItemsBeforeTheTesterJoke + Math.floor(Math.random() * 2)
-  roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the heater, chosen at random for this visit`)
+  roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the working heater, chosen at random for this visit`)
   new RoomScene(container, opening.session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke)
 }
 
