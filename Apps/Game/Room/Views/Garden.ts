@@ -38,7 +38,11 @@ export class Garden {
   constructor(materials: RoomMaterials) {
     this.root.add(ground(materials))
     const plantsByKind = new Map<PlantKind, Plant[]>()
-    for (const plant of gardenPlants()) plantsByKind.set(plant.kind, [...(plantsByKind.get(plant.kind) ?? []), plant])
+    for (const plant of gardenPlants()) {
+      const plantsOfTheKind = plantsByKind.get(plant.kind) ?? []
+      plantsOfTheKind.push(plant)
+      plantsByKind.set(plant.kind, plantsOfTheKind)
+    }
     for (const [kind, plantsOfTheKind] of plantsByKind) {
       for (const plantPart of partsByKind[kind]) this.addInstances(kind, instancesOf(plantPart, plantsOfTheKind, materials))
     }
