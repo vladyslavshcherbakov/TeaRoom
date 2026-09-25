@@ -16,8 +16,6 @@ type Scatter = {
   readonly kinds: readonly PlantKind[]
   readonly count: number
   readonly footprintRadiusMetres: number
-  readonly reachMetres: number
-  readonly mayStandThere: (x: number, z: number) => boolean
 }
 
 type TakenCircle = {
@@ -27,9 +25,8 @@ type TakenCircle = {
 }
 
 const clearOfTheWallsMetres = 0.35
-const gardenReachMetres = 18
-const sunflowerReachMetres = 7
-const grassTufts = 6300
+const gardenReachMetres = 12
+const grassTufts = 2670
 const crowdingCellMetres = 0.8
 const bloomsOnARoseBush = 7
 export const roseBushRadiusMetres = 0.28
@@ -38,10 +35,14 @@ export const roseBushSquash = 0.8
 const lowestRoseOnTheBushRadians = 0.25
 const roseHeightSpreadRadians = 1
 const sunflowersFaceTheCameraRadians = (3 * Math.PI) / 4
-const sidesClearOfTheCamerasViewMetres = 7.5
 const triesForEachPlant = 30
 const layoutSeed = 20260925
 const outside = roomHalfSize + clearOfTheWallsMetres
+
+const scatters: readonly Scatter[] = [
+  { kinds: ['roseBush'], count: 17, footprintRadiusMetres: 0.4 },
+  { kinds: ['tulip', 'daisy', 'marigold', 'poppy'], count: 1230, footprintRadiusMetres: 0.08 },
+]
 
 
 const bloomColoursByKind: Readonly<Record<PlantKind, readonly string[]>> = {
@@ -55,11 +56,11 @@ const bloomColoursByKind: Readonly<Record<PlantKind, readonly string[]>> = {
   rose: ['#c8102e', '#e75480', '#fff4f2'],
 }
 
-export function gardenPlants(sunflowerCount: number): Plant[] {
+export function gardenPlants(): Plant[] {
   const nextRandom = seededRandom(layoutSeed)
   const plants: Plant[] = []
   const takenCircles = new Map<string, TakenCircle[]>()
-  for (const scatter of scattersWith(sunflowerCount)) {
+  for (const scatter of scatters) {
     for (let index = 0; index < scatter.count; index += 1) {
       const spot = freeSpotFor(scatter, takenCircles, nextRandom)
       if (spot === null) continue
@@ -81,18 +82,10 @@ export function gardenPlants(sunflowerCount: number): Plant[] {
   return plants
 }
 
-function scattersWith(sunflowerCount: number): readonly Scatter[] {
-  return [
-    { kinds: ['roseBush'], count: 40, footprintRadiusMetres: 0.4, reachMetres: gardenReachMetres, mayStandThere: isOutsideTheRoom },
-    { kinds: ['sunflower'], count: sunflowerCount, footprintRadiusMetres: 0.2, reachMetres: sunflowerReachMetres, mayStandThere: isBesideTheCamerasView },
-    { kinds: ['tulip', 'daisy', 'marigold', 'poppy'], count: 2900, footprintRadiusMetres: 0.08, reachMetres: gardenReachMetres, mayStandThere: isOutsideTheRoom },
-  ]
-}
-
 function freeSpotFor(scatter: Scatter, takenCircles: ReadonlyMap<string, readonly TakenCircle[]>, nextRandom: () => number): { x: number; z: number } | null {
   for (let attempt = 0; attempt < triesForEachPlant; attempt += 1) {
-    const spot = spotWithin(scatter.reachMetres, nextRandom)
-    if (!scatter.mayStandThere(spot.x, spot.z)) continue
+    const spot = spotWithin(gardenReachMetres, nextRandom)
+    if (!isOutsideTheRoom(spot.x, spot.z)) continue
     const isCrowded = circlesAround(takenCircles, spot.x, spot.z).some((circle) => Math.hypot(circle.x - spot.x, circle.z - spot.z) < circle.radius + scatter.footprintRadiusMetres)
     if (!isCrowded) return spot
   }
@@ -111,10 +104,6 @@ function crowdingCellKey(x: number, z: number): string {
 
 function spotWithin(reachMetres: number, nextRandom: () => number): { x: number; z: number } {
   return { x: (nextRandom() * 2 - 1) * reachMetres, z: (nextRandom() * 2 - 1) * reachMetres }
-}
-
-function isBesideTheCamerasView(x: number, z: number): boolean {
-  return Math.abs(x - z) > sidesClearOfTheCamerasViewMetres
 }
 
 function isOutsideTheRoom(x: number, z: number): boolean {

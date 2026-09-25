@@ -15,7 +15,6 @@ import {
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
-import type { Plant } from './GardenLayout.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type ShapedItem } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
@@ -61,7 +60,7 @@ export class RoomScene {
   private readonly gestures: RoomGestures
   private readonly roomLights = new RoomLights()
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, gardenPlants: readonly Plant[]) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number) {
     this.session = session
     this.catalog = catalog
     this.voiceSeed = voiceSeed
@@ -91,7 +90,7 @@ export class RoomScene {
       tiltReleased: () => this.play.tiltReleased(),
     })
     this.caption = new RoomCaption(container)
-    this.scene.add(this.room.root, new Garden(materials, gardenPlants).root, this.walker.root, this.carried.root, ...this.roomLights.lights)
+    this.scene.add(this.room.root, new Garden(materials).root, this.walker.root, this.carried.root, ...this.roomLights.lights)
     this.fitToWindow()
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
     this.listenToPresses()

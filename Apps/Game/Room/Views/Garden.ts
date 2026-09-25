@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
+import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 
 type PlantPart = {
@@ -31,10 +31,10 @@ const partsByKind: Readonly<Record<PlantKind, readonly PlantPart[]>> = {
 export class Garden {
   readonly root = new THREE.Group()
 
-  constructor(materials: RoomMaterials, plants: readonly Plant[]) {
+  constructor(materials: RoomMaterials) {
     this.root.add(ground(materials))
     const plantsByKind = new Map<PlantKind, Plant[]>()
-    for (const plant of plants) plantsByKind.set(plant.kind, [...(plantsByKind.get(plant.kind) ?? []), plant])
+    for (const plant of gardenPlants()) plantsByKind.set(plant.kind, [...(plantsByKind.get(plant.kind) ?? []), plant])
     for (const [kind, plantsOfTheKind] of plantsByKind) {
       for (const plantPart of partsByKind[kind]) this.root.add(instancesOf(plantPart, plantsOfTheKind, materials))
     }

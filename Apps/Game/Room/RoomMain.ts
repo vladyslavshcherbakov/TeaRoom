@@ -3,7 +3,6 @@ import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitio
 import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { text } from '../Texts/Texts.ts'
-import { gardenPlants } from './GardenLayout.ts'
 import { RoomScene } from './RoomScene.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 
@@ -11,7 +10,6 @@ const roomId = 'quietRoom'
 const shuffledVesselDefinitionId = 'teaBowl'
 const voiceSeedStorageKey = 'tearoom.voiceSeed'
 const largestVoiceSeed = 1_000_000
-const mostSunflowers = 4
 
 document.title = text('page.title')
 
@@ -48,9 +46,7 @@ if (opening.kind === 'unavailable') {
   opening.session.dispatch({ type: 'beginRitual', teaId })
   const voiceSeed = keepersVoiceSeed()
   roomLog(`the keeper speaks with voice ${voiceSeed}`)
-  const sunflowerCount = 1 + Math.floor(Math.random() * mostSunflowers)
-  roomLog(`${sunflowerCount} sunflowers grow in the garden this time, chosen at random from 1 to ${mostSunflowers}`)
-  new RoomScene(container, opening.session, catalog, roomLog, voiceSeed, gardenPlants(sunflowerCount))
+  new RoomScene(container, opening.session, catalog, roomLog, voiceSeed)
 }
 
 function catalogWithBowlsShuffled(): Catalog {
