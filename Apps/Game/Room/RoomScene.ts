@@ -38,6 +38,7 @@ const longestFrameSeconds = 0.1
 const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
 const reflectionsBlurSigma = 0.04
+const transmissionResolutionShare = 0.5
 
 export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
@@ -70,6 +71,7 @@ export class RoomScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFShadowMap
+    this.renderer.transmissionResolutionScale = transmissionResolutionShare
     this.renderer.autoClear = false
     this.renderer.setClearColor(backgroundColour)
     container.append(this.renderer.domElement)

@@ -12,11 +12,11 @@ const groundSizeMetres = 60
 const groundBelowTheFloorMetres = 0.1
 
 const partsByKind: Readonly<Record<PlantKind, readonly PlantPart[]>> = {
-  grassTuft: [part(new THREE.ConeGeometry(0.035, 0.14, 4), 'bloom', 0, 0.07, 0)],
-  marigold: [stem(0.22), part(new THREE.DodecahedronGeometry(0.07, 0).scale(1, 0.6, 1), 'foliage', 0, 0.05, 0), part(new THREE.IcosahedronGeometry(0.04, 1).scale(1, 0.75, 1), 'bloom', 0, 0.24, 0)],
-  daisy: [stem(0.3), part(new THREE.CylinderGeometry(0.045, 0.045, 0.006, 12), 'daisyPetals', 0, 0.3, 0), part(new THREE.SphereGeometry(0.015, 8, 6), 'flowerHeart', 0, 0.305, 0)],
-  poppy: [stem(0.42), part(new THREE.CylinderGeometry(0.048, 0.018, 0.045, 10, 1, true), 'bloom', 0, 0.44, 0), part(new THREE.SphereGeometry(0.013, 8, 6), 'poppyHeart', 0, 0.445, 0)],
-  tulip: [stem(0.32), part(new THREE.ConeGeometry(0.02, 0.16, 4), 'foliage', 0.015, 0.08, 0), part(new THREE.SphereGeometry(0.028, 10, 8).scale(1, 1.5, 1), 'bloom', 0, 0.35, 0)],
+  grassTuft: [part(new THREE.ConeGeometry(0.035, 0.14, 3, 1, true), 'bloom', 0, 0.07, 0)],
+  marigold: [stem(0.22), part(new THREE.OctahedronGeometry(0.07, 0).scale(1, 0.6, 1), 'foliage', 0, 0.05, 0), part(new THREE.IcosahedronGeometry(0.04, 0).scale(1, 0.75, 1), 'bloom', 0, 0.24, 0)],
+  daisy: [stem(0.3), part(new THREE.CylinderGeometry(0.045, 0.045, 0.006, 8), 'daisyPetals', 0, 0.3, 0), part(new THREE.IcosahedronGeometry(0.015, 0), 'flowerHeart', 0, 0.305, 0)],
+  poppy: [stem(0.42), part(new THREE.CylinderGeometry(0.048, 0.018, 0.045, 7, 1, true), 'bloom', 0, 0.44, 0), part(new THREE.IcosahedronGeometry(0.013, 0), 'poppyHeart', 0, 0.445, 0)],
+  tulip: [stem(0.32), part(new THREE.ConeGeometry(0.02, 0.16, 3, 1, true), 'foliage', 0.015, 0.08, 0), part(new THREE.IcosahedronGeometry(0.028, 0).scale(1, 1.5, 1), 'bloom', 0, 0.35, 0)],
   sunflower: [
     part(new THREE.CylinderGeometry(0.014, 0.018, 1.6, 6), 'stem', 0, 0.8, 0),
     part(new THREE.ConeGeometry(0.07, 0.25, 4), 'foliage', 0.06, 0.7, 0),
@@ -25,7 +25,7 @@ const partsByKind: Readonly<Record<PlantKind, readonly PlantPart[]>> = {
     tiltedTowardsTheRoom(new THREE.CylinderGeometry(0.1, 0.1, 0.03, 18), 'sunflowerHeart', 1.65, 0.012),
   ],
   roseBush: [part(new THREE.IcosahedronGeometry(roseBushRadiusMetres, 1).scale(1, roseBushSquash, 1), 'bloom', 0, roseBushCentreHeightMetres, 0)],
-  rose: [part(new THREE.IcosahedronGeometry(0.05, 1), 'bloom', 0, 0, 0)],
+  rose: [part(new THREE.IcosahedronGeometry(0.05, 0), 'bloom', 0, 0, 0)],
 }
 
 export class Garden {
@@ -67,7 +67,7 @@ function instancesOf(plantPart: PlantPart, plants: readonly Plant[], materials: 
 }
 
 function stem(heightMetres: number): PlantPart {
-  return part(new THREE.CylinderGeometry(0.005, 0.006, heightMetres, 5), 'stem', 0, heightMetres / 2, 0)
+  return part(new THREE.CylinderGeometry(0.005, 0.006, heightMetres, 3, 1, true), 'stem', 0, heightMetres / 2, 0)
 }
 
 function part(geometry: THREE.BufferGeometry, surface: Surface, x: number, y: number, z: number): PlantPart {
