@@ -102,6 +102,8 @@ The plan is in `docs/roadmap.md`.
 
 **The light follows the ritual's time of day, and holds still.** The room opens at a time of day chosen at random from those the room offers, through `chooseAtmosphere`, and `Sky/DaylightCycle.ts` turns that time into the sun's position, its warmth and the lights' strength, so the light is testable in Node, and `Views/RoomLights.ts` applies it. A sun that crossed the sky during play was set aside for now, because its shadow edges crept across the room in visible steps. Sunset was dropped from the room's times of day, because the setting sun stands behind the room's left wall, no sunlight reaches the room, and nothing casts a shadow. No rule depends on the time of day yet. The sun passes behind the window wall, low on the open side at sunrise and sunset and over the wall at noon, so the room is lit all day. The noon light stays warm and a little softer than full sun, because a cold white light at noon made the room look like a hospital ward.
 
+**The garden around the house is scenery.** `GardenLayout.ts` places every plant from a fixed seed, only outside the room's floor, so the garden is the same at every visit and never grows through the room. `Views/Garden.ts` draws each part of a kind of plant as one instanced mesh, the plants cast no shadows and take no taps, so a thousand plants cost little on a phone. The tall sunflowers stand off to the sides and face the camera, so they never hide the room.
+
 **Every surface's look is decided in one class.** `RoomMaterials` maps each surface name to a material. Paintings and generated textures replace a colour there without touching the models.
 
 ### Apps/Bench/

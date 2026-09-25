@@ -65,6 +65,14 @@ export type Surface =
   | 'heronPainting'
   | 'teaCharacterPainting'
   | 'yixingClay'
+  | 'lawn'
+  | 'bloom'
+  | 'foliage'
+  | 'stem'
+  | 'daisyPetals'
+  | 'flowerHeart'
+  | 'poppyHeart'
+  | 'sunflowerHeart'
 
 const surfaceColours: Readonly<Record<Surface, string>> = {
   floor: '#e9cfa4',
@@ -120,6 +128,14 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   heronPainting: '#ffffff',
   teaCharacterPainting: '#ffffff',
   yixingClay: '#ffffff',
+  lawn: '#79a94f',
+  bloom: '#ffffff',
+  foliage: '#3f7a32',
+  stem: '#4d8a36',
+  daisyPetals: '#fbfbf6',
+  flowerHeart: '#f2c21c',
+  poppyHeart: '#1d1a17',
+  sunflowerHeart: '#5a3616',
 }
 
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])

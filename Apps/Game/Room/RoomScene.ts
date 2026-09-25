@@ -22,6 +22,7 @@ import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { captionLinesFor, roomRemarkLine } from './RoomTexts.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
+import { Garden } from './Views/Garden.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
 import { daylightFor } from './Sky/DaylightCycle.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
@@ -89,7 +90,7 @@ export class RoomScene {
       tiltReleased: () => this.play.tiltReleased(),
     })
     this.caption = new RoomCaption(container)
-    this.scene.add(this.room.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
+    this.scene.add(this.room.root, new Garden(materials).root, this.walker.root, this.carried.root, ...this.roomLights.lights)
     this.fitToWindow()
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
     this.listenToPresses()

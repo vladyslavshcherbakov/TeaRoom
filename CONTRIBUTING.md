@@ -36,6 +36,7 @@ In the room:
 - `Room/RoomPlay.ts` is the only place that turns presses into ritual commands: taking, choosing a hand, putting down, lids, the heater, the sink and its tap, pouring, the spoon, sipping, offering and wiping. It hands walking and close-ups to `Room/RoomNavigator.ts`, and an aimed pour to `Room/AimedPour.ts`.
 - `Room/RoomGestures.ts` tells taps, strokes, pinches and the aiming finger apart before they reach `RoomPlay`.
 - `Room/Placement.ts` decides whether an item fits where the player tapped.
+- `Room/GardenLayout.ts` decides where the garden around the house grows, and `Views/Garden.ts` draws it.
 - None of these knows Three.js.
 - `Room/Walking/` finds paths on the floor grid and moves the walker. `Room/Camera/` computes where the camera looks and keeps the zooms. `Room/Sky/` computes where the sun stands at each hour of the day.
 - `Room/Views/` builds the meshes. `RoomModel.ts` builds the room. `CarriedItems.ts` builds the items the keeper can carry, placed from the ritual's state every frame and, in a close-up, held in the corners of the view, with their parts in `Views/Carried/`: the meshes, what an item holds, the water streams, the chosen glow and the cloth's fire. `SipButton.ts`, `PourControls.ts` and `RoomCaption.ts` are the controls and the caption, and `RoomLights.ts` lights the room from the sun's place.
