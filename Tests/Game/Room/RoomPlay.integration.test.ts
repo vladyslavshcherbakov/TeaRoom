@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { openLidOffsetBeside, whyThereIsNoRoomFor } from '../../../Apps/Game/Room/Placement.ts'
-import { kitchenBesideTheWindow, type FloorPoint, type FurnitureId, type WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { quietRoomLayout, type FloorPoint, type FurnitureId, type WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { RoomPlay, type RoomRemark, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
@@ -16,7 +16,7 @@ const onTheTeaTable: WorldPoint = { x: 1, y: 0.42, z: -1.5 }
 const onTheCounter: WorldPoint = { x: -1.4, y: 0.9, z: -2.6 }
 const onTheCounterBesideTheBowl: WorldPoint = { x: -0.8, y: 0.9, z: -2.6 }
 const behindTheKettle: WorldPoint = { x: -1.9, y: 0.9, z: -2.86 }
-const quietRoomSurroundings = { layout: kitchenBesideTheWindow, heaterSpot: definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot }
+const quietRoomSurroundings = { layout: quietRoomLayout, heaterSpot: definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot }
 
 test('bowl_whenTappedInTheShelfCloseUp_goesIntoTheFirstFreeHand', () => {
   const room = new RoomVisit()
@@ -932,7 +932,7 @@ class RoomVisit {
   readonly play: RoomPlay
 
   constructor(heaterItemsBeforeTheTesterJoke = 4) {
-    this.play = new RoomPlay(this.ritual.session, defaultCatalog, kitchenBesideTheWindow, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), settingsAsked: () => (this.settingsAsked += 1), mayGrowAMiddleHand: () => this.mayGrowAMiddleHand, keeperDied: () => (this.deathsSeen += 1) })
+    this.play = new RoomPlay(this.ritual.session, defaultCatalog, quietRoomLayout, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), settingsAsked: () => (this.settingsAsked += 1), mayGrowAMiddleHand: () => this.mayGrowAMiddleHand, keeperDied: () => (this.deathsSeen += 1) })
   }
 
   get session() {

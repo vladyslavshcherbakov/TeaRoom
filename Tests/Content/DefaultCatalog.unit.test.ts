@@ -20,7 +20,7 @@ test('quietRoom_inEveryArrangement_opensWithNoContentProblems', () => {
 })
 
 test('quietRoom_withTwoCloths_startsWithBothOfThem', () => {
-  const room = quietRoomArrangedAs({ kitchen: 'facingTheWindow', tools: 'apart', clothCount: 2 })
+  const room = quietRoomArrangedAs({ window: 'alongTheLeftWall', besideTheWindow: 'shelf', table: 'againstTheFrontEdge', tools: 'apart', clothCount: 2 })
 
   assert.deepEqual(room.cloths.map((cloth) => cloth.id), ['cloth', 'cloth2'])
 })

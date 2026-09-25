@@ -24,7 +24,7 @@ import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
-import { roomLayoutFor, type CameraPose, type FloorPoint } from './RoomLayout.ts'
+import { roomLayoutFor, type CameraPose, type FloorPoint, type RoomLayout } from './RoomLayout.ts'
 import type { ClothPattern, RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
@@ -90,6 +90,7 @@ export class RoomScene {
   private readonly session: RitualSession
   private readonly catalog: Catalog
   private readonly arrangement: RoomArrangement
+  private readonly layout: RoomLayout
   private readonly log: RoomLog
   private readonly texts: RoomTexts
   private readonly visitStore: VisitStore
@@ -132,7 +133,8 @@ export class RoomScene {
     this.session = session
     this.catalog = catalog
     this.arrangement = arrival.arrangement
-    const layout = roomLayoutFor(arrival.arrangement.kitchen)
+    const layout = roomLayoutFor(arrival.arrangement)
+    this.layout = layout
     this.log = log
     this.texts = new RoomTexts(voiceSeed, log)
     this.visitStore = visitStore
@@ -256,7 +258,7 @@ export class RoomScene {
   }
 
   private showTheAchievements(): void {
-    const outOfReach = achievementsOutOfReach(this.session.state, { hasTheProphecy: this.room.prophecyInscription !== null })
+    const outOfReach = achievementsOutOfReach(this.session.state, { hasTheProphecy: this.layout.canTheProphecyBeSeen })
     this.log(`the achievements are shown, out of reach here or now: ${[...outOfReach].join(', ') || 'none'}`)
     this.achievementsList.show(this.achievements.unlocked, outOfReach)
   }

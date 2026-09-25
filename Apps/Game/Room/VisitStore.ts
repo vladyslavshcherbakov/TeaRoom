@@ -1,5 +1,5 @@
 import type { FirstPersonLook } from './Camera/FirstPersonLook.ts'
-import { arrangementBeforeRoomsVaried, describeArrangement, problemWithArrangement, type RoomArrangement } from './RoomArrangement.ts'
+import { arrangementBeforeRoomsVaried, arrangementOfAnEarlierSave, describeArrangement, problemWithArrangement, type RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import type { CameraMode, StickLayout } from './Views/DebugMenu.ts'
 
@@ -38,11 +38,12 @@ export class VisitStore {
   find(): FoundVisit {
     const text = this.read()
     if (text === null) return { kind: 'none' }
-    const visit = parsedOrNull(text)
-    if (visit === null) {
+    const parsedVisit = parsedOrNull(text)
+    if (parsedVisit === null) {
       this.log('the saved visit cannot be read as JSON, so the room opens anew')
       return { kind: 'brokenByAnUpdate' }
     }
+    const visit = this.withTheArrangementInTodaysWords(parsedVisit)
     const problem = problemWith(visit)
     if (problem !== null) {
       this.log(`the saved visit does not fit this version of the game: ${problem}`)
@@ -71,6 +72,14 @@ export class VisitStore {
     } catch (error) {
       this.log(`the saved visit could not be forgotten (${reason}): ${String(error)}`)
     }
+  }
+
+  private withTheArrangementInTodaysWords(visit: unknown): unknown {
+    if (typeof visit !== 'object' || visit === null || !('arrangement' in visit)) return visit
+    const arrangement = arrangementOfAnEarlierSave(visit.arrangement)
+    if (arrangement === visit.arrangement) return visit
+    this.log('the saved visit names its room by its kitchen alone, from before the furniture could move, so it keeps its window with the kitchen beside it and the tea table by the window')
+    return { ...visit, arrangement }
   }
 
   private withItsArrangement(visit: Omit<SavedVisit, 'arrangement'> & { readonly arrangement?: RoomArrangement }): SavedVisit {

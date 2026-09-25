@@ -5,7 +5,7 @@ import { RoomGestures, type ScreenPoint } from '../../../Apps/Game/Room/RoomGest
 import { RoomPlay, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
-import { kitchenBesideTheWindow } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 
 test('press_whenTheFingerLiftsWithinTwelvePixels_isATap', () => {
   const room = new GestureRoom()
@@ -42,7 +42,7 @@ test('pinch_whenTheFingersSpreadToTwiceTheirGap_bringsTheCameraToHalfItsDistance
 
 class GestureRoom {
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, kitchenBesideTheWindow, () => {}, 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, settingsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
+  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, quietRoomLayout, () => {}, 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, settingsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
   readonly zoom = new CameraZoom()
   readonly gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: counterAt, aimPointAt: () => ({ x: 0, z: 0 }) }, () => {})
 }

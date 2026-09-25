@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
 import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
-import { kitchenBesideTheWindow } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Views/Carried/CarriedModel.ts'
 import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
@@ -115,7 +115,7 @@ test('itemInTheSink_standsOnTheTopOfTheSinksFloorPlate', () => {
   const tap = definitionIn(defaultCatalog, 'rooms', 'quietRoom').tap
 
   assert.ok(tap !== null, 'the quiet room has a tap')
-  assertNear(tap.sinkSpot.y, kitchenBesideTheWindow.sinkBasin.floorHeight + kitchenBesideTheWindow.sinkBasin.plateMetres)
+  assertNear(tap.sinkSpot.y, quietRoomLayout.sinkBasin.floorHeight + quietRoomLayout.sinkBasin.plateMetres)
 })
 
 test('heldItem_ofEveryShapeInEitherHand_staysInsideAPortraitPhoneScreen', () => {

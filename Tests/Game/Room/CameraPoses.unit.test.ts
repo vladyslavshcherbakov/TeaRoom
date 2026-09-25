@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { closeUpPose, distanceShareAfterPinch, visibleWidthMetres, zoomedPose } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
-import { kitchenBesideTheWindow } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 
 const iPhonePortraitAspect = 390 / 844
 
 test('closeUp_onAPortraitPhone_showsTheWholeWidthOfEachPieceOfFurnitureFromEachSide', () => {
-  for (const piece of kitchenBesideTheWindow.furniture) {
+  for (const piece of quietRoomLayout.furniture) {
     for (const side of piece.sides) {
       const pose = closeUpPose(side.closeUp, iPhonePortraitAspect)
       const distance = Math.hypot(pose.position.x - pose.target.x, pose.position.y - pose.target.y, pose.position.z - pose.target.z)
@@ -17,7 +17,7 @@ test('closeUp_onAPortraitPhone_showsTheWholeWidthOfEachPieceOfFurnitureFromEachS
 })
 
 test('closeUp_ofTheTeaTableFromEachSide_looksDownFromAbove', () => {
-  const teaTable = kitchenBesideTheWindow.furniture.find((piece) => piece.id === 'teaTable')
+  const teaTable = quietRoomLayout.furniture.find((piece) => piece.id === 'teaTable')
   if (teaTable === undefined) throw new Error('the layout lost the tea table')
 
   const downwardAnglesDegrees = teaTable.sides.map((side) => {

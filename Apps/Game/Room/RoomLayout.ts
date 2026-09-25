@@ -1,4 +1,4 @@
-import type { KitchenPlacement } from '../../../Shared/Content/Rooms.ts'
+import { facingDirection, furniturePlacementsFor, pointOn, type Facing, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
 
 export type FloorPoint = {
   readonly x: number
@@ -36,6 +36,7 @@ export type FurnitureSide = {
 
 export type Furniture = {
   readonly id: FurnitureId
+  readonly facing: Facing
   readonly footprint: Footprint
   readonly height: number
   readonly takesItemsOnItsTop: boolean
@@ -86,6 +87,29 @@ export type RoomLayout = {
   readonly faucetSpout: WorldPoint
   readonly sinkBasin: SinkBasin
   readonly itemSpots: readonly ItemSpot[]
+  readonly canTheProphecyBeSeen: boolean
+}
+
+type PieceShape = {
+  readonly id: FurnitureId
+  readonly widthMetres: number
+  readonly depthMetres: number
+  readonly height: number
+  readonly takesItemsOnItsTop: boolean
+  readonly standsInFrontMetres: number
+  readonly closeUp: {
+    readonly targetForwardMetres: number
+    readonly targetHeight: number
+    readonly acrossToCamera: number
+    readonly upToCamera: number
+    readonly widthMetres: number
+    readonly heightMetres: number
+  }
+}
+
+type LookOfAWindow = {
+  readonly windows: readonly WallWindow[]
+  readonly figurines: readonly ItemSpot[]
 }
 
 export const roomHalfSize = 3
@@ -98,130 +122,82 @@ const puddleOffsetFromTheTeaTableCentre: FloorPoint = { x: -0.2, z: 0.1 }
 const puddleAboveTheSurfaceMetres = 0.002
 const largestPuddleRadiusMetres = 0.25
 
-export const kitchenBesideTheWindow: RoomLayout = {
-  furniture: [
-    {
-      id: 'counter',
-      footprint: { x: -1.8, z: -2.65, width: 2.2, depth: 0.7 },
-      height: 0.9,
-      takesItemsOnItsTop: true,
-      sides: [
-        {
-          name: 'front',
-          standingPoint: { x: -1.8, z: -1.85 },
-          closeUp: { target: { x: -1.8, y: 0.95, z: -2.6 }, directionToCamera: { x: 0.2, y: 0.8, z: 1 }, widthMetres: 2.6, heightMetres: 1.4 },
-        },
-      ],
-    },
-    {
-      id: 'shelf',
-      footprint: { x: -2.75, z: 0.4, width: 0.5, depth: 1.8 },
-      height: 1.7,
-      takesItemsOnItsTop: false,
-      sides: [
-        {
-          name: 'front',
-          standingPoint: { x: -1.95, z: 0.4 },
-          closeUp: { target: { x: -2.75, y: 0.95, z: 0.4 }, directionToCamera: { x: 1, y: 0.3, z: 0.1 }, widthMetres: 2.1, heightMetres: 1.9 },
-        },
-      ],
-    },
-    {
-      id: 'teaTable',
-      footprint: { x: 1, z: -1.55, width: 1.4, depth: 0.9 },
-      height: 0.42,
-      takesItemsOnItsTop: true,
-      sides: [
-        {
-          name: 'front',
-          standingPoint: { x: 1, z: -0.6 },
-          closeUp: { target: { x: 1, y: 0.42, z: -1.6 }, directionToCamera: { x: 0, y: 1.6, z: 1 }, widthMetres: 1.7, heightMetres: 1.3 },
-        },
-        {
-          name: 'window side',
-          standingPoint: { x: 1, z: -2.5 },
-          closeUp: { target: { x: 1, y: 0.42, z: -1.5 }, directionToCamera: { x: 0, y: 1.6, z: -1 }, widthMetres: 1.7, heightMetres: 1.3 },
-        },
-      ],
-    },
-  ],
-  cushionSpots: [
-    { x: 1, z: -0.6 },
-    { x: 1, z: -2.5 },
-  ],
-  windows: [{ wall: 'back', centreAlongTheWall: 1, width: 1.8, sillHeight: 0.85, height: 1.3, hasTheProphecyAbove: true }],
-  medal: { wall: 'left', alongTheWall: -1.4, y: 1.55 },
-  settingsGear: { wall: 'left', alongTheWall: -1.4, y: 1 },
-  faucetSpout: { x: -1.45, y: 1.3, z: -2.72 },
-  sinkBasin: { placeId: 'counter', x: -1.45, z: -2.68, width: 0.36, depth: 0.34, floorHeight: 0.816, plateMetres: 0.004 },
-  itemSpots: [
-    { id: 'faucet', shape: 'faucet', position: { x: -1.45, y: 0.9, z: -2.9 } },
-    { id: 'dragon', shape: 'figurine', position: { x: 0.45, y: 0.85, z: -2.88 } },
-    { id: 'toad', shape: 'figurine', position: { x: 1.55, y: 0.85, z: -2.88 } },
-  ],
+const counterShape: PieceShape = {
+  id: 'counter',
+  widthMetres: 2.2,
+  depthMetres: 0.7,
+  height: 0.9,
+  takesItemsOnItsTop: true,
+  standsInFrontMetres: 0.8,
+  closeUp: { targetForwardMetres: 0.05, targetHeight: 0.95, acrossToCamera: 0.2, upToCamera: 0.8, widthMetres: 2.6, heightMetres: 1.4 },
 }
 
-export const kitchenFacingTheWindow: RoomLayout = {
-  furniture: [
-    {
-      id: 'counter',
-      footprint: { x: -1.45, z: -2.65, width: 2.2, depth: 0.7 },
-      height: 0.9,
-      takesItemsOnItsTop: true,
-      sides: [
-        {
-          name: 'front',
-          standingPoint: { x: -1.45, z: -1.85 },
-          closeUp: { target: { x: -1.45, y: 0.95, z: -2.6 }, directionToCamera: { x: 0.2, y: 0.8, z: 1 }, widthMetres: 2.6, heightMetres: 1.4 },
-        },
-      ],
-    },
-    {
-      id: 'shelf',
-      footprint: { x: 1.8, z: -2.75, width: 1.8, depth: 0.5 },
-      height: 1.7,
-      takesItemsOnItsTop: false,
-      sides: [
-        {
-          name: 'front',
-          standingPoint: { x: 1.8, z: -1.95 },
-          closeUp: { target: { x: 1.8, y: 0.95, z: -2.75 }, directionToCamera: { x: -0.1, y: 0.3, z: 1 }, widthMetres: 2.1, heightMetres: 1.9 },
-        },
-      ],
-    },
-    {
-      id: 'teaTable',
-      footprint: { x: -2.1, z: 0, width: 0.9, depth: 1.4 },
-      height: 0.42,
-      takesItemsOnItsTop: true,
-      sides: [
-        {
-          name: 'front',
-          standingPoint: { x: -1.15, z: 0 },
-          closeUp: { target: { x: -2.15, y: 0.42, z: 0 }, directionToCamera: { x: 1, y: 1.6, z: 0 }, widthMetres: 1.7, heightMetres: 1.3 },
-        },
-      ],
-    },
-  ],
-  cushionSpots: [
-    { x: -1.15, z: 0 },
-    { x: -2.1, z: -1.25 },
-  ],
-  windows: [{ wall: 'left', centreAlongTheWall: 0, width: 5.6, sillHeight: 0.85, height: 1.3, hasTheProphecyAbove: false }],
-  medal: { wall: 'back', alongTheWall: 0.28, y: 1.55 },
-  settingsGear: { wall: 'back', alongTheWall: 0.28, y: 1 },
-  faucetSpout: { x: -1.1, y: 1.3, z: -2.72 },
-  sinkBasin: { placeId: 'counter', x: -1.1, z: -2.68, width: 0.36, depth: 0.34, floorHeight: 0.816, plateMetres: 0.004 },
-  itemSpots: [
-    { id: 'faucet', shape: 'faucet', position: { x: -1.1, y: 0.9, z: -2.9 } },
-    { id: 'dragon', shape: 'figurine', position: { x: -2.88, y: 0.875, z: -1.2 } },
-    { id: 'toad', shape: 'figurine', position: { x: -2.88, y: 0.875, z: 1.2 } },
-  ],
+const shelfShape: PieceShape = {
+  id: 'shelf',
+  widthMetres: 1.8,
+  depthMetres: 0.5,
+  height: 1.7,
+  takesItemsOnItsTop: false,
+  standsInFrontMetres: 0.8,
+  closeUp: { targetForwardMetres: 0, targetHeight: 0.95, acrossToCamera: -0.1, upToCamera: 0.3, widthMetres: 2.1, heightMetres: 1.9 },
 }
 
-export function roomLayoutFor(kitchen: KitchenPlacement): RoomLayout {
-  return kitchen === 'besideTheWindow' ? kitchenBesideTheWindow : kitchenFacingTheWindow
+const teaTableShape: PieceShape = {
+  id: 'teaTable',
+  widthMetres: 1.4,
+  depthMetres: 0.9,
+  height: 0.42,
+  takesItemsOnItsTop: true,
+  standsInFrontMetres: 0.95,
+  closeUp: { targetForwardMetres: -0.05, targetHeight: 0.42, acrossToCamera: 0, upToCamera: 1.6, widthMetres: 1.7, heightMetres: 1.3 },
 }
+
+const onTheCounter = {
+  sinkBasin: { across: 0.35, forward: -0.03, widthMetres: 0.36, depthMetres: 0.34, floorHeight: 0.816, plateMetres: 0.004 },
+  faucetBase: { across: 0.35, forward: -0.25, y: 0.9 },
+  faucetSpout: { across: 0.35, forward: -0.07, y: 1.3 },
+} as const
+
+const secondCushionBeyondTheTableEndMetres = 0.55
+
+const looksOfTheWindows: Readonly<Record<WindowPlace, LookOfAWindow>> = {
+  inTheBackWall: {
+    windows: [{ wall: 'back', centreAlongTheWall: 1, width: 1.8, sillHeight: 0.85, height: 1.3, hasTheProphecyAbove: true }],
+    figurines: [
+      { id: 'dragon', shape: 'figurine', position: { x: 0.45, y: 0.85, z: -2.88 } },
+      { id: 'toad', shape: 'figurine', position: { x: 1.55, y: 0.85, z: -2.88 } },
+    ],
+  },
+  alongTheLeftWall: {
+    windows: [{ wall: 'left', centreAlongTheWall: 0, width: 5.6, sillHeight: 0.85, height: 1.3, hasTheProphecyAbove: false }],
+    figurines: [
+      { id: 'dragon', shape: 'figurine', position: { x: -2.88, y: 0.875, z: -1.2 } },
+      { id: 'toad', shape: 'figurine', position: { x: -2.88, y: 0.875, z: 1.2 } },
+    ],
+  },
+}
+
+export function roomLayoutFor(arrangement: FurnitureArrangement): RoomLayout {
+  const placements = furniturePlacementsFor(arrangement)
+  const { teaTable } = placements
+  const counter = pieceAt(counterShape, placements.counter, [placements.counter.facing])
+  const tableFacings: readonly [Facing, ...Facing[]] = teaTable.alsoFacing === null ? [teaTable.facing] : [teaTable.facing, teaTable.alsoFacing]
+  const look = looksOfTheWindows[arrangement.window]
+  const medal = medalFor(arrangement)
+  return {
+    furniture: [counter, pieceAt(shelfShape, placements.shelf, [placements.shelf.facing]), pieceAt(teaTableShape, teaTable, tableFacings)],
+    cushionSpots: cushionSpotsBy(teaTable),
+    windows: look.windows,
+    medal,
+    settingsGear: { ...medal, y: 1 },
+    faucetSpout: worldPointOn(placements.counter, onTheCounter.faucetSpout),
+    sinkBasin: sinkBasinIn(placements.counter),
+    itemSpots: [{ id: 'faucet', shape: 'faucet', position: worldPointOn(placements.counter, onTheCounter.faucetBase) }, ...look.figurines],
+    canTheProphecyBeSeen: look.windows.some((window) => window.hasTheProphecyAbove) && teaTable.alsoFacing !== null,
+  }
+}
+
+export const quietRoomLayout = roomLayoutFor({ window: 'inTheBackWall', besideTheWindow: 'kitchen', table: 'byTheWindow' })
 
 export function puddleRadiusMetres(puddleShare: number): number {
   return Math.sqrt(puddleShare) * largestPuddleRadiusMetres
@@ -244,4 +220,68 @@ export function puddleCentreOn(layout: RoomLayout, placeId: string, spilledAroun
   if (piece === undefined) return null
   const offset = piece.id === 'teaTable' ? puddleOffsetFromTheTeaTableCentre : { x: 0, z: 0 }
   return { x: piece.footprint.x + offset.x, y: piece.height + puddleAboveTheSurfaceMetres, z: piece.footprint.z + offset.z }
+}
+
+function pieceAt(shape: PieceShape, placement: PiecePlacement, facings: readonly [Facing, ...Facing[]]): Furniture {
+  const isAlongX = placement.facing === 'towardsTheFront' || placement.facing === 'towardsTheBack'
+  const [first, ...rest] = facings.map((facing) => sideOf(shape, { ...placement, facing }))
+  return {
+    id: shape.id,
+    facing: placement.facing,
+    footprint: { x: placement.x, z: placement.z, width: isAlongX ? shape.widthMetres : shape.depthMetres, depth: isAlongX ? shape.depthMetres : shape.widthMetres },
+    height: shape.height,
+    takesItemsOnItsTop: shape.takesItemsOnItsTop,
+    sides: [first ?? sideOf(shape, placement), ...rest],
+  }
+}
+
+function sideOf(shape: PieceShape, placement: PiecePlacement): FurnitureSide {
+  const ahead = facingDirection(placement.facing)
+  const target = pointOn(placement, 0, shape.closeUp.targetForwardMetres)
+  const standingPoint = pointOn(placement, 0, shape.standsInFrontMetres)
+  const across = { x: ahead.z, z: -ahead.x }
+  return {
+    name: `side ${placement.facing}`,
+    standingPoint,
+    closeUp: {
+      target: { x: target.x, y: shape.closeUp.targetHeight, z: target.z },
+      directionToCamera: { x: ahead.x + across.x * shape.closeUp.acrossToCamera, y: shape.closeUp.upToCamera, z: ahead.z + across.z * shape.closeUp.acrossToCamera },
+      widthMetres: shape.closeUp.widthMetres,
+      heightMetres: shape.closeUp.heightMetres,
+    },
+  }
+}
+
+function cushionSpotsBy(teaTable: PiecePlacement & { readonly alsoFacing: Facing | null }): FloorPoint[] {
+  const first = pointOn(teaTable, 0, teaTableShape.standsInFrontMetres)
+  if (teaTable.alsoFacing !== null) return [first, pointOn({ ...teaTable, facing: teaTable.alsoFacing }, 0, teaTableShape.standsInFrontMetres)]
+  const alongTheEnd = teaTableShape.widthMetres / 2 + secondCushionBeyondTheTableEndMetres
+  const ends = [pointOn(teaTable, alongTheEnd, 0), pointOn(teaTable, -alongTheEnd, 0)]
+  const nearerTheMiddle = ends.reduce((nearest, end) => (Math.hypot(end.x, end.z) < Math.hypot(nearest.x, nearest.z) ? end : nearest))
+  return [first, nearerTheMiddle]
+}
+
+function medalFor(arrangement: FurnitureArrangement): SpotOnAWall {
+  if (arrangement.window === 'inTheBackWall') return { wall: 'left', alongTheWall: -1.4, y: 1.55 }
+  return { wall: 'back', alongTheWall: arrangement.besideTheWindow === 'kitchen' ? 0.28 : -0.28, y: 1.55 }
+}
+
+function sinkBasinIn(counter: PiecePlacement): SinkBasin {
+  const basin = onTheCounter.sinkBasin
+  const centre = pointOn(counter, basin.across, basin.forward)
+  const isAlongX = counter.facing === 'towardsTheFront' || counter.facing === 'towardsTheBack'
+  return {
+    placeId: 'counter',
+    x: centre.x,
+    z: centre.z,
+    width: isAlongX ? basin.widthMetres : basin.depthMetres,
+    depth: isAlongX ? basin.depthMetres : basin.widthMetres,
+    floorHeight: basin.floorHeight,
+    plateMetres: basin.plateMetres,
+  }
+}
+
+function worldPointOn(placement: PiecePlacement, spot: { readonly across: number; readonly forward: number; readonly y: number }): WorldPoint {
+  const { x, z } = pointOn(placement, spot.across, spot.forward)
+  return { x, y: spot.y, z }
 }

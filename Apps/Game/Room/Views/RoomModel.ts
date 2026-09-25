@@ -17,6 +17,7 @@ import {
   type WallWindow,
   type WorldPoint,
 } from '../RoomLayout.ts'
+import { facingDirection, type Facing } from '../../../../Shared/Content/Rooms.ts'
 import type { RoomArrangement } from '../RoomArrangement.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
@@ -298,11 +299,15 @@ export class RoomModel {
     const plate = this.box('heaterPlate', 0.34, 0.05, 0.3, { x: spot.x, y: spot.y - 0.025, z: spot.z })
     plate.material = this.materials.unsharedMaterialFor('heaterPlate')
     this.tag(plate, { isHeater: true })
-    const counterFront = furnitureWithId(this.layout, 'counter').footprint
-    const frontZ = counterFront.z + counterFront.depth / 2
-    const switchPanel = this.box('heaterPlate', 0.32, 0.2, 0.02, { x: spot.x, y: spot.y - 0.2, z: frontZ + 0.01 })
-    const switchKnob = this.cylinder('steel', 0.05, 0.04, { x: spot.x, y: spot.y - 0.2, z: frontZ + 0.04 })
-    switchKnob.rotation.x = Math.PI / 2
+    const counter = furnitureWithId(this.layout, 'counter')
+    const ahead = facingDirection(counter.facing)
+    const toTheFront = (counter.facing === 'towardsTheFront' || counter.facing === 'towardsTheBack' ? counter.footprint.depth : counter.footprint.width) / 2
+    const heaterForward = (spot.x - counter.footprint.x) * ahead.x + (spot.z - counter.footprint.z) * ahead.z
+    const onTheFront = (outward: number) => ({ x: spot.x + ahead.x * (toTheFront - heaterForward + outward), y: spot.y - 0.2, z: spot.z + ahead.z * (toTheFront - heaterForward + outward) })
+    const switchPanel = this.box('heaterPlate', 0.32, 0.2, 0.02, onTheFront(0.01))
+    switchPanel.rotation.y = turnFacing(counter.facing)
+    const switchKnob = this.cylinder('steel', 0.05, 0.04, onTheFront(0.04))
+    switchKnob.rotation.set(Math.PI / 2, turnFacing(counter.facing), 0, 'YXZ')
     this.tag(switchPanel, { isHeaterSwitch: true })
     this.tag(switchKnob, { isHeaterSwitch: true })
     return plate
@@ -320,26 +325,31 @@ export class RoomModel {
 
   private faucet(base: WorldPoint): THREE.Object3D {
     const { faucetSpout } = this.layout
+    const reach = Math.hypot(faucetSpout.x - base.x, faucetSpout.z - base.z)
     const faucet = new THREE.Group()
+    const turned = new THREE.Group()
+    turned.position.set(base.x, base.y, base.z)
+    turned.rotation.y = Math.atan2(faucetSpout.x - base.x, faucetSpout.z - base.z)
     const postHeight = faucetSpout.y - base.y + faucetPostAboveTheSpoutMetres
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, postHeight, 0.05), this.materials.materialFor('steel'))
-    post.position.set(base.x, base.y + postHeight / 2, base.z)
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, faucetSpout.z - base.z + 0.02), this.materials.materialFor('steel'))
-    arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
+    post.position.set(0, postHeight / 2, 0)
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, reach + 0.02), this.materials.materialFor('steel'))
+    arm.position.set(0, faucetSpout.y - base.y + 0.02, reach / 2)
     post.castShadow = true
     arm.castShadow = true
-    faucet.add(post, arm, this.faucetTouchArea(base, postHeight), ...this.sinkBasinInside(base.y))
+    turned.add(post, arm, this.faucetTouchArea(reach, postHeight))
+    faucet.add(turned, ...this.sinkBasinInside(base.y))
     this.root.add(faucet)
     return faucet
   }
 
-  private faucetTouchArea(base: WorldPoint, postHeight: number): THREE.Mesh {
-    const bottom = base.y + faucetTouchAreaAboveTheCounterMetres
-    const top = base.y + postHeight + faucetTouchAreaBeyondTheFaucetMetres
-    const back = base.z - faucetTouchAreaBeyondTheFaucetMetres
-    const front = this.layout.faucetSpout.z + faucetTouchAreaBeyondTheFaucetMetres
+  private faucetTouchArea(reach: number, postHeight: number): THREE.Mesh {
+    const bottom = faucetTouchAreaAboveTheCounterMetres
+    const top = postHeight + faucetTouchAreaBeyondTheFaucetMetres
+    const back = -faucetTouchAreaBeyondTheFaucetMetres
+    const front = reach + faucetTouchAreaBeyondTheFaucetMetres
     const area = this.touchArea(faucetTouchAreaWidthMetres, top - bottom, front - back)
-    area.position.set(base.x, (bottom + top) / 2, (back + front) / 2)
+    area.position.set(0, (bottom + top) / 2, (back + front) / 2)
     return area
   }
 
@@ -425,4 +435,9 @@ function placeOnTheWall(object: THREE.Object3D, spot: SpotOnAWall, intoTheRoom: 
   const { x, y, z } = pointInTheRoom(spot.wall, { alongTheWall: spot.alongTheWall, y: spot.y, intoTheRoom })
   object.position.set(x, y, z)
   object.rotation.y = turnFacingTheRoom(spot.wall)
+}
+
+function turnFacing(facing: Facing): number {
+  const ahead = facingDirection(facing)
+  return Math.atan2(ahead.x, ahead.z)
 }
