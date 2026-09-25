@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { itemLocationIn } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
+import { isTheLidOpen } from '../../CarriedShapes.ts'
 import { openLidOffsetBeside } from '../../Placement.ts'
 import type { FloorPoint } from '../../RoomLayout.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
@@ -53,7 +54,7 @@ const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetre
 
 export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, heaterSpot: Spot): void {
   const vessel = scene.table.vessels[model.itemId]
-  const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
+  const isOpen = isTheLidOpen(scene.state, model.itemId)
   const isStandingOutsideTheSink = itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface' && scene.state.sink.itemIdInside !== model.itemId
   const lyingLidOffset = isOpen && isStandingOutsideTheSink ? openLidOffsetBeside(model.itemId, scene.state, heaterSpot) : null
   if (model.lid !== null) placeLid(model, model.lid, isOpen, lyingLidOffset)

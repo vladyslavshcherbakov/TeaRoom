@@ -10,7 +10,7 @@ import { AimedPour, type AimedPourView, type PourTarget } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
-import { carriedShapeOf, openingRadiusMetres } from './CarriedShapes.ts'
+import { layoutOf } from './CarriedShapes.ts'
 import { furniture, furnitureWithId, puddleCentreOn, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
@@ -320,20 +320,20 @@ export class RoomPlay {
   private startAimingAt(targetId: string): void {
     const sourceId = this.chosenItemId()
     const target = this.ritual.state.vessels[targetId]
-    const targetShape = carriedShapeOf(this.ritual.state, targetId)
+    const targetLayout = layoutOf(this.ritual.state, targetId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
-    if (sourceId === null || target?.location.kind !== 'onSurface' || targetShape === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
+    if (sourceId === null || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
     const spoutDirection = screenRightOnTheFloor(furnitureWithId(closeUpFurnitureId).closeUp)
-    const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: openingRadiusMetres[targetShape] }
+    const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres }
     this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, pourTarget, this.pourTargetsBeside(sourceId, target.location.spot.placeId), spoutDirection)
   }
 
   private pourTargetsBeside(sourceId: string, placeId: string): PourTarget[] {
     return Object.values(this.ritual.state.vessels).flatMap((vessel) => {
-      const shape = carriedShapeOf(this.ritual.state, vessel.id)
+      const layout = layoutOf(this.ritual.state, vessel.id)
       const isStandingThere = vessel.location.kind === 'onSurface' && vessel.location.spot.placeId === placeId
-      if (vessel.id === sourceId || shape === undefined || !isStandingThere || vessel.location.kind !== 'onSurface') return []
-      return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: openingRadiusMetres[shape] }]
+      if (vessel.id === sourceId || layout === undefined || !isStandingThere || vessel.location.kind !== 'onSurface') return []
+      return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: layout.openingRadiusMetres }]
     })
   }
 

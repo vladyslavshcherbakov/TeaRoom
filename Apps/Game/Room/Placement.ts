@@ -2,7 +2,7 @@ import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition
 import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { carriedShapeOf, footprintCirclesMetres, footprintRadiusMetres, openLidRadiusMetres } from './CarriedShapes.ts'
+import { footprintCirclesOf, isTheLidOpen, layoutOf } from './CarriedShapes.ts'
 import { furniture, heaterFootprintRadiusMetres, sinkBasin, type FloorPoint } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
@@ -23,10 +23,10 @@ export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReado
 
 export function openLidOffsetBeside(itemId: string, state: DeepReadonly<SessionState>, heaterSpot: Spot): FloorPoint | null {
   const location = itemLocationIn(state, itemId)
-  const shape = carriedShapeOf(state, itemId)
-  if (location?.kind !== 'onSurface' || shape === undefined) return null
-  const lidRadius = openLidRadiusMetres[shape]
-  const distance = footprintRadiusMetres[shape] + lidRadius + openLidGapMetres
+  const layout = layoutOf(state, itemId)
+  if (location?.kind !== 'onSurface' || layout === undefined || layout.lid === null) return null
+  const lidRadius = layout.lid.lyingRadiusMetres
+  const distance = layout.footprintRadiusMetres + lidRadius + openLidGapMetres
   const offsets = openLidDirectionsRadians.map((direction) => ({ x: Math.cos(direction) * distance, z: Math.sin(direction) * distance }))
   return offsets.find((offset) => whyThereIsNoRoomForCircles([{ spot: offsetSpot(location.spot, offset), radius: lidRadius, restsOnTheSurface: true }], null, state, heaterSpot) === null) ?? null
 }
@@ -47,22 +47,18 @@ function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: st
 }
 
 function footprintOf(state: DeepReadonly<SessionState>, itemId: string, spot: Spot): Circle[] {
-  const shape = carriedShapeOf(state, itemId)
-  if (shape === undefined) return []
-  return footprintCirclesMetres[shape].map((circle) => ({ spot: offsetSpot(spot, circle), radius: circle.radius, restsOnTheSurface: circle.restsOnTheSurface }))
+  const layout = layoutOf(state, itemId)
+  if (layout === undefined) return []
+  return footprintCirclesOf(layout).map((circle) => ({ spot: offsetSpot(spot, circle), radius: circle.radius, restsOnTheSurface: circle.restsOnTheSurface }))
 }
 
 function lidsLyingBesideTheirItems(state: DeepReadonly<SessionState>, heaterSpot: Spot): { itemId: string; spot: Spot; radius: number }[] {
   return itemsOnSurfaces(state).flatMap(({ itemId, spot }) => {
-    const shape = carriedShapeOf(state, itemId)
-    if (shape === undefined || !isLidOpen(state, itemId) || state.sink.itemIdInside === itemId) return []
+    const lid = layoutOf(state, itemId)?.lid ?? null
+    if (lid === null || !isTheLidOpen(state, itemId) || state.sink.itemIdInside === itemId) return []
     const offset = openLidOffsetBeside(itemId, state, heaterSpot)
-    return offset === null ? [] : [{ itemId, spot: offsetSpot(spot, offset), radius: openLidRadiusMetres[shape] }]
+    return offset === null ? [] : [{ itemId, spot: offsetSpot(spot, offset), radius: lid.lyingRadiusMetres }]
   })
-}
-
-function isLidOpen(state: DeepReadonly<SessionState>, itemId: string): boolean {
-  return carriedShapeOf(state, itemId) === 'caddy' ? state.caddy.isOpen : state.vessels[itemId]?.isLidOpen === true
 }
 
 function offsetSpot(spot: Spot, offset: FloorPoint): Spot {

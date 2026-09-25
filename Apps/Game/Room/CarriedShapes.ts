@@ -26,42 +26,47 @@ export function carriedShapeOf(state: DeepReadonly<SessionState>, itemId: string
   return vessel === undefined ? shapeByToolId[itemId] : shapeByVesselDefinitionId[vessel.definitionId]
 }
 
-export const footprintRadiusMetres: Readonly<Record<CarriedShape, number>> = {
-  kettle: 0.16,
-  thermos: 0.08,
-  caddy: 0.09,
-  bowl: 0.09,
-  spoon: 0.12,
-  cloth: 0.14,
-}
-
-export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
-  kettle: 0.075,
-  thermos: 0.05,
-  caddy: 0.07,
-  bowl: 0.075,
-  spoon: 0,
-  cloth: 0,
-}
-
 export type FootprintCircle = { readonly x: number; readonly z: number; readonly radius: number; readonly restsOnTheSurface: boolean }
+
+export type LidLayout = {
+  readonly openStateIn: 'vessel' | 'caddy'
+  readonly lyingRadiusMetres: number
+}
+
+export type CarriedShapeLayout = {
+  readonly footprintRadiusMetres: number
+  readonly reachesPastTheFootprint: readonly FootprintCircle[]
+  readonly openingRadiusMetres: number
+  readonly lid: LidLayout | null
+}
 
 const kettleSpoutReach: FootprintCircle = { x: 0.19, z: 0, radius: 0.05, restsOnTheSurface: false }
 
-export const footprintCirclesMetres: Readonly<Record<CarriedShape, readonly FootprintCircle[]>> = {
-  kettle: [{ x: 0, z: 0, radius: footprintRadiusMetres.kettle, restsOnTheSurface: true }, kettleSpoutReach],
-  thermos: [{ x: 0, z: 0, radius: footprintRadiusMetres.thermos, restsOnTheSurface: true }],
-  caddy: [{ x: 0, z: 0, radius: footprintRadiusMetres.caddy, restsOnTheSurface: true }],
-  bowl: [{ x: 0, z: 0, radius: footprintRadiusMetres.bowl, restsOnTheSurface: true }],
-  spoon: [{ x: 0, z: 0, radius: footprintRadiusMetres.spoon, restsOnTheSurface: true }],
-  cloth: [{ x: 0, z: 0, radius: footprintRadiusMetres.cloth, restsOnTheSurface: true }],
+export const layoutByShape: Readonly<Record<CarriedShape, CarriedShapeLayout>> = {
+  kettle: { footprintRadiusMetres: 0.16, reachesPastTheFootprint: [kettleSpoutReach], openingRadiusMetres: 0.075, lid: { openStateIn: 'vessel', lyingRadiusMetres: 0.085 } },
+  thermos: { footprintRadiusMetres: 0.08, reachesPastTheFootprint: [], openingRadiusMetres: 0.05, lid: { openStateIn: 'vessel', lyingRadiusMetres: 0.046 } },
+  caddy: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.07, lid: { openStateIn: 'caddy', lyingRadiusMetres: 0.085 } },
+  bowl: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.075, lid: null },
+  spoon: { footprintRadiusMetres: 0.12, reachesPastTheFootprint: [], openingRadiusMetres: 0, lid: null },
+  cloth: { footprintRadiusMetres: 0.14, reachesPastTheFootprint: [], openingRadiusMetres: 0, lid: null },
 }
 
-export const openLidRadiusMetres: Readonly<Record<CarriedShape, number>> = {
-  kettle: 0.085,
-  thermos: 0.046,
-  caddy: 0.085,
-  bowl: 0,
-  spoon: 0,
-  cloth: 0,
+export function footprintCirclesOf(layout: CarriedShapeLayout): readonly FootprintCircle[] {
+  return [{ x: 0, z: 0, radius: layout.footprintRadiusMetres, restsOnTheSurface: true }, ...layout.reachesPastTheFootprint]
+}
+
+export function layoutOf(state: DeepReadonly<SessionState>, itemId: string): CarriedShapeLayout | undefined {
+  const shape = carriedShapeOf(state, itemId)
+  return shape === undefined ? undefined : layoutByShape[shape]
+}
+
+export function isTheLidOpen(state: DeepReadonly<SessionState>, itemId: string): boolean {
+  switch (layoutOf(state, itemId)?.lid?.openStateIn) {
+    case 'caddy':
+      return state.caddy.isOpen
+    case 'vessel':
+      return state.vessels[itemId]?.isLidOpen === true
+    case undefined:
+      return false
+  }
 }

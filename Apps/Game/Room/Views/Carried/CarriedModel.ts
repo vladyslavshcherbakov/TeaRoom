@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { footprintRadiusMetres, type CarriedShape } from '../../CarriedShapes.ts'
+import { layoutByShape, type CarriedShape } from '../../CarriedShapes.ts'
 import { bowlParts } from './BowlParts.ts'
 import { caddyParts } from './CaddyParts.ts'
 import { clothParts } from './ClothParts.ts'
@@ -77,7 +77,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     root,
     spoutTip: parts.spoutTip,
     rimHeight: parts.rimHeight,
-    footprintRadius: footprintRadiusMetres[shape],
+    footprintRadius: layoutByShape[shape].footprintRadiusMetres,
     lid: parts.lid,
     lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
     liquid,
@@ -103,7 +103,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
 }
 
 function forgivingTouchPad(shape: CarriedShape, rimHeight: number, touchPad: THREE.Material): THREE.Mesh {
-  const radius = footprintRadiusMetres[shape] * touchPadShareOfTheFootprint
+  const radius = layoutByShape[shape].footprintRadiusMetres * touchPadShareOfTheFootprint
   const height = rimHeight + touchPadAboveTheRimMetres
   const pad = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 16), touchPad)
   pad.position.y = height / 2
