@@ -219,7 +219,22 @@
         opacity: 0;
         transition: opacity 1.5s ease-in 4s;
       }
-      .you-died.is-shown .you-died-restart {
+      .you-died-restart-group {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+      }
+      .you-died-restart-note {
+        max-width: 24em;
+        margin: 0 24px;
+        color: #a8997a;
+        font: italic 400 15px/1.4 'Times New Roman', Georgia, serif;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 1.5s ease-in 4s;
+      }
+      .you-died.is-shown .you-died-restart,
+      .you-died.is-shown .you-died-restart-note {
         opacity: 1;
       }
       .continue {

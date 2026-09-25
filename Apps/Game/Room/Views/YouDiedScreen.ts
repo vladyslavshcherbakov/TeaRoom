@@ -23,7 +23,13 @@ export class YouDiedScreen {
     restartButton.className = 'you-died-restart'
     restartButton.textContent = text('youDied.restart')
     restartButton.addEventListener('click', restart)
-    this.element.append(band, this.obituary, restartButton)
+    const restartNote = document.createElement('p')
+    restartNote.className = 'you-died-restart-note'
+    restartNote.textContent = text('visit.startOverNote')
+    const restartGroup = document.createElement('div')
+    restartGroup.className = 'you-died-restart-group'
+    restartGroup.append(restartButton, restartNote)
+    this.element.append(band, this.obituary, restartGroup)
     container.append(this.element)
   }
 
