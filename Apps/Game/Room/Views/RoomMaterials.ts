@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import { weaveCloth } from './ClothWeave.ts'
+import { paintCrackle } from './CrackleGlaze.ts'
 import { paintKoi } from './KoiPainting.ts'
 import { paintLotus } from './LotusPainting.ts'
+import { paintGreenMarble } from './MarbleGlaze.ts'
 import { paintTemperBands } from './TemperBands.ts'
 
 export type Surface =
@@ -106,6 +108,7 @@ const paintingSharpness = 8
 const clothRoughness = 1
 const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'blueGlaze', 'yellowGlaze', 'emeraldGlaze'])
 const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
+const glazePaintings: Partial<Record<Surface, () => HTMLCanvasElement>> = { emeraldGlaze: paintGreenMarble, skyBlueGlaze: paintCrackle }
 
 export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
@@ -141,7 +144,7 @@ export class RoomMaterials {
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
-    if (glazedSurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
+    if (glazedSurfaces.has(surface)) return glazeMaterial(surface, color)
     return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
   }
 
@@ -213,4 +216,14 @@ function wovenClothMaterial(): THREE.MeshStandardMaterial {
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = paintingSharpness
   return new THREE.MeshStandardMaterial({ map: texture, color: surfaceColours.cloth, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })
+}
+
+function glazeMaterial(surface: Surface, color: string): THREE.MeshPhysicalMaterial {
+  const paintGlaze = glazePaintings[surface]
+  if (paintGlaze === undefined) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
+  const texture = new THREE.CanvasTexture(paintGlaze())
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.wrapS = THREE.RepeatWrapping
+  texture.anisotropy = paintingSharpness
+  return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.3, clearcoat: 0.7 })
 }
