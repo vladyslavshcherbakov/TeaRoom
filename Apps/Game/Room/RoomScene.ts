@@ -45,7 +45,8 @@ import { Garden } from './Views/Garden.ts'
 import { isSeenWhole } from './Views/ProphecySighting.ts'
 import { InspectionStage } from './Views/InspectionStage.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
-import { daylightAt, hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
+import { daylightAt } from './Sky/DaylightCycle.ts'
+import { hoursSinceSunriseOf } from '../../../Shared/Simulation/Judgement/TimeOfDayJudgement.ts'
 import { DebugMenu, type CameraMode, type StickLayout } from './Views/DebugMenu.ts'
 import { Joysticks } from './Views/Joysticks.ts'
 import { Sky } from './Views/Sky.ts'
@@ -94,7 +95,6 @@ export class RoomScene {
   private readonly log: RoomLog
   private readonly texts: RoomTexts
   private readonly visitStore: VisitStore
-  private readonly shareThroughTheTimeOfDay: number
   private readonly play: RoomPlay
   private readonly room: RoomModel
   private readonly walker: WalkerModel
@@ -129,7 +129,7 @@ export class RoomScene {
   private secondsSinceTheVisitWasKept = 0
   private hasTheKeeperDied = false
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, bowlPaintings: BowlPaintings, arrival: RoomArrival, visitStore: VisitStore) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, heaterItemsBeforeTheTesterJoke: number, bowlPaintings: BowlPaintings, arrival: RoomArrival, visitStore: VisitStore) {
     this.session = session
     this.catalog = catalog
     this.arrangement = arrival.arrangement
@@ -139,7 +139,6 @@ export class RoomScene {
     this.texts = new RoomTexts(voiceSeed, log)
     this.visitStore = visitStore
     if (arrival.camera !== null) this.restoreTheCamera(arrival.camera)
-    this.shareThroughTheTimeOfDay = shareThroughTheTimeOfDay
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
@@ -230,7 +229,7 @@ export class RoomScene {
     this.achievements.worldAdvanced(this.session.state)
     this.achievementNotice.advance(seconds)
     this.keepTheVisitNowAndThen(seconds)
-    const daylight = daylightAt(hoursSinceSunriseFor(this.session.state.atmosphere.timeOfDay, this.shareThroughTheTimeOfDay))
+    const daylight = daylightAt(hoursSinceSunriseOf(this.session.state.atmosphere))
     this.roomLights.show(daylight)
     const isFirstPerson = this.cameraMode === 'firstPerson'
     const isCloseUp = this.play.view.kind === 'closeUp'

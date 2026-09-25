@@ -9,7 +9,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     phase: 'settingUp',
     elapsedSeconds: 0,
     roomId,
-    atmosphere: { timeOfDay: firstOf(room.timesOfDay, room), weather: firstOf(room.weathers, room) },
+    atmosphere: { timeOfDay: firstOf(room.timesOfDay, room), shareThroughTheTimeOfDay: 0, weather: firstOf(room.weathers, room) },
     teaId: null,
     keeper: { placeId: room.keeperStartsAt, hands: [null, null, null], hasAMiddleHand: false },
     vessels: vesselsInTheRoom(room),

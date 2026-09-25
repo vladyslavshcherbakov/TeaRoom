@@ -4,5 +4,6 @@ export type Weather = 'clear' | 'cloudy' | 'rain' | 'heavyRain' | 'fog' | 'snow'
 
 export type Atmosphere = {
   readonly timeOfDay: TimeOfDay
+  readonly shareThroughTheTimeOfDay: number
   readonly weather: Weather
 }

@@ -25,7 +25,8 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay]
+const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
   if (savedVersion !== sessionStateVersion) return { kind: 'doesNotFit', problems: [`the saved state is version ${savedVersion}, the game reads version ${sessionStateVersion}`] }
@@ -215,6 +216,15 @@ function withWhatTheHeaterAndTheTapRanOnto(saved: Shape): ReturnType<SaveMigrati
   return {
     migrated: { ...saved, heater: heaterWithItsRecord, sink: sinkWithItsRecord },
     change: `a save from before the heater and the tap remembered what they ran onto starts remembering now${sinkWithItsRecord === sink ? '' : `, and its running tap counts as having run onto ${hasRunOntoAnItem ? 'the item in the sink' : 'nothing'}`}`,
+  }
+}
+
+function withTheShareThroughTheTimeOfDay(saved: Shape): ReturnType<SaveMigration> {
+  const atmosphere = saved['atmosphere']
+  if (!isShape(atmosphere) || atmosphere['shareThroughTheTimeOfDay'] !== undefined) return null
+  return {
+    migrated: { ...saved, atmosphere: { ...atmosphere, shareThroughTheTimeOfDay: shareThroughTheTimeOfDayOfOlderSaves } },
+    change: `a save from before the light was kept stands halfway through its ${String(atmosphere['timeOfDay'])}`,
   }
 }
 

@@ -3,7 +3,7 @@ import type { Spot } from '../Definitions/RoomDefinition.ts'
 
 export type Command =
   | { readonly type: 'beginRitual'; readonly teaId: string }
-  | { readonly type: 'chooseAtmosphere'; readonly timeOfDay: TimeOfDay; readonly weather: Weather }
+  | { readonly type: 'chooseAtmosphere'; readonly timeOfDay: TimeOfDay; readonly shareThroughTheTimeOfDay: number; readonly weather: Weather }
   | { readonly type: 'standAt'; readonly placeId: string | null }
   | { readonly type: 'pickUp'; readonly itemId: string }
   | { readonly type: 'pickUpWithAMiddleHand'; readonly itemId: string }

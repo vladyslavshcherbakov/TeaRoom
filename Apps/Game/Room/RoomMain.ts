@@ -8,7 +8,6 @@ import { arrangementOfANewGame, describeArrangement, quietRoomArrangementOf, typ
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { faceFeaturesOfANewGame } from './RoomSettings.ts'
-import { hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
 import { whiteBowlIds } from './Views/Carried/BowlParts.ts'
@@ -53,7 +52,7 @@ function offerToContinue(visit: SavedVisit): void {
     continued: () => {
       const awaySeconds = Math.max(0, (Date.now() - visit.savedAtMilliseconds) / millisecondsInASecond)
       roomLog(`the player continues the visit saved ${awaySeconds.toFixed(0)} s ago`)
-      const events = resuming.session.returnAfter(awaySeconds)
+      const events = resuming.session.returnAfter(awaySeconds, Math.random())
       enterTheRoom(resuming.session, catalog, { place: visit.place, camera: visit.camera, events, notice: null, continuesAVisit: true, faceOfANewGame: null, arrangement: visit.arrangement })
     },
     startedOver: () => {
@@ -72,31 +71,30 @@ function enterAnew(notice: string | null): void {
   const teaId = Object.keys(catalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })
+  chooseTheLightOfANewGame(opening.session, catalog)
   const faceOfANewGame = faceFeaturesOfANewGame[Math.floor(Math.random() * faceFeaturesOfANewGame.length)] ?? faceFeaturesOfANewGame[0]
   roomLog(`the keeper of this new game has ${faceOfANewGame}, chosen at random from ${faceFeaturesOfANewGame.join(', ')}, and hair is left for the player to find in the settings`)
   enterTheRoom(opening.session, catalog, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false, faceOfANewGame, arrangement })
 }
 
-function enterTheRoom(session: RitualSession, catalog: Catalog, arrival: RoomArrival): void {
+function chooseTheLightOfANewGame(session: RitualSession, catalog: Catalog): void {
   const timesOfDay = definitionIn(catalog, 'rooms', roomId).timesOfDay
   const timeOfDay = timesOfDay[Math.floor(Math.random() * timesOfDay.length)]
-  if (timeOfDay === undefined) roomLog(`the room offers no time of day, so the light stays at ${session.state.atmosphere.timeOfDay}`)
-  else {
-    roomLog(`the room opens at ${timeOfDay}, chosen at random from ${timesOfDay.join(', ')}`)
-    session.dispatch({ type: 'chooseAtmosphere', timeOfDay, weather: session.state.atmosphere.weather })
-  }
+  if (timeOfDay === undefined) return roomLog(`the room offers no time of day, so the light stays at ${session.state.atmosphere.timeOfDay}`)
+  roomLog(`the new game opens at ${timeOfDay}, chosen at random from ${timesOfDay.join(', ')}, at a random hour within it`)
+  session.dispatch({ type: 'chooseAtmosphere', timeOfDay, shareThroughTheTimeOfDay: Math.random(), weather: session.state.atmosphere.weather })
+}
+
+function enterTheRoom(session: RitualSession, catalog: Catalog, arrival: RoomArrival): void {
   const voiceSeed = 1 + Math.floor(Math.random() * largestVoiceSeed)
   roomLog(`the keeper speaks with voice ${voiceSeed}, chosen at random for this visit`)
-  const shareThroughTheTimeOfDay = Math.random()
-  const hoursSinceSunrise = hoursSinceSunriseFor(session.state.atmosphere.timeOfDay, shareThroughTheTimeOfDay)
-  roomLog(`the light stands ${hoursSinceSunrise.toFixed(1)} hours after sunrise, chosen at random within ${session.state.atmosphere.timeOfDay}`)
   const heaterItemsBeforeTheTesterJoke = fewestHeaterItemsBeforeTheTesterJoke + Math.floor(Math.random() * 2)
   roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the working heater, chosen at random for this visit`)
   const koiPond = koiPonds[Math.floor(Math.random() * koiPonds.length)] ?? 'oneKoi'
   roomLog(`the white bowl shows the koi pond ${koiPond}, chosen at random for this visit`)
   const bowlIdWithTheToadUnderneath = whiteBowlIds[Math.floor(Math.random() * whiteBowlIds.length)] ?? ''
   roomLog(`the three-legged toad is painted under ${bowlIdWithTheToadUnderneath}, chosen at random from ${whiteBowlIds.join(', ')} for this visit`)
-  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, visitStore)
+  new RoomScene(container, session, catalog, roomLog, voiceSeed, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, visitStore)
 }
 
 function showTheQuietScreen(): void {

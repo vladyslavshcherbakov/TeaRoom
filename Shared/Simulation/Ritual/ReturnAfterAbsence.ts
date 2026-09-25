@@ -7,13 +7,15 @@ import { caddyItemId } from './Reach.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { reportTheWorld } from './WorldReport.ts'
 import { dryLeaves } from '../Physics/Brewing.ts'
+import { hoursSinceSunriseOf, timeOfDayAfter } from '../Judgement/TimeOfDayJudgement.ts'
+import { clampedToShare } from '../Physics/ClampedToShare.ts'
 
 export const absenceStepSeconds = 1
 export const longestLivedAbsenceSeconds = 12 * 60 * 60
 
 type CaddyRefill = 'wasEmpty' | 'wasToppedUp'
 
-export function returnAfterAbsence(state: SessionState, awaySeconds: number, catalog: Catalog): Outcome {
+export function returnAfterAbsence(state: SessionState, awaySeconds: number, shareThroughTheNextTimeOfDay: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
   if (draft.state.pour !== null) {
     note(draft, 'the pour stops, because the keeper left in the middle of it')
@@ -21,8 +23,17 @@ export function returnAfterAbsence(state: SessionState, awaySeconds: number, cat
   }
   liveThroughTheAbsence(draft, awaySeconds)
   restockTheHouse(draft)
+  moveOnToTheNextTimeOfDay(draft, shareThroughTheNextTimeOfDay)
   reportTheWorld(draft, 'the room on return')
   return outcomeOf(draft)
+}
+
+function moveOnToTheNextTimeOfDay(draft: Draft, shareThroughTheNextTimeOfDay: number): void {
+  const before = draft.state.atmosphere
+  const timeOfDay = timeOfDayAfter(before.timeOfDay, definitionIn(draft.catalog, 'rooms', draft.state.roomId).timesOfDay)
+  draft.state.atmosphere = { ...before, timeOfDay, shareThroughTheTimeOfDay: clampedToShare(shareThroughTheNextTimeOfDay) }
+  note(draft, `the day moves on from ${before.timeOfDay} to ${timeOfDay} on return, ${hoursSinceSunriseOf(draft.state.atmosphere).toFixed(1)} hours after sunrise`)
+  draft.events.push({ type: 'atmosphereChanged', atmosphere: draft.state.atmosphere })
 }
 
 function liveThroughTheAbsence(draft: Draft, awaySeconds: number): void {

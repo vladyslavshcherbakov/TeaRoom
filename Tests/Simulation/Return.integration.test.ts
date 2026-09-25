@@ -213,3 +213,30 @@ test('savedState_whenTheRoomGainedASecondCloth_laysTheNewClothAtItsStart', () =>
 
   assert.deepEqual(resumed.cloth('cloth2').location, { kind: 'onSurface', spot: { placeId: 'table', x: 11, y: 0, z: 0 } })
 })
+
+test('timeOfDay_onReturn_movesOnToTheNextTimeOfDayTheRoomOffers', () => {
+  const ritual = TestRitual.begun()
+
+  const { ritual: returned } = ritual.leaveAndReturnAfter(60, testCatalog(), 0.25)
+
+  assert.deepEqual(returned.state.atmosphere, { timeOfDay: 'night', shareThroughTheTimeOfDay: 0.25, weather: 'rain' })
+})
+
+test('timeOfDay_onReturnAtTheLastTimeOfDayTheRoomOffers_startsTheDayAgainAtDawn', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'chooseAtmosphere', timeOfDay: 'night', shareThroughTheTimeOfDay: 0.5, weather: 'rain' })
+
+  const { ritual: returned, events } = ritual.leaveAndReturnAfter(60)
+
+  assert.equal(returned.state.atmosphere.timeOfDay, 'dawn')
+  assert.deepEqual(eventsOfType(events, 'atmosphereChanged'), [{ type: 'atmosphereChanged', atmosphere: { timeOfDay: 'dawn', shareThroughTheTimeOfDay: 0.5, weather: 'rain' } }])
+})
+
+test('savedState_fromBeforeTheLightWasKept_standsHalfwayThroughItsTimeOfDay', () => {
+  const savedState = TestRitual.begun().savedState as { atmosphere: Record<string, unknown> }
+  delete savedState.atmosphere['shareThroughTheTimeOfDay']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.deepEqual(resumed.state.atmosphere, { timeOfDay: 'sunset', shareThroughTheTimeOfDay: 0.5, weather: 'rain' })
+})

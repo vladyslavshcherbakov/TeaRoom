@@ -6,6 +6,8 @@ import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
 import { caddyItemId } from './Reach.ts'
 import { dryLeaves } from '../Physics/Brewing.ts'
+import { hoursSinceSunriseOf } from '../Judgement/TimeOfDayJudgement.ts'
+import { clampedToShare } from '../Physics/ClampedToShare.ts'
 
 export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>): void {
   if (draft.catalog.teas[command.teaId] === undefined) {
@@ -26,8 +28,8 @@ export function chooseAtmosphere(draft: Draft, command: CommandOfType<'chooseAtm
   if (!isOffered) {
     return refuse(draft, command, 'notAvailableInThisRoom', `${room.id} offers ${room.timesOfDay.join('/')} with ${room.weathers.join('/')}`)
   }
-  draft.state.atmosphere = { timeOfDay: command.timeOfDay, weather: command.weather }
-  note(draft, `atmosphere set to ${command.timeOfDay}, ${command.weather}`)
+  draft.state.atmosphere = { timeOfDay: command.timeOfDay, shareThroughTheTimeOfDay: clampedToShare(command.shareThroughTheTimeOfDay), weather: command.weather }
+  note(draft, `atmosphere set to ${command.timeOfDay}, ${hoursSinceSunriseOf(draft.state.atmosphere).toFixed(1)} hours after sunrise, ${command.weather}`)
   draft.events.push({ type: 'atmosphereChanged', atmosphere: draft.state.atmosphere })
 }
 

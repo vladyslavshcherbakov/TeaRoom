@@ -59,9 +59,9 @@ export class TestRitual {
     return this.session.advance(seconds)
   }
 
-  leaveAndReturnAfter(awaySeconds: number, catalog: Catalog = testCatalog()): { readonly ritual: TestRitual; readonly events: readonly RitualEvent[] } {
+  leaveAndReturnAfter(awaySeconds: number, catalog: Catalog = testCatalog(), shareThroughTheNextTimeOfDay = 0.5): { readonly ritual: TestRitual; readonly events: readonly RitualEvent[] } {
     const ritual = TestRitual.resumedFrom(this.savedState, catalog)
-    return { ritual, events: ritual.session.returnAfter(awaySeconds) }
+    return { ritual, events: ritual.session.returnAfter(awaySeconds, shareThroughTheNextTimeOfDay) }
   }
 
   heatKettleTo(temperatureC: number): readonly RitualEvent[] {

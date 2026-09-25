@@ -77,9 +77,9 @@ export class RitualSession {
     return this.accept(applyCommand(this.currentState, command, this.catalog))
   }
 
-  returnAfter(awaySeconds: number): readonly RitualEvent[] {
+  returnAfter(awaySeconds: number, shareThroughTheNextTimeOfDay: number): readonly RitualEvent[] {
     this.secondsNotYetSimulated = 0
-    return this.accept(returnAfterAbsence(this.currentState, awaySeconds, this.catalog))
+    return this.accept(returnAfterAbsence(this.currentState, awaySeconds, shareThroughTheNextTimeOfDay, this.catalog))
   }
 
   advance(seconds: number): readonly RitualEvent[] {
