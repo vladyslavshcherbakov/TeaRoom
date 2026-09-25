@@ -60,8 +60,9 @@ A brew starts when leaves and water first share a vessel, whichever arrives seco
 
 - The leaf ratio is the grams per 100 ml divided by the tea's ideal grams per 100 ml.
 - The heat factor is 0 at 40 °C, 1 at the tea's ideal temperature, and at most 1.5.
-- Strength closes `strengthRatePerSecond × leaf ratio × heat factor` of the remaining gap to 100 each second, so it rises fast and then levels off.
-- Bitterness grows by `bitternessPerSecond × leaf ratio × heat factor` each second, multiplied by `bitternessMultiplierAfterIdealTime` once the steep passes the tea's ideal time, and by `1 + bitternessGainPerDegreeAboveGood × degrees above the good range` when the water is too hot.
+- The boil stirs the leaves while their vessel stands on a working heater at 100 °C, and doubles both strength and bitterness per second. Leaves may go into the kettle before the water, or while it stands on the heater.
+- Strength closes `strengthRatePerSecond × leaf ratio × heat factor × stirring` of the remaining gap to 100 each second, so it rises fast and then levels off.
+- Bitterness grows by `bitternessPerSecond × leaf ratio × heat factor × stirring` each second, multiplied by `bitternessMultiplierAfterIdealTime` once the steep passes the tea's ideal time, and by `1 + bitternessGainPerDegreeAboveGood × degrees above the good range` when the water is too hot.
 
 Tea poured out of the brewing vessel stops changing, apart from cooling. When the brewing vessel is emptied, that brew ends, and new water starts a new one.
 

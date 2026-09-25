@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
@@ -67,6 +68,38 @@ test('tea_whenBrewedWithBoilingWater_turnsMoreBitterThanWithGoodWater', () => {
   const goodBitterness = inGoodWater.vessel('kettle').liquid.bitterness
   const boilingBitterness = inBoilingWater.vessel('kettle').liquid.bitterness
   assert.ok(boilingBitterness > goodBitterness * 2, `boiling ${boilingBitterness}, good ${goodBitterness}`)
+})
+
+test('tea_whileItBoilsOnTheHeater_brewsTwiceAsFastAsInWaterJustOffTheBoil', () => {
+  const offTheHeater = ritualWithTeaSteepingAt(100)
+  const onTheHeater = ritualWithTeaSteepingAt(100)
+  onTheHeater.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  onTheHeater.do({ type: 'switchHeaterOn' })
+
+  offTheHeater.wait(10)
+  onTheHeater.wait(10)
+
+  const bitternessOffTheHeater = offTheHeater.vessel('kettle').liquid.bitterness
+  const bitternessOnTheHeater = onTheHeater.vessel('kettle').liquid.bitterness
+  assertNear(bitternessOnTheHeater / bitternessOffTheHeater, 2, 0.05)
+})
+
+test('tea_onceTheHeaterUnderItsBoilIsSwitchedOff_brewsAtItsUsualPaceAgain', () => {
+  const neverBoiled = ritualWithTeaSteepingAt(100)
+  const boiledForAWhile = ritualWithTeaSteepingAt(100)
+  boiledForAWhile.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  boiledForAWhile.do({ type: 'switchHeaterOn' })
+  neverBoiled.wait(5)
+  boiledForAWhile.wait(5)
+  boiledForAWhile.do({ type: 'switchHeaterOff' })
+  const bitternessBefore = [neverBoiled.vessel('kettle').liquid.bitterness, boiledForAWhile.vessel('kettle').liquid.bitterness]
+
+  neverBoiled.wait(10)
+  boiledForAWhile.wait(10)
+
+  const gainNeverBoiled = neverBoiled.vessel('kettle').liquid.bitterness - (bitternessBefore[0] ?? 0)
+  const gainAfterTheBoil = boiledForAWhile.vessel('kettle').liquid.bitterness - (bitternessBefore[1] ?? 0)
+  assertNear(gainAfterTheBoil / gainNeverBoiled, 1, 0.02)
 })
 
 test('brew_whenWaterMeetsTheLeaves_startsAndJudgesTheWater', () => {

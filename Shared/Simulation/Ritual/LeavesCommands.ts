@@ -30,7 +30,7 @@ export function tipSpoonInto(draft: Draft, command: CommandOfType<'tipSpoonInto'
   draft.state.spoon.grams = 0
   vessel.leaves =
     vessel.leaves === null
-      ? { teaId, grams, isSteeping: false, steepedSeconds: 0 }
+      ? { teaId, grams, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
       : { ...vessel.leaves, grams: vessel.leaves.grams + grams }
   note(draft, `tipped ${grams.toFixed(2)} g of ${teaId} into ${vessel.id}, which now holds ${vessel.leaves.grams.toFixed(2)} g`)
   draft.events.push({ type: 'leavesAdded', vesselId: vessel.id, grams })

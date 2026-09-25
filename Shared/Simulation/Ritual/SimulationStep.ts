@@ -1,7 +1,7 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
-import { coolingPerSecondOf, coolLiquid, doesTheSpoonCrumble, heatLiquid, isTooHotToHold, liquidBoiledAway, shellHeatAfter, spoonCharringOnAHotPlate } from '../Physics/Heat.ts'
+import { coolingPerSecondOf, coolLiquid, doesTheSpoonCrumble, heatLiquid, isAtTheBoil, isTooHotToHold, liquidBoiledAway, shellHeatAfter, spoonCharringOnAHotPlate } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
@@ -203,10 +203,20 @@ function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDef
 function steepAllLeaves(draft: Draft, seconds: number): void {
   for (const vessel of Object.values(draft.state.vessels)) {
     if (vessel.leaves === null || !vessel.leaves.isSteeping) continue
+    stirWithTheBoilIfItBoils(draft, vessel)
     const steeped = steepLeaves(vessel.liquid, vessel.leaves, definitionIn(draft.catalog, 'teas', vessel.leaves.teaId), seconds)
     vessel.liquid = steeped.liquid
     vessel.leaves = steeped.leaves
   }
+}
+
+function stirWithTheBoilIfItBoils(draft: Draft, vessel: VesselState): void {
+  if (vessel.leaves === null) return
+  const heater = draft.state.heater
+  const isStirred = heater.isOn && heater.itemIdOnTop === vessel.id && isAtTheBoil(vessel.liquid)
+  if (isStirred === vessel.leaves.isStirredByTheBoil) return
+  vessel.leaves = { ...vessel.leaves, isStirredByTheBoil: isStirred }
+  note(draft, isStirred ? `the boil in ${vessel.id} stirs its leaves, and they brew twice as fast` : `the leaves in ${vessel.id} settle as the boil stops`)
 }
 
 function continueSoaking(draft: Draft, seconds: number): void {

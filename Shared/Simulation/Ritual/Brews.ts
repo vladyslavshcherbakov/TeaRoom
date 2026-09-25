@@ -26,5 +26,5 @@ function startBrew(draft: Draft, vessel: VesselState): void {
 function endBrew(draft: Draft, vessel: VesselState): void {
   if (vessel.leaves === null) return
   note(draft, `brew in ${vessel.id} ended after ${vessel.leaves.steepedSeconds.toFixed(1)} s: the vessel was emptied`)
-  vessel.leaves = { ...vessel.leaves, isSteeping: false, steepedSeconds: 0 }
+  vessel.leaves = { ...vessel.leaves, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
 }

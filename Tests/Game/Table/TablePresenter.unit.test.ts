@@ -198,7 +198,7 @@ test('soakedLeaves_growTwoPerGramUpToTwelve', () => {
   for (const [grams, count] of rows) {
     const state = stateWithLiquid('kettle', { volumeMl: 500 })
     const kettle = state.vessels['kettle']
-    if (kettle !== undefined) kettle.leaves = { teaId: 'testGreen', grams, isSteeping: true, steepedSeconds: 0 }
+    if (kettle !== undefined) kettle.leaves = { teaId: 'testGreen', grams, isSteeping: true, isStirredByTheBoil: false, steepedSeconds: 0 }
     assert.deepEqual(tableViewState(state, catalog).vessels['kettle']?.soakedLeaves, { teaId: 'testGreen', count }, `${grams} g`)
   }
 })
@@ -206,7 +206,7 @@ test('soakedLeaves_growTwoPerGramUpToTwelve', () => {
 test('soakedLeaves_inAnEmptyBowl_stayInIt', () => {
   const state = stateWithLiquid('cup1', { volumeMl: 0 })
   const cup = state.vessels['cup1']
-  if (cup !== undefined) cup.leaves = { teaId: 'testGreen', grams: 3, isSteeping: false, steepedSeconds: 0 }
+  if (cup !== undefined) cup.leaves = { teaId: 'testGreen', grams: 3, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
 
   assert.deepEqual(tableViewState(state, catalog).vessels['cup1']?.soakedLeaves, { teaId: 'testGreen', count: 6 })
 })

@@ -5,11 +5,13 @@ export type Leaves = {
   readonly teaId: string
   readonly grams: number
   readonly isSteeping: boolean
+  readonly isStirredByTheBoil: boolean
   readonly steepedSeconds: number
 }
 
 const temperatureBelowWhichNothingSteepsC = 40
 const strongestHeatFactor = 1.5
+const theBoilStirsExtractionBy = 2
 
 export function steepLeaves(
   liquid: Liquid,
@@ -19,12 +21,12 @@ export function steepLeaves(
 ): { liquid: Liquid; leaves: Leaves } {
   if (isEmpty(liquid)) return { liquid, leaves }
   const leafRatio = leafRatioOf(leaves, liquid, tea)
-  const heatFactor = heatFactorOf(liquid.temperatureC, tea)
+  const extractionFactor = leafRatio * heatFactorOf(liquid.temperatureC, tea) * (leaves.isStirredByTheBoil ? theBoilStirsExtractionBy : 1)
   return {
     liquid: {
       ...liquid,
-      strength: strengthAfter(liquid.strength, tea, leafRatio * heatFactor, seconds),
-      bitterness: Math.min(100, liquid.bitterness + bitternessPerSecond(liquid, leaves, tea, leafRatio * heatFactor) * seconds),
+      strength: strengthAfter(liquid.strength, tea, extractionFactor, seconds),
+      bitterness: Math.min(100, liquid.bitterness + bitternessPerSecond(liquid, leaves, tea, extractionFactor) * seconds),
     },
     leaves: { ...leaves, steepedSeconds: leaves.steepedSeconds + seconds },
   }

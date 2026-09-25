@@ -36,6 +36,10 @@ export function shellHeatAfter(shellHeat: number, isOnAWorkingHeater: boolean, s
   return Math.max(0, shellHeat - seconds / shellCoolsDownSeconds)
 }
 
+export function isAtTheBoil(liquid: Liquid): boolean {
+  return !isEmpty(liquid) && liquid.temperatureC >= boilingPointC
+}
+
 export function isTooHotToHold(shellHeat: number): boolean {
   return shellHeat >= shellTooHotToHoldFrom
 }
