@@ -8,6 +8,8 @@ import type { CarriedModelMaterials, ItemParts, PointDownTheSide } from './ItemP
 import { kettleRadiusAt, kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
 
 const lidTouchPadRadiusMetres = 0.095
+const lidTouchPadHeightMetres = 0.08
+const lidTouchPadAboveTheLidMetres = 0.02
 const gaugeFrameHalfWidthMetres = 0.024
 const gaugeFrameAboveTheBodyMetres = 0.0015
 const gaugeFrameMarginMetres = 0.007
@@ -43,7 +45,8 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
   spout.rotation.z = -0.9
   const lid = new THREE.Group()
   const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 14), materials.room.materialFor('darkWood'))
-  const lidTouchPad = touchAreaOf(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, 0.04, 12))
+  const lidTouchPad = touchAreaOf(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, lidTouchPadHeightMetres, 12))
+  lidTouchPad.position.y = lidTouchPadAboveTheLidMetres
   lid.add(lidTop, lidTouchPad)
   lid.position.y = 0.215
   const gauge = waterGauge(materials.room)

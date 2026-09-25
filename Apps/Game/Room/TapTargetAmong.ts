@@ -10,8 +10,8 @@ export function tapTargetAmong(nearestFirst: readonly TapHit[], chosenHandIndex:
   const [nearest] = nearestFirst
   if (nearest === undefined) return { kind: 'nothing' }
   if (!nearest.isForgivingTouchArea) return nearest.target
-  const itemSeenBehind = nearestFirst.find((hit) => hit.target.kind === 'item' && !hit.isForgivingTouchArea)
-  if (itemSeenBehind !== undefined) return itemSeenBehind.target
+  const itemOrLidSeenBehind = nearestFirst.find((hit) => (hit.target.kind === 'item' || hit.target.kind === 'lid') && !hit.isForgivingTouchArea)
+  if (itemOrLidSeenBehind !== undefined) return itemOrLidSeenBehind.target
   const { target } = nearest
   if (target.kind !== 'hand' || target.handIndex !== chosenHandIndex) return target
   const behind = nearestFirst.map((hit) => hit.target).find((hitTarget) => hitTarget.kind !== 'hand' && hitTarget.kind !== 'nothing')
