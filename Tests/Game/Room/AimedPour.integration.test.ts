@@ -1,11 +1,17 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import type { ScreenPoint } from '../../../Apps/Game/Room/RoomGestures.ts'
+import type { RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { onTopOf, TestRoom } from '../../Support/TestRoom.ts'
 import { wetMlOnEveryPlace } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
 const onTheCounter = onTopOf('counter', 0.4, 0.05)
 const onTheCounterBesideTheBowl = onTopOf('counter', 1, 0.05)
+const pixelsPerMetre = 100
+const whereTheFingerStarts: ScreenPoint = { x: 0, y: 0 }
+const onTheCounterLeftOfTheHeater: ScreenPoint = { x: 40, y: 700 }
+const counterLeftOfTheHeater = onTopOf('counter', -0.2, 0.15)
 
 test('bowl_whenTappedWithTheKettleChosen_isAimedAtWithoutPouring', () => {
   const room = new TestRoom()
@@ -163,6 +169,45 @@ test('thermosLid_whenTappedWhileAimingTheClosedThermos_opensAndKeepsTheAim', () 
   assert.equal(room.play.aimedPourView?.sourceId, 'thermos')
 })
 
+test('aimingFinger_whenMovedFurtherThanTwelvePixels_movesTheSpoutAndKeepsTheAim', () => {
+  const room = roomWithAScreen()
+  aimTheKettleAtTheBowl(room)
+  const spoutBefore = room.play.aimedPourView?.spout ?? { x: Number.NaN, z: Number.NaN }
+
+  room.gestures.fingerDown(1, whereTheFingerStarts)
+  room.gestures.fingerMoved(1, { x: 22, y: 0 })
+  room.gestures.fingerUp(1)
+
+  assertNear(room.play.aimedPourView?.spout.x ?? Number.NaN, spoutBefore.x + 0.22)
+  assert.equal(room.state.keeper.hands[0], 'kettle')
+})
+
+test('aimingFinger_whenLiftedWithoutMoving_putsTheKettleDownWhereItTouched', () => {
+  const room = roomWithAScreen()
+  aimTheKettleAtTheBowl(room)
+
+  room.gestures.fingerDown(1, onTheCounterLeftOfTheHeater)
+  room.gestures.fingerUp(1)
+
+  assert.equal(room.play.aimedPourView, null)
+  assert.deepEqual(room.state.vessels['kettle']?.location, { kind: 'onSurface', spot: { placeId: 'counter', ...counterLeftOfTheHeater } })
+})
+
+test('secondFinger_whileAFingerAims_isIgnored', () => {
+  const room = roomWithAScreen()
+  aimTheKettleAtTheBowl(room)
+  const spoutBefore = room.play.aimedPourView?.spout ?? { x: Number.NaN, z: Number.NaN }
+  room.gestures.fingerDown(1, whereTheFingerStarts)
+
+  room.gestures.fingerDown(2, onTheCounterLeftOfTheHeater)
+  room.gestures.fingerUp(2)
+  room.gestures.fingerMoved(1, { x: 22, y: 0 })
+  room.gestures.fingerUp(1)
+
+  assertNear(room.play.aimedPourView?.spout.x ?? Number.NaN, spoutBefore.x + 0.22)
+  assert.equal(room.state.keeper.hands[0], 'kettle')
+})
+
 function bringABowlToTheCounterAndTakeTheKettle(room: TestRoom): void {
   room.carryFromTheShelf('bowl1')
   room.walkTo('counter')
@@ -196,4 +241,13 @@ function aimTheKettleAtTheBowl(room: TestRoom): void {
   bringABowlToTheCounterAndTakeTheKettle(room)
   room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'item', itemId: 'bowl1' })
+}
+
+function roomWithAScreen(): TestRoom {
+  return new TestRoom({ screen: () => ({ tapTargetAt: targetOnTheScreenAt, aimPointAt: (point) => ({ x: point.x / pixelsPerMetre, z: point.y / pixelsPerMetre }) }) })
+}
+
+function targetOnTheScreenAt(point: ScreenPoint): RoomTapTarget {
+  const isOnTheCounter = point.x === onTheCounterLeftOfTheHeater.x && point.y === onTheCounterLeftOfTheHeater.y
+  return isOnTheCounter ? { kind: 'surface', furnitureId: 'counter', point: counterLeftOfTheHeater } : { kind: 'nothing' }
 }
