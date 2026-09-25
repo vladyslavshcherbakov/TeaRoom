@@ -135,7 +135,7 @@ function bowlLiquidGeometry(surfaceHeight: number): THREE.BufferGeometry {
 
 function bowlLiquidLevel(fillShare: number): { heightMetres: number; radiusMetres: number } {
   const heightMetres = lowestLiquidInABowlMetres + fillShare * (bowlRimHeightMetres - liquidBelowTheRimMetres - lowestLiquidInABowlMetres)
-  return { heightMetres, radiusMetres: 0.042 + (heightMetres / bowlRimHeightMetres) * 0.038 }
+  return { heightMetres, radiusMetres: bowlInsideRadiusAt(heightMetres) * liquidInsetShare }
 }
 
 function bowlGeometryWith(relief: BowlRelief): THREE.BufferGeometry {
