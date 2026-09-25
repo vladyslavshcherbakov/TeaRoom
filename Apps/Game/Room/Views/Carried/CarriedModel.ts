@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { footprintRadiusMetres, type CarriedShape } from '../../RoomLayout.ts'
+import { heronPaintingAspect } from '../HeronPainting.ts'
 import { koiPaintingAspect } from '../KoiPainting.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
 import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
@@ -102,6 +103,7 @@ const bowlProfile = [...bowlUndersideAndFoot, ...bowlOutsideWall, bowlRimTop, ..
 const paintingOnTheBottomByBowlId: Readonly<Record<string, BottomPainting>> = {
   bowl1: { surface: 'koiPainting', lengthMetres: 0.07, aspect: koiPaintingAspect, turnRadians: 0.6 },
   bowl2: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 },
+  bowl5: { surface: 'heronPainting', lengthMetres: 0.064, aspect: heronPaintingAspect, turnRadians: 0 },
 }
 const glazeByBowlId: Readonly<Record<string, Surface>> = {
   bowl1: 'whiteGlaze',
