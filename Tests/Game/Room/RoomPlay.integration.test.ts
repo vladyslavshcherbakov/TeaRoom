@@ -679,6 +679,29 @@ test('bowl_whenPutOnTheHeater_staysInHandAndIsRemarkedOn', () => {
   assert.deepEqual(room.remarks, [{ kind: 'bowlKeptOffTheHeater', timesTapped: 1 }])
 })
 
+test('thirdItem_whenBothHandsAreFull_isRemarkedOn', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1', 'caddy')
+
+  room.tap({ kind: 'item', itemId: 'bowl2' })
+
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'caddy'])
+  assert.deepEqual(room.remarks, [{ kind: 'handsFull', timesTapped: 1 }])
+})
+
+test('thirdBowl_whenBothHandsHoldBowls_isRemarkedOnAsASkillToPractise', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1', 'bowl2')
+
+  room.tap({ kind: 'item', itemId: 'bowl3' })
+  room.tap({ kind: 'item', itemId: 'caddy' })
+
+  assert.deepEqual(room.remarks, [
+    { kind: 'handsFullOfBowls', timesTapped: 1 },
+    { kind: 'handsFullOfBowls', timesTapped: 2 },
+  ])
+})
+
 test('caddy_whenPutOnTheHeaterTwice_isRemarkedOnEachTime', () => {
   const room = new RoomVisit()
   room.carryFromTheShelf('caddy')

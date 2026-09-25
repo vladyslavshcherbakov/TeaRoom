@@ -59,7 +59,7 @@ const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
-export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater'
+export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls'
 
 export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: number }
 
@@ -305,6 +305,7 @@ export class RoomPlay {
 
   private pickUpAndChoose(itemId: string): void {
     const events = this.ritual.dispatch({ type: 'pickUp', itemId })
+    if (events.some((event) => event.type === 'actionRefused' && event.reason === 'handsFull')) return this.remarkOnFullHands(itemId)
     const pickedUp = events.find((event) => event.type === 'pickedUp')
     if (pickedUp === undefined) return
     this.choice = pickedUp.handIndex
@@ -453,6 +454,13 @@ export class RoomPlay {
     if (remarkKind === undefined) return
     const timesTapped = this.remark(remarkKind)
     this.log(`${itemId} is kept off the heater, remarked on ${timesTapped} times`)
+  }
+
+  private remarkOnFullHands(itemId: string): void {
+    const state = this.ritual.state
+    const holdsOnlyBowls = state.keeper.hands.every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
+    const timesTapped = this.remark(holdsOnlyBowls ? 'handsFullOfBowls' : 'handsFull')
+    this.log(`${itemId} not taken: both hands are full${holdsOnlyBowls ? ' of bowls' : ''}, remarked on ${timesTapped} times`)
   }
 
   private remark(kind: RoomRemarkKind): number {
