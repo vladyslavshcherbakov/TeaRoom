@@ -8,9 +8,11 @@ const horizonSky = new THREE.Color('#ffd6b8')
 const groundBounce = '#c9a27a'
 const fillColour = '#dfe8ff'
 const fillIntensity = 0.6
-const shadowMapSize = 1024
+const shadowMapSize = 2048
 const shadowReachMetres = 6
-const shadowBias = -0.0005
+const shadowBias = 0
+const shadowNormalBias = 0.02
+const shadowSoftness = 3
 
 export class RoomLights {
   private readonly sky = new THREE.HemisphereLight(noonSky, groundBounce, 1.6)
@@ -26,6 +28,8 @@ export class RoomLights {
     this.sun.shadow.camera.top = shadowReachMetres
     this.sun.shadow.camera.bottom = -shadowReachMetres
     this.sun.shadow.bias = shadowBias
+    this.sun.shadow.normalBias = shadowNormalBias
+    this.sun.shadow.radius = shadowSoftness
     this.fill.position.set(6, 4, 6)
     this.lights = [this.sky, this.sun, this.fill]
     for (const light of this.lights) light.layers.enableAll()

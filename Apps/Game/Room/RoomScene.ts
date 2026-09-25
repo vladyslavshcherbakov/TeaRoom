@@ -66,7 +66,7 @@ export class RoomScene {
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
+    this.renderer.shadowMap.type = THREE.PCFShadowMap
     this.renderer.autoClear = false
     this.renderer.setClearColor(backgroundColour)
     container.append(this.renderer.domElement)
