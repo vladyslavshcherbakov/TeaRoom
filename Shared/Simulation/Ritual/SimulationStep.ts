@@ -1,9 +1,9 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
-import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
+import type { Spot, TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, doesTheSpoonCrumble, heatLiquid, isAtTheBoil, isTooHotToHold, liquidBoiledAway, shellHeatAfter, spoonCharringOnAHotPlate } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
-import { pourStream } from '../Physics/Pouring.ts'
+import { pourStream, type StreamLanding } from '../Physics/Pouring.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
 import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
@@ -119,8 +119,7 @@ function continuePour(draft: Draft, seconds: number): void {
   if (target !== undefined && landing.target !== null) target.liquid = landing.target
   pour.pouredMl += landing.landedMl
   pour.spilledMl += landing.spilledMl
-  const { placeId, spilledAround } = placeWhereAPourSpills(draft, target)
-  spill(draft, placeId, spilledAround, landing.spilledMl, source.liquid.strength)
+  spillWhatMissedAndOverflowed(draft, pour.missedStreamLandsAt, target, landing, source.liquid.strength)
   if (target !== undefined && landing.overflowedMl > 0 && !pour.hasOverflowed) {
     pour.hasOverflowed = true
     note(draft, `${target.id} overflowed at ${target.liquid.volumeMl.toFixed(1)} ml while pouring from ${source.id}`)
@@ -166,6 +165,13 @@ function runTheTap(draft: Draft, seconds: number): void {
     note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the drain`)
     draft.events.push({ type: 'vesselOverflowed', vesselId: vessel.id })
   }
+}
+
+function spillWhatMissedAndOverflowed(draft: Draft, missedStreamLandsAt: Spot | null, target: VesselState | undefined, landing: StreamLanding, strength: number): void {
+  const aroundTheTarget = placeWhereAPourSpills(draft, target)
+  if (missedStreamLandsAt === null) return spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.spilledMl, strength)
+  spill(draft, missedStreamLandsAt.placeId, missedStreamLandsAt, landing.spilledMl - landing.overflowedMl, strength)
+  spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.overflowedMl, strength)
 }
 
 function drain(runningWater: RunningWaterState, ml: number): void {

@@ -13,7 +13,7 @@ export type Command =
   | { readonly type: 'switchHeaterOn' }
   | { readonly type: 'switchHeaterOff' }
   | { readonly type: 'startPouring'; readonly sourceId: string; readonly targetId: string | null }
-  | { readonly type: 'adjustPour'; readonly tiltDegrees: number; readonly streamOnTargetFraction: number }
+  | { readonly type: 'adjustPour'; readonly tiltDegrees: number; readonly streamOnTargetFraction: number; readonly missedStreamLandsAt: Spot | null }
   | { readonly type: 'stopPouring' }
   | { readonly type: 'putInTheSink'; readonly itemId: string }
   | { readonly type: 'turnTheTapOn' }

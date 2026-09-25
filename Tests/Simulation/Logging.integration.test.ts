@@ -41,7 +41,7 @@ test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
 
-  ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0.5 })
+  ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0.5, missedStreamLandsAt: null })
 
   assert.ok(ritual.log.messagesAt('debug').some((message) => message.endsWith('pour tilted to 30.0°, 50% on target')))
   assert.ok(!ritual.log.messagesAt('info').some((message) => message.includes('pour tilted')))

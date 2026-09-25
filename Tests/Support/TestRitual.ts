@@ -100,7 +100,7 @@ export class TestRitual {
   ): readonly RitualEvent[] {
     return [
       ...this.do({ type: 'startPouring', sourceId, targetId }),
-      ...this.do({ type: 'adjustPour', tiltDegrees, streamOnTargetFraction }),
+      ...this.do({ type: 'adjustPour', tiltDegrees, streamOnTargetFraction, missedStreamLandsAt: null }),
       ...this.wait(seconds),
       ...this.do({ type: 'stopPouring' }),
     ]

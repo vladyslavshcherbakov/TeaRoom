@@ -228,6 +228,19 @@ test('pour_whileTiltIsHeldWithTheSpoutBesideTheBowl_wetsTheTableAndNotTheBowl', 
   assert.ok(wetMlOnEveryPlace(room.state) > 0)
 })
 
+test('pour_whileTiltIsHeldWithTheSpoutBesideTheBowl_puddlesUnderTheSpoutAndNotAroundTheBowl', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheBowl()
+  const spout = room.play.aimedPourView?.spout
+
+  room.play.tiltPressed()
+  room.wait(2)
+
+  const puddleCentre = room.state.puddles['counter']?.spilledAround
+  assertNear(puddleCentre?.x ?? Infinity, spout?.x ?? 0)
+  assertNear(puddleCentre?.z ?? Infinity, spout?.z ?? 0)
+})
+
 test('pour_whenTheTiltButtonIsReleased_stopsAsTheKettleTiltsBack', () => {
   const room = new RoomVisit()
   room.aimTheKettleAtTheBowl()

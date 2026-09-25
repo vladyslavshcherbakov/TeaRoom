@@ -1,3 +1,4 @@
+import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { tiltWhereWaterSplashesDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
@@ -13,7 +14,7 @@ export type AimedPourView = {
 
 export type PourTarget = {
   readonly id: string
-  readonly spot: FloorPoint
+  readonly spot: Spot
   readonly openingRadiusMetres: number
 }
 
@@ -23,6 +24,11 @@ const tiltFallDegreesPerSecond = 70
 const steepestTiltBelowTheSplashDegrees = 1
 export const steepestTiltDegrees = tiltWhereWaterSplashesDegrees - steepestTiltBelowTheSplashDegrees
 const streamRadiusMetres = 0.012
+const spoutMovesThePuddleFromMetres = 0.01
+
+type SentPour = { readonly tiltDegrees: number; readonly streamOnTargetFraction: number; readonly missedStreamLandsAt: Spot | null }
+
+const unsentPour: SentPour = { tiltDegrees: -1, streamOnTargetFraction: -1, missedStreamLandsAt: null }
 
 export class AimedPour {
   private readonly ritual: RitualPort
@@ -36,7 +42,7 @@ export class AimedPour {
   private isTiltHeld = false
   private isPouring = false
   private lastFingerPoint: FloorPoint | null = null
-  private lastSentPour = { tiltDegrees: -1, streamOnTargetFraction: -1 }
+  private lastSentPour: SentPour = unsentPour
 
   constructor(ritual: RitualPort, log: RoomLog, sourceId: string, target: PourTarget, candidates: readonly PourTarget[], spoutDirection: FloorPoint) {
     this.ritual = ritual
@@ -88,8 +94,8 @@ export class AimedPour {
     if (!this.isPouring && this.isTiltHeld && this.tiltDegrees > 0) this.startPouring()
     if (!this.isPouring) return
     if (this.tiltDegrees === 0) return this.stopPouring()
-    const pour = { tiltDegrees: this.tiltDegrees, streamOnTargetFraction: this.onTargetFraction() }
-    if (pour.tiltDegrees === this.lastSentPour.tiltDegrees && pour.streamOnTargetFraction === this.lastSentPour.streamOnTargetFraction) return
+    const pour = { tiltDegrees: this.tiltDegrees, streamOnTargetFraction: this.onTargetFraction(), missedStreamLandsAt: this.spotUnderTheSpout() }
+    if (!hasChangedSince(pour, this.lastSentPour)) return
     this.lastSentPour = pour
     this.ritual.dispatch({ type: 'adjustPour', ...pour })
   }
@@ -110,7 +116,7 @@ export class AimedPour {
 
   private stopPouring(): void {
     this.isPouring = false
-    this.lastSentPour = { tiltDegrees: -1, streamOnTargetFraction: -1 }
+    this.lastSentPour = unsentPour
     this.ritual.dispatch({ type: 'stopPouring' })
   }
 
@@ -123,6 +129,10 @@ export class AimedPour {
     this.target = best.candidate
   }
 
+  private spotUnderTheSpout(): Spot {
+    return { placeId: this.target.spot.placeId, x: this.spout.x, y: this.target.spot.y, z: this.spout.z }
+  }
+
   private onTargetFraction(): number {
     return this.shareOfTheStreamOver(this.target)
   }
@@ -132,4 +142,10 @@ export class AimedPour {
     const share = (target.openingRadiusMetres + streamRadiusMetres - distance) / (2 * streamRadiusMetres)
     return Math.min(1, Math.max(0, share))
   }
+}
+
+function hasChangedSince(pour: SentPour, sent: SentPour): boolean {
+  if (pour.tiltDegrees !== sent.tiltDegrees || pour.streamOnTargetFraction !== sent.streamOnTargetFraction) return true
+  if (pour.missedStreamLandsAt === null || sent.missedStreamLandsAt === null) return pour.missedStreamLandsAt !== sent.missedStreamLandsAt
+  return Math.hypot(pour.missedStreamLandsAt.x - sent.missedStreamLandsAt.x, pour.missedStreamLandsAt.z - sent.missedStreamLandsAt.z) >= spoutMovesThePuddleFromMetres
 }

@@ -54,6 +54,7 @@ export type PourState = {
   targetId: string | null
   tiltDegrees: number
   streamOnTargetFraction: number
+  missedStreamLandsAt: Spot | null
   pouredMl: number
   spilledMl: number
   hasOverflowed: boolean

@@ -352,6 +352,23 @@ test('spill_besideACupOnTheCounter_liesAroundThatCup', () => {
   assert.deepEqual(ritual.state.puddles['counter']?.spilledAround, cupOnTheCounter)
 })
 
+test('spill_ofAStreamThatMissesTheCup_liesWhereTheStreamFalls', () => {
+  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const whereTheStreamFalls = { placeId: 'counter', x: 3, y: 0, z: 0.5 }
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'putDown', itemId: 'cup1', spot: cupOnTheCounter })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
+
+  ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0, missedStreamLandsAt: whereTheStreamFalls })
+  ritual.wait(1)
+
+  assert.deepEqual(ritual.state.puddles['counter']?.spilledAround, whereTheStreamFalls)
+  assert.equal(ritual.vessel('cup1').liquid.volumeMl, 0)
+})
+
 test('puddleOnTheCounter_whenWipedThere_shrinks', () => {
   const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'table' })

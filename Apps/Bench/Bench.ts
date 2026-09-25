@@ -231,7 +231,7 @@ class RitualBench {
   }
 
   private adjustPouring(): void {
-    this.send({ type: 'adjustPour', tiltDegrees: this.tiltDegrees, streamOnTargetFraction: this.streamOnTargetFraction })
+    this.send({ type: 'adjustPour', tiltDegrees: this.tiltDegrees, streamOnTargetFraction: this.streamOnTargetFraction, missedStreamLandsAt: null })
   }
 
   private restart(): void {

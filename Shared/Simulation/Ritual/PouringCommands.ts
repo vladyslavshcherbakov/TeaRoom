@@ -21,6 +21,7 @@ export function startPouring(draft: Draft, command: CommandOfType<'startPouring'
     targetId: target?.id ?? null,
     tiltDegrees: 0,
     streamOnTargetFraction: 1,
+    missedStreamLandsAt: null,
     pouredMl: 0,
     spilledMl: 0,
     hasOverflowed: false,
@@ -34,7 +35,9 @@ export function adjustPour(draft: Draft, command: CommandOfType<'adjustPour'>): 
   if (draft.state.pour === null) return refuse(draft, command, 'notPouring')
   draft.state.pour.tiltDegrees = command.tiltDegrees
   draft.state.pour.streamOnTargetFraction = command.streamOnTargetFraction
-  noteDetail(draft, `pour tilted to ${command.tiltDegrees.toFixed(1)}°, ${(command.streamOnTargetFraction * 100).toFixed(0)}% on target`)
+  draft.state.pour.missedStreamLandsAt = command.missedStreamLandsAt
+  const landing = command.missedStreamLandsAt
+  noteDetail(draft, `pour tilted to ${command.tiltDegrees.toFixed(1)}°, ${(command.streamOnTargetFraction * 100).toFixed(0)}% on target${landing === null ? '' : `, the rest falls on the ${landing.placeId} at (${landing.x.toFixed(2)}, ${landing.z.toFixed(2)})`}`)
 }
 
 export function stopPouring(draft: Draft, command: CommandOfType<'stopPouring'>): void {
