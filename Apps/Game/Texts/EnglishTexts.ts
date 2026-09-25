@@ -1,5 +1,5 @@
 export const englishTexts = {
-  'page.title': 'Tea Room — the room',
+  'page.title': 'TeaCeremony',
   'room.unavailable': 'The room is resting. Come back a little later.',
 
   'hand.sip': 'Sip',

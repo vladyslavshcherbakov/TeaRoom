@@ -63,7 +63,7 @@ test('room_whenReloadedAndStartedOver_opensAtTheEntrance', async ({ page }) => {
 })
 
 test('room_withAVisitSavedByAnIncompatibleVersion_saysTheVisitWasLost', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('tearoom.visit', JSON.stringify({ savedVisitVersion: 0 })))
+  await page.addInitScript(() => localStorage.setItem('visit', JSON.stringify({ savedVisitVersion: 0 })))
 
   await page.goto('./')
 

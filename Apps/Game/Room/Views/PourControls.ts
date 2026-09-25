@@ -5,7 +5,7 @@ export type PourControlsListener = {
   readonly tiltReleased: () => void
 }
 
-const hintSeenStorageKey = 'tearoom.aimHintSeen'
+const hintSeenStorageKey = 'aimHintSeen'
 
 export class PourControls {
   private readonly tiltButton: HTMLButtonElement

@@ -21,7 +21,7 @@ export type SavedVisit = {
 
 export type FoundVisit = { readonly kind: 'none' } | { readonly kind: 'found'; readonly visit: SavedVisit } | { readonly kind: 'brokenByAnUpdate' }
 
-const storageKey = 'tearoom.visit'
+const storageKey = 'visit'
 const cameraModes: readonly CameraMode[] = ['room', 'firstPerson']
 const stickLayouts: readonly StickLayout[] = ['walkOnTheLeft', 'lookOnTheLeft']
 
