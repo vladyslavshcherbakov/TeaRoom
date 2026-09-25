@@ -25,8 +25,8 @@ export const caddyShapeLook: CarriedShapeLook = {
   partsFor: (materials) => caddyParts(materials.room),
   steamRisesAboveTheSpout: false,
   looseLeaves: {
-    heapStartsAt: { x: 0, y: 0.004, z: 0 },
-    pile: { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.14, isLyingFlat: false },
+    heapStartsAt: { x: 0, y: 0.018, z: 0 },
+    pile: { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.126, isLyingFlat: false },
     fillShareIn: (table) => table.caddy.fillShare,
   },
   soakedLeaves: null,
@@ -41,6 +41,8 @@ function caddyParts(materials: SurfaceMaterials): ItemParts {
   const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.08, 28), materials.materialFor('caddyInside'))
   bottom.rotation.x = -Math.PI / 2
   bottom.position.y = 0.002
+  const underside = new THREE.Mesh(new THREE.CircleGeometry(tinRadiusMetres, 28), materials.materialFor('caddyGreen'))
+  underside.rotation.x = Math.PI / 2
   const label = new THREE.Mesh(new THREE.CylinderGeometry(labelRadiusMetres, labelRadiusMetres, labelTopMetres - labelBottomMetres, 28, 1, true), materials.materialFor('caddyLabel'))
   label.position.y = (labelTopMetres + labelBottomMetres) / 2
   const rim = new THREE.Mesh(new THREE.TorusGeometry(tinRadiusMetres, rimTubeMetres, 6, 28), materials.materialFor('caddyRim'))
@@ -52,7 +54,7 @@ function caddyParts(materials: SurfaceMaterials): ItemParts {
   knob.position.y = 0.023
   lid.add(lidTop, knob)
   lid.position.y = 0.174
-  return { meshes: [body, bottom, label, rim], lid, spoutTip: new THREE.Vector3(tinRadiusMetres + rimTubeMetres, tinHeightMetres + rimTubeMetres, 0), rimHeight: tinHeightMetres + rimTubeMetres, liquidLevel: caddyLiquidLevel, liquidVolumeAt: null, pointsDownTheSide: pointsDownTheCaddy, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, liquidTint: null, charTo: null }
+  return { meshes: [body, bottom, underside, label, rim], lid, spoutTip: new THREE.Vector3(tinRadiusMetres + rimTubeMetres, tinHeightMetres + rimTubeMetres, 0), rimHeight: tinHeightMetres + rimTubeMetres, liquidLevel: caddyLiquidLevel, liquidVolumeAt: null, pointsDownTheSide: pointsDownTheCaddy, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, liquidTint: null, charTo: null }
 }
 
 function caddyLiquidLevel(fillShare: number): { heightMetres: number; radiusMetres: number } {

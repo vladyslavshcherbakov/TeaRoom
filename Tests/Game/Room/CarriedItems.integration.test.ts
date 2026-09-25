@@ -27,7 +27,9 @@ const spoutDirections = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -0.6, z: -0.8 }]
 const portraitPhoneAspects = [375 / 667, 390 / 844, 412 / 915]
 const closeUpAndFirstPersonFieldsOfViewDegrees = [30, 70]
 const inspectionTurnsRadians = [[0, 0.55], [Math.PI / 2, Math.PI / 2], [Math.PI / 4, Math.PI], [1, -1]] as const
-const overflowSide = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
+const undersideProbesMetres = [0, 0.02]
+const undersideHeightMetres = 0.01
+const overflowSide =new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
 
 test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () => {
   const target = new THREE.Group()
@@ -170,6 +172,20 @@ test('overflow_ofEveryVessel_runsDownBelowTheRimTouchingTheOutsideOfItsWall', ()
     for (const { point, wall } of pointsBesideTheWall) {
       assert.ok(point.distance >= wall - drawingToleranceMetres, `${model.itemId}'s overflow at ${point.height.toFixed(3)} m runs ${(wall - point.distance).toFixed(4)} m inside its wall`)
       assert.ok(point.distance <= wall + overflowStreamRadiusMetres + streamTouchesTheWallWithinMetres, `${model.itemId}'s overflow at ${point.height.toFixed(3)} m runs ${(point.distance - wall).toFixed(4)} m away from its wall`)
+    }
+  }
+})
+
+test('underside_ofEveryVessel_isDrawnFacingDownWhereItStands', () => {
+  for (const model of vesselModelsInTheQuietRoom()) {
+    model.root.updateMatrixWorld(true)
+    const meshes = drawnMeshesUnder(model.root, model).filter((mesh) => !isPartOf(mesh, model.lid))
+    for (const across of undersideProbesMetres) {
+      const [lowestHit] = new THREE.Raycaster(new THREE.Vector3(across, -1, 0), new THREE.Vector3(0, 1, 0)).intersectObjects(meshes, false)
+      const normalMatrix = new THREE.Matrix3().getNormalMatrix(lowestHit?.object.matrixWorld ?? new THREE.Matrix4())
+      const facing = lowestHit?.face?.normal.clone().applyMatrix3(normalMatrix).y ?? 0
+
+      assert.ok(lowestHit !== undefined && lowestHit.point.y <= undersideHeightMetres && facing < 0, `${model.itemId} seen from below ${across} m off its middle shows ${lowestHit === undefined ? 'nothing' : `a face at ${lowestHit.point.y.toFixed(3)} m turned ${facing < 0 ? 'down' : 'up'}`}`)
     }
   }
 })
