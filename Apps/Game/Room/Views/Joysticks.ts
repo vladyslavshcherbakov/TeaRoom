@@ -10,24 +10,24 @@ const knobTravelShareOfThePad = 0.35
 const restingDeflection: StickDeflection = { right: 0, up: 0 }
 
 export class Joysticks {
-  private readonly walkStick: Stick
-  private readonly lookStick: Stick
+  private readonly leftStick: Stick
+  private readonly rightStick: Stick
 
   constructor(container: HTMLElement) {
-    this.walkStick = newStick(container, 'stick walk')
-    this.lookStick = newStick(container, 'stick look')
+    this.leftStick = newStick(container, 'stick left')
+    this.rightStick = newStick(container, 'stick right')
   }
 
-  get walk(): StickDeflection {
-    return this.walkStick.deflection
+  get left(): StickDeflection {
+    return this.leftStick.deflection
   }
 
-  get look(): StickDeflection {
-    return this.lookStick.deflection
+  get right(): StickDeflection {
+    return this.rightStick.deflection
   }
 
   show(areShown: boolean): void {
-    for (const stick of [this.walkStick, this.lookStick]) {
+    for (const stick of [this.leftStick, this.rightStick]) {
       if (stick.pad.hidden === !areShown) continue
       stick.pad.hidden = !areShown
       if (!areShown) letGoOf(stick)

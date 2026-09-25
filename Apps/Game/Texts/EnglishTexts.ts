@@ -8,6 +8,9 @@ export const englishTexts = {
   'debug.camera': 'Camera',
   'debug.camera.room': 'Room view',
   'debug.camera.firstPerson': 'First person',
+  'debug.sticks': 'Sticks',
+  'debug.sticks.walkOnTheLeft': 'Walk left, look right',
+  'debug.sticks.lookOnTheLeft': 'Look left, walk right',
   'debug.close': 'Close',
 
   'aim.tiltButton': '🫖',

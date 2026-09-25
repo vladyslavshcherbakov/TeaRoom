@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { firstPersonPose, lookTurnedBy, stepFor } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
+import { firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 
 test('step_whenTheStickIsPushedUp_goesForwardAlongTheHeading', () => {
@@ -34,4 +34,16 @@ test('firstPersonPose_standsAtTheWalkersEyes', () => {
   const pose = firstPersonPose({ x: 0.5, z: -1 }, { headingRadians: 0, pitchRadians: 0 })
 
   assert.deepEqual(pose.position, { x: 0.5, y: 1, z: -1 })
+})
+
+test('look_whenTurnedTowardsAWalk_turnsPartWayAtFirst', () => {
+  const look = lookTurnedTowards({ headingRadians: 0, pitchRadians: 0 }, Math.PI / 2, 0.1)
+
+  assert.ok(look.headingRadians > 0 && look.headingRadians < Math.PI / 2, `heading ${look.headingRadians}`)
+})
+
+test('look_whenTurnedTowardsAWalkBehindItsLeft_turnsTheShortWay', () => {
+  const look = lookTurnedTowards({ headingRadians: 3, pitchRadians: 0 }, -3, 0.1)
+
+  assert.ok(look.headingRadians > 3, `heading ${look.headingRadians}`)
 })

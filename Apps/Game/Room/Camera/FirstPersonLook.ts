@@ -17,6 +17,7 @@ const eyeHeightMetres = 1
 const fastestTurnRadiansPerSecond = 2.1
 const fastestTiltRadiansPerSecond = 1.1
 const steepestPitchRadians = 1
+const turnSettleSeconds = 0.3
 
 export function lookTurnedBy(look: FirstPersonLook, stick: StickDeflection, seconds: number): FirstPersonLook {
   const pitchRadians = look.pitchRadians + stick.up * fastestTiltRadiansPerSecond * seconds
@@ -24,6 +25,12 @@ export function lookTurnedBy(look: FirstPersonLook, stick: StickDeflection, seco
     headingRadians: look.headingRadians - stick.right * fastestTurnRadiansPerSecond * seconds,
     pitchRadians: Math.min(steepestPitchRadians, Math.max(-steepestPitchRadians, pitchRadians)),
   }
+}
+
+export function lookTurnedTowards(look: FirstPersonLook, headingRadians: number, seconds: number): FirstPersonLook {
+  const difference = Math.atan2(Math.sin(headingRadians - look.headingRadians), Math.cos(headingRadians - look.headingRadians))
+  const share = 1 - Math.exp(-seconds / turnSettleSeconds)
+  return { ...look, headingRadians: look.headingRadians + difference * share }
 }
 
 export function stepFor(stick: StickDeflection, headingRadians: number, seconds: number): FloorPoint {

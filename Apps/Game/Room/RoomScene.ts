@@ -15,7 +15,7 @@ import {
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
-import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, stepFor, type FirstPersonLook } from './Camera/FirstPersonLook.ts'
+import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, furnitureWithId, type CameraPose, type FloorPoint, type ShapedItem } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
@@ -26,7 +26,7 @@ import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
 import { daylightAt, hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
-import { DebugMenu, type CameraMode } from './Views/DebugMenu.ts'
+import { DebugMenu, type CameraMode, type StickLayout } from './Views/DebugMenu.ts'
 import { Joysticks } from './Views/Joysticks.ts'
 import { Sky } from './Views/Sky.ts'
 import { isWalking } from './Walking/Walk.ts'
@@ -44,6 +44,8 @@ const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
 const reflectionsBlurSigma = 0.04
 const transmissionResolutionShare = 0.5
+const firstPersonSettleSeconds = 1.5
+const fieldOfViewSettleSeconds = 0.35
 
 export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
@@ -72,6 +74,9 @@ export class RoomScene {
   private readonly roomLights = new RoomLights()
   private cameraPose: CameraPose
   private cameraMode: CameraMode = 'room'
+  private stickLayout: StickLayout = 'walkOnTheLeft'
+  private wasFirstPersonView = false
+  private firstPersonSettlesAtSeconds = 0
   private look: FirstPersonLook = { headingRadians: Math.PI, pitchRadians: 0 }
   private shadowPoseLastDrawn = ''
 
@@ -98,7 +103,7 @@ export class RoomScene {
     }
     this.play = new RoomPlay(ritual, catalog, log, {
       remarked: (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]),
-      debugMenuAsked: () => this.debugMenu.open(this.cameraMode),
+      debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
     })
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer))
@@ -113,7 +118,7 @@ export class RoomScene {
     })
     this.caption = new RoomCaption(container)
     this.joysticks = new Joysticks(container)
-    this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode) })
+    this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout) })
     this.garden = new Garden(materials)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
     this.fitToWindow()
@@ -154,11 +159,24 @@ export class RoomScene {
   private walkAndLookInFirstPerson(seconds: number): void {
     if (this.cameraMode !== 'firstPerson' || this.play.view.kind === 'closeUp') return
     const walk = this.play.walk
-    if (isWalking(walk)) this.look = { ...this.look, headingRadians: walk.headingRadians }
-    this.look = lookTurnedBy(this.look, this.joysticks.look, seconds)
-    const stick = this.joysticks.walk
+    if (isWalking(walk)) this.look = lookTurnedTowards(this.look, walk.headingRadians, seconds)
+    this.look = lookTurnedBy(this.look, this.lookStick(), seconds)
+    const stick = this.walkStick()
     if (stick.right === 0 && stick.up === 0) return this.play.stopWalkingFreely()
     this.play.walkFreely(stepFor(stick, this.look.headingRadians, seconds), this.look.headingRadians)
+  }
+
+  private walkStick(): StickDeflection {
+    return this.stickLayout === 'walkOnTheLeft' ? this.joysticks.left : this.joysticks.right
+  }
+
+  private lookStick(): StickDeflection {
+    return this.stickLayout === 'walkOnTheLeft' ? this.joysticks.right : this.joysticks.left
+  }
+
+  private stickLayoutChosen(layout: StickLayout): void {
+    this.stickLayout = layout
+    this.log(`the sticks are laid out as ${layout} from the debug menu`)
   }
 
   private cameraModeChosen(mode: CameraMode): void {
@@ -171,17 +189,21 @@ export class RoomScene {
   private moveCamera(seconds: number): void {
     this.zoom.viewShown(this.play.view)
     const isFirstPersonView = this.cameraMode === 'firstPerson' && this.play.view.kind !== 'closeUp'
-    this.showFieldOfView(isFirstPersonView ? firstPersonFieldOfViewDegrees : cameraFieldOfViewDegrees)
-    const goal = this.cameraGoal()
-    this.cameraPose = isFirstPersonView ? goal : poseEasedTowards(this.cameraPose, zoomedPose(goal, this.zoom.distanceShare), seconds)
+    if (isFirstPersonView && !this.wasFirstPersonView) this.firstPersonSettlesAtSeconds = this.clock.elapsedTime + firstPersonSettleSeconds
+    this.wasFirstPersonView = isFirstPersonView
+    this.showFieldOfView(isFirstPersonView ? firstPersonFieldOfViewDegrees : cameraFieldOfViewDegrees, seconds)
+    const goal = isFirstPersonView ? this.cameraGoal() : zoomedPose(this.cameraGoal(), this.zoom.distanceShare)
+    const isSettled = isFirstPersonView && this.clock.elapsedTime >= this.firstPersonSettlesAtSeconds
+    this.cameraPose = isSettled ? goal : poseEasedTowards(this.cameraPose, goal, seconds)
     this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
     this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
     this.camera.updateMatrixWorld()
   }
 
-  private showFieldOfView(degrees: number): void {
+  private showFieldOfView(degrees: number, seconds: number): void {
     if (this.camera.fov === degrees) return
-    this.camera.fov = degrees
+    const share = 1 - Math.exp(-seconds / fieldOfViewSettleSeconds)
+    this.camera.fov = Math.abs(degrees - this.camera.fov) < 0.05 ? degrees : this.camera.fov + (degrees - this.camera.fov) * share
     this.camera.updateProjectionMatrix()
   }
 
