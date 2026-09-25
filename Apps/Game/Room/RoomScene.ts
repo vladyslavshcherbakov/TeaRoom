@@ -41,6 +41,7 @@ import { tapTargetAmong } from './TapTargetAmong.ts'
 import { savedVisitVersion, type SavedCamera, type VisitStore } from './VisitStore.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
+import { isSeenWhole } from './Views/ProphecySighting.ts'
 import { InspectionStage } from './Views/InspectionStage.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
 import { daylightAt, hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
@@ -246,6 +247,13 @@ export class RoomScene {
     this.pourControls.show(isAiming)
     this.joysticks.show(isFirstPerson && !isCloseUp && !isAiming && !isInspecting)
     this.render()
+    this.noticeTheProphecyIfSeenWhole()
+  }
+
+  private noticeTheProphecyIfSeenWhole(): void {
+    if (this.achievements.isUnlocked('delphicOracle')) return
+    if (!isSeenWhole(this.room.prophecyInscription, this.camera, [this.room.root, this.walker.root])) return
+    this.achievements.prophecySeenWhole()
   }
 
   private walkAndLookInFirstPerson(seconds: number): void {

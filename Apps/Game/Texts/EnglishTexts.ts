@@ -203,6 +203,8 @@ export const englishTexts = {
   'achievement.shiva.title': 'Shiva',
   'achievement.died.title': "You know, I'm something of an enthusiast myself",
   'achievement.died.done': 'Your little heart could not take a brew that strong.',
+  'achievement.delphicOracle.title': 'Delphic Oracle',
+  'achievement.delphicOracle.done': 'Found the prophecy where nobody looks, and read it whole.',
   'achievement.shiva.done': 'Wanted a third arm so badly that you tapped one into being. So proud of you.',
 
   'offering.glow': '{figurine} glows softly.',

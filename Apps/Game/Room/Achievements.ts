@@ -22,6 +22,7 @@ export const achievementIds = [
   'kettleBoiledDry',
   'shiva',
   'died',
+  'delphicOracle',
 ] as const
 
 export type AchievementId = (typeof achievementIds)[number]
@@ -69,6 +70,10 @@ export class Achievements {
     return new Set(this.record.unlocked)
   }
 
+  isUnlocked(id: AchievementId): boolean {
+    return this.record.unlocked.includes(id)
+  }
+
   eventsHappened(events: readonly RitualEvent[], state: DeepReadonly<SessionState>): void {
     for (const event of events) {
       if (event.type === 'tableWiped') this.puddleWipedOn(event.placeId)
@@ -84,6 +89,10 @@ export class Achievements {
 
   roseBushTappedTenTimes(): void {
     this.unlock('roseBushTappedTenTimes', 'the rose bush was tapped ten times in a row')
+  }
+
+  prophecySeenWhole(): void {
+    this.unlock('delphicOracle', 'the whole prophecy on the beam was on the screen, facing the camera, with nothing in front of it')
   }
 
   keeperDied(): void {

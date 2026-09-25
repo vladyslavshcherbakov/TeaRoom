@@ -87,6 +87,14 @@ test('achievement_ofTheKeeperDying_isAnEnthusiast', () => {
   assert.deepEqual(room.announced, ['died'])
 })
 
+test('achievement_ofTheProphecySeenWhole_isTheDelphicOracle', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.prophecySeenWhole()
+
+  assert.deepEqual(room.announced, ['delphicOracle'])
+})
+
 test('achievement_whenTheFirstVisitTheAchievementsSeeContinuesAnOlderSave_isNotTheUsual', () => {
   const room = new AchievementsInTheRoom()
 

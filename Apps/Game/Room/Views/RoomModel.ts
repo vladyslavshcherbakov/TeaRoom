@@ -70,11 +70,12 @@ export class RoomModel {
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
+  readonly prophecyInscription: THREE.Mesh
 
   constructor(materials: RoomMaterials, heaterSpot: WorldPoint) {
     this.materials = materials
     this.addFloor()
-    this.addBackWallWithWindow()
+    this.prophecyInscription = this.addBackWallWithWindow()
     this.addLeftWall()
     this.addMedal()
     this.addSettingsGear()
@@ -108,7 +109,7 @@ export class RoomModel {
     this.tag(floor, { isFloor: true })
   }
 
-  private addBackWallWithWindow(): void {
+  private addBackWallWithWindow(): THREE.Mesh {
     const z = -roomHalfSize - wallThickness / 2
     const { centreX, sillHeight, width, height } = windowOnBackWall
     const windowLeft = centreX - width / 2
@@ -128,6 +129,7 @@ export class RoomModel {
     inscription.position.set(centreX, (windowTop + wallHeight) / 2, z - wallThickness / 2 - 0.002)
     inscription.rotation.y = Math.PI
     this.root.add(inscription)
+    return inscription
   }
 
   private addMedal(): void {
