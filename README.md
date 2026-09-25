@@ -58,7 +58,7 @@ Scripts/build.sh
 Scripts/build-artifact.sh
 ```
 
-`Scripts/build-artifact.sh` builds the room without any logging into `dist-artifact/TeaCeremony.html`: one file with the page, its styles and its script, as a Claude artifact takes it. Claude publishes that file to the same artifact each time.
+`Scripts/build-artifact.sh` builds the room into `dist-artifact/TeaCeremony.html` with every log call and its text taken out: one file with the page, its styles and its script, as a Claude artifact takes it. Claude publishes that file to the same artifact each time.
 
 ## Deploy
 
