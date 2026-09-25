@@ -39,6 +39,6 @@ test('remark_ofTheSillTappedTwice_changesItsLine', () => {
 const burntClothLines = [
   "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'Not a trace of the fire. This world forgives things. I could live here.',
-  "Scorched a minute ago, good as new now. I'm not leaving this place.",
+  "Magic sink! The burn is gone. I'm never leaving.",
   'Burnt, rinsed, reborn. What a kind little world.',
 ]

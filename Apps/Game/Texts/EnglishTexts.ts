@@ -14,7 +14,7 @@ export const englishTexts = {
   'sip.tooHot.1': 'Ouch, too hot. Let it breathe a little.',
   'sip.tooHot.2': 'Hot! The tongue says wait.',
   'sip.tooHot.3': 'Too eager. A minute more and it will be kind.',
-  'sip.tooHot.4': 'Steam first, sip later.',
+  'sip.tooHot.4': 'Ouch! Too hot, too hot.',
   'sip.overbrewed.1': 'Oof… it has gone bitter. It steeped too long.',
   'sip.overbrewed.2': 'That bites back. Too long with the leaves.',
   'sip.overbrewed.3': 'Dark and harsh. The leaves forgot to leave.',
@@ -42,7 +42,7 @@ export const englishTexts = {
   'sip.coolingButGood.1': 'Good, though it is cooling.',
   'sip.coolingButGood.2': 'Still good. Drink it before it goes.',
   'sip.coolingButGood.3': 'Nice, a little shy of warm.',
-  'sip.coolingButGood.4': 'Lovely, if unhurried.',
+  'sip.coolingButGood.4': 'Cooler now, but still lovely.',
   'sip.justRight.1': 'Ahh… just right.',
   'sip.justRight.2': 'Mm. Exactly this.',
   'sip.justRight.3': 'That is the one.',
@@ -50,8 +50,8 @@ export const englishTexts = {
 
   'spill.1': 'Oops… some for the table.',
   'spill.2': 'The table wanted a sip too.',
-  'spill.3': 'A little went astray.',
-  'spill.4': 'Careful hands, wet table.',
+  'spill.3': "Oh no, a puddle. Where's the cloth?",
+  'spill.4': 'Well, that went everywhere.',
 
   'sillIsTheRoomsOwn.1': 'Wow, you tap everything here. The room would like to keep something for itself.',
   'sillIsTheRoomsOwn.2': 'The figurines on the windowsill belong to the room. It keeps them for itself.',
@@ -60,7 +60,7 @@ export const englishTexts = {
 
   'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',
-  'burntClothWashed.3': "Scorched a minute ago, good as new now. I'm not leaving this place.",
+  'burntClothWashed.3': "Magic sink! The burn is gone. I'm never leaving.",
   'burntClothWashed.4': 'Burnt, rinsed, reborn. What a kind little world.',
 
   'gods.temperatureIsPerfect': 'The temperature is perfect. The gods are content.',
