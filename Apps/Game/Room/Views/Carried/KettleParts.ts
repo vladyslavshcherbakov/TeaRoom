@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { RoomMaterials } from '../RoomMaterials.ts'
 import { GaugeStrip } from './GaugeStrip.ts'
-import type { CarriedModelMaterials, ItemParts } from './ItemParts.ts'
+import type { CarriedModelMaterials, ItemParts, PointDownTheSide } from './ItemParts.ts'
 import { kettleShape } from './KettleShape.ts'
 
 const lidTouchPadRadiusMetres = 0.095
@@ -10,6 +10,9 @@ const gaugeFrameAboveTheBodyMetres = 0.0015
 const gaugeFrameMarginMetres = 0.007
 const gaugeWaterHalfWidthMetres = 0.017
 const gaugeWaterAboveTheBodyMetres = 0.003
+const overflowAboveTheBodyMetres = 0.005
+const overflowLeavesTheKettleAtRadians = 2.4
+const overflowPointsOnTheKettle = 12
 
 export function kettleParts(materials: CarriedModelMaterials): ItemParts {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle } = kettleShape
@@ -28,7 +31,18 @@ export function kettleParts(materials: CarriedModelMaterials): ItemParts {
   const gauge = waterGauge(materials.room)
   const kettleWater = waterInsideTheKettle(materials.room)
   const meshes = [body, spout, gauge.frame.mesh, gauge.water.mesh, kettleWater]
-  return { meshes, lid, spoutTip: new THREE.Vector3(0.205, 0.183, 0), rimHeight: 0.23, liquidLevel: null, gaugeWater: gauge.water, kettleWater }
+  return { meshes, lid, spoutTip: new THREE.Vector3(0.205, 0.183, 0), rimHeight: 0.23, liquidLevel: null, gaugeWater: gauge.water, kettleWater, pointsDownTheSide: pointsDownTheKettle() }
+}
+
+function pointsDownTheKettle(): PointDownTheSide[] {
+  const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle } = kettleShape
+  return Array.from({ length: overflowPointsOnTheKettle + 1 }, (_, index) => {
+    const angleFromTheTop = openingAngle + ((overflowLeavesTheKettleAtRadians - openingAngle) * index) / overflowPointsOnTheKettle
+    return {
+      distance: (bodyRadiusMetres + overflowAboveTheBodyMetres) * Math.sin(angleFromTheTop),
+      height: bodyCentreMetres + (bodyRadiusMetres * bodySquash + overflowAboveTheBodyMetres) * Math.cos(angleFromTheTop),
+    }
+  })
 }
 
 function waterInsideTheKettle(materials: RoomMaterials): THREE.Mesh {
