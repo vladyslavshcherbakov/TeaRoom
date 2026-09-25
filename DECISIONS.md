@@ -18,6 +18,8 @@ The plan is in `docs/roadmap.md`.
 
 ### Shared/Simulation/
 
+**A sip is too hot only above 93 °C.** A bowl from a boiling kettle stays above it for about five seconds after the pour, so a player who hurries can catch it and one who pauses misses it. At 70 °C, the first threshold, every bowl of the teas brewed near boiling made the player wait about half a minute before a good sip, and nothing told them to wait. Rejected: a tea bowl that cools faster, because tea would then turn lukewarm in about a minute.
+
 **The simulation is a functional core with an imperative shell.** Commands and time go in, a new state and events come out, and nothing in `Shared/Simulation` knows about Three.js, the DOM or the clock. This keeps every rule testable without a browser, and lets AI-assisted changes to the presentation leave the rules alone. Rejected: game objects that hold their own state inside the renderer, because rules then live in meshes and cannot be tested headless.
 
 **Player decisions are commands, consequences are events.** One command per decision, one event per thing the presentation or the world memory must react to. This gives replays, logs for debugging, and the ritual history the world memory will be built from. Rejected: an event bus where objects call each other, because one action has many consequences and the order would be decided by subscription order.

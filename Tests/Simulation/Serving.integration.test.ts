@@ -13,6 +13,13 @@ function ritualWithTeaInCups(steepSeconds: number, cupIds = ['cup1', 'cup2']): T
   return ritual
 }
 
+function ritualWithTeaBoiledAgainInCup1(): TestRitual {
+  const ritual = ritualWithTeaInCups(60, [])
+  ritual.heatKettleTo(100)
+  ritual.pour('kettle', 'cup1', 3)
+  return ritual
+}
+
 test('sip_ofPlainWater_tastesOfNoTea', () => {
   const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
   ritual.heatKettleTo(80)
@@ -24,8 +31,8 @@ test('sip_ofPlainWater_tastesOfNoTea', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'none')
 })
 
-test('sip_whenTooHot_waitsForItToCoolAndIsEnjoyedLater', () => {
-  const ritual = ritualWithTeaInCups(60, ['cup1'])
+test('sip_whenAboveNinetyThreeDegrees_waitsForItToCoolAndIsEnjoyedLater', () => {
+  const ritual = ritualWithTeaBoiledAgainInCup1()
 
   const tooHotEvents = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
   ritual.waitUntilCupCoolsTo('cup1', 60)
@@ -33,6 +40,15 @@ test('sip_whenTooHot_waitsForItToCoolAndIsEnjoyedLater', () => {
 
   assert.equal(eventsOfType(tooHotEvents, 'teaTasted')[0]?.verdict.reaction, 'waitsForItToCool')
   assert.equal(eventsOfType(laterEvents, 'teaTasted')[0]?.verdict.reaction, 'contentSigh')
+})
+
+test('sip_atNinetyThreeDegrees_isNoLongerTooHot', () => {
+  const ritual = ritualWithTeaBoiledAgainInCup1()
+  ritual.waitUntilCupCoolsTo('cup1', 93)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'cup1' })
+
+  assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.temperature, 'pleasant')
 })
 
 test('sip_takesTwentyMillilitresFromTheCup', () => {

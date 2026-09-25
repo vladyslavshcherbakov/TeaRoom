@@ -71,10 +71,12 @@ A sip takes 20 ml, and it says whether the bowl held leaves. The verdict has fou
 
 | Part | Values |
 |---|---|
-| Temperature | `tooHot` above 70 °C, `pleasant` from 45 to 70 °C, `lukewarm` from 30 to 45 °C, `cold` below 30 °C |
+| Temperature | `tooHot` above 93 °C, `pleasant` from 45 to 93 °C, `lukewarm` from 30 to 45 °C, `cold` below 30 °C |
 | Strength | `none` while it is still plain water, below 5, `weak` below the tea's balanced range, `balanced` inside it, `rich` up to 15 above it, `heavy` beyond, `extreme` from 98, the ceiling that a pile of leaves reaches within a minute |
 | Bitterness | `soft` below 25, `noticeable` from 25, `high` from 45, `overbrewed` from 70 |
 | Reaction | `waitsForItToCool` if too hot, else `strongGrimace` if overbrewed, else `grimace` if high bitterness or heavy or extreme strength, else `shrug` if plain water, weak or cold, else `contentSigh` |
+
+A tea bowl filled from a boiling kettle stays above 93 °C for about five seconds after the pour, so only a keeper who hurries sips it too hot.
 
 ## Offerings
 

@@ -8,7 +8,7 @@ export type TasteVerdict = {
   readonly reaction: 'contentSigh' | 'waitsForItToCool' | 'shrug' | 'grimace' | 'strongGrimace'
 }
 
-const tooHotToDrinkAboveC = 70
+const tooHotToDrinkAboveC = 93
 const lukewarmBelowC = 45
 const coldBelowC = 30
 const richStrengthMargin = 15
