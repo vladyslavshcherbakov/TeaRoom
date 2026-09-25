@@ -10,9 +10,10 @@ import { AimedPour, type AimedPourView } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
-import { carriedShapeOf, furniture, furnitureWithId, openingRadiusMetres, puddleCentre, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { carriedShapeOf, furniture, furnitureWithId, openingRadiusMetres, puddleCentreOn, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
+import { wetMlAt } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
 export type RitualPort = {
   readonly state: DeepReadonly<SessionState>
@@ -33,6 +34,7 @@ export type RoomTapTarget =
   | { readonly kind: 'nothing' }
 
 type WipeStroke = {
+  readonly furnitureId: FurnitureId
   lengthMetres: number
   unwipedMetres: number
   unwipedMetresOverThePuddle: number
@@ -126,12 +128,12 @@ export class RoomPlay {
   pressMovedOver(target: RoomTapTarget): void {
     const press = this.press
     const stroke = press?.stroke
-    if (press === null || stroke === undefined || stroke === null || !this.isOnTheRitualSurface(target) || target.kind !== 'surface') return
+    if (press === null || stroke === undefined || stroke === null || target.kind !== 'surface' || target.furnitureId !== stroke.furnitureId) return
     const segmentMetres = Math.hypot(target.point.x - stroke.lastPoint.x, target.point.z - stroke.lastPoint.z)
     const middle = { x: (target.point.x + stroke.lastPoint.x) / 2, z: (target.point.z + stroke.lastPoint.z) / 2 }
     stroke.lengthMetres += segmentMetres
     stroke.unwipedMetres += segmentMetres
-    if (this.isTheClothOverThePuddleAt(middle)) {
+    if (this.isTheClothOverThePuddleAt(stroke.furnitureId, middle)) {
       stroke.unwipedMetresOverThePuddle += segmentMetres
       stroke.metresOverThePuddle += segmentMetres
     }
@@ -322,7 +324,7 @@ export class RoomPlay {
   private wipeWhatTheStrokeCovered(stroke: WipeStroke, heldSeconds: number): void {
     const seconds = Math.max(heldSeconds - stroke.heldSecondsAtLastWipe, Number.EPSILON)
     const strokeSpeedCmPerSecond = (stroke.unwipedMetres * 100) / seconds
-    const puddleArea = Math.PI * this.puddleRadius() ** 2
+    const puddleArea = Math.PI * (this.puddleOn(stroke.furnitureId)?.radiusMetres ?? 0) ** 2
     const overThePuddle = stroke.unwipedMetresOverThePuddle
     stroke.unwipedMetres = 0
     stroke.unwipedMetresOverThePuddle = 0
@@ -332,26 +334,26 @@ export class RoomPlay {
     this.ritual.dispatch({ type: 'wipeTable', strokeSpeedCmPerSecond, coveredFraction })
   }
 
-  private isTheClothOverThePuddleAt(point: FloorPoint): boolean {
-    return Math.hypot(point.x - puddleCentre.x, point.z - puddleCentre.z) < this.puddleRadius() + clothHalfWidthMetres
+  private isTheClothOverThePuddleAt(furnitureId: FurnitureId, point: FloorPoint): boolean {
+    const puddle = this.puddleOn(furnitureId)
+    return puddle !== null && Math.hypot(point.x - puddle.centre.x, point.z - puddle.centre.z) < puddle.radiusMetres + clothHalfWidthMetres
   }
 
-  private puddleRadius(): number {
-    return puddleRadiusMetres(puddleShareOf(this.ritual.state.tableWetMl))
+  private puddleOn(furnitureId: FurnitureId): { centre: WorldPoint; radiusMetres: number } | null {
+    const puddle = this.ritual.state.puddles[furnitureId]
+    const centre = puddle === undefined ? null : puddleCentreOn(furnitureId, puddle.spilledAround)
+    if (puddle === undefined || centre === null) return null
+    return { centre, radiusMetres: puddleRadiusMetres(puddleShareOf(puddle.wetMl)) }
   }
 
   private finishTheStroke(stroke: WipeStroke, heldSeconds: number): void {
     if (stroke.unwipedMetres > 0) this.wipeWhatTheStrokeCovered(stroke, heldSeconds)
-    this.log(`stroke with the cloth ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, ${stroke.metresOverThePuddle.toFixed(2)} m of it over the puddle, the table is ${this.ritual.state.tableWetMl.toFixed(1)} ml wet`)
+    this.log(`stroke with the cloth ended: ${stroke.lengthMetres.toFixed(2)} m in ${heldSeconds.toFixed(1)} s, ${stroke.metresOverThePuddle.toFixed(2)} m of it over the puddle, the ${stroke.furnitureId} is ${wetMlAt(this.ritual.state, stroke.furnitureId).toFixed(1)} ml wet`)
   }
 
   private wipeStrokeStartingAt(target: RoomTapTarget): WipeStroke | null {
-    if (this.chosenItemId() !== clothItemId || target.kind !== 'surface' || !this.isOnTheRitualSurface(target)) return null
-    return { lengthMetres: 0, unwipedMetres: 0, unwipedMetresOverThePuddle: 0, metresOverThePuddle: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
-  }
-
-  private isOnTheRitualSurface(target: RoomTapTarget): boolean {
-    return target.kind === 'surface' && target.furnitureId === this.ritualFurnitureId()
+    if (this.chosenItemId() !== clothItemId || target.kind !== 'surface') return null
+    return { furnitureId: target.furnitureId, lengthMetres: 0, unwipedMetres: 0, unwipedMetresOverThePuddle: 0, metresOverThePuddle: 0, lastPoint: target.point, heldSecondsAtLastWipe: 0 }
   }
 
   private toggleHand(handIndex: HandIndex): void {
@@ -374,10 +376,11 @@ export class RoomPlay {
   }
 
   private soakUpThePuddleIfTheClothLandsInIt(furnitureId: FurnitureId, point: WorldPoint): void {
-    const puddleRadius = this.puddleRadius()
-    const distanceToThePuddle = Math.hypot(point.x - puddleCentre.x, point.z - puddleCentre.z)
-    const isInThePuddle = furnitureId === this.ritualFurnitureId() && puddleRadius > 0 && distanceToThePuddle < puddleRadius + clothHalfWidthMetres
-    if (!isInThePuddle) return this.log(`the cloth goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddleRadius.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
+    const puddle = this.puddleOn(furnitureId)
+    if (puddle === null) return this.log(`the cloth goes down on the ${furnitureId}, where nothing is spilled`)
+    const distanceToThePuddle = Math.hypot(point.x - puddle.centre.x, point.z - puddle.centre.z)
+    const isInThePuddle = puddle.radiusMetres > 0 && distanceToThePuddle < puddle.radiusMetres + clothHalfWidthMetres
+    if (!isInThePuddle) return this.log(`the cloth goes down ${distanceToThePuddle.toFixed(2)} m from a puddle ${puddle.radiusMetres.toFixed(2)} m wide on the ${furnitureId}, nothing to soak up`)
     this.log(`the cloth goes down in the puddle ${distanceToThePuddle.toFixed(2)} m from its centre`)
     this.ritual.dispatch({ type: 'soakUpThePuddle' })
   }

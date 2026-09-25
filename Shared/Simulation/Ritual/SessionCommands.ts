@@ -3,6 +3,7 @@ import { godsVerdictOnFinishing } from '../Judgement/GodsMood.ts'
 import type { CommandOfType } from './Command.ts'
 import { letTheGodsJudge, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { finishPour } from './PouringCommands.ts'
+import { wetMlOnEveryPlace } from './Puddles.ts'
 
 const tableCountsAsDryBelowMl = 1
 
@@ -36,10 +37,11 @@ export function finishRitual(draft: Draft): void {
     draft.events.push({ type: 'heaterSwitchedOff', waterJudgement: null })
   }
   const openLids = openLidsOf(draft)
-  const isTidy = draft.state.tableWetMl < tableCountsAsDryBelowMl && openLids.length === 0
+  const wetMl = wetMlOnEveryPlace(draft.state)
+  const isTidy = wetMl < tableCountsAsDryBelowMl && openLids.length === 0
   note(
     draft,
-    `ritual finished: table ${draft.state.tableWetMl.toFixed(1)} ml wet, open lids: ${openLids.join(', ') || 'none'}, ${isTidy ? 'tidy' : 'not tidy'}`,
+    `ritual finished: ${wetMl.toFixed(1)} ml wet on every place, open lids: ${openLids.join(', ') || 'none'}, ${isTidy ? 'tidy' : 'not tidy'}`,
   )
   letTheGodsJudge(draft, godsVerdictOnFinishing(isTidy))
   draft.state.phase = 'resting'

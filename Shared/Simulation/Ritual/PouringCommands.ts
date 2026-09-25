@@ -5,6 +5,7 @@ import type { CommandOfType } from './Command.ts'
 import { describeLiquid, isClosedAgainstFilling, letTheGodsJudge, note, noteDetail, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { isWithinReach } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
+import { wetMlOnEveryPlace } from './Puddles.ts'
 
 export function startPouring(draft: Draft, command: CommandOfType<'startPouring'>): void {
   const pourInProgress = draft.state.pour
@@ -49,7 +50,7 @@ export function finishPour(draft: Draft): void {
   note(
     draft,
     `pour from ${pour.sourceId} into ${pour.targetId ?? 'the table'} finished: ` +
-      `${pour.pouredMl.toFixed(1)} ml landed, ${pour.spilledMl.toFixed(1)} ml spilled, table ${draft.state.tableWetMl.toFixed(1)} ml wet`,
+      `${pour.pouredMl.toFixed(1)} ml landed, ${pour.spilledMl.toFixed(1)} ml spilled, ${wetMlOnEveryPlace(draft.state).toFixed(1)} ml wet on every place`,
   )
   draft.events.push({
     type: 'pourFinished',

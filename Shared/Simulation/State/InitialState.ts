@@ -22,8 +22,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     pour: null,
     sink: { itemIdInside: null, runningWater: null },
     figurines: figurinesOnTheShelf(room),
-    tableWetMl: 0,
-    puddleStrength: 0,
+    puddles: {},
     godsSatisfaction: initialGodsSatisfaction,
     godsJudgementsMade: { water: false, firstSip: false },
   }

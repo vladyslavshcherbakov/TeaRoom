@@ -7,6 +7,7 @@ import type { LogLevel } from '../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { BenchLog } from './BenchLog.ts'
 import { button, holdButton, picker, readout, row, section, slider, type Readout } from './Controls.ts'
+import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 const roomId = 'quietRoom'
 const tableTargetLabel = 'table'
@@ -185,7 +186,7 @@ class RitualBench {
   private tableSection(): HTMLElement {
     return section(
       'Table',
-      row(this.live(() => `wet ${this.session.state.tableWetMl.toFixed(1)} ml`)),
+      row(this.live(() => `wet ${wetMlOnEveryPlace(this.session.state).toFixed(1)} ml`)),
       row(
         button('Wipe slowly', () => this.send({ type: 'wipeTable', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })),
         button('Wipe fast', () => this.send({ type: 'wipeTable', strokeSpeedCmPerSecond: 60, coveredFraction: 1 })),

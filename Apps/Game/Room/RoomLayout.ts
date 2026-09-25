@@ -131,10 +131,8 @@ export const openLidRadiusMetres: Readonly<Record<CarriedShape, number>> = {
 export const heaterFootprintRadiusMetres = 0.18
 
 const puddleOffsetFromTheTeaTableCentre: FloorPoint = { x: -0.2, z: 0.1 }
-const puddleAboveTheTeaTableMetres = 0.002
+const puddleAboveTheSurfaceMetres = 0.002
 const largestPuddleRadiusMetres = 0.25
-
-export const puddleCentre: WorldPoint = puddleOnTheTeaTable()
 
 export function puddleRadiusMetres(puddleShare: number): number {
   return Math.sqrt(puddleShare) * largestPuddleRadiusMetres
@@ -155,7 +153,10 @@ export function furnitureWithId(id: FurnitureId): Furniture {
   return found
 }
 
-function puddleOnTheTeaTable(): WorldPoint {
-  const { footprint, height } = furnitureWithId('teaTable')
-  return { x: footprint.x + puddleOffsetFromTheTeaTableCentre.x, y: height + puddleAboveTheTeaTableMetres, z: footprint.z + puddleOffsetFromTheTeaTableCentre.z }
+export function puddleCentreOn(placeId: string, spilledAround: WorldPoint | null): WorldPoint | null {
+  if (spilledAround !== null) return { x: spilledAround.x, y: spilledAround.y + puddleAboveTheSurfaceMetres, z: spilledAround.z }
+  const piece = furniture.find((candidate) => candidate.id === placeId)
+  if (piece === undefined) return null
+  const offset = piece.id === 'teaTable' ? puddleOffsetFromTheTeaTableCentre : { x: 0, z: 0 }
+  return { x: piece.footprint.x + offset.x, y: piece.height + puddleAboveTheSurfaceMetres, z: piece.footprint.z + offset.z }
 }

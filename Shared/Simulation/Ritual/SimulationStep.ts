@@ -5,12 +5,13 @@ import { coolingPerSecondOf, coolLiquid, heatLiquid, liquidBoiledAway } from '..
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap } from '../Physics/TapWater.ts'
-import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp, puddleStrengthAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
+import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
 import type { RunningWaterState, SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { clothItemId, tapOf } from './Reach.ts'
+import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
@@ -22,7 +23,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   runTheTap(draft, seconds)
   steepAllLeaves(draft, seconds)
   continueSoaking(draft, seconds)
-  draft.state.tableWetMl = wetMlAfterDrying(draft.state.tableWetMl, seconds)
+  dryThePuddles(draft, seconds)
   draft.state.cloth.wetMl = clothWetMlAfterDrying(draft.state.cloth.wetMl, draft.state.cloth.teaStain, seconds)
   startOrEndBrews(draft)
   draft.state.elapsedSeconds += seconds
@@ -95,8 +96,8 @@ function continuePour(draft: Draft, seconds: number): void {
   if (target !== undefined && landing.target !== null) target.liquid = landing.target
   pour.pouredMl += landing.landedMl
   pour.spilledMl += landing.spilledMl
-  draft.state.puddleStrength = puddleStrengthAfterSpill(draft.state.tableWetMl, draft.state.puddleStrength, landing.spilledMl, source.liquid.strength)
-  draft.state.tableWetMl += landing.spilledMl
+  const { placeId, spilledAround } = placeWhereAPourSpills(draft, target)
+  spill(draft, placeId, spilledAround, landing.spilledMl, source.liquid.strength)
   if (target !== undefined && landing.overflowedMl > 0 && !pour.hasOverflowed) {
     pour.hasOverflowed = true
     note(draft, `${target.id} overflowed at ${target.liquid.volumeMl.toFixed(1)} ml while pouring from ${source.id}`)
@@ -167,10 +168,13 @@ function steepAllLeaves(draft: Draft, seconds: number): void {
 function continueSoaking(draft: Draft, seconds: number): void {
   const cloth = draft.state.cloth
   if (!cloth.isSoakingThePuddle) return
-  const soakedMl = mlSoakedUp(draft.state.tableWetMl, cloth.wetMl, seconds)
-  takeIntoTheCloth(draft, soakedMl)
-  if (draft.state.tableWetMl > 0 && soakedMl > 0) return
+  const placeId = cloth.location.kind === 'onSurface' ? cloth.location.spot.placeId : null
+  const puddle = placeId === null ? undefined : draft.state.puddles[placeId]
+  const soakedMl = puddle === undefined ? 0 : mlSoakedUp(puddle.wetMl, cloth.wetMl, seconds)
+  if (puddle !== undefined) takeIntoTheCloth(draft, puddle, soakedMl)
+  const wetMlLeft = puddle?.wetMl ?? 0
+  if (wetMlLeft > 0 && soakedMl > 0) return
   cloth.isSoakingThePuddle = false
-  const why = draft.state.tableWetMl === 0 ? 'the puddle is gone' : 'the cloth is soaked through'
-  note(draft, `the cloth stops soaking because ${why}: it holds ${cloth.wetMl.toFixed(2)} ml, the table is ${draft.state.tableWetMl.toFixed(2)} ml wet`)
+  const why = wetMlLeft === 0 ? 'the puddle is gone' : 'the cloth is soaked through'
+  note(draft, `the cloth stops soaking because ${why}: it holds ${cloth.wetMl.toFixed(2)} ml, the ${placeId ?? 'place'} is ${wetMlLeft.toFixed(2)} ml wet`)
 }

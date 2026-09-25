@@ -6,7 +6,7 @@ import {
   furniture,
   furnitureWithId,
   itemSpots,
-  puddleCentre,
+  puddleCentreOn,
   puddleRadiusMetres,
   roomHalfSize,
   windowOnBackWall,
@@ -17,7 +17,9 @@ import {
   type WorldPoint,
 } from '../RoomLayout.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import type { TableViewState } from '../../Table/TableViewState.ts'
 
+const puddleSegments = 40
 const wallHeight = 2.6
 const wallThickness = 0.12
 const faucetPostAboveTheSpoutMetres = 0.04
@@ -41,7 +43,7 @@ export type TapTargetTag =
 export class RoomModel {
   private readonly materials: RoomMaterials
   private readonly heaterPlate: THREE.Mesh
-  private readonly puddle: THREE.Mesh
+  private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
@@ -53,7 +55,6 @@ export class RoomModel {
     for (const piece of furniture) this.addFurniture(piece)
     for (const spot of itemSpots) this.addItem(spot)
     this.heaterPlate = this.addHeater(heaterSpot)
-    this.puddle = this.addPuddle()
   }
 
   showHeater(isOn: boolean): void {
@@ -63,9 +64,16 @@ export class RoomModel {
     material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
   }
 
-  showPuddle(puddleShare: number): void {
-    this.puddle.visible = puddleShare > 0
-    this.puddle.scale.setScalar(puddleRadiusMetres(puddleShare))
+  showPuddles(puddles: readonly TableViewState.Puddle[]): void {
+    for (const mesh of this.puddlesByPlace.values()) mesh.visible = false
+    for (const puddle of puddles) {
+      const centre = puddleCentreOn(puddle.placeId, puddle.spilledAround)
+      if (centre === null || puddle.share === 0) continue
+      const mesh = this.puddlesByPlace.get(puddle.placeId) ?? this.addPuddle(puddle.placeId)
+      mesh.position.set(centre.x, centre.y, centre.z)
+      mesh.scale.setScalar(puddleRadiusMetres(puddle.share))
+      mesh.visible = true
+    }
   }
 
   private addFloor(): void {
@@ -155,11 +163,10 @@ export class RoomModel {
     if (furnitureId !== null) this.tag(mesh, { furnitureId })
   }
 
-  private addPuddle(): THREE.Mesh {
-    const puddle = new THREE.Mesh(new THREE.CircleGeometry(1, 20), this.materials.materialFor('puddle'))
+  private addPuddle(placeId: string): THREE.Mesh {
+    const puddle = new THREE.Mesh(new THREE.CircleGeometry(1, puddleSegments), this.materials.materialFor('puddle'))
     puddle.rotation.x = -Math.PI / 2
-    puddle.position.set(puddleCentre.x, puddleCentre.y, puddleCentre.z)
-    puddle.visible = false
+    this.puddlesByPlace.set(placeId, puddle)
     this.root.add(puddle)
     return puddle
   }

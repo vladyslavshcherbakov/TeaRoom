@@ -114,7 +114,7 @@ export class RoomScene {
     const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothOnTheTableAt: this.play.clothOnTheTableAt, timeSeconds: this.clock.elapsedTime })
     this.room.showHeater(table.isHeaterOn)
-    this.room.showPuddle(table.puddleShare)
+    this.room.showPuddles(table.puddles)
     const isAiming = this.play.aimedPourView !== null
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming)
     this.pourControls.show(isAiming)

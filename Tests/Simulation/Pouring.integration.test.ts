@@ -3,6 +3,7 @@ import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, fullFlowTiltDegrees, TestRitual } from '../Support/TestRitual.ts'
+import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 test('pour_whenTiltedBelowTheThreshold_movesNoWater', () => {
   const ritual = TestRitual.begun()
@@ -33,7 +34,7 @@ test('pour_whenHalfTheStreamMissesTheCup_spillsTheOtherHalfOnTheTable', () => {
   assertNear(ritual.vessel('cup1').liquid.volumeMl, 25)
   const [finished] = eventsOfType(events, 'pourFinished')
   assertNear(finished?.spilledMl ?? -1, 25)
-  assert.ok(ritual.state.tableWetMl > 20, `table holds only ${ritual.state.tableWetMl} ml`)
+  assert.ok(wetMlOnEveryPlace(ritual.state) > 20, `table holds only ${wetMlOnEveryPlace(ritual.state)} ml`)
 })
 
 test('pour_whenFast_splashesATenthOfTheStream', () => {

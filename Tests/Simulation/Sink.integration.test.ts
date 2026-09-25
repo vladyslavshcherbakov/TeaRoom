@@ -4,6 +4,7 @@ import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
+import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 test('kettle_whenPutInTheSink_turnsTheTapOnAndFillsAtItsFlow', () => {
   const ritual = openKettleInHandAtTheCounter()
@@ -33,7 +34,7 @@ test('kettle_whenFullInTheSink_sendsTheRestDownTheDrain', () => {
 
   assertNear(ritual.vessel('kettle').liquid.volumeMl, 1000)
   assert.deepEqual(eventsOfType(events, 'vesselOverflowed'), [{ type: 'vesselOverflowed', vesselId: 'kettle' }])
-  assert.equal(ritual.state.tableWetMl, 0)
+  assert.equal(wetMlOnEveryPlace(ritual.state), 0)
 })
 
 test('tapWater_onAClosedLid_runsDownTheDrainAndNotIntoTheKettle', () => {
@@ -43,7 +44,7 @@ test('tapWater_onAClosedLid_runsDownTheDrainAndNotIntoTheKettle', () => {
   ritual.fillInTheSink('kettle', 2)
 
   assertNear(ritual.vessel('kettle').liquid.volumeMl, 500)
-  assert.equal(ritual.state.tableWetMl, 0)
+  assert.equal(wetMlOnEveryPlace(ritual.state), 0)
 })
 
 test('kettle_whenItsLidIsOpenedInTheSinkUnderTheRunningTap_startsFilling', () => {

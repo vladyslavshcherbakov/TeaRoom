@@ -82,6 +82,12 @@ export type FigurineState = {
   wasOfferedTeaThisRitual: boolean
 }
 
+export type PuddleState = {
+  wetMl: number
+  strength: number
+  spilledAround: Spot | null
+}
+
 export type GodsJudgementsMade = {
   water: boolean
   firstSip: boolean
@@ -102,8 +108,7 @@ export type SessionState = {
   pour: PourState | null
   sink: SinkState
   figurines: Record<string, FigurineState>
-  tableWetMl: number
-  puddleStrength: number
+  puddles: Record<string, PuddleState>
   godsSatisfaction: number
   godsJudgementsMade: GodsJudgementsMade
 }

@@ -43,12 +43,12 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
     clothTeaStain: state.cloth.teaStain,
     clothCharring: state.cloth.charring,
     clothHeating: clothHeatingOf(state),
-    puddleShare: puddleShareOf(state.tableWetMl),
+    puddles: Object.entries(state.puddles).map(([placeId, puddle]) => ({ placeId, spilledAround: puddle.spilledAround === null ? null : { x: puddle.spilledAround.x, y: puddle.spilledAround.y, z: puddle.spilledAround.z }, share: puddleShareOf(puddle.wetMl) })),
   }
 }
 
-export function puddleShareOf(tableWetMl: number): number {
-  return share(tableWetMl, puddleFullAtMl)
+export function puddleShareOf(wetMl: number): number {
+  return share(wetMl, puddleFullAtMl)
 }
 
 function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.ClothHeating {

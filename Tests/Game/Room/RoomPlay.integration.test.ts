@@ -8,6 +8,7 @@ import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
+import { wetMlOnEveryPlace } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
 const frameSeconds = 1 / 60
 const longestWalkSeconds = 30
@@ -160,7 +161,7 @@ test('pour_whileTiltIsHeldWithTheSpoutBesideTheBowl_wetsTheTableAndNotTheBowl', 
   room.wait(2)
 
   assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, 0)
-  assert.ok(room.state.tableWetMl > 0)
+  assert.ok(wetMlOnEveryPlace(room.state) > 0)
 })
 
 test('pour_whenTheTiltButtonIsReleased_stopsAsTheKettleTiltsBack', () => {
@@ -433,11 +434,11 @@ test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAl
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
   room.takeAndChoose('cloth')
-  const wetMlBeforeTheStroke = room.state.tableWetMl
+  const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
 
   room.strokeTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }, { x: 0.5, z: -1.6 }], 10)
 
-  assert.ok(room.state.tableWetMl <= wetMlBeforeTheStroke * 0.2, `${room.state.tableWetMl} ml of ${wetMlBeforeTheStroke} ml left`)
+  assert.ok(wetMlOnEveryPlace(room.state) <= wetMlBeforeTheStroke * 0.2, `${wetMlOnEveryPlace(room.state)} ml of ${wetMlBeforeTheStroke} ml left`)
 })
 
 test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
@@ -445,11 +446,11 @@ test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
   room.takeAndChoose('cloth')
-  const wetMlBeforeTheStroke = room.state.tableWetMl
+  const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
 
   room.moveTheClothOverTheTeaTable([{ x: 0.5, z: -1.6 }, { x: 1.25, z: -1.6 }], 5)
 
-  assert.ok(room.state.tableWetMl < wetMlBeforeTheStroke * 0.5, `${room.state.tableWetMl} ml of ${wetMlBeforeTheStroke} ml left`)
+  assert.ok(wetMlOnEveryPlace(room.state) < wetMlBeforeTheStroke * 0.5, `${wetMlOnEveryPlace(room.state)} ml of ${wetMlBeforeTheStroke} ml left`)
   assert.ok(room.state.cloth.wetMl > 0, 'the cloth stayed dry')
 })
 
@@ -464,7 +465,7 @@ test('table_whenStrokedWithTheClothAwayFromThePuddle_driesOnlyAsATableLeftAlone'
   stroked.strokeTheTeaTable([{ x: 1.3, z: -1.9 }, { x: 1.6, z: -1.9 }, { x: 1.3, z: -1.9 }], 10)
   leftAlone.wait(10)
 
-  assert.ok(Math.abs(stroked.state.tableWetMl - leftAlone.state.tableWetMl) < 0.01, `${stroked.state.tableWetMl} ml against ${leftAlone.state.tableWetMl} ml`)
+  assert.ok(Math.abs(wetMlOnEveryPlace(stroked.state) - wetMlOnEveryPlace(leftAlone.state)) < 0.01, `${wetMlOnEveryPlace(stroked.state)} ml against ${wetMlOnEveryPlace(leftAlone.state)} ml`)
 })
 
 test('chosenItem_behindItsGlow_canBePutDownOnTheTableThatTheTapHit', () => {
@@ -522,12 +523,12 @@ test('cloth_whenTheTeaTableIsTappedAwayFromThePuddle_isPutDownThereAndWipesNothi
   room.setTheTeaTable()
   room.ritual.pour('kettle', null, 2)
   room.takeAndChoose('cloth')
-  const wetMlBeforeTheTap = room.state.tableWetMl
+  const wetMlBeforeTheTap = wetMlOnEveryPlace(room.state)
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { x: 1.45, y: onTheTeaTable.y, z: -1.7 } })
 
   assert.equal(room.state.cloth.location.kind, 'onSurface')
-  assert.equal(room.state.tableWetMl, wetMlBeforeTheTap)
+  assert.equal(wetMlOnEveryPlace(room.state), wetMlBeforeTheTap)
 })
 
 test('cloth_whenPutDownInThePuddle_soaksItUpWhileItLies', () => {
@@ -586,7 +587,7 @@ test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable',
   room.play.tiltPressed()
   room.wait(3)
 
-  assert.equal(room.state.tableWetMl, 0)
+  assert.equal(wetMlOnEveryPlace(room.state), 0)
   assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0, 'the bowl stayed empty')
 })
 
