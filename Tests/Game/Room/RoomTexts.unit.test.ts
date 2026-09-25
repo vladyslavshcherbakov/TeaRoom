@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { captionLinesFor, roomRemarkLine } from '../../../Apps/Game/Room/RoomTexts.ts'
+import { captionLinesFor, obituaryLine, roomRemarkLine } from '../../../Apps/Game/Room/RoomTexts.ts'
 import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
 
 test('caption_ofAnOffering_namesTheFigurine', () => {
@@ -59,6 +59,15 @@ test('heaterTesterLine_acrossTheKeepersVoices_isEveryOneOfItsSixLines', () => {
 
   assert.equal(heaterTesterLines.length, 6)
   assert.deepEqual([...linesHeard].sort(), [...heaterTesterLines].sort())
+})
+
+test('obituary_ofTheKeeper_isOneOfTheFourObituaries', () => {
+  const obituaries: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('obituary.')).map(([, line]) => line)
+
+  const line = obituaryLine(7)
+
+  assert.equal(obituaries.length, 4)
+  assert.ok(obituaries.includes(line), line)
 })
 
 test('caption_ofAnOrdinaryRefusal_staysSilent', () => {

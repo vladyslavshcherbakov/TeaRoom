@@ -18,6 +18,10 @@ export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: numbe
   return events.flatMap((event) => captionLinesOf(event, voiceSeed))
 }
 
+export function obituaryLine(voiceSeed: number): string {
+  return text(`obituary.${phraseVariantFor('obituary', voiceSeed)}`)
+}
+
 export function roomRemarkLine(remark: RoomRemark, voiceSeed: number): string {
   if (remark.kind === 'heaterTester') return text(`heaterTester.${phraseVariantAmong('heaterTester', voiceSeed, heaterTesterVariants) as HeaterTesterVariant}`)
   return text(`${remark.kind}.${phraseVariantAtTurn(remark.kind, voiceSeed, remark.timesTapped)}`)

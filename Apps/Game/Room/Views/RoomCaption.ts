@@ -18,6 +18,11 @@ export class RoomCaption {
     this.secondsLeft = captionSeconds
   }
 
+  hide(): void {
+    this.element.hidden = true
+    this.secondsLeft = 0
+  }
+
   advance(seconds: number): void {
     if (this.element.hidden) return
     this.secondsLeft -= seconds

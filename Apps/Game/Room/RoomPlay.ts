@@ -63,12 +63,14 @@ const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> 
 
 export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester'
 
+export type TeaTasted = Extract<RitualEvent, { readonly type: 'teaTasted' }>
+
 export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: number }
 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
   readonly debugMenuAsked: () => void
-  readonly keeperDied: () => void
+  readonly keeperDied: (fatalSip: TeaTasted) => void
 }
 
 export class RoomPlay {
@@ -214,10 +216,10 @@ export class RoomPlay {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
     const events = this.ritual.dispatch({ type: 'tasteCup', cupId })
-    const strength = events.find((event) => event.type === 'teaTasted')?.verdict.strength
-    if (cupId !== caddyItemId || strength === undefined || !deadlyStrengthsFromTheCaddy.has(strength)) return
-    this.log(`the keeper sipped ${strength} tea straight from the caddy, and it killed them`)
-    this.listener.keeperDied()
+    const sip = events.find((event): event is TeaTasted => event.type === 'teaTasted')
+    if (cupId !== caddyItemId || sip === undefined || !deadlyStrengthsFromTheCaddy.has(sip.verdict.strength)) return
+    this.log(`the keeper sipped ${sip.verdict.strength} tea straight from the caddy, and it killed them`)
+    this.listener.keeperDied(sip)
   }
 
   walkFreely(step: FloorPoint, headingRadians: number): void {

@@ -21,7 +21,7 @@ import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
 import { furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
-import { captionLinesFor, roomRemarkLine } from './RoomTexts.ts'
+import { captionLinesFor, obituaryLine, roomRemarkLine } from './RoomTexts.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
@@ -107,7 +107,10 @@ export class RoomScene {
     this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
       remarked: (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]),
       debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
-      keeperDied: () => this.youDied.show(),
+      keeperDied: (fatalSip) => {
+        this.caption.hide()
+        this.youDied.show(captionLinesFor([fatalSip], this.voiceSeed).join(' '), obituaryLine(this.voiceSeed))
+      },
     })
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer))
