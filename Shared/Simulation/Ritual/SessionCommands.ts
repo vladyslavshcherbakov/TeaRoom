@@ -5,6 +5,7 @@ import { switchTheHeaterOff } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
 import { caddyItemId } from './Reach.ts'
+import { dryLeaves } from '../Physics/Brewing.ts'
 
 export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>): void {
   if (draft.catalog.teas[command.teaId] === undefined) {
@@ -14,7 +15,7 @@ export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>)
   draft.state.teaId = command.teaId
   const caddy = draft.state.vessels[caddyItemId]
   const caddyGrams = definitionIn(draft.catalog, 'rooms', draft.state.roomId).caddyGrams
-  if (caddy !== undefined) caddy.leaves = { teaId: command.teaId, grams: caddyGrams, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
+  if (caddy !== undefined) caddy.leaves = dryLeaves(command.teaId, caddyGrams)
   note(draft, `ritual began with ${command.teaId}, the caddy holds ${caddyGrams} g of it`)
   draft.events.push({ type: 'ritualBegan', teaId: command.teaId })
 }

@@ -13,6 +13,10 @@ const temperatureBelowWhichNothingSteepsC = 40
 const strongestHeatFactor = 1.5
 const theBoilStirsExtractionBy = 2
 
+export function dryLeaves(teaId: string, grams: number): Leaves {
+  return { teaId, grams, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
+}
+
 export function steepLeaves(
   liquid: Liquid,
   leaves: Leaves,

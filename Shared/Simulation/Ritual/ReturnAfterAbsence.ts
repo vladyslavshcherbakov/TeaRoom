@@ -6,6 +6,7 @@ import { finishPour } from './PouringCommands.ts'
 import { caddyItemId } from './Reach.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { reportTheWorld } from './WorldReport.ts'
+import { dryLeaves } from '../Physics/Brewing.ts'
 
 export const absenceStepSeconds = 1
 export const longestLivedAbsenceSeconds = 12 * 60 * 60
@@ -67,7 +68,7 @@ function refillTheCaddy(draft: Draft, caddy: VesselState): CaddyRefill | null {
   if (isFullAndDry) return null
   const pouredOut = heldWater ? `, after pouring out ${caddy.liquid.volumeMl.toFixed(1)} ml and the wet leaves in it` : ''
   caddy.liquid = water(0, room.ambientTemperatureC)
-  caddy.leaves = { teaId, grams: room.caddyGrams, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
+  caddy.leaves = dryLeaves(teaId, room.caddyGrams)
   note(draft, `the caddy is refilled where it stands, from ${gramsBefore.toFixed(1)} g to ${room.caddyGrams} g of ${teaId}${pouredOut}`)
   return gramsBefore === 0 ? 'wasEmpty' : 'wasToppedUp'
 }

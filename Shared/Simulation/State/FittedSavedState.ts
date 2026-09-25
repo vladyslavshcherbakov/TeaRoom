@@ -1,6 +1,6 @@
 import type { Catalog } from '../Definitions/Catalog.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
-import type { Leaves } from '../Physics/Brewing.ts'
+import { dryLeaves, type Leaves } from '../Physics/Brewing.ts'
 import { water } from '../Physics/Liquid.ts'
 import { initialSessionState } from './InitialState.ts'
 import type { ClothState, FigurineState, ItemLocation, PourState, PuddleState, RunningWaterState, SessionState, VesselState } from './SessionState.ts'
@@ -13,7 +13,7 @@ export type FittedSavedState =
 
 type Shape = { readonly [key: string]: unknown }
 
-const leavesShape: Leaves = { teaId: '', grams: 0, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
+const leavesShape: Leaves = dryLeaves('', 0)
 const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
 const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false, hasRunOntoAnItem: false }
 const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, location: { kind: 'gone' } }
