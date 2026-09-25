@@ -718,6 +718,26 @@ test('heaterTester_onceTeased_leavesEveryLaterTryToTheItemsOwnLine', () => {
   ])
 })
 
+test('keeper_whenSippingTeaBrewedInTheCaddyStraightFromIt_dies', () => {
+  const room = new RoomVisit()
+  room.holdTheCaddyWithHotWaterPouredOntoItsLeaves()
+
+  room.play.sipTapped()
+
+  assert.equal(room.deathsSeen, 1)
+})
+
+test('keeper_whenSippingColdTapWaterStraightFromTheCaddy_lives', () => {
+  const room = new RoomVisit()
+  room.holdTheCaddyWithColdTapWater()
+  const mlBeforeTheSip = room.state.vessels['caddy']?.liquid.volumeMl ?? 0
+
+  room.play.sipTapped()
+
+  assert.equal(room.deathsSeen, 0)
+  assertNear(mlBeforeTheSip - (room.state.vessels['caddy']?.liquid.volumeMl ?? 0), 20)
+})
+
 test('thirdItem_whenBothHandsAreFull_isRemarkedOn', () => {
   const room = new RoomVisit()
   room.carryFromTheShelf('bowl1', 'caddy')
@@ -789,10 +809,11 @@ class RoomVisit {
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
   readonly remarks: RoomRemark[] = []
   debugMenusAsked = 0
+  deathsSeen = 0
   readonly play: RoomPlay
 
   constructor(heaterItemsBeforeTheTesterJoke = 4) {
-    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1) })
+    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), keeperDied: () => (this.deathsSeen += 1) })
   }
 
   get session() {
@@ -908,6 +929,26 @@ class RoomVisit {
       }
       from = to
     }
+  }
+
+  holdTheCaddyWithHotWaterPouredOntoItsLeaves(): void {
+    this.carryFromTheShelf('caddy')
+    this.walkTo('counter')
+    this.putDown(0, onTheCounterBesideTheBowl)
+    this.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
+    this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.fillInTheSink('kettle')
+    this.ritual.heatKettleTo(90)
+    this.ritual.pour('kettle', 'caddy', 4)
+    this.session.dispatch({ type: 'pickUp', itemId: 'caddy' })
+    this.tap({ kind: 'hand', handIndex: this.state.keeper.hands[0] === 'caddy' ? 0 : 1 })
+  }
+
+  holdTheCaddyWithColdTapWater(): void {
+    this.carryFromTheShelf('caddy')
+    this.walkTo('counter')
+    this.fillInTheSink('caddy')
+    this.tap({ kind: 'hand', handIndex: this.state.keeper.hands[0] === 'caddy' ? 0 : 1 })
   }
 
   fillInTheSink(vesselId: string): void {

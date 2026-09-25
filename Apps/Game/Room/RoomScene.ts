@@ -32,6 +32,7 @@ import { Joysticks } from './Views/Joysticks.ts'
 import { Sky } from './Views/Sky.ts'
 import { isWalking } from './Walking/Walk.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
+import { YouDiedScreen } from './Views/YouDiedScreen.ts'
 import { RoomLights } from './Views/RoomLights.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
@@ -67,6 +68,7 @@ export class RoomScene {
   private readonly pourControls: PourControls
   private readonly caption: RoomCaption
   private readonly debugMenu: DebugMenu
+  private readonly youDied: YouDiedScreen
   private readonly joysticks: Joysticks
   private readonly garden: Garden
   private readonly sky = new Sky()
@@ -105,6 +107,7 @@ export class RoomScene {
     this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
       remarked: (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]),
       debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
+      keeperDied: () => this.youDied.show(),
     })
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer))
@@ -118,6 +121,10 @@ export class RoomScene {
       tiltReleased: () => this.play.tiltReleased(),
     })
     this.caption = new RoomCaption(container)
+    this.youDied = new YouDiedScreen(container, () => {
+      log('the player starts over after dying')
+      location.reload()
+    })
     this.joysticks = new Joysticks(container)
     this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout) })
     this.garden = new Garden(materials)

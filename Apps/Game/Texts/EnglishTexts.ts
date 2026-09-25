@@ -88,6 +88,8 @@ export const englishTexts = {
   'caddyWashedOut.2': 'The next tea delivery is a week away. Enjoy your hot water until then.',
   'caddyWashedOut.3': 'Oh, I see. Off you go to your coffee, then.',
   'caddyWashedOut.4': 'All of it, down the drain. Is tea some kind of joke to you?',
+  'youDied.title': 'YOU DIED',
+  'youDied.restart': 'Start over',
   'handsFull.1': 'Two hands, both busy. Shiva I am not, sadly.',
   'handsFull.2': 'A third arm would help right now. Evolution is taking its time.',
   'handsFull.3': 'Telekinesis is still on my list. Put something down first.',

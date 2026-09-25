@@ -1,5 +1,6 @@
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
 import { caddyItemId, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
@@ -57,6 +58,7 @@ const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
+const deadlyStrengthsFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
 export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester'
@@ -66,6 +68,7 @@ export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
   readonly debugMenuAsked: () => void
+  readonly keeperDied: () => void
 }
 
 export class RoomPlay {
@@ -210,7 +213,11 @@ export class RoomPlay {
   sipTapped(): void {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
-    this.ritual.dispatch({ type: 'tasteCup', cupId })
+    const events = this.ritual.dispatch({ type: 'tasteCup', cupId })
+    const strength = events.find((event) => event.type === 'teaTasted')?.verdict.strength
+    if (cupId !== caddyItemId || strength === undefined || !deadlyStrengthsFromTheCaddy.has(strength)) return
+    this.log(`the keeper sipped ${strength} tea straight from the caddy, and it killed them`)
+    this.listener.keeperDied()
   }
 
   walkFreely(step: FloorPoint, headingRadians: number): void {
