@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { openLidOffsetBeside } from '../../../Apps/Game/Room/Placement.ts'
+import { openLidOffsetBeside, whyThereIsNoRoomFor } from '../../../Apps/Game/Room/Placement.ts'
 import type { FloorPoint, FurnitureId, WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { RoomPlay, type RoomRemark, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
@@ -97,6 +97,41 @@ test('bowl_whenPutDownOnTheKettlesOpenLid_staysInHand', () => {
 
   assert.deepEqual(room.state.keeper.hands, ['bowl1', null])
   assert.ok(room.logLines.some((line) => line.startsWith('no room for bowl1') && line.endsWith('somethingIsThere')), room.logLines.join('\n'))
+})
+
+test('bowl_underTheSpoutOfTheKettleStandingThere_hasNoRoom', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.walkTo('teaTable')
+  room.putDown(0, onTheTeaTable)
+
+  const refusal = whyThereIsNoRoomFor('bowl1', spotOn('teaTable', { ...onTheTeaTable, x: onTheTeaTable.x + 0.26 }), room.state, quietRoomHeaterSpot)
+
+  assert.equal(refusal, 'somethingIsThere')
+})
+
+test('kettle_withItsSpoutOverTheShelfsFrontEdge_fits', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.walkTo('shelf')
+
+  const refusal = whyThereIsNoRoomFor('kettle', spotOn('shelf', { x: -2.66, y: 1.22, z: 0.9 }), room.state, quietRoomHeaterSpot)
+
+  assert.equal(refusal, null)
+})
+
+test('bowl_behindTheKettleAwayFromItsSpout_fits', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.walkTo('teaTable')
+  room.putDown(0, onTheTeaTable)
+
+  const refusal = whyThereIsNoRoomFor('bowl1', spotOn('teaTable', { ...onTheTeaTable, x: onTheTeaTable.x - 0.26 }), room.state, quietRoomHeaterSpot)
+
+  assert.equal(refusal, null)
 })
 
 test('kettle_whenItsHandIsChosenAndTheHeaterIsTapped_sitsOnTheHeater', () => {

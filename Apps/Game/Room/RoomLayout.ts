@@ -119,6 +119,19 @@ export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
   cloth: 0,
 }
 
+export type FootprintCircle = { readonly x: number; readonly z: number; readonly radius: number; readonly restsOnTheSurface: boolean }
+
+const kettleSpoutReach: FootprintCircle = { x: 0.19, z: 0, radius: 0.05, restsOnTheSurface: false }
+
+export const footprintCirclesMetres: Readonly<Record<CarriedShape, readonly FootprintCircle[]>> = {
+  kettle: [{ x: 0, z: 0, radius: footprintRadiusMetres.kettle, restsOnTheSurface: true }, kettleSpoutReach],
+  thermos: [{ x: 0, z: 0, radius: footprintRadiusMetres.thermos, restsOnTheSurface: true }],
+  caddy: [{ x: 0, z: 0, radius: footprintRadiusMetres.caddy, restsOnTheSurface: true }],
+  bowl: [{ x: 0, z: 0, radius: footprintRadiusMetres.bowl, restsOnTheSurface: true }],
+  spoon: [{ x: 0, z: 0, radius: footprintRadiusMetres.spoon, restsOnTheSurface: true }],
+  cloth: [{ x: 0, z: 0, radius: footprintRadiusMetres.cloth, restsOnTheSurface: true }],
+}
+
 export const openLidRadiusMetres: Readonly<Record<CarriedShape, number>> = {
   kettle: 0.085,
   thermos: 0.046,

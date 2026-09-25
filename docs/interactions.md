@@ -31,7 +31,7 @@ Objects share one physics profile per weight class, so mass is felt through the 
 | Medium | caddy, thermos | medium | 4 px | +3% |
 | Heavy | kettle | high | 2–3 px | +2% |
 
-Grab: `pointerdown`, then 100–150 ms without movement. The lift animation takes 120–180 ms. Nothing counts as moved before `pointerup`. On release the object snaps to a matching socket if it is over one, stays where it was put if the spot is allowed, and springs back to where it came from if the spot is forbidden. There is no red highlight and no error text.
+Grab: `pointerdown`, then 100–150 ms without movement. The lift animation takes 120–180 ms. Nothing counts as moved before `pointerup`. On release the object snaps to a matching socket if it is over one, stays where it was put if the spot is allowed, and springs back to where it came from if the spot is forbidden. A spot is forbidden when any part of the item would be over another item, the kettle's spout included, while the spout may hang past an edge. There is no red highlight and no error text.
 
 Animation always goes anticipation, action, settle. A bowl: lift, move, descend, contact, settle. A lid: grip, lift, rotate, settle. Water: tilt, stream, transfer, final drops, stop.
 
