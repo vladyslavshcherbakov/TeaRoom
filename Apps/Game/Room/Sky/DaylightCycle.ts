@@ -1,5 +1,5 @@
 export const daylightHours = 12
-export const realSecondsPerDaylightHour = 120
+export const realSecondsPerDaylightHour = 90
 export const firstHourAfterSunrise = 1
 
 export type Daylight = {

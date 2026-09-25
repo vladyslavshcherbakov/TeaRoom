@@ -25,10 +25,10 @@ test('sun_atSunset_standsLowInTheWest', () => {
   assert.ok(daylight.warmth > 0.99, `warmth ${daylight.warmth}`)
 })
 
-test('daylightHour_passesInTwoRealMinutes', () => {
-  assert.equal(hoursAfter(1, 120), 2)
+test('daylightHour_passesInNinetyRealSeconds', () => {
+  assert.equal(hoursAfter(1, 90), 2)
 })
 
 test('daylight_afterSunset_beginsAgainAtSunrise', () => {
-  assert.equal(hoursAfter(11.5, 120), 0.5)
+  assert.equal(hoursAfter(11.5, 90), 0.5)
 })
