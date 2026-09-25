@@ -9,11 +9,11 @@ export type TapHit = {
 export function tapTargetAmong(nearestFirst: readonly TapHit[], chosenHandIndex: HandIndex | null, canTheChosenItemActOn: (target: RoomTapTarget) => boolean): RoomTapTarget {
   const [nearest] = nearestFirst
   if (nearest === undefined) return { kind: 'nothing' }
-  const { target } = nearest
-  if (target.kind !== 'hand' || !nearest.isForgivingTouchArea) return target
+  if (!nearest.isForgivingTouchArea) return nearest.target
   const itemSeenBehind = nearestFirst.find((hit) => hit.target.kind === 'item' && !hit.isForgivingTouchArea)
   if (itemSeenBehind !== undefined) return itemSeenBehind.target
-  if (target.handIndex !== chosenHandIndex) return target
+  const { target } = nearest
+  if (target.kind !== 'hand' || target.handIndex !== chosenHandIndex) return target
   const behind = nearestFirst.map((hit) => hit.target).find((hitTarget) => hitTarget.kind !== 'hand' && hitTarget.kind !== 'nothing')
   return behind !== undefined && canTheChosenItemActOn(behind) ? behind : target
 }
