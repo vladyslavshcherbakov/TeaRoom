@@ -7,7 +7,7 @@ import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { clothItemId, isWithinReach, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { clothItemId, emptyTheHand, isWithinReach, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 import { doesTheSpoonCrumble, isTooHotToHold } from '../Physics/Heat.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
@@ -31,7 +31,7 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   const shellHeat = draft.state.vessels[command.itemId]?.shellHeat ?? 0
   if (isTooHotToHold(shellHeat)) return refuse(draft, command, 'tooHotToHold', `${command.itemId}'s metal is at ${(shellHeat * 100).toFixed(0)}% of red heat`)
   const handIndex = freeHandOf(draft)
-  if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.join(' and ')}`)
+  if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((itemId) => itemId !== null).join(' and ')}`)
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
   if (command.itemId === spoonItemId && doesTheSpoonCrumble(draft.state.spoon.charring)) return crumbleTheSpoon(draft)
   draft.state.keeper.hands[handIndex] = command.itemId
@@ -43,6 +43,20 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   closeTheLidAsItIsLifted(draft, command.itemId, 'it was picked up')
 }
 
+export function pickUpWithAMiddleHand(draft: Draft, command: CommandOfType<'pickUpWithAMiddleHand'>): void {
+  const keeper = draft.state.keeper
+  if (keeper.hands[0] === null || keeper.hands[1] === null) return refuse(draft, command, 'aHandIsFree', `holding ${keeper.hands.filter((itemId) => itemId !== null).join(' and ') || 'nothing'}`)
+  if (keeper.hasAMiddleHand) return refuse(draft, command, 'middleHandAlreadyGrown', `the middle hand holds ${keeper.hands[middleHandIndex] ?? 'nothing'}`)
+  keeper.hasAMiddleHand = true
+  pickUp(draft, { type: 'pickUp', itemId: command.itemId })
+  if (keeper.hands[middleHandIndex] !== command.itemId) {
+    keeper.hasAMiddleHand = false
+    return note(draft, `no middle hand grows, since ${command.itemId} could not be taken into it`)
+  }
+  note(draft, `a middle hand grows and takes ${command.itemId}`)
+  draft.events.push({ type: 'middleHandGrown', itemId: command.itemId })
+}
+
 export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
   const location = locationOfItem(draft, command.itemId)
   if (location === undefined) return refuse(draft, command, 'unknownItem')
@@ -51,7 +65,7 @@ export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
     return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, not at the ${command.spot.placeId}`)
   }
   if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
-  draft.state.keeper.hands[location.handIndex] = null
+  emptyTheHand(draft, location.handIndex)
   moveItem(draft, command.itemId, { kind: 'onSurface', spot: command.spot })
   note(draft, `put ${command.itemId} down on the ${command.spot.placeId} at (${command.spot.x.toFixed(2)}, ${command.spot.y.toFixed(2)}, ${command.spot.z.toFixed(2)})`)
   draft.events.push({ type: 'putDown', itemId: command.itemId, spot: command.spot })
@@ -67,8 +81,8 @@ function crumbleTheSpoon(draft: Draft): void {
 }
 
 function freeHandOf(draft: Draft): HandIndex | null {
-  const [firstHand, secondHand] = draft.state.keeper.hands
-  if (firstHand === null) return 0
-  if (secondHand === null) return 1
-  return null
+  const { hands, hasAMiddleHand } = draft.state.keeper
+  if (hands[0] === null) return 0
+  if (hands[1] === null) return 1
+  return hasAMiddleHand && hands[middleHandIndex] === null ? middleHandIndex : null
 }

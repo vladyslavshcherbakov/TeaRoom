@@ -142,7 +142,7 @@ test('savedState_whenTheRoomLostAVesselHeldInAHand_emptiesThatHand', () => {
 
   const resumed = TestRitual.resumedFrom(ritual.savedState, testCatalog())
 
-  assert.deepEqual(resumed.state.keeper.hands, [null, null])
+  assert.deepEqual(resumed.state.keeper.hands, [null, null, null])
   assert.equal(resumed.state.vessels['cup4'], undefined)
 })
 
@@ -153,3 +153,27 @@ function catalogWithAFourthCup(): Catalog {
   const fourthCup = { id: 'cup4', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 10, y: 0, z: 0 } }
   return { ...catalog, rooms: { testRoom: { ...room, vessels: [...room.vessels, fourthCup] } } }
 }
+
+test('savedState_fromBeforeTheMiddleHand_resumesWithAnEmptyMiddleHand', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  const savedState = ritual.savedState as { keeper: { hands: unknown[]; hasAMiddleHand?: boolean } }
+  savedState.keeper.hands = savedState.keeper.hands.slice(0, 2)
+  delete savedState.keeper.hasAMiddleHand
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.deepEqual(resumed.state.keeper, { placeId: 'table', hands: ['kettle', null, null], hasAMiddleHand: false })
+})
+
+test('savedState_withAnItemInTheMiddleHand_resumesWithTheMiddleHandHoldingIt', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'pickUp', itemId: 'thermos' })
+  ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
+
+  const resumed = TestRitual.resumedFrom(ritual.savedState)
+
+  assert.deepEqual(resumed.state.keeper, { placeId: 'table', hands: ['kettle', 'thermos', 'cup1'], hasAMiddleHand: true })
+  assert.deepEqual(resumed.vessel('cup1').location, { kind: 'inHand', handIndex: 2 })
+})

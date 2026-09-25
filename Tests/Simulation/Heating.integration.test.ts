@@ -259,7 +259,7 @@ test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
 
   assert.deepEqual(eventsOfType(events, 'spoonCrumbled'), [{ type: 'spoonCrumbled', gramsLost: 5 }])
   assert.deepEqual(ritual.state.spoon.location, { kind: 'gone' })
-  assert.deepEqual(ritual.state.keeper.hands, [null, null])
+  assert.deepEqual(ritual.state.keeper.hands, [null, null, null])
   assert.equal(ritual.state.heater.itemIdOnTop, null)
 })
 

@@ -4,7 +4,7 @@ import { startOrEndBrews } from './Brews.ts'
 import { soakUpThePuddle, wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
 import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
-import { pickUp, putDown, standAt } from './KeeperCommands.ts'
+import { pickUp, pickUpWithAMiddleHand, putDown, standAt } from './KeeperCommands.ts'
 import { placeOnHeater, switchHeaterOff, switchHeaterOn } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
 import { moveVesselLid } from './LidCommands.ts'
@@ -37,6 +37,8 @@ function carryOut(draft: Draft, command: Command): void {
       return standAt(draft, command)
     case 'pickUp':
       return pickUp(draft, command)
+    case 'pickUpWithAMiddleHand':
+      return pickUpWithAMiddleHand(draft, command)
     case 'putDown':
       return putDown(draft, command)
     case 'openVesselLid':

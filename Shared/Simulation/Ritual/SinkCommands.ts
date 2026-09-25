@@ -4,7 +4,7 @@ import { clothWetMlAfterWringing } from '../Physics/Table.ts'
 import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { clothItemId, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { clothItemId, emptyTheHand, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 const itemsKeptOutOfTheSink: ReadonlySet<string> = new Set([spoonItemId])
 
@@ -19,7 +19,7 @@ export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'
   const occupant = draft.state.sink.itemIdInside
   if (occupant !== null) return refuse(draft, command, 'sinkOccupied', `${occupant} is in it`)
   if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
-  draft.state.keeper.hands[location.handIndex] = null
+  emptyTheHand(draft, location.handIndex)
   moveItem(draft, command.itemId, { kind: 'onSurface', spot: tap.sinkSpot })
   draft.state.sink.itemIdInside = command.itemId
   draft.state.sink.hasRunOverTheItemInside = false

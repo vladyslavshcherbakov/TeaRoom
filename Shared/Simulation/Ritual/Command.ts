@@ -6,6 +6,7 @@ export type Command =
   | { readonly type: 'chooseAtmosphere'; readonly timeOfDay: TimeOfDay; readonly weather: Weather }
   | { readonly type: 'standAt'; readonly placeId: string | null }
   | { readonly type: 'pickUp'; readonly itemId: string }
+  | { readonly type: 'pickUpWithAMiddleHand'; readonly itemId: string }
   | { readonly type: 'putDown'; readonly itemId: string; readonly spot: Spot }
   | { readonly type: 'openVesselLid'; readonly vesselId: string }
   | { readonly type: 'closeVesselLid'; readonly vesselId: string }

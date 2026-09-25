@@ -16,7 +16,7 @@ test('cup_whenPickedUpWhereTheKeeperStands_goesIntoTheFirstFreeHand', () => {
   const events = ritual.do({ type: 'pickUp', itemId: 'cup1' })
 
   assert.deepEqual(events, [{ type: 'pickedUp', itemId: 'cup1', handIndex: 0 }])
-  assert.deepEqual(ritual.state.keeper.hands, ['cup1', null])
+  assert.deepEqual(ritual.state.keeper.hands, ['cup1', null, null])
 })
 
 test('cup_whenTheKeeperStandsElsewhere_isOutOfReach', () => {
@@ -49,7 +49,7 @@ test('cup_whenPutDownOnTheTable_restsExactlyWhereItWasPut', () => {
   ritual.do({ type: 'putDown', itemId: 'cup1', spot: onTheTable })
 
   assert.deepEqual(ritual.vessel('cup1').location, { kind: 'onSurface', spot: onTheTable })
-  assert.deepEqual(ritual.state.keeper.hands, [null, null])
+  assert.deepEqual(ritual.state.keeper.hands, [null, null, null])
 })
 
 test('cup_whenPutDownAtAPlaceTheKeeperIsNotAt_isRefused', () => {
@@ -60,7 +60,7 @@ test('cup_whenPutDownAtAPlaceTheKeeperIsNotAt_isRefused', () => {
   const events = ritual.do({ type: 'putDown', itemId: 'cup1', spot: onTheTable })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'putDown', reason: 'notAtThatPlace' }])
-  assert.deepEqual(ritual.state.keeper.hands, ['cup1', null])
+  assert.deepEqual(ritual.state.keeper.hands, ['cup1', null, null])
 })
 
 test('heater_whenTheKeeperIsNotAtTheCounter_cannotBeSwitchedOn', () => {
@@ -80,7 +80,7 @@ test('kettle_whenPutOnTheHeaterFromTheHand_leavesTheHandFree', () => {
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   assert.equal(ritual.state.heater.itemIdOnTop, 'kettle')
-  assert.deepEqual(ritual.state.keeper.hands, [null, null])
+  assert.deepEqual(ritual.state.keeper.hands, [null, null, null])
   assert.equal(ritual.vessel('kettle').location.kind, 'onSurface')
 })
 
@@ -95,7 +95,7 @@ test('kettle_whenPickedUpFromAWorkingHeater_isLiftedOffAndItsWaterJudged', () =>
 
   assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle', waterJudgement: 'ideal' }])
   assert.equal(ritual.state.heater.itemIdOnTop, null)
-  assert.deepEqual(ritual.state.keeper.hands, ['kettle', null])
+  assert.deepEqual(ritual.state.keeper.hands, ['kettle', null, null])
 })
 
 test('kettleInHand_whenPouredIntoACupOnTheTable_fillsIt', () => {
@@ -167,4 +167,54 @@ test('caddy_whenPickedUpOpen_isClosed', () => {
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
 
   assert.equal(ritual.vessel('caddy').isLidOpen, false)
+})
+
+test('middleHand_withBothHandsFull_growsAndTakesTheItem', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'pickUp', itemId: 'thermos' })
+
+  const events = ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
+
+  assert.deepEqual(ritual.state.keeper.hands, ['kettle', 'thermos', 'cup1'])
+  assert.equal(ritual.state.keeper.hasAMiddleHand, true)
+  assert.deepEqual(eventsOfType(events, 'middleHandGrown'), [{ type: 'middleHandGrown', itemId: 'cup1' }])
+})
+
+test('middleHand_whenAHandIsStillFree_doesNotGrow', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+
+  const events = ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUpWithAMiddleHand', reason: 'aHandIsFree' }])
+  assert.equal(ritual.state.keeper.hasAMiddleHand, false)
+})
+
+test('middleHand_whenItsItemIsPutDown_vanishesAndTakesNothingMore', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'pickUp', itemId: 'thermos' })
+  ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
+
+  const events = ritual.do({ type: 'putDown', itemId: 'cup1', spot: { placeId: 'table', x: 3, y: 0, z: 0 } })
+
+  assert.deepEqual(eventsOfType(events, 'middleHandVanished'), [{ type: 'middleHandVanished' }])
+  assert.equal(ritual.state.keeper.hasAMiddleHand, false)
+  assert.deepEqual(ritual.do({ type: 'pickUp', itemId: 'cup2' }), [{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }])
+})
+
+test('middleHand_forAThermosTooHotToTake_doesNotGrow', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+
+  const events = ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'thermos' })
+
+  assert.deepEqual(eventsOfType(events, 'middleHandGrown'), [])
+  assert.equal(ritual.state.keeper.hasAMiddleHand, false)
+  assert.deepEqual(ritual.state.keeper.hands, ['kettle', 'cup1', null])
 })

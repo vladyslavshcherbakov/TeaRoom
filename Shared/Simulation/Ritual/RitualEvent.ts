@@ -43,6 +43,8 @@ export type RefusalReason =
   | 'outOfReach'
   | 'notAtThatPlace'
   | 'handsFull'
+  | 'aHandIsFree'
+  | 'middleHandAlreadyGrown'
   | 'notInHand'
   | 'alreadyInHand'
   | 'noTapInThisRoom'
@@ -61,6 +63,8 @@ export type RitualEvent =
   | { readonly type: 'actionRefused'; readonly command: Command['type']; readonly reason: RefusalReason }
   | { readonly type: 'keeperMoved'; readonly placeId: string | null }
   | { readonly type: 'pickedUp'; readonly itemId: string; readonly handIndex: HandIndex }
+  | { readonly type: 'middleHandGrown'; readonly itemId: string }
+  | { readonly type: 'middleHandVanished' }
   | { readonly type: 'putDown'; readonly itemId: string; readonly spot: Spot }
   | { readonly type: 'vesselLidOpened'; readonly vesselId: string }
   | { readonly type: 'vesselLidClosed'; readonly vesselId: string }

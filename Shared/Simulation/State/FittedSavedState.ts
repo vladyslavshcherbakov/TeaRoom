@@ -23,13 +23,15 @@ const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
   if (savedVersion !== sessionStateVersion) return { kind: 'doesNotFit', problems: [`the saved state is version ${savedVersion}, the game reads version ${sessionStateVersion}`] }
   if (!isShape(saved)) return { kind: 'doesNotFit', problems: ['the saved state is not an object'] }
-  const roomId = saved['roomId']
+  const changes: string[] = []
+  const savedWithEveryHand = withTheMiddleHand(saved, changes)
+  const roomId = savedWithEveryHand['roomId']
   if (typeof roomId !== 'string' || catalog.rooms[roomId] === undefined) return { kind: 'doesNotFit', problems: [`the saved room ${String(roomId)} is not in the catalog`] }
   const fresh = initialSessionState(catalog, roomId)
-  const problems = shapeProblemsOf(fresh, saved)
+  const problems = shapeProblemsOf(fresh, savedWithEveryHand)
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
-  const state = structuredClone(saved) as SessionState
-  const changes = [...fitTheVessels(state, fresh), ...fitTheFigurines(state, fresh)]
+  const state = structuredClone(savedWithEveryHand) as SessionState
+  changes.push(...fitTheVessels(state, fresh), ...fitTheFigurines(state, fresh))
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
   problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
   if (state.teaId !== null && catalog.teas[state.teaId] === undefined) problems.push(`the saved tea ${state.teaId} is not in the catalog`)
@@ -75,7 +77,7 @@ function locationProblems(owner: string, location: ItemLocation): string[] {
     case 'onSurface':
       return shapeProblems(spotShape, location.spot, `${owner}'s spot`)
     case 'inHand':
-      return location.handIndex === 0 || location.handIndex === 1 ? [] : [`${owner} is held in a hand that does not exist, ${String(location.handIndex)}`]
+      return location.handIndex === 0 || location.handIndex === 1 || location.handIndex === 2 ? [] : [`${owner} is held in a hand that does not exist, ${String(location.handIndex)}`]
     case 'gone':
       return []
     default:
@@ -114,7 +116,9 @@ function fitTheVessels(state: SessionState, fresh: SessionState): string[] {
 
 function forgetTheVessel(state: SessionState, vesselId: string): void {
   delete state.vessels[vesselId]
-  state.keeper.hands = [state.keeper.hands[0] === vesselId ? null : state.keeper.hands[0], state.keeper.hands[1] === vesselId ? null : state.keeper.hands[1]]
+  const [firstHand, secondHand, middleHand] = state.keeper.hands
+  state.keeper.hands = [firstHand === vesselId ? null : firstHand, secondHand === vesselId ? null : secondHand, middleHand === vesselId ? null : middleHand]
+  if (middleHand === vesselId) state.keeper.hasAMiddleHand = false
   if (state.heater.itemIdOnTop === vesselId) state.heater.itemIdOnTop = null
   if (state.sink.itemIdInside === vesselId) state.sink.itemIdInside = null
   if (state.pour !== null && (state.pour.sourceId === vesselId || state.pour.targetId === vesselId)) state.pour = null
@@ -143,6 +147,13 @@ function dropPuddlesOnLostPlaces(state: SessionState, places: ReadonlySet<string
     changes.push(`the puddle on ${placeId} is left out, since the room no longer has that place`)
   }
   return changes
+}
+
+function withTheMiddleHand(saved: Shape, changes: string[]): Shape {
+  const keeper = saved['keeper']
+  if (!isShape(keeper) || !Array.isArray(keeper['hands']) || keeper['hands'].length !== 2) return saved
+  changes.push('the keeper, saved before the middle hand existed, gets an empty one that has not grown')
+  return { ...saved, keeper: { ...keeper, hands: [...keeper['hands'], null], hasAMiddleHand: false } }
 }
 
 function isShape(value: unknown): value is Shape {

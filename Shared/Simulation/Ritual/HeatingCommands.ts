@@ -4,7 +4,7 @@ import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { clothItemId, heaterSpotOf, spoonItemId, isKeeperAt, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { clothItemId, emptyTheHand, heaterSpotOf, spoonItemId, isKeeperAt, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
@@ -18,7 +18,7 @@ export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeate
   const heaterSpot = heaterSpotOf(draft)
   if (!isKeeperAt(draft, heaterSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the heater is at the ${heaterSpot.placeId}`)
   if (!isWithinReach(draft, location)) return refuse(draft, command, 'outOfReach', `${itemId} is ${whereIs(location)}`)
-  if (location.kind === 'inHand') draft.state.keeper.hands[location.handIndex] = null
+  if (location.kind === 'inHand') emptyTheHand(draft, location.handIndex)
   liftOutOfTheSink(draft, itemId)
   moveItem(draft, itemId, { kind: 'onSurface', spot: heaterSpot })
   draft.state.heater.itemIdOnTop = itemId

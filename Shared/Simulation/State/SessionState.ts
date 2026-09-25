@@ -5,13 +5,14 @@ import type { Liquid } from '../Physics/Liquid.ts'
 
 export type Phase = 'settingUp' | 'ritual' | 'resting' | 'ended'
 
-export type HandIndex = 0 | 1
+export type HandIndex = 0 | 1 | 2
 
 export type ItemLocation = { kind: 'onSurface'; spot: Spot } | { kind: 'inHand'; handIndex: HandIndex } | { kind: 'gone' }
 
 export type KeeperState = {
   placeId: string | null
-  hands: [string | null, string | null]
+  hands: [string | null, string | null, string | null]
+  hasAMiddleHand: boolean
 }
 
 export type VesselState = {
