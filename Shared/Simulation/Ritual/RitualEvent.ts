@@ -76,6 +76,8 @@ export type RitualEvent =
       readonly waterJudgement: WaterJudgement | null
       readonly onSeconds: number
       readonly kilowattHoursUsed: number
+      readonly secondsHeatedByItemId: Readonly<Record<string, number>>
+      readonly wasSwitchedOffByTheKeeper: boolean
     }
   | { readonly type: 'targetTemperatureReached'; readonly vesselId: string }
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
@@ -91,7 +93,7 @@ export type RitualEvent =
     }
   | { readonly type: 'putInTheSink'; readonly itemId: string }
   | { readonly type: 'tapTurnedOn' }
-  | { readonly type: 'tapTurnedOff'; readonly openSeconds: number; readonly drainedMl: number }
+  | { readonly type: 'tapTurnedOff'; readonly openSeconds: number; readonly drainedMl: number; readonly hasRunOntoAnItem: boolean }
   | { readonly type: 'teaScooped'; readonly grams: number }
   | { readonly type: 'leavesAdded'; readonly vesselId: string; readonly grams: number }
   | { readonly type: 'brewStarted'; readonly vesselId: string; readonly waterJudgement: WaterJudgement }

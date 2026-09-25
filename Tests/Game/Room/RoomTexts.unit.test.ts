@@ -90,18 +90,18 @@ test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
 })
 
 test('caption_ofATapTurnedOffAfterTwoMinutes_namesTheLitresThatWentDownTheDrain', () => {
-  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460 }], 0)
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460, hasRunOntoAnItem: false }], 0)
 
   assert.equal(lines.length, 1)
   assert.ok(lines[0]?.includes('4.5 litres'), lines.join(' / '))
 })
 
 test('caption_ofATapTurnedOffBeforeTwoMinutes_staysSilent', () => {
-  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 119, drainedMl: 4460 }], 0), [])
+  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'tapTurnedOff', openSeconds: 119, drainedMl: 4460, hasRunOntoAnItem: false }], 0), [])
 })
 
 test('caption_ofAHeaterSwitchedOffAfterTwoMinutes_remarksOnTheEnergy', () => {
-  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'heaterSwitchedOff', waterJudgement: null, onSeconds: 120, kilowattHoursUsed: 0.0667 }], 0)
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'heaterSwitchedOff', waterJudgement: null, onSeconds: 120, kilowattHoursUsed: 0.0667, secondsHeatedByItemId: {}, wasSwitchedOffByTheKeeper: true }], 0)
 
   const energyLines = Object.entries(englishTexts).filter(([key]) => key.startsWith('heaterRanLong.')).map(([, line]) => line.replace('{kilowattHours}', '0.07'))
   assert.equal(lines.length, 1)
@@ -109,7 +109,7 @@ test('caption_ofAHeaterSwitchedOffAfterTwoMinutes_remarksOnTheEnergy', () => {
 })
 
 test('caption_ofAHeaterSwitchedOffBeforeTwoMinutes_staysSilent', () => {
-  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'heaterSwitchedOff', waterJudgement: 'ideal', onSeconds: 119, kilowattHoursUsed: 0.066 }], 0), [])
+  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'heaterSwitchedOff', waterJudgement: 'ideal', onSeconds: 119, kilowattHoursUsed: 0.066, secondsHeatedByItemId: {}, wasSwitchedOffByTheKeeper: true }], 0), [])
 })
 
 test('remark_ofTheSillTappedTwice_changesItsLine', () => {
@@ -216,7 +216,7 @@ test('caption_ofAReturnWithOnlyTheCaddyToppedUp_staysSilent', () => {
   assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: false, caddyWasRefilled: true, caddyWasEmpty: false }], 0), [])
 })
 
-const tapRanForTwoMinutes = { type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460 } as const
+const tapRanForTwoMinutes = { type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460, hasRunOntoAnItem: false } as const
 
 const spillOf10Ml = { type: 'pourFinished', sourceId: 'kettle', targetId: 'bowl', pouredMl: 100, spilledMl: 10 } as const
 

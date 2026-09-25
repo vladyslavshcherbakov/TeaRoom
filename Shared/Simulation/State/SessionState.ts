@@ -30,6 +30,7 @@ export type HeaterState = {
   isOn: boolean
   switchedOnAtSeconds: number
   itemIdOnTop: string | null
+  secondsHeatedByItemId: Record<string, number>
   hasAnnouncedTargetTemperature: boolean
   hasAnnouncedBoilingAway: boolean
 }
@@ -70,6 +71,7 @@ export type RunningWaterState = {
   drainedMl: number
   hasOverflowed: boolean
   isRunningOverTheLid: boolean
+  hasRunOntoAnItem: boolean
 }
 
 export type SinkState = {

@@ -34,7 +34,7 @@ export function finishRitual(draft: Draft): void {
   if (draft.state.pour !== null) finishPour(draft)
   if (draft.state.heater.isOn) {
     note(draft, 'heater switched off because the ritual finished')
-    switchTheHeaterOff(draft, null)
+    switchTheHeaterOff(draft, null, false)
   }
   const openLids = openLidsOf(draft)
   note(draft, `ritual finished: ${wetMlOnEveryPlace(draft.state).toFixed(1)} ml wet on every place, open lids: ${openLids.join(', ') || 'none'}`)

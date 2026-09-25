@@ -42,6 +42,7 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   draft.state.heater.isOn = true
   draft.state.heater.switchedOnAtSeconds = draft.state.elapsedSeconds
+  draft.state.heater.secondsHeatedByItemId = {}
   draft.state.heater.hasAnnouncedTargetTemperature = false
   draft.state.heater.hasAnnouncedBoilingAway = false
   note(draft, `heater switched on with ${draft.state.heater.itemIdOnTop ?? 'nothing'} on top`)
@@ -51,16 +52,22 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
 export function switchHeaterOff(draft: Draft, command: CommandOfType<'switchHeaterOff'>): void {
   if (!draft.state.heater.isOn) return refuse(draft, command, 'heaterAlreadyOff')
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
-  switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft))
+  switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), true)
 }
 
-export function switchTheHeaterOff(draft: Draft, waterJudgement: WaterJudgement | null): void {
+export function switchTheHeaterOff(draft: Draft, waterJudgement: WaterJudgement | null, wasSwitchedOffByTheKeeper: boolean): void {
   const heater = draft.state.heater
   heater.isOn = false
   const onSeconds = draft.state.elapsedSeconds - heater.switchedOnAtSeconds
   const kilowattHours = kilowattHoursUsed(definitionIn(draft.catalog, 'heaters', heater.definitionId), onSeconds)
-  note(draft, `heater switched off after ${onSeconds.toFixed(1)} s on, ${kilowattHours.toFixed(3)} kWh used`)
-  draft.events.push({ type: 'heaterSwitchedOff', waterJudgement, onSeconds, kilowattHoursUsed: kilowattHours })
+  const secondsHeatedByItemId = { ...heater.secondsHeatedByItemId }
+  note(draft, `heater switched off ${wasSwitchedOffByTheKeeper ? 'by the keeper' : 'by the end of the ritual'} after ${onSeconds.toFixed(1)} s on, ${kilowattHours.toFixed(3)} kWh used, having heated ${describeSecondsHeated(secondsHeatedByItemId)}`)
+  draft.events.push({ type: 'heaterSwitchedOff', waterJudgement, onSeconds, kilowattHoursUsed: kilowattHours, secondsHeatedByItemId, wasSwitchedOffByTheKeeper })
+}
+
+function describeSecondsHeated(secondsHeatedByItemId: Readonly<Record<string, number>>): string {
+  const heated = Object.entries(secondsHeatedByItemId).map(([itemId, seconds]) => `${itemId} for ${seconds.toFixed(1)} s`)
+  return heated.length === 0 ? 'nothing' : heated.join(', ')
 }
 
 function isKeeperAtTheHeater(draft: Draft): boolean {

@@ -23,6 +23,7 @@ export function stepTheWorld(draft: Draft, seconds: number): void {
   if (draft.state.phase === 'ended') return
   coolVessels(draft, seconds)
   heatVesselOnHeater(draft, seconds)
+  countTheSecondsOnTheWorkingHeater(draft, seconds)
   heatOrCoolMetalShells(draft, seconds)
   heatTheClothOnTheHeater(draft, seconds)
   charTheSpoonOnTheHeater(draft, seconds)
@@ -45,6 +46,12 @@ function heatVesselOnHeater(draft: Draft, seconds: number): void {
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
   if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)
+}
+
+function countTheSecondsOnTheWorkingHeater(draft: Draft, seconds: number): void {
+  const heater = draft.state.heater
+  if (!heater.isOn || heater.itemIdOnTop === null) return
+  heater.secondsHeatedByItemId[heater.itemIdOnTop] = (heater.secondsHeatedByItemId[heater.itemIdOnTop] ?? 0) + seconds
 }
 
 function heatOrCoolMetalShells(draft: Draft, seconds: number): void {

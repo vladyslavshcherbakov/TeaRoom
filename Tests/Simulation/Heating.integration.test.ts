@@ -4,6 +4,51 @@ import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
+test('heater_whenSwitchedOffAfterHeatingTheKettle_saysHowLongItHeatedIt', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.wait(10)
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  assertNear(eventsOfType(events, 'heaterSwitchedOff')[0]?.secondsHeatedByItemId['kettle'] ?? 0, 10)
+})
+
+test('heater_whenSwitchedOffAfterTheKettleWasTakenOffAndTheSpoonPutOn_namesBothWithTheirSeconds', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.wait(10)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'counter', x: 2, y: 0, z: 0 } })
+  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
+  ritual.wait(5)
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  const secondsHeated = eventsOfType(events, 'heaterSwitchedOff')[0]?.secondsHeatedByItemId ?? {}
+  assert.deepEqual(Object.keys(secondsHeated).sort(), ['kettle', 'spoon'])
+  assertNear(secondsHeated['spoon'] ?? 0, 5)
+})
+
+test('heater_whenSwitchedOffEmpty_saysItHeatedNothingAndTheKeeperSwitchedItOff', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(10)
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  const [switchedOff] = eventsOfType(events, 'heaterSwitchedOff')
+  assert.deepEqual(switchedOff?.secondsHeatedByItemId, {})
+  assert.equal(switchedOff?.wasSwitchedOffByTheKeeper, true)
+})
+
+test('heater_whenTheRitualFinishesWhileItWorks_saysTheKeeperDidNotSwitchItOff', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const events = ritual.do({ type: 'finishRitual' })
+
+  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, false)
+})
+
 function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitual {
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })

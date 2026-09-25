@@ -284,6 +284,28 @@ test('drainedWater_whileItemsGoInAndOutOfTheSink_countsFromWhenTheTapOpened', ()
   assertNear(eventsOfType(events, 'tapTurnedOff')[0]?.drainedMl ?? 0, 400)
 })
 
+test('tap_whenTurnedOffAfterRunningIntoTheEmptySinkAllAlong_saysItRanOntoNothing', () => {
+  const ritual = openKettleInHandAtTheCounter()
+  ritual.do({ type: 'turnTheTapOn' })
+  ritual.wait(3)
+
+  const events = ritual.do({ type: 'turnTheTapOff' })
+
+  assert.equal(eventsOfType(events, 'tapTurnedOff')[0]?.hasRunOntoAnItem, false)
+})
+
+test('tap_whenTurnedOffAfterTheKettleWasTakenOutOfTheSink_saysItRanOntoAnItem', () => {
+  const ritual = openKettleInHandAtTheCounter()
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.wait(1)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.wait(3)
+
+  const events = ritual.do({ type: 'turnTheTapOff' })
+
+  assert.equal(eventsOfType(events, 'tapTurnedOff')[0]?.hasRunOntoAnItem, true)
+})
+
 function openKettleInHandAtTheCounter(): TestRitual {
   const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })

@@ -15,7 +15,7 @@ type Shape = { readonly [key: string]: unknown }
 
 const leavesShape: Leaves = { teaId: '', grams: 0, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
 const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
-const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false }
+const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false, hasRunOntoAnItem: false }
 const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, location: { kind: 'gone' } }
 const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
@@ -26,7 +26,7 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
   if (savedVersion !== sessionStateVersion) return { kind: 'doesNotFit', problems: [`the saved state is version ${savedVersion}, the game reads version ${sessionStateVersion}`] }
   if (!isShape(saved)) return { kind: 'doesNotFit', problems: ['the saved state is not an object'] }
   const changes: string[] = []
-  const savedWithEveryHand = withClothsById(withTheMiddleHand(saved, changes), changes)
+  const savedWithEveryHand = withWhatTheHeaterAndTheTapRanOnto(withClothsById(withTheMiddleHand(saved, changes), changes), changes)
   const roomId = savedWithEveryHand['roomId']
   if (typeof roomId !== 'string' || catalog.rooms[roomId] === undefined) return { kind: 'doesNotFit', problems: [`the saved room ${String(roomId)} is not in the catalog`] }
   const fresh = initialSessionState(catalog, roomId)
@@ -189,6 +189,18 @@ function withClothsById(saved: Shape, changes: string[]): Shape {
   changes.push(`the one cloth of a save from before a room could hold several becomes the cloth "${clothIdOfSavesWithOneCloth}"`)
   const savedWithoutTheOneCloth = Object.fromEntries(Object.entries(saved).filter(([key]) => key !== 'cloth'))
   return { ...savedWithoutTheOneCloth, cloths: { [clothIdOfSavesWithOneCloth]: { ...cloth, id: clothIdOfSavesWithOneCloth } } }
+}
+
+function withWhatTheHeaterAndTheTapRanOnto(saved: Shape, changes: string[]): Shape {
+  const heater = saved['heater']
+  const sink = saved['sink']
+  const heaterWithItsRecord = isShape(heater) && heater['secondsHeatedByItemId'] === undefined ? { ...heater, secondsHeatedByItemId: {} } : heater
+  const runningWater = isShape(sink) ? sink['runningWater'] : undefined
+  const hasRunOntoAnItem = isShape(sink) && sink['itemIdInside'] !== null
+  const sinkWithItsRecord = isShape(sink) && isShape(runningWater) && runningWater['hasRunOntoAnItem'] === undefined ? { ...sink, runningWater: { ...runningWater, hasRunOntoAnItem } } : sink
+  if (heaterWithItsRecord === heater && sinkWithItsRecord === sink) return saved
+  changes.push(`a save from before the heater and the tap remembered what they ran onto starts remembering now${sinkWithItsRecord === sink ? '' : `, and its running tap counts as having run onto ${hasRunOntoAnItem ? 'the item in the sink' : 'nothing'}`}`)
+  return { ...saved, heater: heaterWithItsRecord, sink: sinkWithItsRecord }
 }
 
 function isShape(value: unknown): value is Shape {

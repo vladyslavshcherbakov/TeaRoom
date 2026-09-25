@@ -13,7 +13,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     teaId: null,
     keeper: { placeId: room.keeperStartsAt, hands: [null, null, null], hasAMiddleHand: false },
     vessels: vesselsInTheRoom(room),
-    heater: { definitionId: room.heaterId, isOn: false, switchedOnAtSeconds: 0, itemIdOnTop: null, hasAnnouncedTargetTemperature: false, hasAnnouncedBoilingAway: false },
+    heater: { definitionId: room.heaterId, isOn: false, switchedOnAtSeconds: 0, itemIdOnTop: null, secondsHeatedByItemId: {}, hasAnnouncedTargetTemperature: false, hasAnnouncedBoilingAway: false },
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
     cloths: clothsInTheRoom(room),
     pour: null,

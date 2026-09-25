@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
-import { testCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
+import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('kettle_whenTheKeeperIsAwayAnHour_coolsToTheRoom', () => {
@@ -189,6 +189,21 @@ test('savedState_fromBeforeARoomCouldHoldSeveralCloths_resumesWithItsOneClothUnd
 
   assert.deepEqual(resumed.cloth().location, { kind: 'inHand', handIndex: 0 })
   assert.deepEqual(resumed.state.keeper.hands, ['cloth', null, null])
+})
+
+test('savedState_fromBeforeTheTapRememberedWhatItRanOnto_resumesCountingTheItemInTheSinkAsRunOnto', () => {
+  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  const savedState = ritual.savedState as { heater: Record<string, unknown>; sink: { runningWater: Record<string, unknown> } }
+  delete savedState.heater['secondsHeatedByItemId']
+  delete savedState.sink.runningWater['hasRunOntoAnItem']
+
+  const resumed = TestRitual.resumedFrom(savedState, testHouseCatalog())
+
+  assert.deepEqual(resumed.state.heater.secondsHeatedByItemId, {})
+  assert.equal(resumed.state.sink.runningWater?.hasRunOntoAnItem, true)
 })
 
 test('savedState_whenTheRoomGainedASecondCloth_laysTheNewClothAtItsStart', () => {

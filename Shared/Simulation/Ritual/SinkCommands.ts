@@ -49,10 +49,10 @@ export function turnTheTapOff(draft: Draft, command: CommandOfType<'turnTheTapOf
   note(
     draft,
     `tap closed over ${draft.state.sink.itemIdInside ?? 'the empty sink'}: ${runningWater.filledMl.toFixed(1)} ml went in, ${runningWater.drainedMl.toFixed(1)} ml down the drain; ` +
-      `open for ${openSeconds.toFixed(1)} s, ${runningWater.drainedSinceOpenedMl.toFixed(1)} ml down the drain since it opened` +
+      `open for ${openSeconds.toFixed(1)} s, ${runningWater.drainedSinceOpenedMl.toFixed(1)} ml down the drain since it opened, ${runningWater.hasRunOntoAnItem ? 'having run onto an item' : 'into the empty sink all along'}` +
       describeWhatStandsInTheSink(draft),
   )
-  draft.events.push({ type: 'tapTurnedOff', openSeconds, drainedMl: runningWater.drainedSinceOpenedMl })
+  draft.events.push({ type: 'tapTurnedOff', openSeconds, drainedMl: runningWater.drainedSinceOpenedMl, hasRunOntoAnItem: runningWater.hasRunOntoAnItem })
 }
 
 export function liftOutOfTheSink(draft: Draft, itemId: string): void {
@@ -89,6 +89,7 @@ function runningWaterOver(draft: Draft, itemId: string | null, runningBefore: Ru
     drainedMl: 0,
     hasOverflowed: false,
     isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel),
+    hasRunOntoAnItem: (runningBefore?.hasRunOntoAnItem ?? false) || itemId !== null,
   }
 }
 
