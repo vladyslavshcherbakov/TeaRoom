@@ -362,13 +362,8 @@ export class RoomPlay {
   }
 
   private toggleLidOf(itemId: string): void {
-    const { caddy, vessels } = this.ritual.state
-    if (itemId === caddyItemId) {
-      this.ritual.dispatch({ type: caddy.isOpen ? 'closeCaddy' : 'openCaddy' })
-      return
-    }
     const vesselId = itemId
-    this.ritual.dispatch({ type: vessels[vesselId]?.isLidOpen === true ? 'closeVesselLid' : 'openVesselLid', vesselId })
+    this.ritual.dispatch({ type: this.ritual.state.vessels[vesselId]?.isLidOpen === true ? 'closeVesselLid' : 'openVesselLid', vesselId })
   }
 
   private offerTheChosenCupTo(figurineId: string): void {

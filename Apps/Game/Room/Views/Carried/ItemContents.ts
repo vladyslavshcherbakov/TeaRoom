@@ -8,6 +8,7 @@ import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
+import type { LooseLeavesLook } from './CarriedShapeLook.ts'
 import { mostPuffsFromOneSource, type CarriedModel } from './CarriedModel.ts'
 import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
@@ -33,6 +34,8 @@ const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
 const leavesAboveTheWaterMetres = 0.0015
+const leavesBelowTheLiquidMetres = 0.004
+const flattestSoakedHeapShare = 0.05
 const redHotMetal = new THREE.Color('#3a0904')
 const dullRedHeat = new THREE.Color('#8a1000')
 const brightRedHeat = new THREE.Color('#ff2a00')
@@ -79,7 +82,7 @@ function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], 
 function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
   const looseLeaves = model.look.looseLeaves
   if (looseLeaves === null) return
-  const teaId = scene.state.caddy.teaId
+  const teaId = scene.state.teaId
   if (model.leaves === null || model.leaves.teaId !== teaId) {
     if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
     const pile = new LeafPile(teaLookFor(teaId), looseLeaves.pile)
@@ -88,7 +91,16 @@ function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItem
     holder.add(pile.mesh)
     model.leaves = { pile, teaId }
   }
-  model.leaves.pile.showFill(looseLeaves.fillShareIn(scene.table))
+  const fillShare = looseLeaves.fillShareIn(scene.table)
+  model.leaves.pile.showFill(fillShare)
+  holder.scale.y = heapSquashUnderTheLiquid(model, looseLeaves, fillShare, scene.table.vessels[model.itemId])
+}
+
+function heapSquashUnderTheLiquid(model: CarriedModel, looseLeaves: LooseLeavesLook, fillShare: number, vessel: TableViewState.Vessel | undefined): number {
+  const heapHeight = fillShare * looseLeaves.pile.heightMetres
+  if (vessel === undefined || vessel.fillShare <= 0 || model.liquidLevel === null || heapHeight <= 0) return 1
+  const roomUnderTheSurface = model.liquidLevel(vessel.fillShare).heightMetres - leavesBelowTheLiquidMetres - looseLeaves.heapStartsAt.y
+  return Math.min(1, Math.max(flattestSoakedHeapShare, roomUnderTheSurface / heapHeight))
 }
 
 function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {

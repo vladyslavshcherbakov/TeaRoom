@@ -34,7 +34,6 @@ export type RoomDefinition = {
   readonly vessels: readonly RoomVessel[]
   readonly figurineIds: readonly string[]
   readonly caddyGrams: number
-  readonly caddyStartsAt: Spot
   readonly spoonCapacityGrams: number
   readonly spoonStartsAt: Spot
   readonly clothStartsAt: Spot

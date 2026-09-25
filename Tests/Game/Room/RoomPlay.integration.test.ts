@@ -379,25 +379,25 @@ test('caddyLid_whenTappedOnTheTeaTable_opens', () => {
 
   room.tap({ kind: 'lid', itemId: 'caddy' })
 
-  assert.equal(room.state.caddy.isOpen, true)
+  assert.equal(room.state.vessels['caddy']?.isLidOpen, true)
 })
 
 test('spoon_whenChosenAndTheOpenCaddyIsTapped_fillsWithLeaves', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
-  room.session.dispatch({ type: 'openCaddy' })
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
   room.takeAndChoose('spoon')
 
   room.tap({ kind: 'item', itemId: 'caddy' })
 
   assert.equal(room.state.spoon.grams, 3)
-  assert.equal(room.state.caddy.location.kind, 'onSurface')
+  assert.equal(room.state.vessels['caddy']?.location.kind, 'onSurface')
 })
 
 test('spoon_whenFullAndTheOpenKettleIsTapped_tipsTheLeavesIntoIt', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()
-  room.session.dispatch({ type: 'openCaddy' })
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
   room.takeAndChoose('spoon')
   room.session.dispatch({ type: 'scoopTea', depth: 1 })

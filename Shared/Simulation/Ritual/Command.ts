@@ -9,8 +9,6 @@ export type Command =
   | { readonly type: 'putDown'; readonly itemId: string; readonly spot: Spot }
   | { readonly type: 'openVesselLid'; readonly vesselId: string }
   | { readonly type: 'closeVesselLid'; readonly vesselId: string }
-  | { readonly type: 'openCaddy' }
-  | { readonly type: 'closeCaddy' }
   | { readonly type: 'placeOnHeater'; readonly itemId: string }
   | { readonly type: 'switchHeaterOn' }
   | { readonly type: 'switchHeaterOff' }

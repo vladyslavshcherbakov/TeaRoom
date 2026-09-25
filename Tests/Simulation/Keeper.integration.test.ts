@@ -37,7 +37,7 @@ test('thirdItem_whenBothHandsAreFull_isRefusedAndStaysOnTheShelf', () => {
   const events = ritual.do({ type: 'pickUp', itemId: 'caddy' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }])
-  assert.equal(ritual.state.caddy.location.kind, 'onSurface')
+  assert.equal(ritual.vessel('caddy').location.kind, 'onSurface')
 })
 
 test('cup_whenPutDownOnTheTable_restsExactlyWhereItWasPut', () => {
@@ -143,9 +143,9 @@ test('caddy_whenOnTheShelfAndTheKeeperAtTheTable_cannotBeOpened', () => {
   const ritual = houseRitual()
   ritual.do({ type: 'standAt', placeId: 'table' })
 
-  const events = ritual.do({ type: 'openCaddy' })
+  const events = ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'openCaddy', reason: 'outOfReach' }])
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'openVesselLid', reason: 'outOfReach' }])
 })
 
 test('kettle_whenPickedUpWithItsLidOpen_hasItsLidClosed', () => {
@@ -162,9 +162,9 @@ test('kettle_whenPickedUpWithItsLidOpen_hasItsLidClosed', () => {
 test('caddy_whenPickedUpOpen_isClosed', () => {
   const ritual = houseRitual()
   ritual.do({ type: 'standAt', placeId: 'shelf' })
-  ritual.do({ type: 'openCaddy' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
 
-  assert.equal(ritual.state.caddy.isOpen, false)
+  assert.equal(ritual.vessel('caddy').isLidOpen, false)
 })

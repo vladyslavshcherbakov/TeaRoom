@@ -1,25 +1,28 @@
 import type { CommandOfType } from './Command.ts'
 import { isClosedAgainstFilling, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { isWithinReach, whereIs } from './Reach.ts'
+import { caddyItemId, isWithinReach, whereIs } from './Reach.ts'
 
 export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void {
-  const { caddy, spoon } = draft.state
+  const spoon = draft.state.spoon
+  const caddy = draft.state.vessels[caddyItemId]
+  if (caddy === undefined) return refuse(draft, command, 'unknownVessel', 'the room has no caddy')
   if (spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(spoon.location)}`)
   if (!isWithinReach(draft, caddy.location)) return refuse(draft, command, 'outOfReach', `the caddy is ${whereIs(caddy.location)}`)
-  if (!caddy.isOpen) return refuse(draft, command, 'lidClosed', 'caddy is closed')
-  if (caddy.grams <= 0) return refuse(draft, command, 'caddyIsEmpty')
+  if (!caddy.isLidOpen) return refuse(draft, command, 'lidClosed', 'caddy is closed')
+  const gramsInTheCaddy = caddy.leaves?.grams ?? 0
+  if (caddy.leaves === null || gramsInTheCaddy <= 0) return refuse(draft, command, 'caddyIsEmpty')
   if (spoon.grams >= spoon.capacityGrams) return refuse(draft, command, 'spoonIsFull', `spoon holds ${spoon.grams.toFixed(1)} g`)
   const depth = Math.min(1, Math.max(0, command.depth))
-  const grams = Math.min(spoon.capacityGrams * depth, spoon.capacityGrams - spoon.grams, caddy.grams)
-  caddy.grams -= grams
+  const grams = Math.min(spoon.capacityGrams * depth, spoon.capacityGrams - spoon.grams, gramsInTheCaddy)
+  caddy.leaves = gramsInTheCaddy - grams > 0 ? { ...caddy.leaves, grams: gramsInTheCaddy - grams } : null
   spoon.grams += grams
-  note(draft, `scooped ${grams.toFixed(2)} g at depth ${depth.toFixed(2)}: spoon ${spoon.grams.toFixed(2)} g, caddy ${caddy.grams.toFixed(2)} g`)
+  note(draft, `scooped ${grams.toFixed(2)} g at depth ${depth.toFixed(2)}: spoon ${spoon.grams.toFixed(2)} g, caddy ${(gramsInTheCaddy - grams).toFixed(2)} g`)
   draft.events.push({ type: 'teaScooped', grams })
 }
 
 export function tipSpoonInto(draft: Draft, command: CommandOfType<'tipSpoonInto'>): void {
   const vessel = draft.state.vessels[command.vesselId]
-  const teaId = draft.state.caddy.teaId
+  const teaId = draft.state.teaId
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
   if (draft.state.spoon.grams <= 0 || teaId === null) return refuse(draft, command, 'spoonIsEmpty')
   if (draft.state.spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(draft.state.spoon.location)}`)

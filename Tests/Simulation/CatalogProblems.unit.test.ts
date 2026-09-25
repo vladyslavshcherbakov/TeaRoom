@@ -33,10 +33,19 @@ test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
       { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
       { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
       { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 2, y: 0, z: 0 } },
+      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: { placeId: 'table', x: 3, y: 0, z: 0 } },
     ],
   })
 
   assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" repeats vessel id "cup1"'])
+})
+
+test('contentProblems_whenTheRoomHasNoCaddy_sayWhereTheTeaIsMissing', () => {
+  const catalog = catalogWithRoomChanges({
+    vessels: [{ id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],
+  })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" has no vessel "caddy" to keep its tea in'])
 })
 
 test('contentProblems_whenAFigurineLikesAnUnknownTea_nameTheFigurineAndTea', () => {

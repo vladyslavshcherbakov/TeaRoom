@@ -64,8 +64,6 @@ export type RitualEvent =
   | { readonly type: 'putDown'; readonly itemId: string; readonly spot: Spot }
   | { readonly type: 'vesselLidOpened'; readonly vesselId: string }
   | { readonly type: 'vesselLidClosed'; readonly vesselId: string }
-  | { readonly type: 'caddyOpened' }
-  | { readonly type: 'caddyClosed' }
   | { readonly type: 'placedOnHeater'; readonly itemId: string }
   | { readonly type: 'takenOffHeater'; readonly itemId: string; readonly waterJudgement: WaterJudgement | null }
   | { readonly type: 'heaterSwitchedOn' }

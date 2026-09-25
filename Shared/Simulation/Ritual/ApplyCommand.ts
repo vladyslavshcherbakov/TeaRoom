@@ -7,7 +7,7 @@ import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } f
 import { pickUp, putDown, standAt } from './KeeperCommands.ts'
 import { placeOnHeater, switchHeaterOff, switchHeaterOn } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
-import { moveCaddyLid, moveVesselLid } from './LidCommands.ts'
+import { moveVesselLid } from './LidCommands.ts'
 import { refusalInPhase } from './PhaseRules.ts'
 import { adjustPour, startPouring, stopPouring } from './PouringCommands.ts'
 import { offerCup, tasteCup } from './ServingCommands.ts'
@@ -42,9 +42,6 @@ function carryOut(draft: Draft, command: Command): void {
     case 'openVesselLid':
     case 'closeVesselLid':
       return moveVesselLid(draft, command)
-    case 'openCaddy':
-    case 'closeCaddy':
-      return moveCaddyLid(draft, command)
     case 'placeOnHeater':
       return placeOnHeater(draft, command)
     case 'switchHeaterOn':

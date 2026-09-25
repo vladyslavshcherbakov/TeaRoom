@@ -1,6 +1,7 @@
 import type { Catalog } from './Catalog.ts'
 import type { RoomDefinition } from './RoomDefinition.ts'
 import type { TeaDefinition } from './TeaDefinition.ts'
+import { caddyItemId } from '../Ritual/Reach.ts'
 
 export function problemsOpeningRoom(catalog: Catalog, roomId: string): string[] {
   const room = catalog.rooms[roomId]
@@ -23,6 +24,7 @@ function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
     }
   }
   const vesselIds = room.vessels.map((vessel) => vessel.id)
+  if (!vesselIds.includes(caddyItemId)) problems.push(`room "${room.id}" has no vessel "${caddyItemId}" to keep its tea in`)
   for (const repeatedId of new Set(vesselIds.filter((id, index) => vesselIds.indexOf(id) !== index))) {
     problems.push(`room "${room.id}" repeats vessel id "${repeatedId}"`)
   }
@@ -39,7 +41,6 @@ function problemsWithPlaces(room: RoomDefinition): string[] {
     { what: 'the ritual happens at', placeId: room.ritualPlaceId },
     { what: 'the heater stands at', placeId: room.heaterSpot.placeId },
     { what: 'the sink is at', placeId: room.tap?.sinkSpot.placeId ?? null },
-    { what: 'the caddy starts at', placeId: room.caddyStartsAt.placeId },
     { what: 'the spoon starts at', placeId: room.spoonStartsAt.placeId },
     { what: 'the cloth starts at', placeId: room.clothStartsAt.placeId },
     ...room.vessels.map((vessel) => ({ what: `"${vessel.id}" starts at`, placeId: vessel.startsAt.placeId })),

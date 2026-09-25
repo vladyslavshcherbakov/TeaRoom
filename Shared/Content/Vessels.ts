@@ -35,3 +35,15 @@ export const teaBowl: VesselDefinition = {
   canHoldLeaves: true,
   isDrinkable: true,
 }
+
+export const teaCaddy: VesselDefinition = {
+  id: 'teaCaddy',
+  capacityMl: 600,
+  maxPourMlPerSecond: 30,
+  coolingPerSecond: 0.006,
+  lid: { mustBeOpenToPour: true, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 2 },
+  canSitOnHeater: false,
+  hasAMetalShell: false,
+  canHoldLeaves: true,
+  isDrinkable: true,
+}

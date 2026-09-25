@@ -4,9 +4,9 @@ import { clothWetMlAfterWringing } from '../Physics/Table.ts'
 import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { caddyItemId, clothItemId, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { clothItemId, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
 
-const itemsKeptOutOfTheSink: ReadonlySet<string> = new Set([caddyItemId, spoonItemId])
+const itemsKeptOutOfTheSink: ReadonlySet<string> = new Set([spoonItemId])
 
 export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'>): void {
   const tap = tapOf(draft)

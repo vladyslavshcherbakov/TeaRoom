@@ -10,11 +10,11 @@ The world advances in fixed steps of 0.05 s, whatever the frame rate. A frame ha
 
 ## Places and hands
 
-A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's two hands. A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`. The spot keeps the exact position where the item was put down, so the room can show it there.
+A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy among them, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's two hands. A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`. The spot keeps the exact position where the item was put down, so the room can show it there.
 
 The keeper stands at one place, or at none while walking. An item is within reach when it is in a hand, or on a surface at the place where the keeper stands.
 
-- Picking up needs the item within reach and a free hand. The first free hand takes it, and an open lid of the vessel or the caddy closes. Picking up the kettle from the heater lifts it off, and the water is judged if the heater was on.
+- Picking up needs the item within reach and a free hand. The first free hand takes it, and an open lid of the vessel closes. Picking up the kettle from the heater lifts it off, and the water is judged if the heater was on.
 - Putting down needs the item in a hand and the spot at the keeper's place.
 - The heater's switch and the heater plate need the keeper at the heater's place. Putting a vessel on the heater takes it from the hand or from the same surface.
 - Pouring needs the source and the target within reach. Walking away ends a pour.
@@ -46,7 +46,7 @@ A vessel cannot be poured while it stands on the heater. A vessel whose lid must
 
 A room may have a sink with a tap, at one spot of one of its places, with the temperature of the tap's water and its flow in ml per second. The quiet room's sink is on the counter, its water is 18 °C at 50 ml/s, and its kettle starts empty.
 
-The keeper puts an item from a hand into the sink while standing at the sink's place. One item fits at a time. A vessel or the cloth may go in, and the caddy and the spoon may not. Putting an item in turns the tap on if it is off. The keeper turns the tap on and off only at the sink's place.
+The keeper puts an item from a hand into the sink while standing at the sink's place. One item fits at a time. A vessel, the caddy among them, or the cloth may go in, and the spoon may not. Putting an item in turns the tap on if it is off. The keeper turns the tap on and off only at the sink's place.
 
 The tap runs until it is turned off, also after the keeper walks away. It fills the vessel in the sink. A vessel whose lid must be open to be filled goes in with its lid closed too, and then the water runs over the lid down the drain until the lid is opened, and over it again if the lid is closed. The tap water mixes by volume with what the vessel holds. Once the vessel is full, the rest runs over the rim down the drain: the core reports the first overflow, and the table stays dry. The water running over the rim carries out what the vessel held, so tea in it fades towards the tap's water and hot water cools towards the tap's temperature, and the leaves in it are washed out: every full vessel's worth of water that runs over takes all but a seventh of them, and below 0.1 g none are left. A tea bowl that the tap ran over while it stood in the sink is emptied as it leaves the sink, because it was rinsed and its water poured away. The kettle and the thermos keep their water, because they are filled at the sink. With nothing in the sink, the water runs down the drain. Turning the tap off reports how long it was open and how much of its water ran down the drain since it opened, whatever went into the sink or came out of it meanwhile.
 
@@ -54,7 +54,7 @@ An item leaves the sink when it is picked up or put on the heater. Picking it up
 
 ## Leaves and brewing
 
-The caddy opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from.
+The caddy is a vessel with a lid, and the room's leaves lie in it: the ritual fills it with the room's `caddyGrams` of the chosen tea. It opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from. Water poured into the open caddy brews all its leaves at once, so its tea turns extremely strong within seconds. The keeper may pour it out or sip it straight from the caddy. In the sink with its lid open, the tap fills the caddy and washes every leaf out, and the room has no tea left.
 
 A brew starts when leaves and water first share a vessel, whichever arrives second. While it lasts:
 

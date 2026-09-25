@@ -33,13 +33,6 @@ export type HeaterState = {
   hasAnnouncedBoilingAway: boolean
 }
 
-export type CaddyState = {
-  teaId: string | null
-  grams: number
-  isOpen: boolean
-  location: ItemLocation
-}
-
 export type SpoonState = {
   grams: number
   capacityGrams: number
@@ -103,7 +96,6 @@ export type SessionState = {
   keeper: KeeperState
   vessels: Record<string, VesselState>
   heater: HeaterState
-  caddy: CaddyState
   spoon: SpoonState
   cloth: ClothState
   pour: PourState | null

@@ -4,6 +4,7 @@ import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { switchTheHeaterOff } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
+import { caddyItemId } from './Reach.ts'
 
 export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>): void {
   if (draft.catalog.teas[command.teaId] === undefined) {
@@ -11,8 +12,10 @@ export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>)
   }
   draft.state.phase = 'ritual'
   draft.state.teaId = command.teaId
-  draft.state.caddy.teaId = command.teaId
-  note(draft, `ritual began with ${command.teaId}, caddy holds ${draft.state.caddy.grams} g`)
+  const caddy = draft.state.vessels[caddyItemId]
+  const caddyGrams = definitionIn(draft.catalog, 'rooms', draft.state.roomId).caddyGrams
+  if (caddy !== undefined) caddy.leaves = { teaId: command.teaId, grams: caddyGrams, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
+  note(draft, `ritual began with ${command.teaId}, the caddy holds ${caddyGrams} g of it`)
   draft.events.push({ type: 'ritualBegan', teaId: command.teaId })
 }
 
@@ -46,8 +49,7 @@ export function leaveRoom(draft: Draft): void {
 }
 
 function openLidsOf(draft: Draft): string[] {
-  const openLids = Object.values(draft.state.vessels)
+  return Object.values(draft.state.vessels)
     .filter((vessel) => vesselDefinitionOf(draft, vessel).lid !== null && vessel.isLidOpen)
     .map((vessel) => vessel.id)
-  return draft.state.caddy.isOpen ? [...openLids, 'caddy'] : openLids
 }

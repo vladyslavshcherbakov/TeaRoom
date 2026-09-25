@@ -116,14 +116,15 @@ test('sink_whenSomethingIsInIt_refusesASecondItem', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'putInTheSink', reason: 'sinkOccupied' }])
 })
 
-test('sink_forTheCaddy_isRefused', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
-  ritual.do({ type: 'standAt', placeId: 'counter' })
+test('caddy_underTheRunningTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', () => {
+  const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
+  ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
-  const events = ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
+  ritual.wait(60)
 
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'putInTheSink', reason: 'cannotGoInTheSink' }])
+  assert.equal(ritual.vessel('caddy').leaves, null)
 })
 
 test('sink_awayFromTheCounter_isRefused', () => {

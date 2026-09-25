@@ -1,4 +1,4 @@
-import { caddyItemId, clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 
@@ -13,10 +13,10 @@ const shapeByVesselDefinitionId: Readonly<Record<string, CarriedShape>> = {
   clayKettle: 'kettle',
   thermos: 'thermos',
   teaBowl: 'bowl',
+  teaCaddy: 'caddy',
 }
 
 const shapeByToolId: Readonly<Record<string, CarriedShape>> = {
-  [caddyItemId]: 'caddy',
   [spoonItemId]: 'spoon',
   [clothItemId]: 'cloth',
 }
@@ -29,7 +29,6 @@ export function carriedShapeOf(state: DeepReadonly<SessionState>, itemId: string
 export type FootprintCircle = { readonly x: number; readonly z: number; readonly radius: number; readonly restsOnTheSurface: boolean }
 
 export type LidLayout = {
-  readonly openStateIn: 'vessel' | 'caddy'
   readonly lyingRadiusMetres: number
 }
 
@@ -43,9 +42,9 @@ export type CarriedShapeLayout = {
 const kettleSpoutReach: FootprintCircle = { x: 0.19, z: 0, radius: 0.05, restsOnTheSurface: false }
 
 export const layoutByShape: Readonly<Record<CarriedShape, CarriedShapeLayout>> = {
-  kettle: { footprintRadiusMetres: 0.16, reachesPastTheFootprint: [kettleSpoutReach], openingRadiusMetres: 0.075, lid: { openStateIn: 'vessel', lyingRadiusMetres: 0.085 } },
-  thermos: { footprintRadiusMetres: 0.08, reachesPastTheFootprint: [], openingRadiusMetres: 0.05, lid: { openStateIn: 'vessel', lyingRadiusMetres: 0.046 } },
-  caddy: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.07, lid: { openStateIn: 'caddy', lyingRadiusMetres: 0.085 } },
+  kettle: { footprintRadiusMetres: 0.16, reachesPastTheFootprint: [kettleSpoutReach], openingRadiusMetres: 0.075, lid: { lyingRadiusMetres: 0.085 } },
+  thermos: { footprintRadiusMetres: 0.08, reachesPastTheFootprint: [], openingRadiusMetres: 0.05, lid: { lyingRadiusMetres: 0.046 } },
+  caddy: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.07, lid: { lyingRadiusMetres: 0.085 } },
   bowl: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.075, lid: null },
   spoon: { footprintRadiusMetres: 0.12, reachesPastTheFootprint: [], openingRadiusMetres: 0, lid: null },
   cloth: { footprintRadiusMetres: 0.14, reachesPastTheFootprint: [], openingRadiusMetres: 0, lid: null },
@@ -61,12 +60,6 @@ export function layoutOf(state: DeepReadonly<SessionState>, itemId: string): Car
 }
 
 export function isTheLidOpen(state: DeepReadonly<SessionState>, itemId: string): boolean {
-  switch (layoutOf(state, itemId)?.lid?.openStateIn) {
-    case 'caddy':
-      return state.caddy.isOpen
-    case 'vessel':
-      return state.vessels[itemId]?.isLidOpen === true
-    case undefined:
-      return false
-  }
+  const hasALid = layoutOf(state, itemId)?.lid !== null
+  return hasALid && state.vessels[itemId]?.isLidOpen === true
 }

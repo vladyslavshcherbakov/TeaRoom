@@ -14,7 +14,6 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     keeper: { placeId: room.keeperStartsAt, hands: [null, null] },
     vessels: vesselsInTheRoom(room),
     heater: { definitionId: room.heaterId, isOn: false, switchedOnAtSeconds: 0, itemIdOnTop: null, hasAnnouncedTargetTemperature: false, hasAnnouncedBoilingAway: false },
-    caddy: { teaId: null, grams: room.caddyGrams, isOpen: false, location: { kind: 'onSurface', spot: room.caddyStartsAt } },
     spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
     cloth: { wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'onSurface', spot: room.clothStartsAt } },
     pour: null,

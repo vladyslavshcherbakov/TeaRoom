@@ -68,7 +68,7 @@ export class TestRitual {
     const events = [
       ...this.do({ type: 'pickUp', itemId: 'spoon' }),
       ...this.do({ type: 'openVesselLid', vesselId: 'kettle' }),
-      ...this.do({ type: 'openCaddy' }),
+      ...this.do({ type: 'openVesselLid', vesselId: 'caddy' }),
     ]
     let gramsLeftToAdd = grams
     while (gramsLeftToAdd > 0) {
@@ -77,7 +77,7 @@ export class TestRitual {
       gramsLeftToAdd -= this.state.spoon.grams
       events.push(...this.do({ type: 'tipSpoonInto', vesselId: 'kettle' }))
     }
-    events.push(...this.do({ type: 'closeCaddy' }), ...this.do({ type: 'closeVesselLid', vesselId: 'kettle' }))
+    events.push(...this.do({ type: 'closeVesselLid', vesselId: 'caddy' }), ...this.do({ type: 'closeVesselLid', vesselId: 'kettle' }))
     if (spoonLocation.kind === 'onSurface') events.push(...this.do({ type: 'putDown', itemId: 'spoon', spot: spoonLocation.spot }))
     return events
   }
@@ -85,7 +85,7 @@ export class TestRitual {
   tipASpoonOfLeavesInto(vesselId: string): readonly RitualEvent[] {
     return [
       ...this.do({ type: 'pickUp', itemId: 'spoon' }),
-      ...this.do({ type: 'openCaddy' }),
+      ...this.do({ type: 'openVesselLid', vesselId: 'caddy' }),
       ...this.do({ type: 'scoopTea', depth: 1 }),
       ...this.do({ type: 'tipSpoonInto', vesselId }),
     ]

@@ -5,6 +5,7 @@ export type CoolingPerSecond = {
   readonly kettle?: number
   readonly thermos?: number
   readonly cup?: number
+  readonly caddy?: number
 }
 
 export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
@@ -57,6 +58,17 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         canHoldLeaves: true,
         isDrinkable: true,
       },
+      testCaddy: {
+        id: 'testCaddy',
+        capacityMl: 500,
+        maxPourMlPerSecond: 20,
+        coolingPerSecond: cooling.caddy ?? 0,
+        lid: { mustBeOpenToPour: true, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 1 },
+        canSitOnHeater: false,
+        hasAMetalShell: false,
+        canHoldLeaves: true,
+        isDrinkable: true,
+      },
     },
     heaters: {
       testHeater: { id: 'testHeater', degreesPerSecondPerLitre: 2, powerWatts: 3000, boilingAwayMlPerSecond: 1 },
@@ -83,10 +95,10 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
           { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(3) },
           { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(4) },
           { id: 'cup3', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(5) },
+          { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: onTheTable(6) },
         ],
         figurineIds: ['dragon', 'toad'],
         caddyGrams: 50,
-        caddyStartsAt: onTheTable(6),
         spoonCapacityGrams: 5,
         spoonStartsAt: onTheTable(7),
         clothStartsAt: onTheTable(8),
@@ -119,8 +131,8 @@ export function testHouseCatalog(): Catalog {
           { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: at('counter', 1) },
           { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 1) },
           { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 2) },
+          { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: at('shelf', 3) },
         ],
-        caddyStartsAt: at('shelf', 3),
         spoonStartsAt: at('table', 7),
         clothStartsAt: at('table', 8),
       },

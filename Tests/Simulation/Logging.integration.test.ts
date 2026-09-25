@@ -32,9 +32,9 @@ test('logLine_startsWithTheSimulatedTimeToTheMillisecond', () => {
   const ritual = TestRitual.begun()
   ritual.wait(2.5)
 
-  ritual.do({ type: 'openCaddy' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
-  assert.equal(ritual.log.messagesAt('info').at(-1), 't=2.500s caddy opened with 50.0 g inside')
+  assert.equal(ritual.log.messagesAt('info').at(-1), 't=2.500s caddy lid opened')
 })
 
 test('pourTilt_isLoggedOnlyAtDebugLevel', () => {

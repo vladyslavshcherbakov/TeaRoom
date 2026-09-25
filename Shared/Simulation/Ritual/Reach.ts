@@ -5,7 +5,6 @@ import type { ItemLocation, SessionState } from '../State/SessionState.ts'
 import type { Draft } from './Draft.ts'
 
 type ItemHolders<Holder> = {
-  readonly caddy: Holder
   readonly spoon: Holder
   readonly cloth: Holder
   readonly vessels: Readonly<Record<string, Holder>>
@@ -16,7 +15,7 @@ export const spoonItemId = 'spoon'
 export const clothItemId = 'cloth'
 
 export function carriedItemIdsIn(state: DeepReadonly<SessionState>): readonly string[] {
-  return [...Object.keys(state.vessels), caddyItemId, spoonItemId, clothItemId]
+  return [...Object.keys(state.vessels), spoonItemId, clothItemId]
 }
 
 export function itemLocationIn(state: DeepReadonly<SessionState>, itemId: string): DeepReadonly<ItemLocation> | undefined {
@@ -77,8 +76,6 @@ export function whereTheKeeperStands(draft: Draft): string {
 
 function holderIn<Holder>(holders: ItemHolders<Holder>, itemId: string): Holder | undefined {
   switch (itemId) {
-    case caddyItemId:
-      return holders.caddy
     case spoonItemId:
       return holders.spoon
     case clothItemId:

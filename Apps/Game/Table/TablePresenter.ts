@@ -4,7 +4,7 @@ import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/Ve
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { spoonCrumblesFromCharring } from '../../../Shared/Simulation/Physics/Heat.ts'
-import { clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { caddyItemId, clothItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from './TableViewState.ts'
@@ -40,7 +40,7 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
   return {
     vessels,
     isHeaterOn: state.heater.isOn,
-    caddy: { isOpen: state.caddy.isOpen, fillShare: share(state.caddy.grams, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
+    caddy: { isOpen: state.vessels[caddyItemId]?.isLidOpen === true, fillShare: share(state.vessels[caddyItemId]?.leaves?.grams ?? 0, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     clothWetShare: share(state.cloth.wetMl, clothSoakedAtMl),
     clothTeaStain: state.cloth.teaStain,

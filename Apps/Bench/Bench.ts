@@ -134,8 +134,8 @@ class RitualBench {
       'Tea leaves',
       row(this.live(() => this.leavesSummary())),
       row(
-        button('Open caddy', () => this.send({ type: 'openCaddy' })),
-        button('Close caddy', () => this.send({ type: 'closeCaddy' })),
+        button('Open caddy', () => this.send({ type: 'openVesselLid', vesselId: 'caddy' })),
+        button('Close caddy', () => this.send({ type: 'closeVesselLid', vesselId: 'caddy' })),
       ),
       row(slider(0, 1, this.scoopDepth, (depth) => (this.scoopDepth = depth))),
       row(
@@ -271,8 +271,9 @@ class RitualBench {
   }
 
   private leavesSummary(): string {
-    const { caddy, spoon } = this.session.state
-    return `caddy ${caddy.grams.toFixed(1)} g${caddy.isOpen ? ' (open)' : ''} · spoon ${spoon.grams.toFixed(1)} g`
+    const { vessels, spoon } = this.session.state
+    const caddy = vessels['caddy']
+    return `caddy ${(caddy?.leaves?.grams ?? 0).toFixed(1)} g${caddy?.isLidOpen === true ? ' (open)' : ''} · spoon ${spoon.grams.toFixed(1)} g`
   }
 }
 
