@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: '.',
   testMatch: '*.spec.ts',
   timeout: 60_000,
+  fullyParallel: true,
   retries: 0,
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${previewPort}/` },

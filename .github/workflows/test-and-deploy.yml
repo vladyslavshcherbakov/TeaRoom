@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-and-build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -24,10 +24,40 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Type-check and run the tests
         run: Scripts/test.sh
-      - name: Install the browsers for the UI tests
-        run: npx playwright install --with-deps webkit chromium
-      - name: Build the site and run the UI tests on iPhone WebKit and Android Chromium
-        run: Scripts/test-ui.sh
+
+  ui-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: iphone-webkit
+            browser: webkit
+          - project: android-chromium
+            browser: chromium
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Install the browser for the UI tests
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Build the site and run the UI tests on ${{ matrix.project }}
+        run: Scripts/test-ui.sh --project=${{ matrix.project }}
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Build the site
+        run: Scripts/build.sh
       - name: Upload the site for GitHub Pages
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
         uses: actions/upload-pages-artifact@v5
@@ -35,7 +65,7 @@ jobs:
           path: dist
 
   deploy:
-    needs: test-and-build
+    needs: [test, ui-test, build]
     if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     permissions:
