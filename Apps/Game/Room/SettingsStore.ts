@@ -15,7 +15,7 @@ export class SettingsStore {
       const text = localStorage.getItem(storageKey)
       if (text === null) return defaultRoomSettings
       const settings = roomSettingsFrom(JSON.parse(text))
-      this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}`)
+      this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}`)
       return settings
     } catch (error) {
       this.log(`the saved settings cannot be read, so the defaults are used: ${String(error)}`)

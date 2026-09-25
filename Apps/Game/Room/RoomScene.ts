@@ -30,6 +30,7 @@ import { RoomTexts } from './RoomTexts.ts'
 import type { CoatColour, RoomSettings } from './RoomSettings.ts'
 import { SettingsStore } from './SettingsStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
+import { FrameRateCounter } from './Views/FrameRateCounter.ts'
 import { Achievements } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
@@ -90,6 +91,7 @@ export class RoomScene {
   private readonly walker: WalkerModel
   private readonly settingsStore: SettingsStore
   private readonly settingsScreen: SettingsScreen
+  private readonly frameRateCounter: FrameRateCounter
   private settings: RoomSettings
   private softShadowsInCorners: EffectComposer | null = null
   private readonly carried: CarriedItems
@@ -185,7 +187,9 @@ export class RoomScene {
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
     this.settingsStore = new SettingsStore(log)
     this.settings = this.settingsStore.load()
-    this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn) })
+    this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn), frameRateShownChosen: (isShown) => this.frameRateShownChosen(isShown) })
+    this.frameRateCounter = new FrameRateCounter(container)
+    this.frameRateCounter.show(this.settings.isFrameRateShown)
     this.walker.paintTheBody(this.settings.coatColour)
     this.fitToWindow()
     this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
@@ -200,7 +204,9 @@ export class RoomScene {
   }
 
   private frame(): void {
-    const seconds = Math.min(this.clock.getDelta(), longestFrameSeconds)
+    const secondsSinceTheLastFrame = this.clock.getDelta()
+    this.frameRateCounter.frameDrawn(secondsSinceTheLastFrame)
+    const seconds = Math.min(secondsSinceTheLastFrame, longestFrameSeconds)
     this.walkAndLookInFirstPerson(seconds)
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
@@ -294,6 +300,13 @@ export class RoomScene {
     this.settingsStore.keep(this.settings)
     this.showSoftShadowsInCorners(isOn)
     this.log(`soft shadows in corners are turned ${isOn ? 'on' : 'off'} from the settings`)
+  }
+
+  private frameRateShownChosen(isShown: boolean): void {
+    this.settings = { ...this.settings, isFrameRateShown: isShown }
+    this.settingsStore.keep(this.settings)
+    this.frameRateCounter.show(isShown)
+    this.log(`the frame rate is ${isShown ? 'shown' : 'hidden'} from the settings`)
   }
 
   private showSoftShadowsInCorners(isOn: boolean): void {
