@@ -128,6 +128,10 @@ The plan is in `docs/roadmap.md`.
 
 **Screenshots and scratch output never go into the repository.** Twice, pictures from a browser check landed in the repository's root, because the check ran from there. Checks run from a scratch folder outside the repository, and files are staged by name.
 
+### Apps/Game/Room/
+
+**Nothing is drawn through anything else.** Several times a thing was placed at a fixed offset and passed through its neighbours: open lids lay in the sink's sides, on the heater and in a bowl beside them, the thermos stood through the sink's floor, and an overflow started off the vessel's wall. Every spot a thing is drawn at comes from `Placement.ts` or is checked against the furniture, the heater, the sink and the other items there, and a spot that is taken is refused or moved, never overlapped. A change that draws something at a new spot is checked in a close-up next to its neighbours before it is done.
+
 ## Open questions
 
 - Which languages the game's text ships in. The user answers it.

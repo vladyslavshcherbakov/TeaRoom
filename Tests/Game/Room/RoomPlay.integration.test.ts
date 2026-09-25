@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { openLidOffsetBeside } from '../../../Apps/Game/Room/Placement.ts'
 import type { FloorPoint, FurnitureId, WorldPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { RoomPlay, type RoomRemark, type RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
@@ -11,6 +13,8 @@ const frameSeconds = 1 / 60
 const longestWalkSeconds = 30
 const onTheTeaTable: WorldPoint = { x: 1, y: 0.42, z: -1.5 }
 const onTheCounter: WorldPoint = { x: -1.4, y: 0.9, z: -2.6 }
+const behindTheKettle: WorldPoint = { x: -1.9, y: 0.9, z: -2.86 }
+const quietRoomHeaterSpot = definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot
 
 test('bowl_whenTappedInTheShelfCloseUp_goesIntoTheFirstFreeHand', () => {
   const room = new RoomVisit()
@@ -67,6 +71,30 @@ test('bowl_whenPutDownWhereAnotherBowlStands_staysInHandWithItsHandChosen', () =
   assert.deepEqual(room.state.keeper.hands, [null, 'bowl2'])
   assert.equal(room.play.chosenHandIndex, 1)
   assert.ok(room.logLines.some((line) => line.startsWith('no room for bowl2') && line.endsWith('somethingIsThere')), room.logLines.join('\n'))
+})
+
+test('openKettleLid_withTheHeaterOnItsLeftTheSinkOnItsRightAndTheEdgeInFront_liesBehindTheKettle', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+
+  const offset = openLidOffsetBeside('kettle', room.state, quietRoomHeaterSpot)
+  assertNear(offset?.x ?? Number.NaN, 0, 1e-9)
+  assert.ok((offset?.z ?? 0) < 0, `lid offset ${JSON.stringify(offset)}`)
+})
+
+test('bowl_whenPutDownOnTheKettlesOpenLid_staysInHand', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1')
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'surface', furnitureId: 'counter', point: behindTheKettle })
+
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', null])
+  assert.ok(room.logLines.some((line) => line.startsWith('no room for bowl1') && line.endsWith('somethingIsThere')), room.logLines.join('\n'))
 })
 
 test('kettle_whenItsHandIsChosenAndTheHeaterIsTapped_sitsOnTheHeater', () => {

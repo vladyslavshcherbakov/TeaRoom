@@ -83,7 +83,7 @@ export class RoomScene {
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
-    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null)
+    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, roomDefinition.heaterSpot)
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),

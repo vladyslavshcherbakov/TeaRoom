@@ -119,6 +119,15 @@ export const openingRadiusMetres: Readonly<Record<CarriedShape, number>> = {
   cloth: 0,
 }
 
+export const openLidRadiusMetres: Readonly<Record<CarriedShape, number>> = {
+  kettle: 0.085,
+  thermos: 0.046,
+  caddy: 0.085,
+  bowl: 0,
+  spoon: 0,
+  cloth: 0,
+}
+
 export const heaterFootprintRadiusMetres = 0.18
 
 const puddleOffsetFromTheTeaTableCentre: FloorPoint = { x: -0.2, z: 0.1 }

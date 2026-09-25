@@ -30,11 +30,13 @@ export class CarriedItems {
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
   private readonly clothFire: ClothFire
+  private readonly heaterSpot: Spot
   private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
-  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null) {
+  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, heaterSpot: Spot) {
+    this.heaterSpot = heaterSpot
     this.materials = materials
     this.clothMaterial = materials.unsharedMaterialFor('cloth')
     const claySeenFromInside = materials.unsharedMaterialFor('clay')
@@ -53,7 +55,7 @@ export class CarriedItems {
 
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
-    for (const model of this.models) showContentsOf(model, scene)
+    for (const model of this.models) showContentsOf(model, scene, this.heaterSpot)
     this.clothMaterial.color.copy(this.clothColourFor(scene.table))
     const clothModel = this.models.find((model) => model.itemId === clothItemId)
     this.clothFire.show(clothModel, scene.table.clothHeating, scene.timeSeconds)
