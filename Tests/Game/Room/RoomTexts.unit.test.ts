@@ -41,6 +41,17 @@ test('caption_ofASpoonThatCrumbled_answersInOneLine', () => {
   assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('spoonCrumbled.') && line === lines[0]), lines.join(' / '))
 })
 
+test('caption_ofTheCaddyWashedClean_mournsTheTea', () => {
+  const lines = captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'caddy' }], 7)
+
+  assert.equal(lines.length, 1)
+  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('caddyWashedOut.') && line === lines[0]), lines.join(' / '))
+})
+
+test('caption_ofLeavesWashedOutOfTheKettle_staysSilent', () => {
+  assert.deepEqual(captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'kettle' }], 7), [])
+})
+
 test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 7), [])
 })

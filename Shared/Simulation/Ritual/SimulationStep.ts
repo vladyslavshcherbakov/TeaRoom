@@ -182,6 +182,7 @@ function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: numbe
   }
   vessel.leaves = null
   note(draft, `the running water washed the last leaves out of ${vessel.id}, which holds ${describeLiquid(vessel)}`)
+  draft.events.push({ type: 'lastLeavesWashedOut', vesselId: vessel.id })
 }
 
 function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {

@@ -76,6 +76,7 @@ export type RitualEvent =
   | { readonly type: 'targetTemperatureReached'; readonly vesselId: string }
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'vesselOverflowed'; readonly vesselId: string }
+  | { readonly type: 'lastLeavesWashedOut'; readonly vesselId: string }
   | {
       readonly type: 'pourFinished'
       readonly sourceId: string

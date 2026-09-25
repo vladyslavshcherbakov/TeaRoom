@@ -1,4 +1,5 @@
 import type { OfferingResponse } from '../../../Shared/Simulation/Judgement/OfferingJudgement.ts'
+import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
@@ -34,6 +35,8 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return event.charring >= smoulderingFromCharring ? [text(`smoulderingClothTaken.${phraseVariantFor('smoulderingClothTaken', voiceSeed)}`)] : []
     case 'spoonCrumbled':
       return [text(`spoonCrumbled.${phraseVariantFor('spoonCrumbled', voiceSeed)}`)]
+    case 'lastLeavesWashedOut':
+      return event.vesselId === caddyItemId ? [text(`caddyWashedOut.${phraseVariantFor('caddyWashedOut', voiceSeed)}`)] : []
     case 'burntClothWashedBackToNew':
       return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
     case 'figurineAcceptedTea':

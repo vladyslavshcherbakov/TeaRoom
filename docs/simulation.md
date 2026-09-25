@@ -54,7 +54,7 @@ An item leaves the sink when it is picked up or put on the heater. Picking it up
 
 ## Leaves and brewing
 
-The caddy is a vessel with a lid, and the room's leaves lie in it: the ritual fills it with the room's `caddyGrams` of the chosen tea. It opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from. Water poured into the open caddy brews all its leaves at once, so its tea turns extremely strong within seconds. The keeper may pour it out or sip it straight from the caddy. In the sink with its lid open, the tap fills the caddy and washes every leaf out, and the room has no tea left.
+The caddy is a vessel with a lid, and the room's leaves lie in it: the ritual fills it with the room's `caddyGrams` of the chosen tea. It opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from. Water poured into the open caddy brews all its leaves at once, so its tea turns extremely strong within seconds. The keeper may pour it out or sip it straight from the caddy. In the sink with its lid open, the tap fills the caddy and washes every leaf out, and the room has no tea left. The last leaves washed out of any vessel report `lastLeavesWashedOut`.
 
 A brew starts when leaves and water first share a vessel, whichever arrives second. While it lasts:
 
