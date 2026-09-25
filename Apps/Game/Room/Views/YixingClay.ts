@@ -27,11 +27,13 @@ function paintColours(): HTMLCanvasElement {
     const x = pseudoRandom(blotch * 3 + 1) * canvasWidth
     const y = pseudoRandom(blotch * 3 + 2) * canvasHeight
     const radius = 40 + pseudoRandom(blotch * 3 + 3) * 90
-    const shade = context.createRadialGradient(x, y, 0, x, y, radius)
-    shade.addColorStop(0, blotch % 2 === 0 ? 'rgba(40, 18, 10, 0.18)' : 'rgba(150, 90, 60, 0.14)')
-    shade.addColorStop(1, 'rgba(0, 0, 0, 0)')
-    context.fillStyle = shade
-    for (const shift of [-canvasWidth, 0, canvasWidth]) context.fillRect(x - radius + shift, y - radius, radius * 2, radius * 2)
+    for (const shift of [-canvasWidth, 0, canvasWidth]) {
+      const shade = context.createRadialGradient(x + shift, y, 0, x + shift, y, radius)
+      shade.addColorStop(0, blotch % 2 === 0 ? 'rgba(40, 18, 10, 0.18)' : 'rgba(150, 90, 60, 0.14)')
+      shade.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      context.fillStyle = shade
+      context.fillRect(x - radius + shift, y - radius, radius * 2, radius * 2)
+    }
   }
   scatterDots(context, poreCount, darkClay, widestPorePx, 11)
   scatterDots(context, grainCount, paleGrain, widestGrainPx, 29)
@@ -53,9 +55,11 @@ function scatterDots(context: CanvasRenderingContext2D, count: number, colour: s
     const x = pseudoRandom(dot * 2 + salt) * canvasWidth
     const y = pseudoRandom(dot * 2 + 1 + salt * 5) * canvasHeight
     const radius = 0.4 + pseudoRandom(dot + salt * 13) * widestPx
-    context.beginPath()
-    context.arc(x, y, radius, 0, Math.PI * 2)
-    context.fill()
+    for (const shift of [-canvasWidth, 0, canvasWidth]) {
+      context.beginPath()
+      context.arc(x + shift, y, radius, 0, Math.PI * 2)
+      context.fill()
+    }
   }
 }
 

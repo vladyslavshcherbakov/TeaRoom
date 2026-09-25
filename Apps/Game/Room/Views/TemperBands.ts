@@ -26,6 +26,6 @@ export function paintTemperBands(): HTMLCanvasElement {
 function thicknessAt(around: number, along: number): number {
   const swirl = swirlStrength * Math.sin(around * Math.PI * 2 * swirlsAround + along * 5)
   const band = Math.sin(along * Math.PI * 2 * bandsFromFootToRim + swirl)
-  const grain = grainStrength * Math.sin(around * 91 + along * 57) * Math.sin(around * 37 - along * 83)
+  const grain = grainStrength * Math.sin(Math.PI * 2 * around * 15 + along * 57) * Math.sin(Math.PI * 2 * around * 6 - along * 83)
   return Math.min(1, Math.max(0, 0.5 + bandDepth * band + grain))
 }

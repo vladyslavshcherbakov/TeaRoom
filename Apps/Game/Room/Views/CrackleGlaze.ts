@@ -28,7 +28,7 @@ export function paintCrackle(): HTMLCanvasElement {
     for (let column = 0; column < canvasWidth; column += 1) {
       const around = column / canvasWidth
       const along = row / canvasHeight
-      const glaze = mix(skyBlue, paleSkyBlue, 0.5 + 0.5 * Math.sin(around * 40 + along * 23) * Math.sin(along * 31 - around * 17))
+      const glaze = mix(skyBlue, paleSkyBlue, 0.5 + 0.5 * Math.sin(Math.PI * 2 * around * 6 + along * 23) * Math.sin(along * 31 - Math.PI * 2 * around * 3))
       const largeCrack = crackAt(around, along, largeSeeds, largeCrackWidth) * largeCrackDarkness
       const smallCrack = crackAt(around, along, smallSeeds, smallCrackWidth) * smallCrackDarkness
       const colour = mix(glaze, crackColour, Math.max(largeCrack, smallCrack))
