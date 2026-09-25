@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { testHouseCatalog } from '../Support/TestCatalog.ts'
+import { TestRitual } from '../Support/TestRitual.ts'
+import { wetMlAt, wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
+
+const cupOnTheCounter = { placeId: 'counter', x: 5, y: 0, z: 0 }
+
+test('table_whenLeftAlone_driesByItself', () => {
+  const ritual = ritualWithSpillOnTheTable()
+
+  ritual.wait(600)
+
+  assert.equal(wetMlOnEveryPlace(ritual.state), 0)
+})
+
+test('spill_whilePouringAtTheCounter_wetsTheCounterAndNotTheTeaTable', () => {
+  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+
+  ritual.pour('kettle', null, 2.5)
+
+  assert.ok(wetMlAt(ritual.state, 'counter') > 0, JSON.stringify(ritual.state.puddles))
+  assert.equal(wetMlAt(ritual.state, 'table'), 0)
+})
+
+test('spill_besideACupOnTheCounter_liesAroundThatCup', () => {
+  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'putDown', itemId: 'cup1', spot: cupOnTheCounter })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+
+  ritual.pour('kettle', 'cup1', 2, undefined, 0.5)
+
+  assert.deepEqual(ritual.state.puddles['counter']?.spilledAround, cupOnTheCounter)
+})
+
+test('spill_ofAStreamThatMissesTheCup_liesWhereTheStreamFalls', () => {
+  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const whereTheStreamFalls = { placeId: 'counter', x: 3, y: 0, z: 0.5 }
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'putDown', itemId: 'cup1', spot: cupOnTheCounter })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
+
+  ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0, missedStreamLandsAt: whereTheStreamFalls })
+  ritual.wait(1)
+
+  assert.deepEqual(ritual.state.puddles['counter']?.spilledAround, whereTheStreamFalls)
+  assert.equal(ritual.vessel('cup1').liquid.volumeMl, 0)
+})
+
+function ritualWithSpillOnTheTable(): TestRitual {
+  const ritual = TestRitual.begun()
+  ritual.pour('kettle', null, 2.5)
+  return ritual
+}
