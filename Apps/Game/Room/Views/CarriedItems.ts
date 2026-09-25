@@ -156,6 +156,8 @@ function moveToLayer(model: CarriedModel, layer: number): void {
   model.layer = layer
   model.isHeldInView = layer === roomLayers.heldInView
   model.root.traverse((part) => part.layers.set(layer))
+  const look = model.heldInViewLook
+  if (look !== null) look.mesh.material = model.isHeldInView ? look.heldInView : look.inRoom
 }
 
 function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {

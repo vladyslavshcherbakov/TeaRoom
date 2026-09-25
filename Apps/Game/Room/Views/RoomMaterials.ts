@@ -46,6 +46,7 @@ export type Surface =
   | 'emeraldGlaze'
   | 'temperGlaze'
   | 'flutedGlass'
+  | 'clearGlassHeldInView'
   | 'koiPainting'
   | 'lotusPainting'
 
@@ -91,6 +92,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   emeraldGlaze: '#1f8a68',
   temperGlaze: '#7a6650',
   flutedGlass: '#ffffff',
+  clearGlassHeldInView: '#eef7f2',
   koiPainting: '#ffffff',
   lotusPainting: '#ffffff',
 }
@@ -98,6 +100,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const smokeOpacity = 0.4
+const clearGlassOpacity = 0.28
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
 const clothRoughness = 1
@@ -131,6 +134,7 @@ export class RoomMaterials {
     if (surface === 'flame' || surface === 'flameCore' || surface === 'ember') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
     if (surface === 'temperGlaze') return this.temperGlazeMaterial(color)
     if (surface === 'flutedGlass') return this.glassMaterial(color)
+    if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
     if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
     if (surface === 'cloth') return wovenClothMaterial()
@@ -154,6 +158,19 @@ export class RoomMaterials {
       iridescenceThicknessMap: thicknessMap,
       envMap: this.reflections,
       envMapIntensity: 1.3,
+    })
+  }
+
+  private clearGlassMaterial(color: string): THREE.MeshPhysicalMaterial {
+    return new THREE.MeshPhysicalMaterial({
+      color,
+      metalness: 0,
+      roughness: 0.05,
+      transparent: true,
+      opacity: clearGlassOpacity,
+      specularIntensity: 1,
+      envMap: this.reflections,
+      envMapIntensity: 1.2,
     })
   }
 

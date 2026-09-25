@@ -23,10 +23,17 @@ export type CarriedModel = {
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
   readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
+  readonly heldInViewLook: HeldInViewLook | null
   tagKey: string
   layer: number
   isHeldInView: boolean
   castsShadow: boolean
+}
+
+export type HeldInViewLook = {
+  readonly mesh: THREE.Mesh
+  readonly inRoom: THREE.Material
+  readonly heldInView: THREE.Material
 }
 
 export type CarriedModelMaterials = {
@@ -49,6 +56,7 @@ type ItemParts = {
   readonly spoutTip: THREE.Vector3
   readonly rimHeight: number
   readonly liquidRadius: number | null
+  readonly heldInViewLook?: HeldInViewLook
 }
 
 export const mostSteamSources = 2
@@ -141,6 +149,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     leaves: null,
     kettleWater,
     puffs,
+    heldInViewLook: parts.heldInViewLook ?? null,
     tagKey: '',
     layer: 0,
     isHeldInView: false,
@@ -264,7 +273,11 @@ function bowlParts(materials: RoomMaterials, glaze: Surface, painting: BottomPai
   const body = new THREE.Mesh(isFluted ? flutedBowlGeometry() : new THREE.LatheGeometry(bowlProfile, bowlSegmentsAround), glazed)
   const meshes: THREE.Object3D[] = [body]
   if (painting !== undefined) meshes.push(paintedOnTheBottom(materials, painting))
-  return { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
+  const bowl = { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, 0.062, 0), rimHeight: 0.062, liquidRadius: 0.08 }
+  if (glaze !== 'flutedGlass') return bowl
+  const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
+  clearGlass.side = THREE.DoubleSide
+  return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass } }
 }
 
 function flutedBowlGeometry(): THREE.BufferGeometry {
