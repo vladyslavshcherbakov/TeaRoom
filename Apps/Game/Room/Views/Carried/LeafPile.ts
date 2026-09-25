@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { LeafShape, TeaLook } from '../../../Table/TeaLooks.ts'
+import { seededRandom } from '../../SeededRandom.ts'
 
 export type LeafPileSize = {
   readonly leafCount: number
@@ -63,13 +64,5 @@ function layOutLeaves(mesh: THREE.InstancedMesh, look: TeaLook, size: LeafPileSi
     leaf.updateMatrix()
     mesh.setMatrixAt(index, leaf.matrix)
     mesh.setColorAt(index, baseColour.clone().multiplyScalar(1 - shadeSpread / 2 + nextRandom() * shadeSpread))
-  }
-}
-
-function seededRandom(seed: number): () => number {
-  let state = seed
-  return () => {
-    state = (state * 1664525 + 1013904223) % 4294967296
-    return state / 4294967296
   }
 }
