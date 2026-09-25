@@ -126,3 +126,24 @@ test('puddle_growsWithTheSpillUntilThirtyMillilitres', () => {
     assert.equal(tableViewState(state, catalog).puddleShare, puddleShare, `${tableWetMl} ml`)
   }
 })
+
+test('clothOnAWorkingHeater_burnsInStagesAsItChars', () => {
+  const rows = [
+    [0, 'smoking'],
+    [0.2, 'scorching'],
+    [0.5, 'smouldering'],
+    [0.8, 'burning'],
+  ] as const
+
+  for (const [charring, heating] of rows) {
+    assert.equal(tableViewState(stateWithTheDryClothOnAWorkingHeater(charring), catalog).clothHeating, heating, `charring ${charring}`)
+  }
+})
+
+function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
+  const state = ritualState()
+  state.heater.isOn = true
+  state.heater.itemIdOnTop = 'cloth'
+  state.cloth.charring = charring
+  return state
+}

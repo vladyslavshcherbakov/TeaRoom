@@ -21,6 +21,9 @@ const simmeringFromC = 55
 const boilingFromC = 95
 const puddleFullAtMl = 30
 const clothSoakedAtMl = 25
+const scorchingFromCharring = 0.2
+const smoulderingFromCharring = 0.5
+const burningFromCharring = 0.8
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
@@ -48,7 +51,12 @@ export function puddleShareOf(tableWetMl: number): number {
 
 function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.ClothHeating {
   if (!state.heater.isOn || state.heater.itemIdOnTop !== clothItemId) return 'none'
-  return state.cloth.wetMl > 0 ? 'steaming' : 'smouldering'
+  if (state.cloth.wetMl > 0) return 'steaming'
+  const charring = state.cloth.charring
+  if (charring < scorchingFromCharring) return 'smoking'
+  if (charring < smoulderingFromCharring) return 'scorching'
+  if (charring < burningFromCharring) return 'smouldering'
+  return 'burning'
 }
 
 function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null, isHeated: boolean): TableViewState.Vessel {

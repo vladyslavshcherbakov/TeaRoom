@@ -11,7 +11,7 @@ const strongestTea = 100
 const washingAFullStainOffSeconds = 3
 const wrungClothHoldsMl = 8
 const steamingOffAHotPlateMlPerSecond = 2
-const charringFullySeconds = 30
+const charringFullySeconds = 60
 const washingAFullCharringOffSeconds = 5
 const clothHoldsMl = 40
 

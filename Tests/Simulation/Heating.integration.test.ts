@@ -105,12 +105,12 @@ test('cup_whenPlacedOnTheHeater_isRefused', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'cannotSitOnHeater' }])
 })
 
-test('cloth_onAWorkingHeater_charsThroughInThirtySeconds', () => {
+test('cloth_onAWorkingHeater_charsThroughInAMinute', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
 
-  ritual.wait(15)
+  ritual.wait(30)
 
   assertNear(ritual.state.cloth.charring, 0.5)
 })
@@ -141,7 +141,7 @@ test('cloth_charredThrough_whenWashedUnderTheTap_isAsGoodAsNew', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
+  ritual.wait(60)
   ritual.do({ type: 'switchHeaterOff' })
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
 

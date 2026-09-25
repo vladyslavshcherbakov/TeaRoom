@@ -13,7 +13,7 @@ export type TableViewState = {
 export declare namespace TableViewState {
   type SteamLevel = 'none' | 'wisps' | 'visible' | 'billowing'
   type SurfaceMotion = 'still' | 'shimmering' | 'simmering' | 'boiling'
-  type ClothHeating = 'none' | 'steaming' | 'smouldering'
+  type ClothHeating = 'none' | 'steaming' | 'smoking' | 'scorching' | 'smouldering' | 'burning'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed'
 
   type Vessel = {

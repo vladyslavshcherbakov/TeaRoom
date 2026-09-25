@@ -16,6 +16,10 @@ const foldOffsetMetres = 0.03
 const rippleHeightMetres = 0.0025
 const creaseHeightMetres = 0.0012
 const edgeWanderMetres = 0.004
+const charSpreadsFromTheMiddleShare = 0.75
+const charEdgeRaggedness = 0.25
+const charFrontSoftness = 0.12
+const charThresholdAttribute = 'charThreshold'
 
 export function rumpledClothGeometry(): THREE.BufferGeometry {
   const geometry = new THREE.PlaneGeometry(clothLengthMetres, clothWidthMetres, segmentsAlong, segmentsAcross)
@@ -27,7 +31,32 @@ export function rumpledClothGeometry(): THREE.BufferGeometry {
     position.setXYZ(index, x + edgeWanderAt(z, x, clothLengthMetres / 2), heightAt(x, z), z + edgeWanderAt(x, z, clothWidthMetres / 2))
   }
   geometry.computeVertexNormals()
+  geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(position.count * 3).fill(1), 3))
+  geometry.setAttribute(charThresholdAttribute, new THREE.BufferAttribute(charThresholdsOf(position), 1))
   return geometry
+}
+
+export function charTheCloth(geometry: THREE.BufferGeometry, charring: number, charredColour: THREE.Color): void {
+  const thresholds = geometry.getAttribute(charThresholdAttribute)
+  const colours = geometry.getAttribute('color')
+  if (thresholds === undefined || colours === undefined) return
+  for (let index = 0; index < thresholds.count; index += 1) {
+    const burnt = THREE.MathUtils.clamp((charring * (1 + charFrontSoftness) - thresholds.getX(index)) / charFrontSoftness, 0, 1)
+    colours.setXYZ(index, 1 + (charredColour.r - 1) * burnt, 1 + (charredColour.g - 1) * burnt, 1 + (charredColour.b - 1) * burnt)
+  }
+  colours.needsUpdate = true
+}
+
+function charThresholdsOf(position: THREE.BufferAttribute | THREE.InterleavedBufferAttribute): Float32Array {
+  const thresholds = new Float32Array(position.count)
+  for (let index = 0; index < position.count; index += 1) {
+    const x = position.getX(index)
+    const z = position.getZ(index)
+    const distanceFromTheMiddle = Math.hypot(x / (clothLengthMetres / 2), z / (clothWidthMetres / 2)) / Math.SQRT2
+    const ragged = 0.5 + 0.5 * Math.sin(x * 97 + z * 61) * Math.sin(x * 41 - z * 83)
+    thresholds[index] = distanceFromTheMiddle * charSpreadsFromTheMiddleShare + ragged * charEdgeRaggedness
+  }
+  return thresholds
 }
 
 function heightAt(x: number, z: number): number {

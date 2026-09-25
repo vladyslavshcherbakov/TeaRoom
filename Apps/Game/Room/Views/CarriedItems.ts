@@ -21,7 +21,6 @@ const handHeightMetres = 0.55
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
 const spoutAboveTargetRimMetres = 0.1
-const darkestShareOfCharring = 0.9
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
@@ -56,15 +55,16 @@ export class CarriedItems {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) showContentsOf(model, scene)
     this.clothMaterial.color.copy(this.clothColourFor(scene.table))
-    this.clothFire.show(this.models.find((model) => model.itemId === clothItemId), scene.table.clothHeating, scene.timeSeconds)
+    const clothModel = this.models.find((model) => model.itemId === clothItemId)
+    this.clothFire.show(clothModel, scene.table.clothHeating, scene.timeSeconds)
+    this.clothFire.char(clothModel, scene.table.clothCharring)
     this.waterStreams.show(scene, this.models)
     this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
     this.chosenGlow.show(scene, this.models)
   }
 
   private clothColourFor(table: TableViewState): THREE.Color {
-    const stainedColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), table.clothTeaStain)
-    const dryColour = stainedColour.lerp(this.materials.colourOf('charredCloth'), table.clothCharring * darkestShareOfCharring)
+    const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), table.clothTeaStain)
     const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), table.clothWetShare)
     return dryColour.multiply(wetDarkening)
   }

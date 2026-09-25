@@ -20,6 +20,7 @@ export type Surface =
   | 'smoke'
   | 'flame'
   | 'flameCore'
+  | 'ember'
   | 'jade'
   | 'toadBrown'
   | 'heaterPlate'
@@ -64,6 +65,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   smoke: '#5f5a57',
   flame: '#ff8a2a',
   flameCore: '#ffe07a',
+  ember: '#ff4a12',
   jade: '#6fb59a',
   toadBrown: '#b39a5c',
   heaterPlate: '#3d3733',
@@ -126,7 +128,7 @@ export class RoomMaterials {
     const color = surfaceColours[surface]
     if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
     if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
-    if (surface === 'flame' || surface === 'flameCore') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+    if (surface === 'flame' || surface === 'flameCore' || surface === 'ember') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
     if (surface === 'temperGlaze') return this.temperGlazeMaterial(color)
     if (surface === 'flutedGlass') return this.glassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
@@ -193,5 +195,5 @@ function wovenClothMaterial(): THREE.MeshStandardMaterial {
   const texture = new THREE.CanvasTexture(weaveCloth())
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = paintingSharpness
-  return new THREE.MeshStandardMaterial({ map: texture, color: surfaceColours.cloth, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide })
+  return new THREE.MeshStandardMaterial({ map: texture, color: surfaceColours.cloth, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })
 }
