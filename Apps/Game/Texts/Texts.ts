@@ -19,9 +19,13 @@ export function textOrFallback(key: string, fallback: string): string {
 }
 
 export function phraseVariantFor(phrase: string, voiceSeed: number): PhraseVariant {
+  return phraseVariantAmong(phrase, voiceSeed, phraseVariants) as PhraseVariant
+}
+
+export function phraseVariantAmong(phrase: string, voiceSeed: number, variantCount: number): number {
   let hash = 2166136261 ^ voiceSeed
   for (const character of phrase) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619)
-  return ((((hash >>> 0) % phraseVariants) + 1) as PhraseVariant)
+  return ((hash >>> 0) % variantCount) + 1
 }
 
 export function phraseVariantAtTurn(phrase: string, voiceSeed: number, turn: number): PhraseVariant {

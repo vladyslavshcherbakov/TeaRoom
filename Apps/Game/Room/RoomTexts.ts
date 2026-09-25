@@ -3,19 +3,23 @@ import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
-import { phraseVariantAtTurn, phraseVariantFor, text, textOrFallback, textWith } from '../Texts/Texts.ts'
+import { phraseVariantAmong, phraseVariantAtTurn, phraseVariantFor, text, textOrFallback, textWith } from '../Texts/Texts.ts'
 import type { RoomRemark } from './RoomPlay.ts'
 
 const spillTheKeeperRemarksOnMl = 5
 const tapRanLongFromSeconds = 120
 const heaterRanLongFromSeconds = 120
 const millilitresInALitre = 1000
+const heaterTesterVariants = 7
+
+type HeaterTesterVariant = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
   return events.flatMap((event) => captionLinesOf(event, voiceSeed))
 }
 
 export function roomRemarkLine(remark: RoomRemark, voiceSeed: number): string {
+  if (remark.kind === 'heaterTester') return text(`heaterTester.${phraseVariantAmong('heaterTester', voiceSeed, heaterTesterVariants) as HeaterTesterVariant}`)
   return text(`${remark.kind}.${phraseVariantAtTurn(remark.kind, voiceSeed, remark.timesTapped)}`)
 }
 

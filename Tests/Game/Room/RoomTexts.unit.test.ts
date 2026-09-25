@@ -52,6 +52,15 @@ test('caption_ofLeavesWashedOutOfTheKettle_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'kettle' }], 7), [])
 })
 
+test('heaterTesterLine_acrossTheKeepersVoices_isEveryOneOfItsSevenLines', () => {
+  const heaterTesterLines = Object.entries(englishTexts).filter(([key]) => key.startsWith('heaterTester.')).map(([, line]) => line)
+
+  const linesHeard = new Set(Array.from({ length: 1000 }, (_, index) => roomRemarkLine({ kind: 'heaterTester', timesTapped: 1 }, index + 1)))
+
+  assert.equal(heaterTesterLines.length, 7)
+  assert.deepEqual([...linesHeard].sort(), [...heaterTesterLines].sort())
+})
+
 test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 7), [])
 })
