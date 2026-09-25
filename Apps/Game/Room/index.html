@@ -222,6 +222,41 @@
       .you-died.is-shown .you-died-restart {
         opacity: 1;
       }
+      .continue {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        align-content: center;
+        justify-items: center;
+        gap: 16px;
+        padding: 0 16px;
+        background: #f6e9d6;
+      }
+      .continue-title {
+        max-width: 24em;
+        margin: 0 0 16px;
+        color: #5a3a26;
+        font: 18px/1.4 system-ui, sans-serif;
+        text-align: center;
+      }
+      .continue-primary,
+      .continue-secondary {
+        min-width: 200px;
+        min-height: 48px;
+        padding: 0 24px;
+        border-radius: 24px;
+        font: 600 16px/1 system-ui, sans-serif;
+      }
+      .continue-primary {
+        border: 2px solid #3f6f57;
+        background: #5f9a7c;
+        color: #fbf4e8;
+      }
+      .continue-secondary {
+        border: 2px solid #8f5a3a;
+        background: #fbf4e8;
+        color: #5a3a26;
+      }
       .quiet {
         position: fixed;
         inset: 0;

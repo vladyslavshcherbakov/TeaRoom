@@ -172,6 +172,17 @@ test('caption_ofASpillTwoMinutesAfterTheLastRemarkedSpill_remarksInAnotherLine',
   assert.notDeepEqual(laterLines, firstLines)
 })
 
+test('caption_ofAReturnWithTheSpoonBackAndTheCaddyRefilledFromEmpty_isOneLineAboutBoth', () => {
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: true, caddyWasRefilled: true, caddyWasEmpty: true }], 0)
+
+  assert.equal(lines.length, 1)
+  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('spoonAndCaddyReturned.') && line === lines[0]), lines.join(' / '))
+})
+
+test('caption_ofAReturnWithOnlyTheCaddyToppedUp_staysSilent', () => {
+  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: false, caddyWasRefilled: true, caddyWasEmpty: false }], 0), [])
+})
+
 const tapRanForTwoMinutes = { type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460 } as const
 
 const spillOf10Ml = { type: 'pourFinished', sourceId: 'kettle', targetId: 'bowl', pouredMl: 100, spilledMl: 10 } as const

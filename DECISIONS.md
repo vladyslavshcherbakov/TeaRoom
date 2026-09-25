@@ -42,6 +42,12 @@ The plan is in `docs/roadmap.md`.
 
 **The kettle's water comes from the tap at the counter, and the kettle starts empty.** Filling the kettle is the first step of a ritual. The kettle stands in the sink under the tap, and the tap runs until the keeper turns it off, also while the keeper is away. Holding it under the tap tied the keeper to the counter, and the kettle walked away with them. Water that overflows runs down the drain and does not wet the table, because the table is where the ritual's spills count. Rejected: filling a kettle held in a hand as well, because two ways to do one thing made the tap's taps ambiguous.
 
+**A continued visit lives through the time away, up to twelve hours, in steps of 1 s.** The world should not wait for the player: tea left in a bowl is cold when they come back, and a kettle left on the heater has boiled dry. Twelve hours settle everything, even the thermos, which takes hours to cool. Steps of 1 s are fine enough for the curves, and the whole absence works on one copy of the state, so twelve hours take about 70 ms. Rejected: freezing the world while away, because the room would not feel lived in, and the 0.05 s step for the absence, because twelve hours would take seconds on a phone.
+
+**A continued visit gets back the spoon and a full caddy.** A burnt spoon or a caddy washed down the sink would otherwise end the tea for good, since the house has no other. The loss stands for the rest of that visit, and the keeper remarks on the return. Rejected: carrying the loss over, because one mistake would close the game.
+
+**A saved state is resumed only if it fits, and added or removed content fits.** The saved state is compared field by field with what the game reads, so a changed state throws away only the saves it would misread. A new bowl joins at its place and a removed one is left out, because content is added often and each addition would otherwise cost the player their visit.
+
 ### Shared/Content/
 
 **Content is data in a `Catalog`.** A new tea, vessel, heater, figurine or room is a definition, not code. Rejected: a class per tea, because every new tea would need new code and a new review of the rules.
@@ -83,6 +89,8 @@ The plan is in `docs/roadmap.md`.
 **The room begins the ritual with the first tea of the catalog.** Carrying needs the ritual phase, and the room has no tea choice yet. The room logs which tea it chose. It stays so until the room offers a choice of tea.
 
 **Pinching zooms the camera, the room's zoom is kept, and each close-up starts unzoomed.** The zoom only scales the camera's distance to what it looks at, so the view keeps its angle and its subject. The room's zoom is the player's choice, so it stays while the keeper walks and comes back after a close-up, and the camera flies into a close-up from wherever the player left it. A close-up starts at its usual distance because it is framed to show the whole piece of furniture. `Camera/CameraZoom.ts` keeps the two zooms apart. Rejected: resetting the zoom on every change of view, the first version, because the camera jumped out and back in on each walk. Safari's own page zoom is turned off so the pinch reaches the game. Rejected: pinching while a pour is aimed, because the first finger already moves the vessel.
+
+**The visit is saved every two seconds and when the page is hidden.** Mobile Safari may drop a page in the background without any event, so a save only on leaving would lose visits. A save is about 4 KB of JSON. The light, the voice and the once-a-visit jokes start anew, because a continued visit is still a new visit. The keeper's death forgets the save, so the joke of YOU DIED keeps its weight.
 
 ### Apps/Game/Room/Views/
 
@@ -145,4 +153,3 @@ The plan is in `docs/roadmap.md`.
 - Whether the bench stays published after 1.0. The user answers it.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.
-- Whether a loss such as the burnt spoon or the caddy washed clean carries over to the next visit once the world remembers visits, or each visit starts whole. The user answers it.

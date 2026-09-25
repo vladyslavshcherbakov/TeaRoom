@@ -43,7 +43,7 @@ In the room:
 - `Room/Views/` builds the meshes. `RoomModel.ts` builds the room. `CarriedItems.ts` builds the items the keeper can carry, placed from the ritual's state every frame and, in a close-up, held in the corners of the view, with their parts in `Views/Carried/`: one parts file per shape, such as `KettleParts.ts` and `BowlParts.ts`, each with the shape's `CarriedShapeLook`: how its model is built, where its steam rises, how it shows leaves and where it burns, assembled by `CarriedModel.ts`, what an item holds, the water streams, the chosen glow, the fire of an item burning on the heater and the ash of one that crumbles. `SipButton.ts`, `PourControls.ts`, `Joysticks.ts`, `DebugMenu.ts` and `RoomCaption.ts` are the controls, the debug menu and the caption, `Sky.ts` is the sky of first person, and `RoomLights.ts` lights the room from the sun's place.
 - `Room/Views/RoomMaterials.ts` is the one place that decides how each surface looks. Paintings and generated textures, such as `KoiPainting.ts` and `LotusPainting.ts`, are drawn on canvases and used there.
 - `Views/RoomLayers.ts` names the render layers.
-- `RoomScene.ts` renders, raycasts and forwards pointer events to `RoomGestures`. `RoomMain.ts` opens the ritual session.
+- `RoomScene.ts` renders, raycasts and forwards pointer events to `RoomGestures`, and saves the visit through `Room/VisitStore.ts`, the one place that reads and writes the browser's storage. `RoomMain.ts` opens the ritual session, or resumes a saved one after `Views/ContinueScreen.ts` asks.
 
 ### Adding content
 

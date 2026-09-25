@@ -5,6 +5,7 @@ import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
+import { sessionStateVersion } from '../../../Shared/Simulation/State/FittedSavedState.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { tableViewState } from '../Table/TablePresenter.ts'
 import {
@@ -19,10 +20,11 @@ import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurne
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
 import { furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.ts'
-import type { RoomLog } from './RoomNavigator.ts'
+import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
+import { savedVisitVersion, type SavedCamera, type VisitStore } from './VisitStore.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
@@ -48,6 +50,14 @@ const reflectionsBlurSigma = 0.04
 const transmissionResolutionShare = 0.5
 const firstPersonSettleSeconds = 1.5
 const fieldOfViewSettleSeconds = 0.35
+const secondsBetweenKeepingTheVisit = 2
+
+export type RoomArrival = {
+  readonly place: RoomPlace
+  readonly camera: SavedCamera | null
+  readonly events: readonly RitualEvent[]
+  readonly notice: string | null
+}
 
 export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
@@ -59,6 +69,7 @@ export class RoomScene {
   private readonly catalog: Catalog
   private readonly log: RoomLog
   private readonly texts: RoomTexts
+  private readonly visitStore: VisitStore
   private readonly shareThroughTheTimeOfDay: number
   private readonly play: RoomPlay
   private readonly room: RoomModel
@@ -82,12 +93,16 @@ export class RoomScene {
   private firstPersonSettlesAtSeconds = 0
   private look: FirstPersonLook = { headingRadians: Math.PI, pitchRadians: 0 }
   private shadowPoseLastDrawn = ''
+  private secondsSinceTheVisitWasKept = 0
+  private hasTheKeeperDied = false
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, arrival: RoomArrival, visitStore: VisitStore) {
     this.session = session
     this.catalog = catalog
     this.log = log
     this.texts = new RoomTexts(voiceSeed, log)
+    this.visitStore = visitStore
+    if (arrival.camera !== null) this.restoreTheCamera(arrival.camera)
     this.shareThroughTheTimeOfDay = shareThroughTheTimeOfDay
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
@@ -108,10 +123,12 @@ export class RoomScene {
       remarked: (remark) => this.caption.show(this.texts.remarkLines(remark)),
       debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
       keeperDied: (fatalSip) => {
+        this.hasTheKeeperDied = true
+        this.visitStore.forget('the keeper died, so the next visit starts anew')
         this.caption.hide()
         this.youDied.show(this.texts.captionLinesFor([fatalSip], this.session.state.elapsedSeconds).join(' '), this.texts.obituaryLine())
       },
-    })
+    }, arrival.place)
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer))
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
@@ -136,6 +153,8 @@ export class RoomScene {
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
     this.listenToPresses()
     window.addEventListener('resize', () => this.fitToWindow())
+    this.keepTheVisitWhenThePageIsLeft()
+    this.caption.show([...this.texts.captionLinesFor(arrival.events, session.state.elapsedSeconds), ...(arrival.notice === null ? [] : [arrival.notice])])
     this.renderer.setAnimationLoop(() => this.frame())
   }
 
@@ -145,6 +164,7 @@ export class RoomScene {
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
     this.caption.advance(seconds)
+    this.keepTheVisitNowAndThen(seconds)
     const daylight = daylightAt(hoursSinceSunriseFor(this.session.state.atmosphere.timeOfDay, this.shareThroughTheTimeOfDay))
     this.roomLights.show(daylight)
     const isFirstPerson = this.cameraMode === 'firstPerson'
@@ -183,6 +203,40 @@ export class RoomScene {
 
   private lookStick(): StickDeflection {
     return this.stickLayout === 'walkOnTheLeft' ? this.joysticks.right : this.joysticks.left
+  }
+
+  private restoreTheCamera(camera: SavedCamera): void {
+    this.cameraMode = camera.mode
+    this.stickLayout = camera.stickLayout
+    this.look = camera.look
+    this.log(`the camera is back in ${camera.mode} mode with the sticks laid out as ${camera.stickLayout}, as the visit left it`)
+  }
+
+  private keepTheVisitWhenThePageIsLeft(): void {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.keepTheVisit('the page was hidden')
+    })
+    window.addEventListener('pagehide', () => this.keepTheVisit('the page was left'))
+  }
+
+  private keepTheVisitNowAndThen(seconds: number): void {
+    this.secondsSinceTheVisitWasKept += seconds
+    if (this.secondsSinceTheVisitWasKept < secondsBetweenKeepingTheVisit) return
+    this.keepTheVisit(null)
+  }
+
+  private keepTheVisit(reason: string | null): void {
+    this.secondsSinceTheVisitWasKept = 0
+    if (this.hasTheKeeperDied) return
+    this.visitStore.keep({
+      savedVisitVersion,
+      sessionStateVersion,
+      savedAtMilliseconds: Date.now(),
+      ritual: this.session.state,
+      place: this.play.place,
+      camera: { mode: this.cameraMode, stickLayout: this.stickLayout, look: this.look },
+    })
+    if (reason !== null) this.log(`the visit is saved because ${reason}`)
   }
 
   private stickLayoutChosen(layout: StickLayout): void {

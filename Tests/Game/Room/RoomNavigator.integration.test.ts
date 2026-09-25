@@ -127,3 +127,28 @@ test('walker_whenWalkingFreelyOnTheWayToFurniture_givesUpTheWay', () => {
   assert.deepEqual(navigator.view, { kind: 'overview' })
   assert.equal(isWalking(navigator.walk), false)
 })
+
+test('walker_whenTheVisitLeftThemAtTheTeaTableCloseUp_startsThereCloseUp', () => {
+  const place = { position: teaTable.standingPoint, headingRadians: 1, closeUpOf: 'teaTable' } as const
+
+  const navigator = new RoomNavigator(() => {}, () => {}, place)
+
+  assert.deepEqual(navigator.place, place)
+  assert.deepEqual(navigator.view, { kind: 'closeUp', furnitureId: 'teaTable' })
+})
+
+test('walker_whenTheSavedPlaceIsInsideFurniture_startsAtTheEntrance', () => {
+  const place = { position: { x: teaTable.footprint.x, z: teaTable.footprint.z }, headingRadians: 1, closeUpOf: null }
+
+  const navigator = new RoomNavigator(() => {}, () => {}, place)
+
+  assert.deepEqual(navigator.walk.position, walkerStart)
+})
+
+test('walker_whenStartedAtTheTeaTableCloseUpAndTheFloorIsTapped_leavesTheCloseUp', () => {
+  const navigator = new RoomNavigator(() => {}, () => {}, { position: teaTable.standingPoint, headingRadians: 1, closeUpOf: 'teaTable' })
+
+  navigator.tapped({ kind: 'floor', point: { x: -1, z: 1.5 } })
+
+  assert.deepEqual(navigator.view, { kind: 'overview' })
+})

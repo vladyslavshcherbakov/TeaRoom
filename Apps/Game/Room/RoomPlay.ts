@@ -14,7 +14,7 @@ import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
 import { carriedShapeOf, layoutOf, type CarriedShape } from './CarriedShapes.ts'
 import { furniture, furnitureWithId, puddleCentreOn, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
-import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
+import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
 import { wetMlAt } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
@@ -88,13 +88,13 @@ export class RoomPlay {
   private readonly itemsTriedOnTheWorkingHeater = new Set<string>()
   private roseBushTapsInARow = 0
 
-  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener) {
+  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
     this.ritual = ritual
     this.catalog = catalog
     this.log = log
     this.heaterItemsBeforeTheTesterJoke = heaterItemsBeforeTheTesterJoke
     this.listener = listener
-    this.navigator = new RoomNavigator(log, (furnitureId) => this.keeperMovedTo(furnitureId))
+    this.navigator = new RoomNavigator(log, (furnitureId) => this.keeperMovedTo(furnitureId), startsAt)
   }
 
   get walk(): Walk {
@@ -103,6 +103,10 @@ export class RoomPlay {
 
   get view(): RoomView {
     return this.navigator.view
+  }
+
+  get place(): RoomPlace {
+    return this.navigator.place
   }
 
   get chosenHandIndex(): HandIndex | null {

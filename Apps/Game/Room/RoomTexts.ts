@@ -58,11 +58,20 @@ export class RoomTexts {
         return event.vesselId === caddyItemId ? this.joke('caddyWashedOut') : []
       case 'burntClothWashedBackToNew':
         return this.saidUpTo('burntClothWashed', onceAVisit)
+      case 'houseRestocked':
+        return this.restockLines(event.spoonReturned, event.caddyWasEmpty)
       case 'figurineAcceptedTea':
         return [offeringResponseText(event.figurineId, event.response)]
       default:
         return []
     }
+  }
+
+  private restockLines(spoonReturned: boolean, caddyWasEmpty: boolean): readonly string[] {
+    if (spoonReturned && caddyWasEmpty) return [phraseLineAtTurn('spoonAndCaddyReturned', this.voiceSeed, 1)]
+    if (spoonReturned) return [phraseLineAtTurn('spoonReturned', this.voiceSeed, 1)]
+    if (caddyWasEmpty) return [phraseLineAtTurn('emptyCaddyRefilled', this.voiceSeed, 1)]
+    return []
   }
 
   private joke(phrase: string, values: Readonly<Record<string, string>> = {}): readonly string[] {

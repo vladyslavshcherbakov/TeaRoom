@@ -12,6 +12,14 @@ export type RoomView =
   | { readonly kind: 'approaching'; readonly furnitureId: FurnitureId }
   | { readonly kind: 'closeUp'; readonly furnitureId: FurnitureId }
 
+export type RoomPlace = {
+  readonly position: FloorPoint
+  readonly headingRadians: number
+  readonly closeUpOf: FurnitureId | null
+}
+
+export const roomEntrance: RoomPlace = { position: walkerStart, headingRadians: Math.PI, closeUpOf: null }
+
 export type RoomLog = (message: string) => void
 
 export type KeeperMoved = (furnitureId: FurnitureId | null) => void
@@ -20,15 +28,19 @@ export class RoomNavigator {
   private readonly floor = new FloorGrid(furniture.map((piece) => piece.footprint))
   private readonly log: RoomLog
   private readonly keeperMoved: KeeperMoved
-  private currentWalk: Walk = standingAt(walkerStart, Math.PI)
-  private currentView: RoomView = { kind: 'overview' }
-  private furnitureStoodAt: FurnitureId | null = null
+  private currentWalk: Walk
+  private currentView: RoomView
+  private furnitureStoodAt: FurnitureId | null
   private isWalkingFreely = false
 
-  constructor(log: RoomLog, keeperMoved: KeeperMoved = () => {}) {
+  constructor(log: RoomLog, keeperMoved: KeeperMoved = () => {}, startsAt: RoomPlace = roomEntrance) {
     this.log = log
     this.keeperMoved = keeperMoved
-    log(`room opened, walker at ${coordinatesOf(walkerStart)}`)
+    const place = this.placeToStartAt(startsAt)
+    this.currentWalk = standingAt(place.position, place.headingRadians)
+    this.currentView = place.closeUpOf === null ? { kind: 'overview' } : { kind: 'closeUp', furnitureId: place.closeUpOf }
+    this.furnitureStoodAt = place.closeUpOf
+    log(`room opened, walker at ${coordinatesOf(place.position)}${place.closeUpOf === null ? '' : `, showing ${place.closeUpOf} close up`}`)
   }
 
   get walk(): Walk {
@@ -37,6 +49,11 @@ export class RoomNavigator {
 
   get view(): RoomView {
     return this.currentView
+  }
+
+  get place(): RoomPlace {
+    const view = this.currentView
+    return { position: this.currentWalk.position, headingRadians: this.currentWalk.headingRadians, closeUpOf: view.kind === 'closeUp' ? view.furnitureId : null }
   }
 
   tapped(target: TapTarget): void {
@@ -76,6 +93,18 @@ export class RoomNavigator {
     if (!this.isWalkingFreely) return
     this.isWalkingFreely = false
     this.log(`stopped walking freely at ${coordinatesOf(this.currentWalk.position)}`)
+  }
+
+  private placeToStartAt(place: RoomPlace): RoomPlace {
+    if (!this.floor.isWalkable(place.position)) {
+      this.log(`the walker cannot stand at ${coordinatesOf(place.position)}, so they start at the entrance`)
+      return roomEntrance
+    }
+    if (place.closeUpOf !== null && !furniture.some((piece) => piece.id === place.closeUpOf)) {
+      this.log(`the room has no ${place.closeUpOf} to show close up, so the walker starts with the whole room in view`)
+      return { ...place, closeUpOf: null }
+    }
+    return place
   }
 
   private startWalkingFreely(): void {
