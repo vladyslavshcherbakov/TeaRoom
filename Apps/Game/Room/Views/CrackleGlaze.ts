@@ -12,8 +12,14 @@ const smallCrackWidth = 0.0013
 const largeCrackDarkness = 0.8
 const smallCrackDarkness = 0.35
 const cellsStretchAlong = 2
+const pixelsPerCandidateCell = 16
+const candidateCellsAround = canvasWidth / pixelsPerCandidateCell
+const candidateCellsAlong = canvasHeight / pixelsPerCandidateCell
+const roundingMargin = 1e-9
 
 type Seed = { readonly around: number; readonly along: number }
+
+type SeedsByCell = readonly (readonly Seed[])[]
 
 type Rgb = readonly [number, number, number]
 
@@ -23,16 +29,17 @@ export function paintCrackle(): HTMLCanvasElement {
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
   if (context === null) return canvas
-  const largeSeeds = seedsFor(largeCells, 11)
-  const smallSeeds = seedsFor(smallCells, 23)
+  const largeSeedsByCell = seedsThatCanBeNearestByCell(seedsFor(largeCells, 11))
+  const smallSeedsByCell = seedsThatCanBeNearestByCell(seedsFor(smallCells, 23))
   const image = context.createImageData(canvasWidth, canvasHeight)
   for (let row = 0; row < canvasHeight; row += 1) {
     for (let column = 0; column < canvasWidth; column += 1) {
       const around = column / canvasWidth
       const along = row / canvasHeight
+      const cellIndex = Math.floor(row / pixelsPerCandidateCell) * candidateCellsAround + Math.floor(column / pixelsPerCandidateCell)
       const glaze = mix(skyBlue, paleSkyBlue, 0.5 + 0.5 * Math.sin(Math.PI * 2 * around * 6 + along * 23) * Math.sin(along * 31 - Math.PI * 2 * around * 3))
-      const largeCrack = crackAt(around, along, largeSeeds, largeCrackWidth) * largeCrackDarkness
-      const smallCrack = crackAt(around, along, smallSeeds, smallCrackWidth) * smallCrackDarkness
+      const largeCrack = crackAt(around, along, largeSeedsByCell[cellIndex] ?? [], largeCrackWidth) * largeCrackDarkness
+      const smallCrack = crackAt(around, along, smallSeedsByCell[cellIndex] ?? [], smallCrackWidth) * smallCrackDarkness
       const colour = mix(glaze, crackColour, Math.max(largeCrack, smallCrack))
       image.data.set([colour[0], colour[1], colour[2], 255], (row * canvasWidth + column) * 4)
     }
@@ -43,6 +50,20 @@ export function paintCrackle(): HTMLCanvasElement {
 
 function seedsFor(count: number, salt: number): Seed[] {
   return Array.from({ length: count }, (_, index) => ({ around: pseudoRandom(index * 2 + salt), along: pseudoRandom(index * 2 + 1 + salt * 7) }))
+}
+
+function seedsThatCanBeNearestByCell(seeds: readonly Seed[]): SeedsByCell {
+  const halfCellAround = 0.5 / candidateCellsAround
+  const halfCellAlong = 0.5 / candidateCellsAlong
+  const centreToCorner = distanceBetween(0, 0, halfCellAround, halfCellAlong)
+  return Array.from({ length: candidateCellsAround * candidateCellsAlong }, (_, cellIndex) => {
+    const centreAround = (cellIndex % candidateCellsAround) / candidateCellsAround + halfCellAround
+    const centreAlong = Math.floor(cellIndex / candidateCellsAround) / candidateCellsAlong + halfCellAlong
+    const distancesFromTheCentre = seeds.map((seed) => distanceBetween(centreAround, centreAlong, seed.around, seed.along))
+    const secondNearestFromTheCentre = [...distancesFromTheCentre].sort((first, second) => first - second)[1] ?? Infinity
+    const farthestThatCanBeNearest = secondNearestFromTheCentre + 2 * centreToCorner + roundingMargin
+    return seeds.filter((_, index) => (distancesFromTheCentre[index] ?? Infinity) <= farthestThatCanBeNearest)
+  })
 }
 
 function crackAt(around: number, along: number, seeds: readonly Seed[], width: number): number {
