@@ -71,9 +71,9 @@ export const englishTexts = {
   'spill.4': 'Well, that went everywhere.',
 
   'sillIsTheRoomsOwn.1': 'Wow, you tap everything here. The room would like to keep something for itself.',
-  'sillIsTheRoomsOwn.2': 'The figurines on the windowsill belong to the room. It keeps them for itself.',
-  'sillIsTheRoomsOwn.3': 'You have touched almost everything here. Let the room keep these two for itself.',
-  'sillIsTheRoomsOwn.4': 'Not these ones. The room likes to keep a few things just for itself.',
+  'sillIsTheRoomsOwn.2': 'The figurines on the windowsill belong to the room. Admire them from here.',
+  'sillIsTheRoomsOwn.3': 'You have touched almost everything in this house. These two are off the list.',
+  'sillIsTheRoomsOwn.4': 'Not these ones. Some things in a house are only for looking at.',
 
   'bowlKeptOffTheHeater.1': 'Have you lost your mind? That bowl is the dearest thing in this house. Put your own hand there instead.',
   'bowlKeptOffTheHeater.2': 'The Guild of Beautiful Bowls has received a complaint about us. It is not amused.',
