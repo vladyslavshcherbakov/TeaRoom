@@ -2,7 +2,8 @@ import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition
 import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { carriedShapeOf, footprintCirclesMetres, footprintRadiusMetres, furniture, heaterFootprintRadiusMetres, openLidRadiusMetres, sinkBasin, type FloorPoint } from './RoomLayout.ts'
+import { carriedShapeOf, footprintCirclesMetres, footprintRadiusMetres, openLidRadiusMetres } from './CarriedShapes.ts'
+import { furniture, heaterFootprintRadiusMetres, sinkBasin, type FloorPoint } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
 const openLidGapMetres = 0.01

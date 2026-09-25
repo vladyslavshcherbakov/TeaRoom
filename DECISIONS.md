@@ -130,7 +130,7 @@ The plan is in `docs/roadmap.md`.
 
 ### Apps/Game/Room/
 
-**Nothing is drawn through anything else.** Several times a thing was placed at a fixed offset and passed through its neighbours: open lids lay in the sink's sides, on the heater and in a bowl beside them, the thermos stood through the sink's floor, and an overflow started off the vessel's wall. Every spot a thing is drawn at comes from `Placement.ts` or is checked against the furniture, the heater, the sink and the other items there, and a spot that is taken is refused or moved, never overlapped. An item's footprint in `RoomLayout.ts` is every part that reaches past its body: the kettle's spout is a second circle, which may hang over an edge, the sink or the heater, but never over another item. A change that draws something at a new spot is checked in a close-up next to its neighbours before it is done.
+**Nothing is drawn through anything else.** Several times a thing was placed at a fixed offset and passed through its neighbours: open lids lay in the sink's sides, on the heater and in a bowl beside them, the thermos stood through the sink's floor, and an overflow started off the vessel's wall. Every spot a thing is drawn at comes from `Placement.ts` or is checked against the furniture, the heater, the sink and the other items there, and a spot that is taken is refused or moved, never overlapped. An item's footprint in `CarriedShapes.ts` is every part that reaches past its body: the kettle's spout is a second circle, which may hang over an edge, the sink or the heater, but never over another item. A change that draws something at a new spot is checked in a close-up next to its neighbours before it is done.
 
 ## Open questions
 

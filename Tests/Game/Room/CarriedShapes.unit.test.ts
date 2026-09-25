@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { carriedShapeOf } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { carriedShapeOf } from '../../../Apps/Game/Room/CarriedShapes.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'

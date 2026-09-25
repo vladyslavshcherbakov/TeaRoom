@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
-import { faucetSpout, type CarriedShape } from '../../RoomLayout.ts'
+import type { CarriedShape } from '../../CarriedShapes.ts'
+import { faucetSpout } from '../../RoomLayout.ts'
 import type { RoomMaterials } from '../RoomMaterials.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { CarriedModel } from './CarriedModel.ts'

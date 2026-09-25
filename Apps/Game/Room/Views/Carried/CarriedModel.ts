@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { footprintRadiusMetres, type CarriedShape } from '../../RoomLayout.ts'
+import { footprintRadiusMetres, type CarriedShape } from '../../CarriedShapes.ts'
 import { bowlParts } from './BowlParts.ts'
 import { caddyParts } from './CaddyParts.ts'
 import { clothParts } from './ClothParts.ts'
