@@ -5,6 +5,7 @@ export const roomLayers = {
   heldInView: 1,
   untappableRoom: 2,
   touchAreas: 3,
+  inspected: 4,
 } as const
 
 const touchAreaMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
@@ -23,7 +24,7 @@ export function isATouchArea(part: THREE.Object3D): boolean {
 export function putOnLayer(root: THREE.Object3D, layer: number): void {
   root.traverse((part) => {
     if (!isATouchArea(part)) return part.layers.set(layer)
-    if (layer === roomLayers.untappableRoom) return part.layers.disableAll()
+    if (layer === roomLayers.untappableRoom || layer === roomLayers.inspected) return part.layers.disableAll()
     part.layers.set(roomLayers.touchAreas)
   })
 }

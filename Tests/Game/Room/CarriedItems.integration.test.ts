@@ -6,6 +6,7 @@ import { sinkBasin } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Views/Carried/CarriedModel.ts'
 import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
+import { inspectInView } from '../../../Apps/Game/Room/Views/Carried/InspectedInView.ts'
 import type { CarriedModelMaterials } from '../../../Apps/Game/Room/Views/Carried/ItemParts.ts'
 import { overflowSideFromTheGaugeRadians, overflowStreamRadiusMetres } from '../../../Apps/Game/Room/Views/Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers } from '../../../Apps/Game/Room/Views/RoomLayers.ts'
@@ -25,6 +26,7 @@ const tiltsDegrees = [0, 10, 20, 30, tiltOfFullFlowDegrees]
 const spoutDirections = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -0.6, z: -0.8 }]
 const portraitPhoneAspects = [375 / 667, 390 / 844, 412 / 915]
 const closeUpAndFirstPersonFieldsOfViewDegrees = [30, 70]
+const inspectionTurnsRadians = [[0, 0.55], [Math.PI / 2, Math.PI / 2], [Math.PI / 4, Math.PI], [1, -1]] as const
 const overflowSide = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
 
 test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () => {
@@ -71,12 +73,12 @@ test('fire_ofEveryShape_isDrawnExactlyWhenTheItemCanCharAndTheTableSaysHowFar', 
   }
 })
 
-test('touchAreas_ofEveryShapeStandingHeldOrWiping_areNeverDrawnByTheCamera', () => {
+test('touchAreas_ofEveryShapeStandingHeldWipingOrInspected_areNeverDrawnByTheCamera', () => {
   const layersTheCameraDraws = new THREE.Layers()
-  for (const layer of [roomLayers.room, roomLayers.untappableRoom, roomLayers.heldInView]) layersTheCameraDraws.enable(layer)
+  for (const layer of [roomLayers.room, roomLayers.untappableRoom, roomLayers.heldInView, roomLayers.inspected]) layersTheCameraDraws.enable(layer)
 
   for (const model of modelsInTheQuietRoom()) {
-    for (const layer of [roomLayers.room, roomLayers.heldInView, roomLayers.untappableRoom]) {
+    for (const layer of [roomLayers.room, roomLayers.heldInView, roomLayers.untappableRoom, roomLayers.inspected]) {
       putOnLayer(model.root, layer)
 
       const drawnTouchAreas = meshesUnder(model.root).filter((mesh) => isATouchArea(mesh) && mesh.layers.test(layersTheCameraDraws))
@@ -85,11 +87,11 @@ test('touchAreas_ofEveryShapeStandingHeldOrWiping_areNeverDrawnByTheCamera', () 
   }
 })
 
-test('touchAreas_ofEveryShape_catchTapsWhileStandingOrHeldAndLetThemThroughWhileWiping', () => {
+test('touchAreas_ofEveryShape_catchTapsWhileStandingOrHeldAndLetThemThroughWhileWipingOrInspected', () => {
   const raycaster = new THREE.Raycaster()
   raycaster.layers.enableAll()
   raycaster.layers.disable(roomLayers.untappableRoom)
-  const layersAndWhetherTapsAreCaught = [[roomLayers.room, true], [roomLayers.heldInView, true], [roomLayers.untappableRoom, false]] as const
+  const layersAndWhetherTapsAreCaught = [[roomLayers.room, true], [roomLayers.heldInView, true], [roomLayers.untappableRoom, false], [roomLayers.inspected, false]] as const
 
   for (const model of modelsInTheQuietRoom()) {
     for (const [layer, isCaught] of layersAndWhetherTapsAreCaught) {
@@ -129,6 +131,23 @@ test('heldItem_ofEveryShapeInEitherHand_staysInsideAPortraitPhoneScreen', () => 
             const farthest = farthestFromTheScreensCentre(model, camera)
             assert.ok(farthest <= 1, `${model.itemId} in hand ${handIndex}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
           }
+        }
+      }
+    }
+  }
+})
+
+test('inspectedItem_ofEveryShapeTurnedAnyWayAtItsUsualSize_staysInsideAPortraitPhoneScreen', () => {
+  for (const aspect of portraitPhoneAspects) {
+    for (const fieldOfViewDegrees of closeUpAndFirstPersonFieldsOfViewDegrees) {
+      const camera = new THREE.PerspectiveCamera(fieldOfViewDegrees, aspect, 0.1, 100)
+      camera.updateMatrixWorld(true)
+      for (const model of modelsInTheQuietRoom()) {
+        for (const [yawRadians, pitchRadians] of inspectionTurnsRadians) {
+          inspectInView(model, { camera, inspection: { itemId: model.itemId, handIndex: 0, yawRadians, pitchRadians, magnification: 1 } })
+
+          const farthest = farthestFromTheScreensCentre(model, camera)
+          assert.ok(farthest <= 1, `${model.itemId} turned ${yawRadians.toFixed(2)} and ${pitchRadians.toFixed(2)}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
         }
       }
     }

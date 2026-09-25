@@ -3,6 +3,7 @@ import type { DeepReadonly } from '../../../../../Shared/Simulation/State/DeepRe
 import type { HandIndex, SessionState } from '../../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { AimedPourView } from '../../AimedPour.ts'
+import type { ItemInspectionView } from '../../ItemInspection.ts'
 import type { WorldPoint } from '../../RoomLayout.ts'
 import type { Walk } from '../../Walking/Walk.ts'
 
@@ -11,6 +12,7 @@ export type CarriedItemsScene = {
   readonly table: TableViewState
   readonly walk: Walk
   readonly heldInView: HeldInView | null
+  readonly inspected: InspectedInView | null
   readonly aimedPour: AimedPourView | null
   readonly clothOnTheTableAt: WorldPoint | null
   readonly timeSeconds: number
@@ -19,4 +21,9 @@ export type CarriedItemsScene = {
 export type HeldInView = {
   readonly camera: THREE.PerspectiveCamera
   readonly chosenHandIndex: HandIndex | null
+}
+
+export type InspectedInView = {
+  readonly camera: THREE.PerspectiveCamera
+  readonly inspection: ItemInspectionView
 }
