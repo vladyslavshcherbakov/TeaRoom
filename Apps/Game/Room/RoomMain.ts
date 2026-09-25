@@ -8,7 +8,6 @@ import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 
 const roomId = 'quietRoom'
 const shuffledVesselDefinitionId = 'teaBowl'
-const voiceSeedStorageKey = 'tearoom.voiceSeed'
 const largestVoiceSeed = 1_000_000
 
 document.title = text('page.title')
@@ -44,8 +43,8 @@ if (opening.kind === 'unavailable') {
   const teaId = Object.keys(catalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })
-  const voiceSeed = keepersVoiceSeed()
-  roomLog(`the keeper speaks with voice ${voiceSeed}`)
+  const voiceSeed = 1 + Math.floor(Math.random() * largestVoiceSeed)
+  roomLog(`the keeper speaks with voice ${voiceSeed}, chosen at random for this visit`)
   new RoomScene(container, opening.session, catalog, roomLog, voiceSeed)
 }
 
@@ -59,16 +58,4 @@ function catalogWithBowlsShuffled(): Catalog {
   const shelfOrder = shuffledRoom.vessels.filter((vessel) => vessel.definitionId === shuffledVesselDefinitionId).map((vessel) => `${vessel.id} at ${vessel.startsAt.placeId} (${vessel.startsAt.y}, ${vessel.startsAt.z})`)
   roomLog(`the bowls stand in a random order: ${shelfOrder.join(', ')}`)
   return { ...defaultCatalog, rooms: { ...defaultCatalog.rooms, [roomId]: shuffledRoom } }
-}
-
-function keepersVoiceSeed(): number {
-  try {
-    const stored = Number(window.localStorage.getItem(voiceSeedStorageKey))
-    if (Number.isInteger(stored) && stored > 0) return stored
-    const chosen = 1 + Math.floor(Math.random() * largestVoiceSeed)
-    window.localStorage.setItem(voiceSeedStorageKey, String(chosen))
-    return chosen
-  } catch {
-    return 1 + Math.floor(Math.random() * largestVoiceSeed)
-  }
 }
