@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { weaveCloth } from './ClothWeave.ts'
 import { paintCrackle } from './CrackleGlaze.ts'
+import { paintKintsugi } from './KintsugiGlaze.ts'
 import { paintKoi } from './KoiPainting.ts'
 import { paintLotus } from './LotusPainting.ts'
 import { paintGreenMarble } from './MarbleGlaze.ts'
@@ -106,7 +107,7 @@ const clearGlassOpacity = 0.28
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
 const clothRoughness = 1
-const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'blueGlaze', 'yellowGlaze', 'emeraldGlaze'])
+const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'yellowGlaze', 'emeraldGlaze'])
 const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
 const glazePaintings: Partial<Record<Surface, () => HTMLCanvasElement>> = { emeraldGlaze: paintGreenMarble, skyBlueGlaze: paintCrackle }
 
@@ -136,6 +137,7 @@ export class RoomMaterials {
     if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
     if (surface === 'flame' || surface === 'flameCore' || surface === 'ember') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
     if (surface === 'temperGlaze') return this.temperGlazeMaterial(color)
+    if (surface === 'blueGlaze') return this.kintsugiMaterial()
     if (surface === 'flutedGlass') return this.glassMaterial(color)
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
     if (surface === 'koiPainting') return paintingMaterial(paintKoi())
@@ -146,6 +148,27 @@ export class RoomMaterials {
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
     if (glazedSurfaces.has(surface)) return glazeMaterial(surface, color)
     return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+  }
+
+  private kintsugiMaterial(): THREE.MeshPhysicalMaterial {
+    const kintsugi = paintKintsugi()
+    const colours = new THREE.CanvasTexture(kintsugi.colours)
+    colours.colorSpace = THREE.SRGBColorSpace
+    const surface = new THREE.CanvasTexture(kintsugi.surface)
+    for (const texture of [colours, surface]) {
+      texture.wrapS = THREE.RepeatWrapping
+      texture.anisotropy = paintingSharpness
+    }
+    return new THREE.MeshPhysicalMaterial({
+      map: colours,
+      metalnessMap: surface,
+      roughnessMap: surface,
+      metalness: 1,
+      roughness: 1,
+      clearcoat: 0.6,
+      envMap: this.reflections,
+      envMapIntensity: 1.4,
+    })
   }
 
   private temperGlazeMaterial(color: string): THREE.MeshPhysicalMaterial {
