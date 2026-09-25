@@ -7,9 +7,9 @@ import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { emptyTheHand, isWithinReach, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { emptyTheHand, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 import { howTheSpoonChars, isBurning } from '../Physics/Charring.ts'
-import { isTooHotToHold } from '../Physics/Heat.ts'
+import { isCoolEnoughToHold, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isWithinTheKeepersReach, wasRefusedByAnyOf } from './ItemRefusals.ts'
 import { percent } from './Percent.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
@@ -24,14 +24,8 @@ export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
 }
 
 export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
-  const location = locationOfItem(draft, command.itemId)
-  if (location === undefined) return refuse(draft, command, 'unknownItem')
-  if (location.kind === 'inHand') return refuse(draft, command, 'alreadyInHand')
-  if (location.kind === 'gone') return refuse(draft, command, 'burntAway')
-  if (!isWithinReach(draft, location)) return refuse(draft, command, 'outOfReach', `${command.itemId} is ${whereIs(location)}, ${whereTheKeeperStands(draft)}`)
-  if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
-  const shellHeat = draft.state.vessels[command.itemId]?.shellHeat ?? 0
-  if (isTooHotToHold(shellHeat)) return refuse(draft, command, 'tooHotToHold', `${command.itemId}'s metal is at ${percent(shellHeat)} of red heat`)
+  if (wasRefusedByAnyOf(draft, command, command.itemId, [isKnown, isNotInAHand, isNotBurntAway, isWithinTheKeepersReach, isNotBeingPoured, isCoolEnoughToHold])) return
+  const whereItWas = whereIs(locationOfItem(draft, command.itemId))
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((itemId) => itemId !== null).join(' and ')}`)
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
@@ -41,7 +35,7 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   if (cloth !== undefined) liftTheClothOutOfThePuddle(draft, cloth)
   liftOutOfTheSink(draft, command.itemId)
   moveItem(draft, command.itemId, { kind: 'inHand', handIndex })
-  note(draft, `picked up ${command.itemId} from the ${location.spot.placeId} into hand ${handIndex}`)
+  note(draft, `picked up ${command.itemId}, which was ${whereItWas}, into hand ${handIndex}`)
   draft.events.push({ type: 'pickedUp', itemId: command.itemId, handIndex })
   closeTheLidAsItIsLifted(draft, command.itemId, 'it was picked up')
 }

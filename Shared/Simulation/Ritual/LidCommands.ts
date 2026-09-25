@@ -1,8 +1,6 @@
-import { isTooHotToHold } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { isWithinReach, whereIs, whereTheKeeperStands } from './Reach.ts'
-import { percent } from './Percent.ts'
+import { isCoolEnoughToHold, isWithinTheKeepersReach, wasRefusedByAnyOf } from './ItemRefusals.ts'
 
 export function moveVesselLid(
   draft: Draft,
@@ -11,8 +9,7 @@ export function moveVesselLid(
   const vessel = draft.state.vessels[command.vesselId]
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
   if (vesselDefinitionOf(draft, vessel).lid === null) return refuse(draft, command, 'vesselHasNoLid')
-  if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}, ${whereTheKeeperStands(draft)}`)
-  if (isTooHotToHold(vessel.shellHeat)) return refuse(draft, command, 'tooHotToHold', `${vessel.id}'s metal is at ${percent(vessel.shellHeat)} of red heat`)
+  if (wasRefusedByAnyOf(draft, command, vessel.id, [isWithinTheKeepersReach, isCoolEnoughToHold])) return
   const shouldOpen = command.type === 'openVesselLid'
   if (vessel.isLidOpen === shouldOpen) return refuse(draft, command, shouldOpen ? 'lidAlreadyOpen' : 'lidAlreadyClosed')
   vessel.isLidOpen = shouldOpen

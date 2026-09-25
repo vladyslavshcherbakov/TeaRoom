@@ -2,24 +2,18 @@ import { definitionIn } from '../Definitions/Catalog.ts'
 import { judgeWater, type WaterJudgement } from '../Judgement/WaterJudgement.ts'
 import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
-import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { chosenTea, describeLiquid, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { isKnown, isNotBeingPoured, isNotBurntAway, isWithinTheKeepersReach, wasRefusedByAnyOf, type ItemCheck } from './ItemRefusals.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { emptyTheHand, heaterSpotOf, isACloth, isKeeperAt, isWithinReach, locationOfItem, moveItem, spoonItemId, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { emptyTheHand, heaterSpotOf, isACloth, isKeeperAt, locationOfItem, moveItem, spoonItemId, whereTheKeeperStands } from './Reach.ts'
 import { percent } from './Percent.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
-  const location = locationOfItem(draft, itemId)
-  if (location === undefined) return refuse(draft, command, 'unknownItem')
-  if (location.kind === 'gone') return refuse(draft, command, 'burntAway')
-  if (!canSitOnTheHeater(draft, itemId)) return refuse(draft, command, 'cannotSitOnHeater')
-  const occupant = draft.state.heater.itemIdOnTop
-  if (occupant !== null) return refuse(draft, command, 'heaterOccupied', `${occupant} is on it`)
-  if (isInvolvedInPour(draft, itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
+  if (wasRefusedByAnyOf(draft, command, itemId, [isKnown, isNotBurntAway, canSitOnTheHeaterCheck, isTheHeaterFree, isNotBeingPoured, isTheKeeperAtTheHeater, isWithinTheKeepersReach])) return
   const heaterSpot = heaterSpotOf(draft)
-  if (!isKeeperAt(draft, heaterSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the heater is at the ${heaterSpot.placeId}`)
-  if (!isWithinReach(draft, location)) return refuse(draft, command, 'outOfReach', `${itemId} is ${whereIs(location)}`)
-  if (location.kind === 'inHand') emptyTheHand(draft, location.handIndex)
+  const location = locationOfItem(draft, itemId)
+  if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
   liftOutOfTheSink(draft, itemId)
   moveItem(draft, itemId, { kind: 'onSurface', spot: heaterSpot })
   draft.state.heater.itemIdOnTop = itemId
@@ -91,6 +85,18 @@ function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
       `(good ${good.lowestC}–${good.highestC} °C, acceptable ${acceptable.lowestC}–${acceptable.highestC} °C)`,
   )
   return judgement
+}
+
+const canSitOnTheHeaterCheck: ItemCheck = (draft, itemId) => (canSitOnTheHeater(draft, itemId) ? null : { reason: 'cannotSitOnHeater', values: '' })
+
+const isTheHeaterFree: ItemCheck = (draft) => {
+  const occupant = draft.state.heater.itemIdOnTop
+  return occupant === null ? null : { reason: 'heaterOccupied', values: `${occupant} is on it` }
+}
+
+const isTheKeeperAtTheHeater: ItemCheck = (draft) => {
+  const heaterPlaceId = heaterSpotOf(draft).placeId
+  return isKeeperAt(draft, heaterPlaceId) ? null : { reason: 'notAtThatPlace', values: `${whereTheKeeperStands(draft)}, the heater is at the ${heaterPlaceId}` }
 }
 
 function canSitOnTheHeater(draft: Draft, itemId: string): boolean {
