@@ -77,7 +77,8 @@ export const bowlShapeLook: CarriedShapeLook = {
   soakedLeaves: {
     pile: { leafCount: mostSoakedLeavesShown, radiusMetres: 0.035, heightMetres: 0, isLyingFlat: true },
     floatHeightAt: (fillShare) => bowlLiquidLevel(fillShare).heightMetres,
-    areSeenOnlyOnWaterUnderAnOpenLid: false,
+    spreadShareAt: () => 1,
+    areSeenOnlyUnderAnOpenLid: false,
   },
   fire: null,
 }

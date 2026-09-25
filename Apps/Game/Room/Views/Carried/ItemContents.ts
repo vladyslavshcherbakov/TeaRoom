@@ -38,7 +38,7 @@ const dullRedHeat = new THREE.Color('#8a1000')
 const brightRedHeat = new THREE.Color('#ff2a00')
 const redHeatRisesWithGlow = 1.5
 const brightestRedHeatIntensity = 2.2
-const leavesDriftRadiansPerSecond = 0.05
+const leavesDriftRadiansPerSecondByMotion: Readonly<Record<TableViewState.SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
 const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
 const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
   still: { heightMetres: 0, tiltRadians: 0, wavesPerSecond: 0 },
@@ -133,7 +133,7 @@ function showWaterInGauge(gaugeWater: GaugeStrip, vessel: TableViewState.Vessel,
 function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: TableViewState.Vessel, wave: Wave, timeSeconds: number): void {
   const soaked = vessel.soakedLeaves
   const soakedLook = model.look.soakedLeaves
-  const isInsideShown = soakedLook?.areSeenOnlyOnWaterUnderAnOpenLid === true ? vessel.fillShare > 0 && vessel.isLidOpen === true : true
+  const isInsideShown = soakedLook?.areSeenOnlyUnderAnOpenLid === true ? vessel.isLidOpen === true : true
   holder.visible = soaked !== null && soakedLook !== null && isInsideShown
   if (soaked === null || soakedLook === null || !holder.visible) return
   if (model.soakedLeaves === null || model.soakedLeaves.teaId !== soaked.teaId) {
@@ -146,7 +146,16 @@ function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: Tabl
   model.soakedLeaves.pile.showFill(soaked.count / mostSoakedLeavesShown)
   const waterRise = vessel.fillShare > 0 ? wave.riseMetres : 0
   holder.position.y = soakedLook.floatHeightAt(vessel.fillShare) + waterRise + leavesAboveTheWaterMetres
-  holder.rotation.set(wave.tiltXRadians, timeSeconds * leavesDriftRadiansPerSecond, wave.tiltZRadians)
+  holder.rotation.set(wave.tiltXRadians, soakedLeavesTurnedBy(model, vessel.surfaceMotion, timeSeconds), wave.tiltZRadians)
+  const spreadShare = soakedLook.spreadShareAt(vessel.fillShare)
+  holder.scale.set(spreadShare, 1, spreadShare)
+}
+
+function soakedLeavesTurnedBy(model: CarriedModel, motion: TableViewState.SurfaceMotion, timeSeconds: number): number {
+  const turn = model.soakedLeavesTurn ?? { radians: 0, atSeconds: timeSeconds }
+  const radians = turn.radians + Math.max(0, timeSeconds - turn.atSeconds) * leavesDriftRadiansPerSecondByMotion[motion]
+  model.soakedLeavesTurn = { radians, atSeconds: timeSeconds }
+  return radians
 }
 
 function showRedHeat(shell: GlowingShell, glow: number): void {

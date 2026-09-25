@@ -19,7 +19,8 @@ export type LooseLeavesLook = {
 export type SoakedLeavesLook = {
   readonly pile: LeafPileSize
   readonly floatHeightAt: (fillShare: number) => number
-  readonly areSeenOnlyOnWaterUnderAnOpenLid: boolean
+  readonly spreadShareAt: (fillShare: number) => number
+  readonly areSeenOnlyUnderAnOpenLid: boolean
 }
 
 export type FireLook = {

@@ -4,7 +4,7 @@ import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { GaugeStrip } from './GaugeStrip.ts'
 import type { CarriedModelMaterials, ItemParts, PointDownTheSide } from './ItemParts.ts'
-import { kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
+import { kettleRadiusAt, kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
 
 const lidTouchPadRadiusMetres = 0.095
 const gaugeFrameHalfWidthMetres = 0.024
@@ -15,15 +15,18 @@ const gaugeWaterAboveTheBodyMetres = 0.003
 const overflowAboveTheBodyMetres = 0.005
 const overflowLeavesTheKettleAtRadians = 2.4
 const overflowPointsOnTheKettle = 12
+const soakedLeavesRadiusMetres = 0.06
+const leavesClearOfTheWallMetres = 0.006
 
 export const kettleShapeLook: CarriedShapeLook = {
   partsFor: kettleParts,
   steamRisesAboveTheSpout: true,
   looseLeaves: null,
   soakedLeaves: {
-    pile: { leafCount: mostSoakedLeavesShown, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true },
+    pile: { leafCount: mostSoakedLeavesShown, radiusMetres: soakedLeavesRadiusMetres, heightMetres: 0, isLyingFlat: true },
     floatHeightAt: kettleWaterHeightAt,
-    areSeenOnlyOnWaterUnderAnOpenLid: true,
+    spreadShareAt: (fillShare) => Math.min(1, (kettleRadiusAt(kettleWaterHeightAt(fillShare)) - leavesClearOfTheWallMetres) / soakedLeavesRadiusMetres),
+    areSeenOnlyUnderAnOpenLid: true,
   },
   fire: null,
 }

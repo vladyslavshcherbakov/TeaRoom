@@ -33,6 +33,7 @@ export type CarriedModel = {
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
   readonly soakedLeafHolder: THREE.Group | null
   soakedLeaves: { readonly pile: LeafPile; readonly teaId: string } | null
+  soakedLeavesTurn: { radians: number; atSeconds: number } | null
   readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
@@ -106,6 +107,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     leaves: null,
     soakedLeafHolder,
     soakedLeaves: null,
+    soakedLeavesTurn: null,
     kettleWater: parts.kettleWater,
     puffs,
     heldInViewLook: parts.heldInViewLook,
