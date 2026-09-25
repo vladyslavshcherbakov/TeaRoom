@@ -226,6 +226,35 @@ test('kettle_whenTakenOutAfterTheTapRanOverItsRim_keepsItsWater', () => {
   assertNear(ritual.vessel('kettle').liquid.volumeMl, 1000)
 })
 
+test('kettleOfTea_whenTheTapRunsOverItsRimForLong_comesOutFullOfClearWater', () => {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(5)
+  ritual.wait(60)
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+
+  ritual.fillInTheSink('kettle', 60)
+
+  assert.ok(ritual.vessel('kettle').liquid.strength < 1, `strength ${ritual.vessel('kettle').liquid.strength}`)
+  assertNear(ritual.vessel('kettle').liquid.volumeMl, 1000)
+})
+
+test('boilingWaterInTheThermos_whenTheTapRunsOverItsRim_coolsToTheTapWater', () => {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(100)
+  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
+  ritual.pour('kettle', 'thermos', 10)
+  ritual.do({ type: 'pickUp', itemId: 'thermos' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
+  const temperatureBefore = ritual.vessel('thermos').liquid.temperatureC
+
+  ritual.do({ type: 'putInTheSink', itemId: 'thermos' })
+  ritual.wait(30)
+
+  assert.ok(temperatureBefore > 90, `temperature before ${temperatureBefore}`)
+  assertNear(ritual.vessel('thermos').liquid.temperatureC, 20, 0.5)
+})
+
 function openKettleInHandAtTheCounter(): TestRitual {
   const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })
