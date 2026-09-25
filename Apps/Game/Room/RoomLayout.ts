@@ -49,7 +49,7 @@ export const walkerStart: FloorPoint = { x: 1.6, z: 1.8 }
 
 export const windowOnBackWall = { centreX: 1, sillHeight: 0.85, width: 1.8, height: 1.3 }
 
-export const medalOnBackWall = { x: -0.3, y: 1.75 }
+export const medalOnLeftWall = { z: -1.4, y: 1.55 }
 
 export const furniture: readonly Furniture[] = [
   {

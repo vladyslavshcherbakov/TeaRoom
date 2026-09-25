@@ -10,7 +10,7 @@ import {
   puddleRadiusMetres,
   roomHalfSize,
   windowOnBackWall,
-  medalOnBackWall,
+  medalOnLeftWall,
   type Footprint,
   type Furniture,
   type FurnitureId,
@@ -114,7 +114,6 @@ export class RoomModel {
 
   private addMedal(): void {
     const medal = new THREE.Group()
-    const wallFace = -roomHalfSize
     for (const side of [-1, 1]) {
       const ribbon = this.plainBox('medalRibbon', medalRibbonWidthMetres, medalRibbonLengthMetres, 0.004, { x: side * medalRibbonWidthMetres * 0.45, y: medalRadiusMetres + medalRibbonLengthMetres * 0.42, z: 0.004 })
       ribbon.rotation.z = side * medalRibbonTiltRadians
@@ -128,7 +127,8 @@ export class RoomModel {
     touchArea.position.set(0, medalRibbonLengthMetres * 0.4, 0.025)
     touchArea.userData = { isForgivingTouchArea: true }
     medal.add(disc, touchArea)
-    medal.position.set(medalOnBackWall.x, medalOnBackWall.y, wallFace)
+    medal.position.set(-roomHalfSize, medalOnLeftWall.y, medalOnLeftWall.z)
+    medal.rotation.y = Math.PI / 2
     this.root.add(medal)
     this.tag(medal, { isMedal: true })
   }
