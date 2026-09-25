@@ -4,33 +4,6 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 
 1.0 is the MVP of the GDD: one room, one window, three times of day, rain, a cat, one kettle, an electric heater, a thermos, a caddy and spoon, six tea bowls in different glazes, three teas, a cloth and two figurines, with heating, temperature, pouring, brewing, bitterness, the first sip, the gods' plaque and the option to simply stay.
 
-## 0.1 — Simulation core (done)
-
-- The ritual as a headless simulation in TypeScript that imports nothing: heating, cooling, the thermos, pouring with spills and overflow, scooping and tipping leaves, brewing with strength and bitterness, tasting, offerings, the gods, wiping and drying, finishing, resting and leaving.
-- Fixed-step time, identical results at any frame rate.
-- Content as data: sencha, oolong and shou puerh, the clay kettle, the thermos, tea bowls, the electric plate, the dragon and the toad, the quiet room.
-- Integration tests for every rule, plus a content balance test that brews each tea by the book.
-- A ritual bench: a debug page with buttons and sliders over the core, published on GitHub Pages, so the rules can be tried on a phone.
-- GitHub Actions: type-check and tests on every push, deploy to Pages from the default branch.
-
-## 0.2 — First touch (done, then replaced by the 3D room)
-
-- Phaser (version chosen and pinned when it is added), with a Vite build in the same pipeline.
-- A portrait scene with placeholder shapes: table, kettle, heater, thermos, caddy, spoon, three bowls, two figurines, cloth.
-- Every 0.1 command reachable by gesture: drag to the heater, tap the switch, tilt to pour with a vertical drag, scoop and tip, drag a bowl to a figurine or to the viewer.
-- A presenter that turns state into cues: steam and kettle sound levels from temperature, liquor colour from strength, liquid level from volume, as pure functions with unit tests.
-- The game at the root of the site, the bench under `/bench/`.
-- A browser smoke test in CI that loads the game and completes one ritual.
-
-## 0.3 — The room (done)
-
-- A small 3D room in Three.js, seen from above at an angle: floor, two walls cut away like a dollhouse, the window, the counter with the heater and the tap, the shelf with the caddy and the bowls, the low table with the cushion, the figurines on the windowsill, and a walker.
-- A tap on the floor walks there around the furniture. A tap on a piece of furniture walks to it and shows it close up. A tap elsewhere returns to the room.
-- Two hands: pick up and put down, one item per hand, known to the simulation, so the rules can say what is out of reach.
-- The table close-up hosts the tactile ritual from 0.2.
-- The kettle is filled at the tap, pours are aimed with two fingers, the spoon and the cloth are carried in the hands, and the cloth wipes as it moves.
-- Flat colours in the style of Big Walk, with one place to swap in generated textures.
-
 ## 0.4 — Feel
 
 - The five phases of every grab: lift, lag by weight class, resistance, contact bounce, settle.

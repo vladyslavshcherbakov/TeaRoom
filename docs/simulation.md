@@ -94,6 +94,7 @@ The gods start at 50 in 0.1. Persistence arrives in 0.9.
 | First sip too hot to drink | nothing yet: the next sip is the first | — |
 | A pour that spilled 5 ml or more | −1 | `weWillTellNoOne` |
 | An offering the figurine liked | + half its satisfaction gain, rounded up | `acceptTheOffering` |
+| An offering that gained the figurine nothing | 0 | `understandProbably` |
 | Finishing with a dry table and every lid closed | +2 | `appreciateTheCalm` |
 
 No single moment costs more than 3 points, and the value stays between 0 and 100.
