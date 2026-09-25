@@ -152,6 +152,17 @@ test('cloth_wetOnAWorkingHeater_steamsDryBeforeItChars', () => {
   assert.equal(ritual.state.cloth.charring, 0)
 })
 
+test('cloth_whenTakenOffTheHeater_saysHowCharredItIs', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
+
+  assertNear(eventsOfType(events, 'clothTakenOffTheHeater')[0]?.charring ?? 0, 0.5)
+})
+
 test('cloth_onAHeaterThatIsOff_doesNotChar', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })

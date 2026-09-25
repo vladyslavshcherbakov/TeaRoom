@@ -26,7 +26,7 @@ const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number
 const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
-const smoulderingFromCharring = 0.5
+export const smoulderingFromCharring = 0.5
 const burningFromCharring = 0.8
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {

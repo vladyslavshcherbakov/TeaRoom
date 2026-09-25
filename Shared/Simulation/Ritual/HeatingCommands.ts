@@ -30,6 +30,10 @@ export function liftOffTheHeater(draft: Draft, itemId: string): void {
   if (!draft.state.heater.isOn) note(draft, `${itemId} lifted off a heater that was off, water not judged`)
   draft.state.heater.itemIdOnTop = null
   draft.events.push({ type: 'takenOffHeater', itemId, waterJudgement })
+  if (itemId !== clothItemId) return
+  const charring = draft.state.cloth.charring
+  note(draft, `the cloth is taken off the heater ${(charring * 100).toFixed(0)}% charred`)
+  draft.events.push({ type: 'clothTakenOffTheHeater', charring })
 }
 
 export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeaterOn'>): void {

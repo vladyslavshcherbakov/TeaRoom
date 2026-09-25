@@ -23,6 +23,17 @@ test('caption_ofTakingAThermosTooHotToHold_warnsOfItsGlow', () => {
   assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('tooHotToHold.') && line === lines[0]), lines.join(' / '))
 })
 
+test('caption_ofASmoulderingClothTakenOffTheHeater_jokesAboutTheHouse', () => {
+  const lines = captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.5 }], 7)
+
+  assert.equal(lines.length, 1)
+  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('smoulderingClothTaken.') && line === lines[0]), lines.join(' / '))
+})
+
+test('caption_ofAClothTakenOffTheHeaterBeforeItSmoulders_staysSilent', () => {
+  assert.deepEqual(captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.49 }], 7), [])
+})
+
 test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 7), [])
 })

@@ -1,5 +1,6 @@
 import type { OfferingResponse } from '../../../Shared/Simulation/Judgement/OfferingJudgement.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
+import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
 import { phraseVariantAtTurn, phraseVariantFor, text, textOrFallback, textWith } from '../Texts/Texts.ts'
 import type { RoomRemark } from './RoomPlay.ts'
@@ -29,6 +30,8 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return event.onSeconds >= heaterRanLongFromSeconds ? [heaterEnergyLine(event.kilowattHoursUsed, voiceSeed)] : []
     case 'tapTurnedOff':
       return event.openSeconds >= tapRanLongFromSeconds ? [drainedLitresLine(event.drainedMl, voiceSeed)] : []
+    case 'clothTakenOffTheHeater':
+      return event.charring >= smoulderingFromCharring ? [text(`smoulderingClothTaken.${phraseVariantFor('smoulderingClothTaken', voiceSeed)}`)] : []
     case 'burntClothWashedBackToNew':
       return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
     case 'figurineAcceptedTea':
