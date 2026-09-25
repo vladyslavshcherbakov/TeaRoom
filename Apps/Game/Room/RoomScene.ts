@@ -232,7 +232,7 @@ export class RoomScene {
     this.caption.advance(seconds)
     this.achievements.worldAdvanced(this.session.state)
     this.achievementNotice.advance(seconds)
-    this.keepTheVisitNowAndThen(seconds)
+    this.keepTheVisitNowAndThen(secondsSinceTheLastFrame)
     const daylight = daylightAt(hoursSinceSunriseOf(this.session.state.atmosphere))
     this.roomLights.show(daylight)
     const isFirstPerson = this.cameraMode === 'firstPerson'
