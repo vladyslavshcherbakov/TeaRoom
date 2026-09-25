@@ -21,6 +21,7 @@ export type CarriedModel = {
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
   readonly liquidLevel: LiquidLevel | null
+  readonly pointsDownTheSide: readonly PointDownTheSide[] | null
   readonly liquidVolume: THREE.Mesh | null
   liquidVolumeHeight: number
   readonly gaugeWater: THREE.Mesh | null
@@ -34,6 +35,8 @@ export type CarriedModel = {
   isHeldInView: boolean
   castsShadow: boolean
 }
+
+export type PointDownTheSide = { readonly distance: number; readonly height: number }
 
 export type LiquidLevel = (fillShare: number) => { readonly heightMetres: number; readonly radiusMetres: number }
 
@@ -74,6 +77,7 @@ type ItemParts = {
   readonly liquidLevel: LiquidLevel | null
   readonly heldInViewLook?: HeldInViewLook
   readonly isSeeThrough?: boolean
+  readonly pointsDownTheSide?: readonly PointDownTheSide[]
 }
 
 export const mostSteamSources = 2
@@ -95,6 +99,7 @@ const thermosHeightMetres = 0.3
 const thermosOutsideRadiusMetres = 0.07
 const thermosInsideRadiusMetres = 0.062
 const thermosFloorMetres = 0.012
+const overflowOverTheLipMetres = 0.003
 const liquidInsetShare = 0.97
 const liquidAboveTheInsideMetres = 0.0005
 const liquidBelowItsSurfaceMetres = 0.001
@@ -187,6 +192,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     liquid,
     liquidMaterial,
     liquidLevel: parts.liquidLevel,
+    pointsDownTheSide: parts.pointsDownTheSide ?? null,
     liquidVolume,
     liquidVolumeHeight: 0,
     gaugeWater,
@@ -289,8 +295,19 @@ function thermosParts(materials: RoomMaterials): ItemParts {
   base.rotation.x = Math.PI / 2
   const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.06, 0.05, 12), materials.materialFor('darkWood'))
   lid.position.y = thermosHeightMetres + 0.025
-  return { meshes: [outside, inside, mouth, floor, base], lid, spoutTip: new THREE.Vector3(0.06, thermosHeightMetres, 0), rimHeight: thermosHeightMetres, liquidLevel: thermosLiquidLevel }
+  return { meshes: [outside, inside, mouth, floor, base], lid, spoutTip: new THREE.Vector3(0.06, thermosHeightMetres, 0), rimHeight: thermosHeightMetres, liquidLevel: thermosLiquidLevel, pointsDownTheSide: pointsDownTheThermos }
 }
+
+const pointsDownTheThermos: readonly PointDownTheSide[] = [
+  { distance: thermosInsideRadiusMetres, height: thermosHeightMetres + overflowOverTheLipMetres },
+  { distance: thermosOutsideRadiusMetres + overflowOverTheLipMetres, height: thermosHeightMetres },
+  { distance: thermosOutsideRadiusMetres + overflowOverTheLipMetres, height: thermosHeightMetres / 2 },
+]
+
+const pointsDownTheBowl: readonly PointDownTheSide[] = [
+  { distance: bowlRimTop.x - overflowOverTheLipMetres, height: bowlRimTop.y + overflowOverTheLipMetres },
+  ...[...bowlOutsideWall].reverse().map((point) => ({ distance: point.x + overflowOverTheLipMetres, height: point.y })),
+]
 
 function thermosLiquidLevel(fillShare: number): { heightMetres: number; radiusMetres: number } {
   const lowest = thermosFloorMetres + liquidAboveTheFloorMetres
@@ -344,7 +361,7 @@ function bowlParts(materials: RoomMaterials, look: BowlLook): ItemParts {
   const meshes: THREE.Object3D[] = [body]
   if (look.painting !== null) meshes.push(paintedOnTheBottom(materials, look.painting))
   if (look.isRimGilded) meshes.push(gildedRim(materials))
-  const bowl = { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, bowlRimHeightMetres, 0), rimHeight: bowlRimHeightMetres, liquidLevel: bowlLiquidLevel }
+  const bowl = { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, bowlRimHeightMetres, 0), rimHeight: bowlRimHeightMetres, liquidLevel: bowlLiquidLevel, pointsDownTheSide: pointsDownTheBowl }
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
   clearGlass.side = THREE.DoubleSide

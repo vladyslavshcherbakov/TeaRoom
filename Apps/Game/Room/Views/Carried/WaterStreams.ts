@@ -79,7 +79,7 @@ export class WaterStreams {
     const known = this.overflowPathByShape.get(model.shape)
     if (known !== undefined) return known
     const side = new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
-    const pointsOnTheSide = model.shape === 'kettle' ? pointsDownTheKettle() : pointsDownAStraightSide(model)
+    const pointsOnTheSide = model.shape === 'kettle' ? pointsDownTheKettle() : (model.pointsDownTheSide ?? pointsDownAStraightSide(model))
     const lastOnTheSide = pointsOnTheSide[pointsOnTheSide.length - 1] ?? { distance: 0, height: 0 }
     const points = [...pointsOnTheSide, { distance: lastOnTheSide.distance, height: 0 }].map(({ distance, height }) => side.clone().multiplyScalar(distance).setY(height))
     const path = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 48, overflowStreamRadiusMetres, 6, false)
@@ -99,7 +99,7 @@ function pointsDownTheKettle(): PointOnTheSide[] {
   })
 }
 
-function pointsDownAStraightSide(model: CarriedModel): PointOnTheSide[] {
+function pointsDownAStraightSide(model: CarriedModel): readonly PointOnTheSide[] {
   const distance = model.footprintRadius + overflowAboveTheSurfaceMetres
   return [
     { distance, height: model.rimHeight },
