@@ -29,8 +29,8 @@ export type AchievementId = (typeof achievementIds)[number]
 
 export type AchievementRecord = {
   readonly unlocked: readonly AchievementId[]
-  readonly hasTheTapRunLong: boolean
-  readonly hasTheHeaterRunLong: boolean
+  readonly hasTheTapRunForNothing: boolean
+  readonly hasTheHeaterRunForNothing: boolean
   readonly puddlesWiped: number
   readonly visitsBegun: number
 }
@@ -42,7 +42,12 @@ export type AchievementStorage = {
 
 export type AchievementUnlocked = (id: AchievementId) => void
 
+type TapTurnedOff = Extract<RitualEvent, { readonly type: 'tapTurnedOff' }>
+
+type HeaterSwitchedOff = Extract<RitualEvent, { readonly type: 'heaterSwitchedOff' }>
+
 const longRunSeconds = 120
+const kettleShape = 'kettle'
 const puddlesWipedForOcd = 2
 
 const achievementByRemark: Partial<Record<RoomRemarkKind, AchievementId>> = {
@@ -77,6 +82,8 @@ export class Achievements {
   eventsHappened(events: readonly RitualEvent[], state: DeepReadonly<SessionState>): void {
     for (const event of events) {
       if (event.type === 'tableWiped') this.puddleWipedOn(event.placeId)
+      if (event.type === 'tapTurnedOff') this.tapTurnedOff(event)
+      if (event.type === 'heaterSwitchedOff') this.heaterSwitchedOff(event, state)
       const id = achievementOf(event, state)
       if (id !== null) this.unlock(id, `the ritual reported ${event.type}`)
     }
@@ -108,18 +115,33 @@ export class Achievements {
 
   worldAdvanced(state: DeepReadonly<SessionState>): void {
     this.forgetPuddlesThatAreGone(state)
-    const runningWater = state.sink.runningWater
-    const hasTheTapRunLong = this.record.hasTheTapRunLong || (runningWater !== null && state.elapsedSeconds - runningWater.openedAtSeconds >= longRunSeconds)
-    const hasTheHeaterRunLong = this.record.hasTheHeaterRunLong || (state.heater.isOn && state.elapsedSeconds - state.heater.switchedOnAtSeconds >= longRunSeconds)
-    if (hasTheTapRunLong === this.record.hasTheTapRunLong && hasTheHeaterRunLong === this.record.hasTheHeaterRunLong) return
-    this.log(`the tap has ${hasTheTapRunLong ? '' : 'not '}run for two minutes and the heater has ${hasTheHeaterRunLong ? '' : 'not '}been on for two minutes, over every visit`)
-    this.keep({ ...this.record, hasTheTapRunLong, hasTheHeaterRunLong })
-    if (hasTheTapRunLong && hasTheHeaterRunLong) this.unlock('tapAndHeaterLeftOn', 'both the tap and the heater have run for two minutes')
   }
 
   reset(): void {
-    this.keep({ unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0, visitsBegun: 0 })
+    this.keep({ unlocked: [], hasTheTapRunForNothing: false, hasTheHeaterRunForNothing: false, puddlesWiped: 0, visitsBegun: 0 })
     this.log('every achievement is reset')
+  }
+
+  private tapTurnedOff(event: TapTurnedOff): void {
+    if (event.openSeconds < longRunSeconds) return
+    if (event.hasRunOntoAnItem) return this.log(`the tap ran ${event.openSeconds.toFixed(0)} s but onto something in the sink, so it did not run for nothing`)
+    this.log(`the tap ran ${event.openSeconds.toFixed(0)} s into the empty sink and was turned off`)
+    this.ranForNothing({ ...this.record, hasTheTapRunForNothing: true })
+  }
+
+  private heaterSwitchedOff(event: HeaterSwitchedOff, state: DeepReadonly<SessionState>): void {
+    if (event.onSeconds < longRunSeconds) return
+    if (!event.wasSwitchedOffByTheKeeper) return this.log(`the heater worked ${event.onSeconds.toFixed(0)} s but the end of the ritual switched it off, not the keeper`)
+    const kettleIdsHeated = Object.keys(event.secondsHeatedByItemId).filter((itemId) => carriedShapeOf(state, itemId) === kettleShape)
+    if (kettleIdsHeated.length > 0) return this.log(`the heater worked ${event.onSeconds.toFixed(0)} s but heated ${kettleIdsHeated.join(', ')}, so it did not work for nothing`)
+    this.log(`the heater worked ${event.onSeconds.toFixed(0)} s without the kettle and was switched off`)
+    this.ranForNothing({ ...this.record, hasTheHeaterRunForNothing: true })
+  }
+
+  private ranForNothing(record: AchievementRecord): void {
+    this.keep(record)
+    this.log(`over every visit, the tap has ${record.hasTheTapRunForNothing ? '' : 'not '}run for nothing and the heater has ${record.hasTheHeaterRunForNothing ? '' : 'not '}worked for nothing`)
+    if (record.hasTheTapRunForNothing && record.hasTheHeaterRunForNothing) this.unlock('tapAndHeaterLeftOn', 'the tap ran two minutes into the empty sink and the heater worked two minutes without the kettle, each then switched off')
   }
 
   private puddleWipedOn(placeId: string): void {

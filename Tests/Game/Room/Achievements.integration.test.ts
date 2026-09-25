@@ -121,26 +121,51 @@ test('achievement_ofTheHeaterTesterRemark_isHopeless', () => {
   assert.deepEqual(room.announced, ['heaterTester'])
 })
 
-test('achievement_whenOnlyTheTapRanTwoMinutes_isNotYetUnlocked', () => {
+test('achievement_whenOnlyTheTapRanTwoMinutesIntoTheEmptySink_isNotYetUnlocked', () => {
   const room = new AchievementsInTheRoom()
-  room.runTheTap(121)
 
-  room.achievements.worldAdvanced(room.ritual.state)
+  room.turnOffTheTapAfterRunning(121, null)
 
   assert.deepEqual(room.announced, [])
 })
 
-test('achievement_whenTheHeaterRunsTwoMinutesInALaterVisitAfterTheTapDid_isParentsWouldNotApprove', () => {
+test('achievement_whenTheHeaterWorksTwoMinutesWithoutTheKettleInALaterVisitAfterTheTapRanForNothing_isParentsWouldNotApprove', () => {
   const storage = new StorageInMemory()
-  const earlierVisit = new AchievementsInTheRoom(storage)
-  earlierVisit.runTheTap(121)
-  earlierVisit.achievements.worldAdvanced(earlierVisit.ritual.state)
+  new AchievementsInTheRoom(storage).turnOffTheTapAfterRunning(121, null)
   const laterVisit = new AchievementsInTheRoom(storage)
-  laterVisit.runTheHeater(121)
 
-  laterVisit.achievements.worldAdvanced(laterVisit.ritual.state)
+  laterVisit.switchOffTheHeaterAfterWorking(121, 'thermos')
 
   assert.deepEqual(laterVisit.announced, ['tapAndHeaterLeftOn'])
+})
+
+test('achievement_whenTheHeaterHeatedTheKettleForTwoMinutes_isNotUnlocked', () => {
+  const room = new AchievementsInTheRoom()
+  room.turnOffTheTapAfterRunning(121, null)
+
+  room.switchOffTheHeaterAfterWorking(121, 'kettle')
+
+  assert.deepEqual(room.announced, [])
+})
+
+test('achievement_whenTheTapRanTwoMinutesOntoTheKettle_isNotUnlocked', () => {
+  const room = new AchievementsInTheRoom()
+  room.switchOffTheHeaterAfterWorking(121, null)
+
+  room.turnOffTheTapAfterRunning(121, 'kettle')
+
+  assert.deepEqual(room.announced, [])
+})
+
+test('achievement_whenTheIdleTapIsStillRunning_isNotUnlockedBeforeItIsTurnedOff', () => {
+  const room = new AchievementsInTheRoom()
+  room.switchOffTheHeaterAfterWorking(121, null)
+  room.ritual.do({ type: 'turnTheTapOn' })
+  room.ritual.wait(121)
+
+  room.achievements.worldAdvanced(room.ritual.state)
+
+  assert.deepEqual(room.announced, [])
 })
 
 test('achievements_unlockedInAnEarlierVisit_areStillUnlocked', () => {
@@ -168,7 +193,7 @@ const strongButFine: TasteVerdict = { temperature: 'pleasant', strength: 'heavy'
 const justRight: TasteVerdict = { temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }
 
 class StorageInMemory implements AchievementStorage {
-  private record: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0, visitsBegun: 0 }
+  private record: AchievementRecord = { unlocked: [], hasTheTapRunForNothing: false, hasTheHeaterRunForNothing: false, puddlesWiped: 0, visitsBegun: 0 }
 
   readonly load = (): AchievementRecord => this.record
 
@@ -186,15 +211,24 @@ class AchievementsInTheRoom {
     this.achievements = new Achievements(storage, () => {}, (id) => this.announced.push(id))
   }
 
-  runTheTap(seconds: number): void {
+  turnOffTheTapAfterRunning(seconds: number, itemIdInTheSink: string | null): void {
     this.ritual.do({ type: 'standAt', placeId: 'counter' })
-    this.ritual.do({ type: 'turnTheTapOn' })
+    if (itemIdInTheSink === null) this.ritual.do({ type: 'turnTheTapOn' })
+    else this.putInTheSink(itemIdInTheSink)
     this.ritual.wait(seconds)
+    this.achievements.eventsHappened(this.ritual.do({ type: 'turnTheTapOff' }), this.ritual.state)
   }
 
-  runTheHeater(seconds: number): void {
+  switchOffTheHeaterAfterWorking(seconds: number, itemIdOnTop: string | null): void {
     this.ritual.do({ type: 'standAt', placeId: 'counter' })
+    if (itemIdOnTop !== null) this.ritual.do({ type: 'placeOnHeater', itemId: itemIdOnTop })
     this.ritual.do({ type: 'switchHeaterOn' })
     this.ritual.wait(seconds)
+    this.achievements.eventsHappened(this.ritual.do({ type: 'switchHeaterOff' }), this.ritual.state)
+  }
+
+  private putInTheSink(itemId: string): void {
+    this.ritual.do({ type: 'pickUp', itemId })
+    this.ritual.do({ type: 'putInTheSink', itemId })
   }
 }

@@ -198,7 +198,7 @@ export const englishTexts = {
   'achievement.visitContinued.title': 'The Usual, Please',
   'achievement.visitContinued.done': 'Came back and continued a visit.',
   'achievement.tapAndHeaterLeftOn.title': "Parents Wouldn't Approve",
-  'achievement.tapAndHeaterLeftOn.done': 'Left the tap running for two minutes, and the heater on for two minutes.',
+  'achievement.tapAndHeaterLeftOn.done': 'Ran the tap into an empty sink for two minutes and the heater without the kettle for two minutes, then turned both off.',
   'achievement.kettleBoiledDry.title': 'Stubborn',
   'achievement.kettleBoiledDry.done': 'Waited on the heater until the kettle boiled dry.',
   'achievement.shiva.title': 'Shiva',
