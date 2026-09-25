@@ -34,6 +34,10 @@ export class RoomTexts {
     return this.linesOnTurn(remark.kind, remark.timesTapped, phraseVariantsOf(remark.kind), {})
   }
 
+  lastWordsLine(): string {
+    return phraseLineAtTurn('lastWords', this.voiceSeed, 1)
+  }
+
   obituaryLine(): string {
     return phraseLineAtTurn('obituary', this.voiceSeed, 1)
   }

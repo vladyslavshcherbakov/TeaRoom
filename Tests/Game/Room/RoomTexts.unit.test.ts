@@ -70,6 +70,21 @@ test('obituary_ofTheKeeper_isOneOfTheFourObituaries', () => {
   assert.ok(obituaries.includes(line), line)
 })
 
+test('lastWords_ofTheKeeperWhoDied_areOneOfTheThreeLinesForDying', () => {
+  const lastWords: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('lastWords.')).map(([, line]) => line)
+
+  const line = new RoomTexts(7, () => {}).lastWordsLine()
+
+  assert.equal(lastWords.length, 3)
+  assert.ok(lastWords.includes(line), line)
+})
+
+test('playerTexts_nameTheKeeperNowhere', () => {
+  const linesNamingTheKeeper = Object.values(englishTexts).filter((line) => /keeper/i.test(line))
+
+  assert.deepEqual(linesNamingTheKeeper, [])
+})
+
 test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
   assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 0), [])
 })

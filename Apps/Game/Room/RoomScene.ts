@@ -122,11 +122,11 @@ export class RoomScene {
     this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
       remarked: (remark) => this.caption.show(this.texts.remarkLines(remark)),
       debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
-      keeperDied: (fatalSip) => {
+      keeperDied: () => {
         this.hasTheKeeperDied = true
         this.visitStore.forget('the keeper died, so the next visit starts anew')
         this.caption.hide()
-        this.youDied.show(this.texts.captionLinesFor([fatalSip], this.session.state.elapsedSeconds).join(' '), this.texts.obituaryLine())
+        this.youDied.show(this.texts.lastWordsLine(), this.texts.obituaryLine())
       },
     }, arrival.place)
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)

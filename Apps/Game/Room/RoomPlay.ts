@@ -71,7 +71,7 @@ export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
   readonly debugMenuAsked: () => void
-  readonly keeperDied: (fatalSip: TeaTasted) => void
+  readonly keeperDied: () => void
 }
 
 export class RoomPlay {
@@ -224,7 +224,7 @@ export class RoomPlay {
     const sip = events.find((event): event is TeaTasted => event.type === 'teaTasted')
     if (cupId !== caddyItemId || sip === undefined || !deadlyStrengthsFromTheCaddy.has(sip.verdict.strength)) return
     this.log(`the keeper sipped ${sip.verdict.strength} tea straight from the caddy, and it killed them`)
-    this.listener.keeperDied(sip)
+    this.listener.keeperDied()
   }
 
   walkFreely(step: FloorPoint, headingRadians: number): void {
