@@ -48,6 +48,7 @@ export type CarriedModel = {
 }
 
 const mostSteamSources = 2
+const steamPuffGeometry = new THREE.SphereGeometry(0.03, 8, 6)
 export const mostPuffsFromOneSource = 3
 
 const touchPadShareOfTheFootprint = 1.5
@@ -85,7 +86,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const soakedLeafHolder = look.soakedLeaves === null ? null : new THREE.Group()
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !isATouchArea(part)))
-  const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), materials.room.materialFor('steam')))
+  const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(steamPuffGeometry, materials.room.materialFor('steam')))
   for (const puff of puffs) puff.castShadow = false
   return {
     itemId,
