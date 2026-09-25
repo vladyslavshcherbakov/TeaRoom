@@ -1,7 +1,7 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { switchTheHeaterOff } from './HeatingCommands.ts'
+import { isTheHeaterInUse, switchTheHeaterOff } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
 import { caddyItemId } from './Reach.ts'
@@ -35,7 +35,7 @@ export function chooseAtmosphere(draft: Draft, command: CommandOfType<'chooseAtm
 
 export function finishRitual(draft: Draft): void {
   if (draft.state.pour !== null) finishPour(draft)
-  if (draft.state.heater.isOn) {
+  if (isTheHeaterInUse(draft.state.heater)) {
     note(draft, 'heater switched off because the ritual finished')
     switchTheHeaterOff(draft, null, false)
   }

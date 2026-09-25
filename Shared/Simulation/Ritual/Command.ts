@@ -13,6 +13,9 @@ export type Command =
   | { readonly type: 'placeOnHeater'; readonly itemId: string }
   | { readonly type: 'switchHeaterOn' }
   | { readonly type: 'switchHeaterOff' }
+  | { readonly type: 'setTheThermostat'; readonly targetC: number }
+  | { readonly type: 'startTheThermostat' }
+  | { readonly type: 'stopTheThermostat' }
   | { readonly type: 'startPouring'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'adjustPour'; readonly tiltDegrees: number; readonly streamOnTargetFraction: number; readonly missedStreamLandsAt: Spot | null }
   | { readonly type: 'stopPouring' }

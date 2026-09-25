@@ -25,6 +25,9 @@ export type RefusalReason =
   | 'heaterOccupied'
   | 'heaterAlreadyOn'
   | 'heaterAlreadyOff'
+  | 'thermostatAlreadyOn'
+  | 'thermostatAlreadyOff'
+  | 'thermostatOutOfRange'
   | 'alreadyPouring'
   | 'notPouring'
   | 'cannotPourIntoItself'
@@ -71,6 +74,8 @@ export type RitualEvent =
   | { readonly type: 'placedOnHeater'; readonly itemId: string }
   | { readonly type: 'takenOffHeater'; readonly itemId: string; readonly waterJudgement: WaterJudgement | null }
   | { readonly type: 'heaterSwitchedOn' }
+  | { readonly type: 'thermostatSet'; readonly targetC: number }
+  | { readonly type: 'thermostatStarted'; readonly targetC: number }
   | {
       readonly type: 'heaterSwitchedOff'
       readonly waterJudgement: WaterJudgement | null

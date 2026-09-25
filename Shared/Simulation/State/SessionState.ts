@@ -25,13 +25,20 @@ export type VesselState = {
   location: ItemLocation
 }
 
+export type ThermostatState = {
+  targetC: number
+  isOn: boolean
+}
+
 export type HeaterState = {
   definitionId: string
   isOn: boolean
+  thermostat: ThermostatState
   switchedOnAtSeconds: number
   itemIdOnTop: string | null
   secondsHeatedByItemId: Record<string, number>
   secondsWasted: number
+  secondsHeating: number
   hasAnnouncedTargetTemperature: boolean
   hasAnnouncedBoilingAway: boolean
 }

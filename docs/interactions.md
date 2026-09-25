@@ -51,6 +51,7 @@ The simulation core receives one command per player decision and answers with ev
 | Lift the kettle off | tap the kettle on the heater | `pickUp` | `takenOffHeater` with a water judgement if the heater was on, then `pickedUp` |
 | Fill in the sink | choose the kettle's hand, tap the sink, tap the tap to turn it on and open the kettle's lid; tap the tap again to turn it off, and tap the kettle to take it | `putInTheSink`, `turnTheTapOn`, `turnTheTapOff` | `putInTheSink`, `tapTurnedOn`, `vesselOverflowed`, `tapTurnedOff` |
 | Heat | tap the switch on the counter's front | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `targetTemperatureReached`, `heaterSwitchedOff` with a water judgement |
+| Keep the water at a temperature | tap the arrows beside the heater's display to set it, then tap the thermostat's button | `setTheThermostat`, `startTheThermostat`, `stopTheThermostat` | `thermostatSet`, `thermostatStarted`, `heaterSwitchedOff` with a water judgement |
 | Pour | choose the hand with the vessel, tap the target, then move the vessel with one finger and hold the tilt button with another | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
 | Scoop leaves | take the spoon, choose its hand, then tap the open caddy | `scoopTea` with a full spoon's depth | `teaScooped` |
 | Tip leaves | with the spoon's hand chosen, tap the open kettle | `tipSpoonInto` | `leavesAdded`, then `brewStarted` once leaves and water meet |

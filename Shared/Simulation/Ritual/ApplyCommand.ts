@@ -5,7 +5,7 @@ import { soakUpThePuddle, wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
 import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
 import { pickUp, pickUpWithAMiddleHand, putDown, standAt } from './KeeperCommands.ts'
-import { placeOnHeater, switchHeaterOff, switchHeaterOn } from './HeatingCommands.ts'
+import { placeOnHeater, setTheThermostat, startTheThermostat, stopTheThermostat, switchHeaterOff, switchHeaterOn } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
 import { moveVesselLid } from './LidCommands.ts'
 import { refusalInPhase } from './PhaseRules.ts'
@@ -50,6 +50,12 @@ function carryOut(draft: Draft, command: Command): void {
       return switchHeaterOn(draft, command)
     case 'switchHeaterOff':
       return switchHeaterOff(draft, command)
+    case 'setTheThermostat':
+      return setTheThermostat(draft, command)
+    case 'startTheThermostat':
+      return startTheThermostat(draft, command)
+    case 'stopTheThermostat':
+      return stopTheThermostat(draft, command)
     case 'startPouring':
       return startPouring(draft, command)
     case 'adjustPour':

@@ -15,7 +15,7 @@ export type FittedSavedState =
 
 type Shape = { readonly [key: string]: unknown }
 
-type SaveMigration = (saved: Shape) => { readonly migrated: Shape; readonly change: string } | null
+type SaveMigration = (saved: Shape, catalog: Catalog) => { readonly migrated: Shape; readonly change: string } | null
 
 const leavesShape: Leaves = dryLeaves('', 0)
 const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
@@ -25,7 +25,7 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -33,7 +33,7 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
   if (!isShape(saved)) return { kind: 'doesNotFit', problems: ['the saved state is not an object'] }
   const changes: string[] = []
   const savedInTodaysShape = migrationsOldestFirst.reduce((shape, migrate) => {
-    const migration = migrate(shape)
+    const migration = migrate(shape, catalog)
     if (migration === null) return shape
     changes.push(migration.change)
     return migration.migrated
@@ -234,6 +234,20 @@ function withTheHeatersWastedSeconds(saved: Shape): ReturnType<SaveMigration> {
   return {
     migrated: { ...saved, heater: { ...heater, secondsWasted: 0 } },
     change: 'a save from before the heater counted its wasted seconds starts counting them now',
+  }
+}
+
+function withTheThermostat(saved: Shape, catalog: Catalog): ReturnType<SaveMigration> {
+  const heater = saved['heater']
+  if (!isShape(heater) || heater['thermostat'] !== undefined) return null
+  const startsAtC = catalog.heaters[String(heater['definitionId'])]?.thermostat.startsAtC
+  if (startsAtC === undefined) return null
+  const elapsedSeconds = typeof saved['elapsedSeconds'] === 'number' ? saved['elapsedSeconds'] : 0
+  const switchedOnAtSeconds = typeof heater['switchedOnAtSeconds'] === 'number' ? heater['switchedOnAtSeconds'] : elapsedSeconds
+  const secondsHeating = heater['isOn'] === true ? elapsedSeconds - switchedOnAtSeconds : 0
+  return {
+    migrated: { ...saved, heater: { ...heater, thermostat: { targetC: startsAtC, isOn: false }, secondsHeating } },
+    change: `a save from before the heater had a thermostat gets one set to ${startsAtC} °C and not working, and counts ${secondsHeating.toFixed(0)} s of heating so far`,
   }
 }
 

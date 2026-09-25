@@ -1,5 +1,6 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
+import { isTheThermostatCallingForHeat } from '../Judgement/ThermostatJudgement.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, isAtTheBoil, isTooHotToHold, shellHeatAfter } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
@@ -24,6 +25,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
 export function stepTheWorld(draft: Draft, seconds: number): void {
   if (draft.state.phase === 'ended') return
   coolVessels(draft, seconds)
+  letTheThermostatDecide(draft)
   heatWhatSitsOnTheWorkingHeater(draft, seconds)
   countTheSecondsOnTheWorkingHeater(draft, seconds)
   heatOrCoolMetalShells(draft, seconds)
@@ -37,6 +39,20 @@ export function stepTheWorld(draft: Draft, seconds: number): void {
   draft.state.elapsedSeconds += seconds
 }
 
+function letTheThermostatDecide(draft: Draft): void {
+  const heater = draft.state.heater
+  if (!heater.thermostat.isOn) return
+  const itemId = heater.itemIdOnTop
+  const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
+  const measuredWaterC = vessel === undefined || isEmpty(vessel.liquid) ? null : vessel.liquid.temperatureC
+  const { heatsAgainBelowTheTargetByC } = definitionIn(draft.catalog, 'heaters', heater.definitionId).thermostat
+  const shouldHeat = isTheThermostatCallingForHeat(heater.isOn, measuredWaterC, heater.thermostat.targetC, heatsAgainBelowTheTargetByC)
+  if (shouldHeat === heater.isOn) return
+  heater.isOn = shouldHeat
+  const measured = measuredWaterC === null ? `no water on the heater to measure, ${itemId ?? 'nothing'} on it` : `${itemId} at ${measuredWaterC.toFixed(1)} °C`
+  note(draft, `thermostat ${shouldHeat ? 'starts heating' : 'stops heating'}: ${measured}, target ${heater.thermostat.targetC} °C`)
+}
+
 function heatWhatSitsOnTheWorkingHeater(draft: Draft, seconds: number): void {
   const heater = draft.state.heater
   const itemId = heater.itemIdOnTop
@@ -48,6 +64,7 @@ function countTheSecondsOnTheWorkingHeater(draft: Draft, seconds: number): void 
   const heater = draft.state.heater
   const itemId = heater.itemIdOnTop
   if (!heater.isOn) return
+  heater.secondsHeating += seconds
   if (itemId === null || rulesFor(draft.state, itemId)?.isMadeForTheHeater(draft, itemId) !== true) heater.secondsWasted += seconds
   if (itemId !== null) heater.secondsHeatedByItemId[itemId] = (heater.secondsHeatedByItemId[itemId] ?? 0) + seconds
 }

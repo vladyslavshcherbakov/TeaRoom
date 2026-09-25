@@ -3,6 +3,7 @@ import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import type { ClothState, ItemLocation, SessionState, VesselState } from '../State/SessionState.ts'
 import { noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { isTheHeaterInUse } from './HeatingCommands.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { percent } from './Percent.ts'
 import { spoonItemId, whereIs } from './Reach.ts'
@@ -64,10 +65,11 @@ function vesselLines(draft: Draft, vessel: VesselState, ahead: VesselState | und
 
 function heaterLines(draft: Draft): string[] {
   const heater = draft.state.heater
-  if (!heater.isOn) return []
+  if (!isTheHeaterInUse(heater)) return []
   const onSeconds = draft.state.elapsedSeconds - heater.switchedOnAtSeconds
-  const kilowattHours = kilowattHoursUsed(definitionIn(draft.catalog, 'heaters', heater.definitionId), onSeconds)
-  return [`the heater has been on for ${onSeconds.toFixed(0)} s and used ${kilowattHours.toFixed(4)} kWh, ${heater.secondsWasted.toFixed(0)} s of it wasted, with ${heater.itemIdOnTop ?? 'nothing'} on it`]
+  const kilowattHours = kilowattHoursUsed(definitionIn(draft.catalog, 'heaters', heater.definitionId), heater.secondsHeating)
+  const control = heater.thermostat.isOn ? `its thermostat at ${heater.thermostat.targetC} °C, ${heater.isOn ? 'heating' : 'waiting'}` : 'by hand'
+  return [`the heater has been in use for ${onSeconds.toFixed(0)} s, ${control}, heated ${heater.secondsHeating.toFixed(0)} s and used ${kilowattHours.toFixed(4)} kWh, ${heater.secondsWasted.toFixed(0)} s of it wasted, with ${heater.itemIdOnTop ?? 'nothing'} on it`]
 }
 
 function tapLines(state: SessionState): string[] {

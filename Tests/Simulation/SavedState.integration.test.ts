@@ -118,6 +118,17 @@ test('savedState_fromBeforeTheHeaterCountedItsWaste_startsCountingItAtNothing', 
   assert.equal(resumed.state.heater.secondsWasted, 0)
 })
 
+test('savedState_fromBeforeTheThermostat_getsOneAtAHundredDegreesNotWorking', () => {
+  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  delete savedState.heater['thermostat']
+  delete savedState.heater['secondsHeating']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.deepEqual(resumed.state.heater.thermostat, { targetC: 100, isOn: false })
+  assert.equal(resumed.state.heater.secondsHeating, 0)
+})
+
 function catalogWithAFourthCup(): Catalog {
   const catalog = testCatalog()
   const room = catalog.rooms['testRoom']
