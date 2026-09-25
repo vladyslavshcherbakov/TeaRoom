@@ -5,6 +5,8 @@ import { tapTargetAmong, type TapHit } from '../../../Apps/Game/Room/TapTargetAm
 
 const firstHandsArea: TapHit = { target: { kind: 'hand', handIndex: 0 }, isForgivingTouchArea: true }
 const shelfSurface: TapHit = { target: { kind: 'surface', furnitureId: 'shelf', point: { x: 0, y: 1, z: 0 } }, isForgivingTouchArea: false }
+const bowlOnTheShelf: TapHit = { target: { kind: 'item', itemId: 'bowl7' }, isForgivingTouchArea: false }
+const bowlsTouchPad: TapHit = { target: { kind: 'item', itemId: 'bowl7' }, isForgivingTouchArea: true }
 const canActOnAnything = (): boolean => true
 const canActOnNothing = (): boolean => false
 
@@ -20,6 +22,20 @@ test('tap_throughTheChosenHandsAreaOnWhatItsItemCanActOn_reachesWhatIsBehind', (
 
 test('tap_throughTheChosenHandsAreaOnWhatItsItemCannotActOn_staysOnTheHand', () => {
   const target = tapTargetAmong([firstHandsArea, shelfSurface], 0, canActOnNothing)
+
+  assert.deepEqual(target, { kind: 'hand', handIndex: 0 } satisfies RoomTapTarget)
+})
+
+test('tap_throughAHandsAreaOnAnItemSeenBehind_reachesTheItemWhetherOrNotTheHandIsChosen', () => {
+  for (const chosenHandIndex of [0, 1, null] as const) {
+    const target = tapTargetAmong([firstHandsArea, bowlOnTheShelf, shelfSurface], chosenHandIndex, canActOnNothing)
+
+    assert.deepEqual(target, bowlOnTheShelf.target)
+  }
+})
+
+test('tap_throughAHandsAreaOnlyOnAnItemsTouchPad_staysOnTheHand', () => {
+  const target = tapTargetAmong([firstHandsArea, bowlsTouchPad, shelfSurface], null, canActOnNothing)
 
   assert.deepEqual(target, { kind: 'hand', handIndex: 0 } satisfies RoomTapTarget)
 })
