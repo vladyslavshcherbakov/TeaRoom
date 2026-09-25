@@ -137,7 +137,7 @@ test('cloth_onAHeaterThatIsOff_doesNotChar', () => {
   assert.equal(ritual.state.cloth.charring, 0)
 })
 
-test('cloth_charredThrough_whenWashedUnderTheTap_isAsGoodAsNew', () => {
+test('charredCloth_whenWashedUnderTheTap_isAsGoodAsNew', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
@@ -151,7 +151,7 @@ test('cloth_charredThrough_whenWashedUnderTheTap_isAsGoodAsNew', () => {
   assert.equal(ritual.state.cloth.charring, 0)
 })
 
-test('cloth_burntAndWashed_whenTakenOutOfTheSink_isNoticedAsNew', () => {
+test('washedBurntCloth_whenTakenOutOfTheSink_isNoticedAsNew', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
@@ -166,7 +166,7 @@ test('cloth_burntAndWashed_whenTakenOutOfTheSink_isNoticedAsNew', () => {
   assert.deepEqual(eventsOfType(events, 'burntClothWashedBackToNew'), [{ type: 'burntClothWashedBackToNew' }])
 })
 
-test('cloth_neverBurnt_whenTakenOutOfTheSink_isNotRemarkedOn', () => {
+test('clothThatNeverBurnt_whenTakenOutOfTheSink_isNotRemarkedOn', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })

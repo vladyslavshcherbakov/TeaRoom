@@ -310,7 +310,7 @@ test('tap_whenTappedWithNothingChosenWhileRunning_turnsOff', () => {
   assert.equal(room.state.sink.itemIdInside, 'kettle')
 })
 
-test('kettle_inTheSink_whenTapped_isTakenBackIntoAHand', () => {
+test('kettleInTheSink_whenTapped_isTakenBackIntoAHand', () => {
   const room = new RoomVisit()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
