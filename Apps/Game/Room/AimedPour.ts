@@ -1,4 +1,3 @@
-import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { tiltWhereWaterSplashesDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { FloorPoint } from './RoomLayout.ts'
 import type { RoomLog } from './RoomNavigator.ts'
@@ -12,6 +11,12 @@ export type AimedPourView = {
   readonly tiltDegrees: number
 }
 
+export type PourTarget = {
+  readonly id: string
+  readonly spot: FloorPoint
+  readonly openingRadiusMetres: number
+}
+
 const firstSpoutOffsetFromTargetMetres = 0.22
 const tiltGrowthDegreesPerSecond = 30
 const tiltFallDegreesPerSecond = 70
@@ -23,9 +28,8 @@ export class AimedPour {
   private readonly ritual: RitualPort
   private readonly log: RoomLog
   private readonly sourceId: string
-  private readonly targetId: string
-  private readonly target: FloorPoint
-  private readonly openingRadiusMetres: number
+  private readonly candidates: readonly PourTarget[]
+  private target: PourTarget
   private readonly spoutDirection: FloorPoint
   private spout: FloorPoint
   private tiltDegrees = 0
@@ -34,20 +38,19 @@ export class AimedPour {
   private lastFingerPoint: FloorPoint | null = null
   private lastSentPour = { tiltDegrees: -1, streamOnTargetFraction: -1 }
 
-  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, targetId: string, targetSpot: Spot, openingRadiusMetres: number, spoutDirection: FloorPoint) {
+  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, target: PourTarget, candidates: readonly PourTarget[], spoutDirection: FloorPoint) {
     this.ritual = ritual
     this.log = log
     this.sourceId = sourceId
-    this.targetId = targetId
-    this.target = { x: targetSpot.x, z: targetSpot.z }
-    this.openingRadiusMetres = openingRadiusMetres
+    this.target = target
+    this.candidates = candidates
     this.spoutDirection = spoutDirection
-    this.spout = { x: targetSpot.x - spoutDirection.x * firstSpoutOffsetFromTargetMetres, z: targetSpot.z - spoutDirection.z * firstSpoutOffsetFromTargetMetres }
-    log(`aiming ${sourceId} at ${targetId}, the spout starts ${firstSpoutOffsetFromTargetMetres} m to its left on the screen, pointing (${spoutDirection.x.toFixed(2)}, ${spoutDirection.z.toFixed(2)})`)
+    this.spout = { x: target.spot.x - spoutDirection.x * firstSpoutOffsetFromTargetMetres, z: target.spot.z - spoutDirection.z * firstSpoutOffsetFromTargetMetres }
+    log(`aiming ${sourceId} at ${target.id}, the spout starts ${firstSpoutOffsetFromTargetMetres} m to its left on the screen, pointing (${spoutDirection.x.toFixed(2)}, ${spoutDirection.z.toFixed(2)}), ${candidates.map((candidate) => candidate.id).join(', ')} can be poured into here`)
   }
 
   get view(): AimedPourView {
-    return { sourceId: this.sourceId, targetId: this.targetId, spout: this.spout, spoutDirection: this.spoutDirection, tiltDegrees: this.tiltDegrees }
+    return { sourceId: this.sourceId, targetId: this.target.id, spout: this.spout, spoutDirection: this.spoutDirection, tiltDegrees: this.tiltDegrees }
   }
 
   fingerDown(point: FloorPoint): void {
@@ -59,11 +62,12 @@ export class AimedPour {
     if (last === null) return
     this.spout = { x: this.spout.x + point.x - last.x, z: this.spout.z + point.z - last.z }
     this.lastFingerPoint = point
+    this.followTheSpout()
   }
 
   fingerUp(): void {
     this.lastFingerPoint = null
-    this.log(`spout of ${this.sourceId} moved to (${this.spout.x.toFixed(2)}, ${this.spout.z.toFixed(2)}), ${this.onTargetFraction().toFixed(2)} of the stream over ${this.targetId}`)
+    this.log(`spout of ${this.sourceId} moved to (${this.spout.x.toFixed(2)}, ${this.spout.z.toFixed(2)}), ${this.onTargetFraction().toFixed(2)} of the stream over ${this.target.id}`)
   }
 
   tiltPressed(): void {
@@ -92,14 +96,14 @@ export class AimedPour {
 
   finish(): void {
     if (this.isPouring) this.stopPouring()
-    this.log(`stopped aiming ${this.sourceId} at ${this.targetId}`)
+    this.log(`stopped aiming ${this.sourceId} at ${this.target.id}`)
   }
 
   private startPouring(): void {
-    const events = this.ritual.dispatch({ type: 'startPouring', sourceId: this.sourceId, targetId: this.targetId })
+    const events = this.ritual.dispatch({ type: 'startPouring', sourceId: this.sourceId, targetId: this.target.id })
     if (events.some((event) => event.type === 'actionRefused')) {
       this.isTiltHeld = false
-      return this.log(`${this.sourceId} tilts back: the pour into ${this.targetId} was refused`)
+      return this.log(`${this.sourceId} tilts back: the pour into ${this.target.id} was refused`)
     }
     this.isPouring = true
   }
@@ -110,9 +114,22 @@ export class AimedPour {
     this.ritual.dispatch({ type: 'stopPouring' })
   }
 
+  private followTheSpout(): void {
+    const shareOverTheTarget = this.shareOfTheStreamOver(this.target)
+    const [best] = this.candidates.map((candidate) => ({ candidate, share: this.shareOfTheStreamOver(candidate) })).sort((first, second) => second.share - first.share)
+    if (best === undefined || best.share <= shareOverTheTarget || best.candidate.id === this.target.id) return
+    this.log(`the spout of ${this.sourceId} moved over ${best.candidate.id}, ${best.share.toFixed(2)} of the stream against ${shareOverTheTarget.toFixed(2)} over ${this.target.id}, so it pours into ${best.candidate.id} now`)
+    if (this.isPouring) this.stopPouring()
+    this.target = best.candidate
+  }
+
   private onTargetFraction(): number {
-    const distance = Math.hypot(this.spout.x - this.target.x, this.spout.z - this.target.z)
-    const share = (this.openingRadiusMetres + streamRadiusMetres - distance) / (2 * streamRadiusMetres)
+    return this.shareOfTheStreamOver(this.target)
+  }
+
+  private shareOfTheStreamOver(target: PourTarget): number {
+    const distance = Math.hypot(this.spout.x - target.spot.x, this.spout.z - target.spot.z)
+    const share = (target.openingRadiusMetres + streamRadiusMetres - distance) / (2 * streamRadiusMetres)
     return Math.min(1, Math.max(0, share))
   }
 }

@@ -14,6 +14,7 @@ const frameSeconds = 1 / 60
 const longestWalkSeconds = 30
 const onTheTeaTable: WorldPoint = { x: 1, y: 0.42, z: -1.5 }
 const onTheCounter: WorldPoint = { x: -1.4, y: 0.9, z: -2.6 }
+const onTheCounterBesideTheBowl: WorldPoint = { x: -0.8, y: 0.9, z: -2.6 }
 const behindTheKettle: WorldPoint = { x: -1.9, y: 0.9, z: -2.86 }
 const quietRoomHeaterSpot = definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot
 
@@ -151,6 +152,34 @@ test('pour_whileTiltIsHeldWithTheSpoutMovedOverTheBowl_landsEntirelyInTheBowl', 
 
   assert.equal(room.state.pour?.streamOnTargetFraction, 1)
   assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0)
+})
+
+test('pour_whenTheSpoutIsMovedOverAnotherBowl_fillsThatBowl', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheFirstOfTwoBowls()
+  room.moveTheSpout({ x: 0.22 + onTheCounterBesideTheBowl.x - onTheCounter.x, z: 0 })
+
+  room.play.tiltPressed()
+  room.wait(2)
+
+  assert.equal(room.play.aimedPourView?.targetId, 'bowl2')
+  assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, 0)
+  assert.ok((room.state.vessels['bowl2']?.liquid.volumeMl ?? 0) > 0)
+})
+
+test('pour_whenTheSpoutMovesToAnotherBowlWhilePouring_carriesOnIntoThatBowl', () => {
+  const room = new RoomVisit()
+  room.aimTheKettleAtTheFirstOfTwoBowls()
+  room.moveTheSpout({ x: 0.22, z: 0 })
+  room.play.tiltPressed()
+  room.wait(2)
+
+  room.moveTheSpout({ x: onTheCounterBesideTheBowl.x - onTheCounter.x, z: 0 })
+  room.wait(2)
+
+  assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0)
+  assert.ok((room.state.vessels['bowl2']?.liquid.volumeMl ?? 0) > 0)
+  assert.equal(room.state.pour?.targetId, 'bowl2')
 })
 
 test('pour_whileTiltIsHeldWithTheSpoutBesideTheBowl_wetsTheTableAndNotTheBowl', () => {
@@ -650,6 +679,17 @@ class RoomVisit {
     this.putDown(0, onTheCounter)
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
     this.fillTheKettleInTheSink()
+  }
+
+  aimTheKettleAtTheFirstOfTwoBowls(): void {
+    this.carryFromTheShelf('bowl1', 'bowl2')
+    this.walkTo('counter')
+    this.putDown(0, onTheCounter)
+    this.putDown(1, onTheCounterBesideTheBowl)
+    this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.fillTheKettleInTheSink()
+    this.tap({ kind: 'hand', handIndex: 0 })
+    this.tap({ kind: 'item', itemId: 'bowl1' })
   }
 
   aimTheKettleAtTheBowl(): void {

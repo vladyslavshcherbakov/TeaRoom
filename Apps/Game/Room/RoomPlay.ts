@@ -6,7 +6,7 @@ import { caddyItemId, clothItemId, itemLocationIn, spoonItemId } from '../../../
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { AimedPour, type AimedPourView } from './AimedPour.ts'
+import { AimedPour, type AimedPourView, type PourTarget } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
@@ -284,8 +284,18 @@ export class RoomPlay {
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
     if (sourceId === null || target?.location.kind !== 'onSurface' || targetShape === undefined || closeUpFurnitureId === null) return this.log(`no pour to aim at ${targetId}`)
     const spoutDirection = screenRightOnTheFloor(furnitureWithId(closeUpFurnitureId).closeUp)
-    this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, targetId, target.location.spot, openingRadiusMetres[targetShape], spoutDirection)
+    const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: openingRadiusMetres[targetShape] }
+    this.aimedPour = new AimedPour(this.ritual, this.log, sourceId, pourTarget, this.pourTargetsBeside(sourceId, target.location.spot.placeId), spoutDirection)
   }
+  private pourTargetsBeside(sourceId: string, placeId: string): PourTarget[] {
+    return Object.values(this.ritual.state.vessels).flatMap((vessel) => {
+      const shape = carriedShapeOf(this.ritual.state, vessel.id)
+      const isStandingThere = vessel.location.kind === 'onSurface' && vessel.location.spot.placeId === placeId
+      if (vessel.id === sourceId || shape === undefined || !isStandingThere || vessel.location.kind !== 'onSurface') return []
+      return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: openingRadiusMetres[shape] }]
+    })
+  }
+
 
   private useTheSink(): void {
     const itemId = this.chosenItemId()
