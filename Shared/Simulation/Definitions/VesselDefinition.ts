@@ -13,6 +13,7 @@ export type VesselDefinition = {
   readonly coolingPerSecond: number
   readonly lid: LidDefinition | null
   readonly canSitOnHeater: boolean
+  readonly isMadeForTheHeater: boolean
   readonly hasAMetalShell: boolean
   readonly canHoldLeaves: boolean
   readonly isDrinkable: boolean

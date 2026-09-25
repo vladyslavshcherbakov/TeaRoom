@@ -13,6 +13,10 @@ export const vesselRules: ItemKindRules = {
     const vessel = draft.state.vessels[itemId]
     return vessel !== undefined && vesselDefinitionOf(draft, vessel).canSitOnHeater
   },
+  isMadeForTheHeater: (draft, itemId) => {
+    const vessel = draft.state.vessels[itemId]
+    return vessel !== undefined && vesselDefinitionOf(draft, vessel).isMadeForTheHeater
+  },
   describeOnTheHeater: (draft, itemId) => {
     const vessel = draft.state.vessels[itemId]
     return vessel === undefined ? itemId : describeLiquid(vessel)

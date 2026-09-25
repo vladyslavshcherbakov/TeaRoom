@@ -31,7 +31,7 @@ A vessel with a metal shell, the thermos, may stand on the heater too. On a work
 
 When the water on the heater first reaches the lower edge of the chosen tea's good range, the core announces it once per switch-on. This is the moment for two faint haptic pulses where the device has them.
 
-Switching the heater off, by hand or by finishing the ritual, reports how long it was on since it was last switched on, and the energy it used: its `powerWatts` for that time, 2000 W for the electric plate. It also reports whether the keeper switched it off, and each item that sat on it while it worked, with the seconds it sat there.
+Switching the heater off, by hand or by finishing the ritual, reports how long it was on since it was last switched on, and the energy it used: its `powerWatts` for that time, 2000 W for the electric plate. It also reports whether the keeper switched it off, each item that sat on it while it worked, with the seconds it sat there, and the seconds and energy it wasted: the time it worked with nothing on it or with something not made for the heater. Only the kettle is made for the heater, so the thermos, the spoon and the cloth waste its energy, and an empty kettle does not.
 
 ## Judging water
 

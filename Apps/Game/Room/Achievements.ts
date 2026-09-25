@@ -49,7 +49,6 @@ type TapTurnedOff = Extract<RitualEvent, { readonly type: 'tapTurnedOff' }>
 type HeaterSwitchedOff = Extract<RitualEvent, { readonly type: 'heaterSwitchedOff' }>
 
 const longRunSeconds = 120
-const kettleShape = 'kettle'
 const puddlesWipedForOcd = 2
 
 const achievementsThatNeedLeaves: readonly AchievementId[] = ['perfectTea', 'teaBrewedInTheBowl']
@@ -87,7 +86,7 @@ export class Achievements {
     for (const event of events) {
       if (event.type === 'tableWiped') this.puddleWipedOn(event.placeId)
       if (event.type === 'tapTurnedOff') this.tapTurnedOff(event)
-      if (event.type === 'heaterSwitchedOff') this.heaterSwitchedOff(event, state)
+      if (event.type === 'heaterSwitchedOff') this.heaterSwitchedOff(event)
       const id = achievementOf(event, state)
       if (id !== null) this.unlock(id, `the ritual reported ${event.type}`)
     }
@@ -133,12 +132,10 @@ export class Achievements {
     this.ranForNothing({ ...this.record, hasTheTapRunForNothing: true })
   }
 
-  private heaterSwitchedOff(event: HeaterSwitchedOff, state: DeepReadonly<SessionState>): void {
-    if (event.onSeconds < longRunSeconds) return
-    if (!event.wasSwitchedOffByTheKeeper) return this.log(`the heater worked ${event.onSeconds.toFixed(0)} s but the end of the ritual switched it off, not the keeper`)
-    const kettleIdsHeated = Object.keys(event.secondsHeatedByItemId).filter((itemId) => carriedShapeOf(state, itemId) === kettleShape)
-    if (kettleIdsHeated.length > 0) return this.log(`the heater worked ${event.onSeconds.toFixed(0)} s but heated ${kettleIdsHeated.join(', ')}, so it did not work for nothing`)
-    this.log(`the heater worked ${event.onSeconds.toFixed(0)} s without the kettle and was switched off`)
+  private heaterSwitchedOff(event: HeaterSwitchedOff): void {
+    if (event.wastedSeconds < longRunSeconds) return
+    if (!event.wasSwitchedOffByTheKeeper) return this.log(`the heater wasted ${event.wastedSeconds.toFixed(0)} s but the end of the ritual switched it off, not the keeper`)
+    this.log(`the heater wasted ${event.wastedSeconds.toFixed(0)} s on the air or on things not made for it and was switched off`)
     this.ranForNothing({ ...this.record, hasTheHeaterRunForNothing: true })
   }
 

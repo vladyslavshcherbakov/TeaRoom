@@ -5,6 +5,7 @@ import { percent } from './Percent.ts'
 
 export const spoonRules: ItemKindRules = {
   canSitOnTheHeater: () => true,
+  isMadeForTheHeater: () => false,
   describeOnTheHeater: (draft) => `the spoon, ${percent(draft.state.spoon.charring)} charred`,
   heatOnTheWorkingHeater: (draft, _itemId, seconds) => charTheSpoon(draft, seconds),
   takeOffTheHeater: () => undefined,

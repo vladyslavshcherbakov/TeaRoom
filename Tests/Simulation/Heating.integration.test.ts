@@ -103,6 +103,42 @@ test('heater_whenSwitchedOffAfterTwoMinutes_saysItWasOnThatLongAndUsedATenthOfAK
   assertNear(switchedOff?.kilowattHoursUsed ?? 0, 0.1)
 })
 
+test('heater_whenSwitchedOffAfterHeatingOnlyTheKettle_hasWastedNothing', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.wait(120)
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  const [switchedOff] = eventsOfType(events, 'heaterSwitchedOff')
+  assert.equal(switchedOff?.wastedSeconds, 0)
+  assert.equal(switchedOff?.kilowattHoursWasted, 0)
+})
+
+test('heater_whenSwitchedOffAfterTwoMinutesWithNothingOnIt_hasWastedATenthOfAKilowattHour', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(120)
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  const [switchedOff] = eventsOfType(events, 'heaterSwitchedOff')
+  assertNear(switchedOff?.wastedSeconds ?? 0, 120)
+  assertNear(switchedOff?.kilowattHoursWasted ?? 0, 0.1)
+})
+
+test('heater_whenSwitchedOffAfterTheKettleAndThenTheThermos_hasWastedOnlyTheThermosSeconds', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.wait(10)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'table', x: 2, y: 0, z: 0 } })
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.wait(5)
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  assertNear(eventsOfType(events, 'heaterSwitchedOff')[0]?.wastedSeconds ?? 0, 5)
+})
+
 test('heater_whenSwitchedOnAgain_countsItsTimeFromTheNewSwitch', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
   ritual.wait(30)

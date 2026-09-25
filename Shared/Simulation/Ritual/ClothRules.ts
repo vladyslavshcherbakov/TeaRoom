@@ -10,6 +10,7 @@ import { drain } from './RunningWater.ts'
 
 export const clothRules: ItemKindRules = {
   canSitOnTheHeater: () => true,
+  isMadeForTheHeater: () => false,
   describeOnTheHeater: (draft, itemId) => {
     const cloth = draft.state.cloths[itemId]
     return cloth === undefined ? itemId : `${cloth.id} holding ${cloth.wetMl.toFixed(1)} ml, ${percent(cloth.charring)} charred`

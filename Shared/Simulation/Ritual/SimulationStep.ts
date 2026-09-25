@@ -46,8 +46,10 @@ function heatWhatSitsOnTheWorkingHeater(draft: Draft, seconds: number): void {
 
 function countTheSecondsOnTheWorkingHeater(draft: Draft, seconds: number): void {
   const heater = draft.state.heater
-  if (!heater.isOn || heater.itemIdOnTop === null) return
-  heater.secondsHeatedByItemId[heater.itemIdOnTop] = (heater.secondsHeatedByItemId[heater.itemIdOnTop] ?? 0) + seconds
+  const itemId = heater.itemIdOnTop
+  if (!heater.isOn) return
+  if (itemId === null || rulesFor(draft.state, itemId)?.isMadeForTheHeater(draft, itemId) !== true) heater.secondsWasted += seconds
+  if (itemId !== null) heater.secondsHeatedByItemId[itemId] = (heater.secondsHeatedByItemId[itemId] ?? 0) + seconds
 }
 
 function heatOrCoolMetalShells(draft: Draft, seconds: number): void {

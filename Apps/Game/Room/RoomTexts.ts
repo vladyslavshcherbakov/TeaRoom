@@ -51,7 +51,7 @@ export class RoomTexts {
       case 'actionRefused':
         return event.reason === 'tooHotToHold' ? this.joke('tooHotToHold') : []
       case 'heaterSwitchedOff':
-        return event.onSeconds >= heaterRanLongFromSeconds ? this.joke('heaterRanLong', { kilowattHours: kilowattHoursText(event.kilowattHoursUsed) }) : []
+        return event.wastedSeconds >= heaterRanLongFromSeconds ? this.joke('heaterRanLong', { kilowattHours: kilowattHoursText(event.kilowattHoursWasted) }) : []
       case 'tapTurnedOff':
         return event.openSeconds >= tapRanLongFromSeconds ? this.joke('tapRanLong', { litres: litresText(event.drainedMl) }) : []
       case 'clothTakenOffTheHeater':

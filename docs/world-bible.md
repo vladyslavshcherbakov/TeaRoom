@@ -71,7 +71,7 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 **Some damage heals, and some does not.** A burnt cloth washes back to new, and the keeper marvels at such a forgiving world. A burnt spoon is gone, and the keeper hints that tea can still be brewed without it. The caddy washed clean under the tap leaves the house without tea, and the keeper despairs of it.
 
-**The house notices waste.** A tap left running for minutes, or a heater left on, earns one dry line about the litres or the kilowatt-hours when it is finally turned off.
+**The house notices waste.** A tap left running for minutes, or a heater left on with nothing on it or with something not made for it, earns one dry line about the litres or the kilowatt-hours when it is finally turned off.
 
 **One voice per visit.** The keeper speaks with one voice for a whole visit: the same feeling gets the same words. Another visit may bring other words for it.
 

@@ -67,7 +67,7 @@ function heaterLines(draft: Draft): string[] {
   if (!heater.isOn) return []
   const onSeconds = draft.state.elapsedSeconds - heater.switchedOnAtSeconds
   const kilowattHours = kilowattHoursUsed(definitionIn(draft.catalog, 'heaters', heater.definitionId), onSeconds)
-  return [`the heater has been on for ${onSeconds.toFixed(0)} s and used ${kilowattHours.toFixed(4)} kWh, with ${heater.itemIdOnTop ?? 'nothing'} on it`]
+  return [`the heater has been on for ${onSeconds.toFixed(0)} s and used ${kilowattHours.toFixed(4)} kWh, ${heater.secondsWasted.toFixed(0)} s of it wasted, with ${heater.itemIdOnTop ?? 'nothing'} on it`]
 }
 
 function tapLines(state: SessionState): string[] {

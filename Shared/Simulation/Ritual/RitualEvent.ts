@@ -76,6 +76,8 @@ export type RitualEvent =
       readonly waterJudgement: WaterJudgement | null
       readonly onSeconds: number
       readonly kilowattHoursUsed: number
+      readonly wastedSeconds: number
+      readonly kilowattHoursWasted: number
       readonly secondsHeatedByItemId: Readonly<Record<string, number>>
       readonly wasSwitchedOffByTheKeeper: boolean
     }

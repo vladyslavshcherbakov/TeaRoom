@@ -149,9 +149,9 @@ export const englishTexts = {
   'tapRanLong.1': '{litres} litres straight down the drain. The river sends its thanks.',
   'tapRanLong.2': 'That was {litres} litres for the sink. It has never been this hydrated.',
 
-  'heaterRanLong.1': 'That much electricity would have bought a whole tin of good tea. Ah well, the water is hot.',
+  'heaterRanLong.1': 'That much electricity would have bought a whole tin of good tea. Ah well, the air is warm.',
   'heaterRanLong.2': 'Promise me you do this before we leave the house, too.',
-  'heaterRanLong.3': '{kilowattHours} kWh for one kettle. The power plant sends its warmest regards.',
+  'heaterRanLong.3': '{kilowattHours} kWh to warm the air. The power plant sends its warmest regards.',
 
   'settings.title': 'Settings',
   'settings.coatColour': 'Body colour',

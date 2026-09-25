@@ -11,6 +11,7 @@ export type ItemKind = 'vessel' | 'spoon' | 'cloth'
 
 export type ItemKindRules = {
   readonly canSitOnTheHeater: (draft: Draft, itemId: string) => boolean
+  readonly isMadeForTheHeater: (draft: Draft, itemId: string) => boolean
   readonly describeOnTheHeater: (draft: Draft, itemId: string) => string
   readonly heatOnTheWorkingHeater: (draft: Draft, itemId: string, seconds: number) => void
   readonly takeOffTheHeater: (draft: Draft, itemId: string) => void

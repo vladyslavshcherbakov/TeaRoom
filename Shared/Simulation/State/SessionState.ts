@@ -31,6 +31,7 @@ export type HeaterState = {
   switchedOnAtSeconds: number
   itemIdOnTop: string | null
   secondsHeatedByItemId: Record<string, number>
+  secondsWasted: number
   hasAnnouncedTargetTemperature: boolean
   hasAnnouncedBoilingAway: boolean
 }

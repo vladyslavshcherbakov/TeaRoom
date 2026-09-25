@@ -109,6 +109,15 @@ test('savedState_fromBeforeTheLightWasKept_standsHalfwayThroughItsTimeOfDay', ()
   assert.deepEqual(resumed.state.atmosphere, { timeOfDay: 'sunset', shareThroughTheTimeOfDay: 0.5, weather: 'rain' })
 })
 
+test('savedState_fromBeforeTheHeaterCountedItsWaste_startsCountingItAtNothing', () => {
+  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  delete savedState.heater['secondsWasted']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal(resumed.state.heater.secondsWasted, 0)
+})
+
 function catalogWithAFourthCup(): Catalog {
   const catalog = testCatalog()
   const room = catalog.rooms['testRoom']
