@@ -140,6 +140,13 @@ test('clothOnAWorkingHeater_burnsInStagesAsItChars', () => {
   }
 })
 
+test('liquor_whenBrewed_isLessSeeThroughThanWater', () => {
+  const water = vesselView(stateWithLiquid('cup1', { strength: 0 }), 'cup1')?.liquorOpacity ?? 1
+  const tea = vesselView(stateWithLiquid('cup1', { strength: 60 }), 'cup1')?.liquorOpacity ?? 0
+
+  assert.ok(water < tea, `water ${water}, tea ${tea}`)
+})
+
 function stateWithTheDryClothOnAWorkingHeater(charring: number): SessionState {
   const state = ritualState()
   state.heater.isOn = true

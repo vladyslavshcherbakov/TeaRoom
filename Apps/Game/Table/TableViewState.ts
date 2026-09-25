@@ -20,6 +20,7 @@ export declare namespace TableViewState {
     readonly id: string
     readonly fillShare: number
     readonly liquorColour: string
+    readonly liquorOpacity: number
     readonly steam: SteamLevel
     readonly surfaceMotion: SurfaceMotion
     readonly brewStage: BrewStage

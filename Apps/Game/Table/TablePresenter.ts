@@ -20,6 +20,7 @@ const shimmeringFromC = 40
 const simmeringFromC = 55
 const boilingFromC = 95
 const puddleFullAtMl = 30
+const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number>> = { water: 0.3, pale: 0.5, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95 }
 const clothSoakedAtMl = 25
 const scorchingFromCharring = 0.2
 const smoulderingFromCharring = 0.5
@@ -65,6 +66,7 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
     id: vessel.id,
     fillShare: share(vessel.liquid.volumeMl, definition.capacityMl),
     liquorColour: tea === null || brewStage === 'water' ? waterColour : liquorColour(vessel.liquid, tea),
+    liquorOpacity: liquorOpacityByBrewStage[brewStage],
     steam: steamOf(vessel, definition),
     surfaceMotion: isHeated && !isEmpty(vessel.liquid) ? surfaceMotionAt(vessel.liquid.temperatureC) : 'still',
     brewStage,

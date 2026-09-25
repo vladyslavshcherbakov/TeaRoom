@@ -19,6 +19,8 @@ export type CarriedModel = {
   readonly lidClosedPosition: THREE.Vector3
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
+  readonly liquidVolume: THREE.Mesh | null
+  liquidVolumeHeight: number
   readonly gaugeWater: THREE.Mesh | null
   readonly leafHolder: THREE.Group | null
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
@@ -67,6 +69,7 @@ type ItemParts = {
   readonly rimHeight: number
   readonly liquidRadius: number | null
   readonly heldInViewLook?: HeldInViewLook
+  readonly isSeeThrough?: boolean
 }
 
 export const mostSteamSources = 2
@@ -79,6 +82,9 @@ const paintingAboveTheGlazeMetres = 0.0004
 const paintingSegmentsAlong = 48
 const fewestPaintingSegmentsAcross = 8
 const bowlSegmentsAround = 64
+const liquidInsetShare = 0.97
+const liquidAboveTheInsideMetres = 0.0005
+const liquidBelowItsSurfaceMetres = 0.001
 const flutedBowlSegmentsAround = 160
 const hobnailBowlSegmentsAround = 192
 const hobnailsAround = 22
@@ -140,10 +146,13 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   if (parts.lid !== null) root.add(parts.lid)
   const liquidMaterial = parts.liquidRadius === null ? null : (materials.room.unsharedMaterialFor('porcelain') as THREE.MeshStandardMaterial)
   const liquid = liquidMaterial === null ? null : new THREE.Mesh(new THREE.CircleGeometry(1, 20), liquidMaterial)
-  if (liquid !== null) {
+  if (liquid !== null && liquidMaterial !== null) {
     liquid.rotation.x = -Math.PI / 2
+    liquidMaterial.transparent = true
     root.add(liquid)
   }
+  const liquidVolume = parts.isSeeThrough === true ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
+  if (liquidVolume !== null) root.add(liquidVolume)
   if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight, materials.touchPad))
   const gaugeWater = shape === 'kettle' ? addWaterGauge(root, materials.room) : null
   const leafHolder = leafHolderFor(shape)
@@ -163,6 +172,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
     liquid,
     liquidMaterial,
+    liquidVolume,
+    liquidVolumeHeight: 0,
     gaugeWater,
     leafHolder,
     leaves: null,
@@ -297,7 +308,7 @@ function bowlParts(materials: RoomMaterials, look: BowlLook): ItemParts {
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
   clearGlass.side = THREE.DoubleSide
-  return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass } }
+  return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass }, isSeeThrough: true }
 }
 
 function bowlGeometryWith(relief: BowlRelief): THREE.BufferGeometry {
@@ -381,6 +392,27 @@ function paintedOnTheBottom(materials: RoomMaterials, painting: BottomPainting):
   paintingMesh.renderOrder = 1
   paintingMesh.castShadow = false
   return paintingMesh
+}
+
+export function bowlLiquidGeometry(surfaceHeight: number): THREE.BufferGeometry {
+  const underTheSurface = bowlInsideProfile.filter((point) => point.y < surfaceHeight)
+  const surfaceRadius = bowlInsideRadiusAt(surfaceHeight)
+  const outline = [
+    new THREE.Vector2(0, (bowlInsideProfile[0]?.y ?? 0) + liquidAboveTheInsideMetres),
+    ...underTheSurface.map((point) => new THREE.Vector2(point.x * liquidInsetShare, point.y + liquidAboveTheInsideMetres)),
+    new THREE.Vector2(surfaceRadius * liquidInsetShare, surfaceHeight - liquidBelowItsSurfaceMetres),
+    new THREE.Vector2(0, surfaceHeight - liquidBelowItsSurfaceMetres),
+  ]
+  return new THREE.LatheGeometry(outline, bowlSegmentsAround)
+}
+
+function bowlInsideRadiusAt(height: number): number {
+  const above = bowlInsideProfile.findIndex((point, index) => index > 0 && point.y >= height)
+  const after = bowlInsideProfile[above]
+  const before = bowlInsideProfile[above - 1]
+  if (after === undefined) return bowlInsideProfile.at(-1)?.x ?? 0
+  if (before === undefined) return after.x
+  return before.x + ((after.x - before.x) * (height - before.y)) / (after.y - before.y)
 }
 
 function bowlBottomHeightAt(distanceFromTheCentre: number): number {
