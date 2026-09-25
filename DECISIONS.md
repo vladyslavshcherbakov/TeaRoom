@@ -102,6 +102,8 @@ The plan is in `docs/roadmap.md`.
 
 **A debug menu hides behind ten taps in a row on a rose bush.** The menu is for the people who build the game, so it has no button a player would find, and a rose bush is the one thing in the garden that answers a tap. The count lives in `RoomPlay.ts` and any other tap resets it. The menu's first choice is the camera: the room view, or first person, which walks the same floor grid as a tapped walk, so it can never reach a place a tapped walk could not. First person uses two fixed sticks on screen, chosen over a stick that appears under the finger, and keeps every tap working as in the room view.
 
+**Each carried shape is described once, and its promises are tested over every item in the room.** A shape's layout in `CarriedShapes.ts` says what it takes up on a surface, its opening and its lid, and its `CarriedShapeLook` says how its model is built, where its steam rises and how it shows leaves. Every field is required, so a new shape does not compile until it answers each one. The same mistake came back in new forms while these facts lived in special cases by name: a lid on the heater, items on top of each other, the thermos sinking into the table while aimed, a see-through bowl that turned into a ghost in the hand. `Tests/Game/Room/CarriedItems.integration.test.ts` builds the real model of every item and checks the promises with no code per item.
+
 **Every surface's look is decided in one class.** `RoomMaterials` maps each surface name to a material. Paintings and generated textures replace a colour there without touching the models.
 
 ### Apps/Bench/
@@ -120,7 +122,7 @@ The plan is in `docs/roadmap.md`.
 
 **GitHub Actions tests every push and deploys to Pages from the default branch.** The workflow reads the default branch from the event instead of naming `main`, so it keeps working if the default branch is renamed. Action versions are the Node 24 majors (`checkout@v5`, `setup-node@v5`, `upload-pages-artifact@v5`, `deploy-pages@v5`), because GitHub is removing the Node 20 runtime from its runners in September 2026. A new push to a branch cancels the run still going for the same branch, because only the newest commit is worth testing and deploying, and the older run wastes minutes.
 
-**Every script lives in `Scripts/`, and each configuration file lives beside what it configures.** A newcomer finds every command in one folder. The root `tsconfig.json` checks `Shared` and `Tests` and is the one editors find, `Apps/tsconfig.json` adds the browser's types for the apps, and `Tests/Browser/playwright.config.ts` sits with the browser tests it runs. Rejected: scripts beside their configuration files, because the commands would then be spread over several folders.
+**Every script lives in `Scripts/`, and each configuration file lives beside what it configures.** A newcomer finds every command in one folder. The root `tsconfig.json` checks `Shared` and the simulation's tests without the browser's types and is the one editors find, `Apps/tsconfig.json` adds the browser's types for the apps and the game's tests, which build the room's models, and `Tests/Browser/playwright.config.ts` sits with the browser tests it runs. Rejected: scripts beside their configuration files, because the commands would then be spread over several folders.
 
 ## Corrections that stuck
 

@@ -11,8 +11,8 @@ import { FallingStream } from './FallingStream.ts'
 const streamRadiusMetres = 0.007
 const smallestVisibleTiltDegrees = 10
 const pourStreamEndsAboveTheTargetMetres = 0.01
-const overflowSideFromTheGaugeRadians = 0.7
-const overflowStreamRadiusMetres = 0.009
+export const overflowSideFromTheGaugeRadians = 0.7
+export const overflowStreamRadiusMetres = 0.009
 
 export class WaterStreams {
   private readonly pouredLiquid: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial

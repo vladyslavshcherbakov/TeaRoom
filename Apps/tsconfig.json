@@ -2,9 +2,9 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "module": "ESNext",
     "moduleResolution": "bundler"
   },
-  "include": ["./**/*.ts", "../Shared/**/*.ts"]
+  "include": ["./**/*.ts", "../Shared/**/*.ts", "../Tests/Game/**/*.ts", "../Tests/Support/**/*.ts"]
 }

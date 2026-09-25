@@ -16,5 +16,6 @@
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["Shared", "Tests"]
+  "include": ["Shared", "Tests"],
+  "exclude": ["Tests/Game"]
 }

@@ -21,7 +21,7 @@ const firstSpoutOffsetFromTargetMetres = 0.22
 const tiltGrowthDegreesPerSecond = 30
 const tiltFallDegreesPerSecond = 70
 const steepestTiltBelowTheSplashDegrees = 1
-const steepestTiltDegrees = tiltWhereWaterSplashesDegrees - steepestTiltBelowTheSplashDegrees
+export const steepestTiltDegrees = tiltWhereWaterSplashesDegrees - steepestTiltBelowTheSplashDegrees
 const streamRadiusMetres = 0.012
 
 export class AimedPour {

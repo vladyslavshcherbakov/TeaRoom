@@ -10,7 +10,7 @@ A change is done when the commands in the README sections "Test" and "Build" pas
 
 The layers are `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
-`Apps/Game` is the game, and `Apps/Bench` is the ritual bench, a debug page over the simulation. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `Scripts/build.sh`. The root `tsconfig.json` type-checks `Shared` and `Tests`.
+`Apps/Game` is the game, and `Apps/Bench` is the ritual bench, a debug page over the simulation. Both are type-checked by `Apps/tsconfig.json`, together with the game's tests in `Tests/Game`, and built by Vite from `Scripts/build.sh`. The root `tsconfig.json` type-checks `Shared` and the other tests without the browser's types, so the simulation cannot reach the DOM.
 
 External dependencies: Three.js for the room, pinned in `package.json`. Vite, TypeScript, Playwright and `@types` packages for development. The simulation imports none of them.
 
@@ -51,6 +51,12 @@ A tea, a vessel, a figurine or a room:
 
 1. Add the definition to the matching file in `Shared/Content/` and register it in `DefaultCatalog.ts`.
 2. Run the tests. `Tests/Content/DefaultCatalog.unit.test.ts` runs `problemsOpeningRoom` over every room, and `Tests/Content/TeaBalance.integration.test.ts` brews every tea by the book.
+
+A new shape of carried item, such as a teapot:
+
+1. Add it to `CarriedShape` in `Room/CarriedShapes.ts`, map its vessel definition or tool to it, and give it a layout in `layoutByShape`.
+2. Add its parts file in `Room/Views/Carried/` with its `CarriedShapeLook`, and register the look in `lookByShape` in `CarriedModel.ts`. The compiler lists every entry that is still missing.
+3. Run the tests. `Tests/Game/Room/CarriedItems.integration.test.ts` builds every item of the room and checks that it stays above the surface while aimed, that its open lid fits the place kept for it, that it stays on a phone's screen when held, and that its overflow runs down its wall.
 
 ### Adding a mechanic
 
