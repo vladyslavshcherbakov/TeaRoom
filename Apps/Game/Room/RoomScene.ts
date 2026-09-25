@@ -23,6 +23,10 @@ import { furnitureWithId, type CameraPose, type FloorPoint } from './RoomLayout.
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
+import { Achievements } from './Achievements.ts'
+import { AchievementStore } from './AchievementStore.ts'
+import { AchievementNotice } from './Views/AchievementNotice.ts'
+import { AchievementsList } from './Views/AchievementsList.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
 import { savedVisitVersion, type SavedCamera, type VisitStore } from './VisitStore.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
@@ -57,6 +61,7 @@ export type RoomArrival = {
   readonly camera: SavedCamera | null
   readonly events: readonly RitualEvent[]
   readonly notice: string | null
+  readonly continuesAVisit: boolean
 }
 
 export class RoomScene {
@@ -78,6 +83,9 @@ export class RoomScene {
   private readonly sipButton: SipButton
   private readonly pourControls: PourControls
   private readonly caption: RoomCaption
+  private readonly achievements: Achievements
+  private readonly achievementsList: AchievementsList
+  private readonly achievementNotice: AchievementNotice
   private readonly debugMenu: DebugMenu
   private readonly youDied: YouDiedScreen
   private readonly joysticks: Joysticks
@@ -120,8 +128,15 @@ export class RoomScene {
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
     this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
-      remarked: (remark) => this.caption.show(this.texts.remarkLines(remark)),
-      debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
+      remarked: (remark) => {
+        this.achievements.remarked(remark.kind)
+        this.caption.show(this.texts.remarkLines(remark))
+      },
+      debugMenuAsked: () => {
+        this.achievements.roseBushTappedTenTimes()
+        this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout })
+      },
+      achievementsAsked: () => this.achievementsList.show(this.achievements.unlocked),
       keeperDied: () => {
         this.hasTheKeeperDied = true
         this.visitStore.forget('the keeper died, so the next visit starts anew')
@@ -141,6 +156,9 @@ export class RoomScene {
       tiltReleased: () => this.play.tiltReleased(),
     })
     this.caption = new RoomCaption(container)
+    this.achievementNotice = new AchievementNotice(container)
+    this.achievements = new Achievements(new AchievementStore(log), log, (id) => this.achievementNotice.announce(id))
+    this.achievementsList = new AchievementsList(container, { resetAsked: () => this.achievements.reset() })
     this.youDied = new YouDiedScreen(container, () => {
       log('the player starts over after dying')
       location.reload()
@@ -155,6 +173,8 @@ export class RoomScene {
     window.addEventListener('resize', () => this.fitToWindow())
     this.keepTheVisitWhenThePageIsLeft()
     this.caption.show([...this.texts.captionLinesFor(arrival.events, session.state.elapsedSeconds), ...(arrival.notice === null ? [] : [arrival.notice])])
+    if (arrival.continuesAVisit) this.achievements.visitContinued()
+    this.achievements.eventsHappened(arrival.events, session.state)
     this.renderer.setAnimationLoop(() => this.frame())
   }
 
@@ -164,6 +184,8 @@ export class RoomScene {
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
     this.caption.advance(seconds)
+    this.achievements.worldAdvanced(this.session.state)
+    this.achievementNotice.advance(seconds)
     this.keepTheVisitNowAndThen(seconds)
     const daylight = daylightAt(hoursSinceSunriseFor(this.session.state.atmosphere.timeOfDay, this.shareThroughTheTimeOfDay))
     this.roomLights.show(daylight)
@@ -288,6 +310,7 @@ export class RoomScene {
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
     this.caption.show(this.texts.captionLinesFor(events, this.session.state.elapsedSeconds))
+    this.achievements.eventsHappened(events, this.session.state)
     return events
   }
 
@@ -372,6 +395,7 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
   if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }
   if ('isRoseBush' in tag) return { kind: 'roseBush' }
+  if ('isMedal' in tag) return { kind: 'medal' }
   const upwardNormal = hit.face?.normal.clone().transformDirection(hit.object.matrixWorld).y ?? 0
   if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }
   return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: hit.point.x, y: hit.point.y, z: hit.point.z } }

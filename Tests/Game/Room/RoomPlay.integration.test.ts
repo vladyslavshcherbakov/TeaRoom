@@ -862,16 +862,25 @@ test('thermosLid_whenTappedWhileAimingTheClosedThermos_opensAndKeepsTheAim', () 
   assert.equal(room.play.aimedPourView?.sourceId, 'thermos')
 })
 
+test('medal_whenTapped_asksForTheListOfAchievements', () => {
+  const room = new RoomVisit()
+
+  room.tap({ kind: 'medal' })
+
+  assert.equal(room.achievementListsAsked, 1)
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
   readonly remarks: RoomRemark[] = []
   debugMenusAsked = 0
+  achievementListsAsked = 0
   deathsSeen = 0
   readonly play: RoomPlay
 
   constructor(heaterItemsBeforeTheTesterJoke = 4) {
-    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), keeperDied: () => (this.deathsSeen += 1) })
+    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), keeperDied: () => (this.deathsSeen += 1) })
   }
 
   get session() {

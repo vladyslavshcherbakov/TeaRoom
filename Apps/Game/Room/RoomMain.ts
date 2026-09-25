@@ -49,7 +49,7 @@ function offerToContinue(visit: SavedVisit): void {
       const awaySeconds = Math.max(0, (Date.now() - visit.savedAtMilliseconds) / millisecondsInASecond)
       roomLog(`the player continues the visit saved ${awaySeconds.toFixed(0)} s ago`)
       const events = resuming.session.returnAfter(awaySeconds)
-      enterTheRoom(resuming.session, { place: visit.place, camera: visit.camera, events, notice: null })
+      enterTheRoom(resuming.session, { place: visit.place, camera: visit.camera, events, notice: null, continuesAVisit: true })
     },
     startedOver: () => {
       visitStore.forget('the player starts over')
@@ -64,7 +64,7 @@ function enterAnew(notice: string | null): void {
   const teaId = Object.keys(catalog.teas)[0] ?? ''
   roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
   opening.session.dispatch({ type: 'beginRitual', teaId })
-  enterTheRoom(opening.session, { place: roomEntrance, camera: null, events: [], notice })
+  enterTheRoom(opening.session, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false })
 }
 
 function enterTheRoom(session: RitualSession, arrival: RoomArrival): void {

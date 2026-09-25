@@ -10,6 +10,7 @@ import {
   puddleRadiusMetres,
   roomHalfSize,
   windowOnBackWall,
+  medalOnBackWall,
   type Footprint,
   type Furniture,
   type FurnitureId,
@@ -22,6 +23,12 @@ import type { TableViewState } from '../../Table/TableViewState.ts'
 const puddleSegments = 40
 const wallHeight = 2.6
 const wallThickness = 0.12
+const medalRadiusMetres = 0.13
+const medalThicknessMetres = 0.025
+const medalRibbonWidthMetres = 0.09
+const medalRibbonLengthMetres = 0.3
+const medalRibbonTiltRadians = 0.35
+const medalTouchAreaMetres = 0.55
 const faucetPostAboveTheSpoutMetres = 0.04
 const faucetTouchAreaWidthMetres = 0.2
 const faucetTouchAreaAboveTheCounterMetres = 0.12
@@ -42,6 +49,7 @@ export type TapTargetTag =
   | { readonly lidOfItemId: string }
   | { readonly figurineId: string }
   | { readonly isRoseBush: true }
+  | { readonly isMedal: true }
 
 export class RoomModel {
   private readonly materials: RoomMaterials
@@ -56,6 +64,7 @@ export class RoomModel {
     this.addFloor()
     this.addBackWallWithWindow()
     this.addLeftWall()
+    this.addMedal()
     for (const piece of furniture) this.addFurniture(piece)
     for (const spot of itemSpots) this.addItem(spot)
     this.heaterPlate = this.addHeater(heaterSpot)
@@ -101,6 +110,27 @@ export class RoomModel {
     sky.position.set(centreX, sillHeight + height / 2, z - 0.3)
     this.root.add(sky)
     this.box('darkWood', 0.05, height, 0.06, { x: centreX, y: sillHeight + height / 2, z })
+  }
+
+  private addMedal(): void {
+    const medal = new THREE.Group()
+    const wallFace = -roomHalfSize
+    for (const side of [-1, 1]) {
+      const ribbon = this.plainBox('medalRibbon', medalRibbonWidthMetres, medalRibbonLengthMetres, 0.004, { x: side * medalRibbonWidthMetres * 0.45, y: medalRadiusMetres + medalRibbonLengthMetres * 0.42, z: 0.004 })
+      ribbon.rotation.z = side * medalRibbonTiltRadians
+      medal.add(ribbon)
+    }
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(medalRadiusMetres, medalRadiusMetres, medalThicknessMetres, 32), this.materials.materialFor('gildedRim'))
+    disc.rotation.x = Math.PI / 2
+    disc.position.z = medalThicknessMetres / 2 + 0.008
+    disc.castShadow = true
+    const touchArea = new THREE.Mesh(new THREE.BoxGeometry(medalTouchAreaMetres, medalTouchAreaMetres * 1.3, 0.05), this.touchAreaMaterial)
+    touchArea.position.set(0, medalRibbonLengthMetres * 0.4, 0.025)
+    touchArea.userData = { isForgivingTouchArea: true }
+    medal.add(disc, touchArea)
+    medal.position.set(medalOnBackWall.x, medalOnBackWall.y, wallFace)
+    this.root.add(medal)
+    this.tag(medal, { isMedal: true })
   }
 
   private addLeftWall(): void {

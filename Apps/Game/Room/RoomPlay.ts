@@ -35,6 +35,7 @@ export type RoomTapTarget =
   | { readonly kind: 'lid'; readonly itemId: string }
   | { readonly kind: 'figurine'; readonly figurineId: string }
   | { readonly kind: 'roseBush' }
+  | { readonly kind: 'medal' }
   | { readonly kind: 'nothing' }
 
 type WipeStroke = {
@@ -71,6 +72,7 @@ export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
   readonly debugMenuAsked: () => void
+  readonly achievementsAsked: () => void
   readonly keeperDied: () => void
 }
 
@@ -247,6 +249,7 @@ export class RoomPlay {
     this.log(`tap on ${describeTarget(target)}, ${chosenItemId === null ? 'no hand chosen' : `${chosenItemId} chosen in hand ${this.choice}`}`)
     if (target.kind === 'roseBush') return this.countTheRoseBushTap()
     this.forgetTheRoseBushTaps()
+    if (target.kind === 'medal') return this.showTheAchievements()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
@@ -254,6 +257,11 @@ export class RoomPlay {
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)
     this.actAtCloseUp(target)
+  }
+
+  private showTheAchievements(): void {
+    this.log('the medal on the wall shows the list of achievements')
+    this.listener.achievementsAsked()
   }
 
   private countTheRoseBushTap(): void {

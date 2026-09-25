@@ -62,6 +62,7 @@ export type Surface =
   | 'temperGlaze'
   | 'glass'
   | 'gildedRim'
+  | 'medalRibbon'
   | 'clearGlassHeldInView'
   | 'koiPainting'
   | 'lotusPainting'
@@ -130,6 +131,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   temperGlaze: '#7a6650',
   glass: '#ffffff',
   gildedRim: '#e2b451',
+  medalRibbon: '#a8392e',
   clearGlassHeldInView: '#26302c',
   koiPainting: '#ffffff',
   lotusPainting: '#ffffff',
