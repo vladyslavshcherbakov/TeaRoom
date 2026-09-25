@@ -312,13 +312,6 @@ function paintEye(context: CanvasRenderingContext2D, x: number, y: number): void
   context.fill()
 }
 
-function line(context: CanvasRenderingContext2D, from: Point, to: Point): void {
-  context.beginPath()
-  context.moveTo(from[0], from[1])
-  context.lineTo(to[0], to[1])
-  context.stroke()
-}
-
 function circle(context: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
   context.beginPath()
   context.arc(x, y, radius, 0, Math.PI * 2)
