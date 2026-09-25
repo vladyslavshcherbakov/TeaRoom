@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import type { TapTargetTag } from './RoomModel.ts'
 
 type PlantPart = {
   readonly geometry: THREE.BufferGeometry
@@ -10,6 +11,8 @@ type PlantPart = {
 
 const groundSizeMetres = 60
 const groundBelowTheFloorMetres = 0.1
+const kindsThatOpenTheDebugMenu: ReadonlySet<PlantKind> = new Set(['roseBush', 'rose'])
+const roseBushTag: TapTargetTag = { isRoseBush: true }
 
 const partsByKind: Readonly<Record<PlantKind, readonly PlantPart[]>> = {
   grassTuft: [part(new THREE.ConeGeometry(0.035, 0.14, 3, 1, true), 'bloom', 0, 0.07, 0)],
@@ -30,14 +33,22 @@ const partsByKind: Readonly<Record<PlantKind, readonly PlantPart[]>> = {
 
 export class Garden {
   readonly root = new THREE.Group()
+  readonly tappableMeshes: THREE.Object3D[] = []
 
   constructor(materials: RoomMaterials) {
     this.root.add(ground(materials))
     const plantsByKind = new Map<PlantKind, Plant[]>()
     for (const plant of gardenPlants()) plantsByKind.set(plant.kind, [...(plantsByKind.get(plant.kind) ?? []), plant])
     for (const [kind, plantsOfTheKind] of plantsByKind) {
-      for (const plantPart of partsByKind[kind]) this.root.add(instancesOf(plantPart, plantsOfTheKind, materials))
+      for (const plantPart of partsByKind[kind]) this.addInstances(kind, instancesOf(plantPart, plantsOfTheKind, materials))
     }
+  }
+
+  private addInstances(kind: PlantKind, instances: THREE.InstancedMesh): void {
+    this.root.add(instances)
+    if (!kindsThatOpenTheDebugMenu.has(kind)) return
+    instances.userData = { ...instances.userData, tapTarget: roseBushTag }
+    this.tappableMeshes.push(instances)
   }
 }
 

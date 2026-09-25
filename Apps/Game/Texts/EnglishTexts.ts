@@ -4,6 +4,12 @@ export const englishTexts = {
 
   'hand.sip': 'Sip',
 
+  'debug.title': 'Debug',
+  'debug.camera': 'Camera',
+  'debug.camera.room': 'Room view',
+  'debug.camera.firstPerson': 'First person',
+  'debug.close': 'Close',
+
   'aim.tiltButton': '🫖',
   'aim.hint': 'Drag to move what you pour from. Hold 🫖 with another finger to tilt it. Tap anywhere to stop.',
 

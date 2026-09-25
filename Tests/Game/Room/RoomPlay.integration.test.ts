@@ -655,11 +655,30 @@ test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable',
   assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0, 'the bowl stayed empty')
 })
 
+test('roseBush_whenTappedTenTimesInARow_asksForTheDebugMenu', () => {
+  const room = new RoomVisit()
+
+  for (let tap = 0; tap < 10; tap += 1) room.tap({ kind: 'roseBush' })
+
+  assert.equal(room.debugMenusAsked, 1)
+})
+
+test('roseBush_whenAnotherTapComesBeforeTheTenth_startsCountingAgain', () => {
+  const room = new RoomVisit()
+  for (let tap = 0; tap < 9; tap += 1) room.tap({ kind: 'roseBush' })
+  room.tap({ kind: 'nothing' })
+
+  room.tap({ kind: 'roseBush' })
+
+  assert.equal(room.debugMenusAsked, 0)
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
   readonly remarks: RoomRemark[] = []
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), (remark) => this.remarks.push(remark))
+  debugMenusAsked = 0
+  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1) })
 
   get session() {
     return this.ritual.session

@@ -86,6 +86,72 @@
       .caption[hidden] {
         display: none;
       }
+      .stick {
+        position: fixed;
+        bottom: calc(28px + env(safe-area-inset-bottom));
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px solid rgba(143, 90, 58, 0.6);
+        background: rgba(251, 244, 232, 0.35);
+        touch-action: none;
+        display: grid;
+        place-items: center;
+      }
+      .stick.walk {
+        left: 24px;
+      }
+      .stick.look {
+        right: 24px;
+      }
+      .stick[hidden] {
+        display: none;
+      }
+      .stick-knob {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: rgba(251, 244, 232, 0.9);
+        border: 2px solid #8f5a3a;
+        pointer-events: none;
+      }
+      .debug-menu {
+        position: fixed;
+        top: calc(16px + env(safe-area-inset-top));
+        left: 16px;
+        right: 16px;
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(251, 244, 232, 0.97);
+        color: #5a3a26;
+        font: 15px/1.4 system-ui, sans-serif;
+        display: grid;
+        gap: 8px;
+      }
+      .debug-menu[hidden] {
+        display: none;
+      }
+      .debug-menu h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+      .debug-menu p {
+        margin: 0;
+      }
+      .debug-choice,
+      .debug-close {
+        min-height: 44px;
+        border-radius: 12px;
+        border: 2px solid #8f5a3a;
+        background: #fbf4e8;
+        color: #5a3a26;
+        font: 600 15px/1 system-ui, sans-serif;
+      }
+      .debug-choice[aria-pressed='true'] {
+        background: #5f9a7c;
+        border-color: #3f6f57;
+        color: #fbf4e8;
+      }
       .quiet {
         position: fixed;
         inset: 0;

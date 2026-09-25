@@ -104,6 +104,8 @@ The plan is in `docs/roadmap.md`.
 
 **The garden around the house is scenery.** `GardenLayout.ts` places every plant from a fixed seed, only outside the room's floor, so the garden is the same at every visit and never grows through the room. The plants are scattered 12 metres out from the house with room around each one, and each flower picks its kind and colour on its own, because beds looked like blocks of colour and the flowers in them stood on top of each other. `Views/Garden.ts` draws each part of a kind of plant as one instanced mesh, the plants cast no shadows and take no taps, so four thousand plants cost little on a phone. Each part of a plant is a flat-shaded shape of 3 to 20 faces, because the garden drew over 200 thousand triangles a frame for flowers a few pixels wide, and now draws about 64 thousand. The sunflower's model stays in `Views/Garden.ts` and is not planted for now, because the user will choose a place for it.
 
+**A debug menu hides behind ten taps in a row on a rose bush.** The menu is for the people who build the game, so it has no button a player would find, and a rose bush is the one thing in the garden that answers a tap. The count lives in `RoomPlay.ts` and any other tap resets it. The menu's first choice is the camera: the room view, or first person, which walks the same floor grid as a tapped walk, so it can never reach a place a tapped walk could not. First person uses two fixed sticks on screen, chosen over a stick that appears under the finger, and keeps every tap working as in the room view.
+
 **Every surface's look is decided in one class.** `RoomMaterials` maps each surface name to a material. Paintings and generated textures replace a colour there without touching the models.
 
 ### Apps/Bench/

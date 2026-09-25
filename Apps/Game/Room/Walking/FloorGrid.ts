@@ -18,7 +18,7 @@ export class FloorGrid {
     this.blockedCells = blockedCellsUnder(obstacles)
   }
 
-  private isWalkable(point: FloorPoint): boolean {
+  isWalkable(point: FloorPoint): boolean {
     return this.isFreeCell(cellAt(point))
   }
 

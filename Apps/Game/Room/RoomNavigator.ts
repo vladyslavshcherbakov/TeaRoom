@@ -23,6 +23,7 @@ export class RoomNavigator {
   private currentWalk: Walk = standingAt(walkerStart, Math.PI)
   private currentView: RoomView = { kind: 'overview' }
   private furnitureStoodAt: FurnitureId | null = null
+  private isWalkingFreely = false
 
   constructor(log: RoomLog, keeperMoved: KeeperMoved = () => {}) {
     this.log = log
@@ -58,6 +59,36 @@ export class RoomNavigator {
     this.furnitureStoodAt = furnitureId
     this.log(`arrived at ${furnitureId}, showing it close up`)
     this.keeperMoved(furnitureId)
+  }
+
+  walkFreely(step: FloorPoint, headingRadians: number): void {
+    const from = this.currentWalk.position
+    const reachable = [
+      { x: from.x + step.x, z: from.z + step.z },
+      { x: from.x + step.x, z: from.z },
+      { x: from.x, z: from.z + step.z },
+    ].find((point) => this.floor.isWalkable(point))
+    if (!this.isWalkingFreely) this.startWalkingFreely()
+    this.currentWalk = { position: reachable ?? from, headingRadians, waypoints: [] }
+  }
+
+  stopWalkingFreely(): void {
+    if (!this.isWalkingFreely) return
+    this.isWalkingFreely = false
+    this.log(`stopped walking freely at ${coordinatesOf(this.currentWalk.position)}`)
+  }
+
+  private startWalkingFreely(): void {
+    this.isWalkingFreely = true
+    this.log(`walking freely from ${coordinatesOf(this.currentWalk.position)}`)
+    if (this.currentView.kind === 'approaching') {
+      this.log(`gave up walking to ${this.currentView.furnitureId}`)
+      this.currentView = { kind: 'overview' }
+    }
+    if (this.furnitureStoodAt === null) return
+    this.log(`left ${this.furnitureStoodAt}`)
+    this.furnitureStoodAt = null
+    this.keeperMoved(null)
   }
 
   private walkToFloor(point: FloorPoint): void {

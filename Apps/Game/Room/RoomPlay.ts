@@ -31,6 +31,7 @@ export type RoomTapTarget =
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
   | { readonly kind: 'lid'; readonly itemId: string }
   | { readonly kind: 'figurine'; readonly figurineId: string }
+  | { readonly kind: 'roseBush' }
   | { readonly kind: 'nothing' }
 
 type WipeStroke = {
@@ -54,25 +55,32 @@ const fullSpoonDepth = 1
 const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
+const roseBushTapsThatOpenTheDebugMenu = 10
 
 export type RoomRemark = { readonly kind: 'sillIsTheRoomsOwn'; readonly timesTapped: number }
+
+export type RoomPlayListener = {
+  readonly remarked: (remark: RoomRemark) => void
+  readonly debugMenuAsked: () => void
+}
 
 export class RoomPlay {
   private readonly ritual: RitualPort
   private readonly catalog: Catalog
   private readonly log: RoomLog
-  private readonly remark: (remark: RoomRemark) => void
+  private readonly listener: RoomPlayListener
   private readonly navigator: RoomNavigator
   private choice: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
   private sillTapsFromAfar = 0
+  private roseBushTapsInARow = 0
 
-  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, remark: (remark: RoomRemark) => void) {
+  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, listener: RoomPlayListener) {
     this.ritual = ritual
     this.catalog = catalog
     this.log = log
-    this.remark = remark
+    this.listener = listener
     this.navigator = new RoomNavigator(log, (furnitureId) => this.keeperMovedTo(furnitureId))
   }
 
@@ -193,6 +201,15 @@ export class RoomPlay {
     this.ritual.dispatch({ type: 'tasteCup', cupId })
   }
 
+  walkFreely(step: FloorPoint, headingRadians: number): void {
+    if (this.aimedPour !== null) return
+    this.navigator.walkFreely(step, headingRadians)
+  }
+
+  stopWalkingFreely(): void {
+    this.navigator.stopWalkingFreely()
+  }
+
   advance(seconds: number): void {
     this.navigator.advance(seconds)
     this.aimedPour?.advance(seconds)
@@ -200,6 +217,8 @@ export class RoomPlay {
   }
 
   private tapped(target: RoomTapTarget): void {
+    if (target.kind === 'roseBush') return this.countTheRoseBushTap()
+    this.forgetTheRoseBushTaps()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
@@ -209,10 +228,25 @@ export class RoomPlay {
     this.actAtCloseUp(target)
   }
 
+  private countTheRoseBushTap(): void {
+    this.roseBushTapsInARow += 1
+    this.log(`rose bush tapped ${this.roseBushTapsInARow} times in a row`)
+    if (this.roseBushTapsInARow < roseBushTapsThatOpenTheDebugMenu) return
+    this.roseBushTapsInARow = 0
+    this.log('the debug menu opens after ten taps in a row on a rose bush')
+    this.listener.debugMenuAsked()
+  }
+
+  private forgetTheRoseBushTaps(): void {
+    if (this.roseBushTapsInARow === 0) return
+    this.log(`another tap after ${this.roseBushTapsInARow} taps on a rose bush starts the count again`)
+    this.roseBushTapsInARow = 0
+  }
+
   private keepTheSillForTheRoom(figurineId: string): void {
     this.sillTapsFromAfar += 1
     this.log(`tap on ${figurineId} from afar leaves the keeper in place: it stands on the sill, tapped from afar ${this.sillTapsFromAfar} times`)
-    this.remark({ kind: 'sillIsTheRoomsOwn', timesTapped: this.sillTapsFromAfar })
+    this.listener.remarked({ kind: 'sillIsTheRoomsOwn', timesTapped: this.sillTapsFromAfar })
   }
 
   private navigate(target: RoomTapTarget, targetFurnitureId: FurnitureId | null): void {

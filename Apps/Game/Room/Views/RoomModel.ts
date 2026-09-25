@@ -42,6 +42,7 @@ export type TapTargetTag =
   | { readonly handIndex: HandIndex }
   | { readonly lidOfItemId: string }
   | { readonly figurineId: string }
+  | { readonly isRoseBush: true }
 
 export class RoomModel {
   private readonly materials: RoomMaterials

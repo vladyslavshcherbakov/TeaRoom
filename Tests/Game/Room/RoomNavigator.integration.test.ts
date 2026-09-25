@@ -94,3 +94,36 @@ test('walker_whenTappedElsewhereMidWalk_changesCourseToTheNewPoint', () => {
   assertNear(navigator.walk.position.z, 0)
   assert.deepEqual(navigator.view, { kind: 'overview' })
 })
+
+test('walker_whenWalkingFreelyIntoTheTeaTable_stopsAtItsEdge', () => {
+  const { navigator } = roomWithLog()
+  navigator.tapped({ kind: 'floor', point: { x: 1, z: -0.6 } })
+  walkUntilStill(navigator)
+
+  for (let frame = 0; frame < 120; frame += 1) navigator.walkFreely({ x: 0, z: -0.03 }, Math.PI)
+
+  assert.equal(isInsideTeaTable(navigator.walk.position), false)
+  assert.ok(navigator.walk.position.z > teaTable.footprint.z + teaTable.footprint.depth / 2, `z ${navigator.walk.position.z}`)
+})
+
+test('walker_whenWalkingFreelyAwayFromFurniture_leavesIt', () => {
+  const places: (string | null)[] = []
+  const navigator = new RoomNavigator(() => {}, (furnitureId) => places.push(furnitureId))
+  navigator.tapped({ kind: 'furniture', furnitureId: 'teaTable' })
+  walkUntilStill(navigator)
+
+  navigator.walkFreely({ x: 0, z: 0.1 }, 0)
+
+  assert.deepEqual(places, ['teaTable', null])
+})
+
+test('walker_whenWalkingFreelyOnTheWayToFurniture_givesUpTheWay', () => {
+  const { navigator } = roomWithLog()
+  navigator.tapped({ kind: 'furniture', furnitureId: 'shelf' })
+  navigator.advance(frameSeconds)
+
+  navigator.walkFreely({ x: 0.01, z: 0 }, Math.PI / 2)
+
+  assert.deepEqual(navigator.view, { kind: 'overview' })
+  assert.equal(isWalking(navigator.walk), false)
+})
