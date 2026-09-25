@@ -23,6 +23,9 @@ const puddleSegments = 40
 const wallHeight = 2.6
 const wallThickness = 0.12
 const faucetPostAboveTheSpoutMetres = 0.04
+const faucetTouchAreaWidthMetres = 0.2
+const faucetTouchAreaAboveTheCounterMetres = 0.12
+const faucetTouchAreaBeyondTheFaucetMetres = 0.08
 const sinkPlateMetres = 0.004
 const reachOfFurnitureMetres = 0.35
 const heaterGlowColour = new THREE.Color('#e0603a')
@@ -44,6 +47,7 @@ export class RoomModel {
   private readonly materials: RoomMaterials
   private readonly heaterPlate: THREE.Mesh
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
+  private readonly touchAreaMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
@@ -204,9 +208,20 @@ export class RoomModel {
     arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
     post.castShadow = true
     arm.castShadow = true
-    faucet.add(post, arm, ...this.sinkBasinInside(base.y))
+    faucet.add(post, arm, this.faucetTouchArea(base, postHeight), ...this.sinkBasinInside(base.y))
     this.root.add(faucet)
     return faucet
+  }
+
+  private faucetTouchArea(base: WorldPoint, postHeight: number): THREE.Mesh {
+    const bottom = base.y + faucetTouchAreaAboveTheCounterMetres
+    const top = base.y + postHeight + faucetTouchAreaBeyondTheFaucetMetres
+    const back = base.z - faucetTouchAreaBeyondTheFaucetMetres
+    const front = faucetSpout.z + faucetTouchAreaBeyondTheFaucetMetres
+    const area = new THREE.Mesh(new THREE.BoxGeometry(faucetTouchAreaWidthMetres, top - bottom, front - back), this.touchAreaMaterial)
+    area.position.set(base.x, (bottom + top) / 2, (back + front) / 2)
+    area.userData = { isForgivingTouchArea: true }
+    return area
   }
 
   private sinkBasinInside(counterHeight: number): THREE.Mesh[] {
