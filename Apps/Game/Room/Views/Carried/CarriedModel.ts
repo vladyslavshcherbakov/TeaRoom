@@ -88,6 +88,8 @@ const lidTouchPadRadiusMetres = 0.095
 const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
 const paintingAboveTheGlazeMetres = 0.0004
+const liquidSurfaceSegments = 64
+const liquidDrawnAfterThePaintingBelowIt = 2
 const paintingSegmentsAlong = 48
 const fewestPaintingSegmentsAcross = 8
 const bowlSegmentsAround = 64
@@ -161,11 +163,12 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const parts = partsOf(shape, itemId, materials)
   root.add(...parts.meshes)
   if (parts.lid !== null) root.add(parts.lid)
-  const liquidMaterial = parts.liquidLevel === null ? null : (materials.room.unsharedMaterialFor('porcelain') as THREE.MeshStandardMaterial)
-  const liquid = liquidMaterial === null ? null : new THREE.Mesh(new THREE.CircleGeometry(1, 20), liquidMaterial)
+  const liquidMaterial = parts.liquidLevel === null ? null : (materials.room.unsharedMaterialFor('liquidSurface') as THREE.MeshStandardMaterial)
+  const liquid = liquidMaterial === null ? null : new THREE.Mesh(new THREE.CircleGeometry(1, liquidSurfaceSegments), liquidMaterial)
   if (liquid !== null && liquidMaterial !== null) {
     liquid.rotation.x = -Math.PI / 2
     liquidMaterial.transparent = true
+    liquid.renderOrder = liquidDrawnAfterThePaintingBelowIt
     root.add(liquid)
   }
   const liquidVolume = parts.isSeeThrough === true ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null

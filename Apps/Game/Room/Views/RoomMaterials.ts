@@ -43,6 +43,7 @@ export type Surface =
   | 'gaugeTube'
   | 'tapWater'
   | 'pouredLiquid'
+  | 'liquidSurface'
   | 'steam'
   | 'sinkHollow'
   | 'sinkWall'
@@ -97,6 +98,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   gaugeTube: '#4d5a60',
   tapWater: '#a9d3ea',
   pouredLiquid: '#c9e3f0',
+  liquidSurface: '#ffffff',
   steam: '#ffffff',
   sinkHollow: '#56626a',
   sinkWall: '#b7c2c7',
@@ -161,6 +163,7 @@ export class RoomMaterials {
     if (surface === 'blueGlaze') return this.kintsugiMaterial()
     if (surface === 'glass') return this.glassMaterial(color)
     if (surface === 'gildedRim') return this.goldMaterial(color)
+    if (surface === 'liquidSurface') return this.liquidSurfaceMaterial(color)
     if (surface === 'aluminium') return this.aluminiumMaterial(color)
     if (surface === 'thermosPainting') return this.thermosPaintingMaterial()
     if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
@@ -238,6 +241,10 @@ export class RoomMaterials {
     texture.colorSpace = THREE.SRGBColorSpace
     texture.anisotropy = paintingSharpness
     return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.35, clearcoat: 0.8, envMap: this.reflections, envMapIntensity: 0.8 })
+  }
+
+  private liquidSurfaceMaterial(color: string): THREE.MeshPhysicalMaterial {
+    return new THREE.MeshPhysicalMaterial({ color, metalness: 0, roughness: 0.06, specularIntensity: 1, transparent: true, envMap: this.reflections, envMapIntensity: 1 })
   }
 
   private goldMaterial(color: string): THREE.MeshPhysicalMaterial {
