@@ -141,7 +141,7 @@ export const englishTexts = {
   'spoonCrumbled.2': 'Ash. That was bamboo a minute ago. Lovely trick. Now make it come back.',
   'spoonCrumbled.3': 'Well, that settles the tea for today. Unless you work out how to brew without a spoon. There might be a way.',
   'spoonCrumbled.4': 'Poor little spoon. It scooped so faithfully, and now it is a pinch of ash. 😭',
-  'tooHotToHold.1': 'And then what? Juggle a glowing thermos? Bold plan. No.',
+  'tooHotToHold.1': 'And then what? Juggle a glowing thermos?',
   'tooHotToHold.2': "Blister my palm and ruin a lovely day? I'll pass, thanks.",
   'tooHotToHold.3': "It's literally glowing. Even the thermos is telling you no.",
 
