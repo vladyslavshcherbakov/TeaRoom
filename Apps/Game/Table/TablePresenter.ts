@@ -22,6 +22,7 @@ const boilingFromC = 95
 const puddleFullAtMl = 30
 const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number>> = { water: 0.3, pale: 0.5, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95 }
 const clothSoakedAtMl = 25
+const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
 const smoulderingFromCharring = 0.5
 const burningFromCharring = 0.8
@@ -54,6 +55,7 @@ function clothHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Cloth
   if (!state.heater.isOn || state.heater.itemIdOnTop !== clothItemId) return 'none'
   if (state.cloth.wetMl > 0) return 'steaming'
   const charring = state.cloth.charring
+  if (charring < smokingFromCharring) return 'warming'
   if (charring < scorchingFromCharring) return 'smoking'
   if (charring < smoulderingFromCharring) return 'scorching'
   if (charring < burningFromCharring) return 'smouldering'

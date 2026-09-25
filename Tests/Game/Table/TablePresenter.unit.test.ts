@@ -129,7 +129,8 @@ test('puddle_growsWithTheSpillUntilThirtyMillilitres', () => {
 
 test('clothOnAWorkingHeater_burnsInStagesAsItChars', () => {
   const rows = [
-    [0, 'smoking'],
+    [0, 'warming'],
+    [0.035, 'smoking'],
     [0.2, 'scorching'],
     [0.5, 'smouldering'],
     [0.8, 'burning'],
