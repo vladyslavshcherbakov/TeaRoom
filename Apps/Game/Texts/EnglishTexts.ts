@@ -101,10 +101,9 @@ export const englishTexts = {
   'heaterTester.1': 'Everything goes on the heater, I see. Looks like we have caught ourselves a tester.',
   'heaterTester.2': "Mummy's little arsonist is at it again.",
   'heaterTester.3': 'Is this really what you came to this game for? I may have to report some worrying behaviour.',
-  'heaterTester.4': 'allo yoba ty 4to delaesh hvatit uzhe!!!',
-  'heaterTester.5': 'Who would have thought this would become the most popular feature of the tea room.',
-  'heaterTester.6': 'This is exactly the behaviour I expected from you.',
-  'heaterTester.7': 'We are renaming ourselves Fire Room. Or The Fireplace. Send in your suggestions.',
+  'heaterTester.4': 'Who would have thought this would become the most popular feature of the tea room.',
+  'heaterTester.5': 'This is exactly the behaviour I expected from you.',
+  'heaterTester.6': 'We are renaming ourselves Fire Room. Or The Fireplace. Send in your suggestions.',
 
   'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',

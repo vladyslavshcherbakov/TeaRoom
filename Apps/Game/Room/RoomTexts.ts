@@ -10,9 +10,9 @@ const spillTheKeeperRemarksOnMl = 5
 const tapRanLongFromSeconds = 120
 const heaterRanLongFromSeconds = 120
 const millilitresInALitre = 1000
-const heaterTesterVariants = 7
+const heaterTesterVariants = 6
 
-type HeaterTesterVariant = 1 | 2 | 3 | 4 | 5 | 6 | 7
+type HeaterTesterVariant = 1 | 2 | 3 | 4 | 5 | 6
 
 export function captionLinesFor(events: readonly RitualEvent[], voiceSeed: number): readonly string[] {
   return events.flatMap((event) => captionLinesOf(event, voiceSeed))
