@@ -77,6 +77,7 @@ export type RitualEvent =
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'vesselOverflowed'; readonly vesselId: string }
   | { readonly type: 'lastLeavesWashedOut'; readonly vesselId: string }
+  | { readonly type: 'houseRestocked'; readonly spoonReturned: boolean; readonly caddyWasRefilled: boolean; readonly caddyWasEmpty: boolean }
   | {
       readonly type: 'pourFinished'
       readonly sourceId: string

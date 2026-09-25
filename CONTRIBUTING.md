@@ -75,7 +75,8 @@ The reference mechanic is pouring: `Physics/Pouring.ts`, `Ritual/PouringCommands
 - The product says "tea bowl" for the drinking vessel in content, and "cup" in the simulation's generic commands (`tasteCup`, `offerCup`).
 - Test names are `subject_condition_outcome`, without a `test_` prefix.
 - The simulation never reads the clock, randomness, the DOM or any browser API. Time arrives through `advance`. Randomness, when it comes, is a seeded source passed in.
-- The simulation only advances in fixed steps of `RitualSession.simulationStepSeconds`. A rule never multiplies by a frame's duration.
+- The simulation only advances in fixed steps of `RitualSession.simulationStepSeconds`. A rule never multiplies by a frame's duration. A return after an absence lives through the time away in fixed steps of `absenceStepSeconds`.
+- `FittedSavedState.ts` decides whether a saved state still fits the game. A change it cannot see, such as a new meaning for an existing field, bumps `sessionStateVersion`.
 - Every refusal is an `actionRefused` event with a reason. A handler never throws for a player mistake and never ignores a command silently.
 - Source files use only erasable TypeScript syntax: no enums, namespaces or constructor parameter properties. Relative imports end in `.ts`.
 - Every action on an item first checks that it is within reach through `Ritual/Reach.ts`. Every action with the spoon or the cloth checks that it is in a hand, except soaking up a puddle, where the cloth lies on the surface. Offering checks that the keeper stands at the ritual place, and wiping that the keeper stands at a place with a puddle. A new action gets the same checks.

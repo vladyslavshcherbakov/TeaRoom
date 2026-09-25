@@ -2,6 +2,7 @@ import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Command } from '../../Shared/Simulation/Ritual/Command.ts'
 import type { RitualEvent } from '../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
+import { sessionStateVersion } from '../../Shared/Simulation/State/FittedSavedState.ts'
 import { RecordingLog } from './RecordingLog.ts'
 import { testCatalog } from './TestCatalog.ts'
 
@@ -14,8 +15,8 @@ export class TestRitual {
   readonly log = new RecordingLog()
   readonly session: RitualSession
 
-  constructor(catalog: Catalog = testCatalog(), roomId = 'testRoom') {
-    const opening = RitualSession.open(catalog, roomId, this.log, true)
+  constructor(catalog: Catalog = testCatalog(), roomId = 'testRoom', savedState: unknown = null) {
+    const opening = savedState === null ? RitualSession.open(catalog, roomId, this.log, true) : RitualSession.resume(catalog, savedState, sessionStateVersion, this.log, true)
     if (opening.kind !== 'opened') throw new Error(`test room "${roomId}" is unavailable: ${opening.problems.join('; ')}`)
     this.session = opening.session
   }
@@ -24,6 +25,14 @@ export class TestRitual {
     const ritual = new TestRitual(catalog, roomId)
     ritual.do({ type: 'beginRitual', teaId })
     return ritual
+  }
+
+  static resumedFrom(savedState: unknown, catalog: Catalog = testCatalog()): TestRitual {
+    return new TestRitual(catalog, 'testRoom', savedState)
+  }
+
+  get savedState(): unknown {
+    return JSON.parse(JSON.stringify(this.session.state))
   }
 
   get state() {
@@ -42,6 +51,11 @@ export class TestRitual {
 
   wait(seconds: number): readonly RitualEvent[] {
     return this.session.advance(seconds)
+  }
+
+  leaveAndReturnAfter(awaySeconds: number, catalog: Catalog = testCatalog()): { readonly ritual: TestRitual; readonly events: readonly RitualEvent[] } {
+    const ritual = TestRitual.resumedFrom(this.savedState, catalog)
+    return { ritual, events: ritual.session.returnAfter(awaySeconds) }
   }
 
   heatKettleTo(temperatureC: number): readonly RitualEvent[] {

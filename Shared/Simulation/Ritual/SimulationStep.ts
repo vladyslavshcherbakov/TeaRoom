@@ -15,7 +15,12 @@ import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
-  if (state.phase === 'ended') return outcomeOf(draft)
+  stepTheWorld(draft, seconds)
+  return outcomeOf(draft)
+}
+
+export function stepTheWorld(draft: Draft, seconds: number): void {
+  if (draft.state.phase === 'ended') return
   coolVessels(draft, seconds)
   heatVesselOnHeater(draft, seconds)
   heatOrCoolMetalShells(draft, seconds)
@@ -29,7 +34,6 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   draft.state.cloth.wetMl = clothWetMlAfterDrying(draft.state.cloth.wetMl, draft.state.cloth.teaStain, seconds)
   startOrEndBrews(draft)
   draft.state.elapsedSeconds += seconds
-  return outcomeOf(draft)
 }
 
 function heatVesselOnHeater(draft: Draft, seconds: number): void {
