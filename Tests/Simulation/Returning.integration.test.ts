@@ -76,6 +76,7 @@ test('caddy_whenWashedCleanBeforeTheAbsence_isFullAndDryAgainAndIsAnnouncedAsEmp
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
   ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.wait(60)
   ritual.do({ type: 'turnTheTapOff' })

@@ -234,8 +234,8 @@ class AchievementsInTheRoom {
 
   turnOffTheTapAfterRunning(seconds: number, itemIdInTheSink: string | null): void {
     this.ritual.do({ type: 'standAt', placeId: 'counter' })
-    if (itemIdInTheSink === null) this.ritual.do({ type: 'turnTheTapOn' })
-    else this.putInTheSink(itemIdInTheSink)
+    if (itemIdInTheSink !== null) this.putInTheSink(itemIdInTheSink)
+    this.ritual.do({ type: 'turnTheTapOn' })
     this.ritual.wait(seconds)
     this.achievements.eventsHappened(this.ritual.do({ type: 'turnTheTapOff' }), this.ritual.state)
   }
@@ -254,6 +254,7 @@ class AchievementsInTheRoom {
     this.ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
     this.ritual.do({ type: 'standAt', placeId: 'counter' })
     this.ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
+    this.ritual.do({ type: 'turnTheTapOn' })
     this.ritual.wait(120)
     this.ritual.do({ type: 'turnTheTapOff' })
   }

@@ -22,7 +22,7 @@ export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'
   draft.state.sink.hasRunOverTheItemInside = false
   note(draft, `${command.itemId} put in the sink from hand ${location.handIndex}`)
   draft.events.push({ type: 'putInTheSink', itemId: command.itemId })
-  if (draft.state.sink.runningWater === null) return openTheTap(draft, tap)
+  if (draft.state.sink.runningWater === null) return note(draft, `the tap stays closed over ${command.itemId} until the keeper turns it on`)
   draft.state.sink.runningWater = runningWaterOver(draft, command.itemId, draft.state.sink.runningWater)
   note(draft, `the running tap now runs onto ${command.itemId}`)
 }

@@ -86,9 +86,9 @@ test('chosenItem_behindItsGlow_canBePutDownOnTheTableThatTheTapHit', () => {
   setTheTeaTable(room)
   room.takeAndChoose('cloth')
 
-  const canActOnTheTable = room.play.canTheChosenItemActOn({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+  const doesTheTapReachTheTable = room.play.doesATapReachPastTheChosenHand({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
 
-  assert.equal(canActOnTheTable, true)
+  assert.equal(doesTheTapReachTheTable, true)
 })
 
 test('chosenItem_behindItsGlow_letsTheHandKeepATapOnTheFloor', () => {
@@ -96,9 +96,9 @@ test('chosenItem_behindItsGlow_letsTheHandKeepATapOnTheFloor', () => {
   setTheTeaTable(room)
   room.takeAndChoose('cloth')
 
-  const canActOnTheFloor = room.play.canTheChosenItemActOn({ kind: 'floor', point: { x: 1, z: -0.6 } })
+  const doesTheTapReachTheFloor = room.play.doesATapReachPastTheChosenHand({ kind: 'floor', point: { x: 1, z: -0.6 } })
 
-  assert.equal(canActOnTheFloor, false)
+  assert.equal(doesTheTapReachTheFloor, false)
 })
 
 test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {

@@ -95,6 +95,7 @@ export class TestRoom {
   fillInTheSink(vesselId: string): void {
     this.session.dispatch({ type: 'openVesselLid', vesselId })
     this.session.dispatch({ type: 'putInTheSink', itemId: vesselId })
+    this.session.dispatch({ type: 'turnTheTapOn' })
     this.advance(10)
     this.session.dispatch({ type: 'turnTheTapOff' })
     this.session.dispatch({ type: 'pickUp', itemId: vesselId })

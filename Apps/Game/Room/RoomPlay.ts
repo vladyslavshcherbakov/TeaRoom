@@ -35,6 +35,7 @@ export type RoomTapTarget =
   | { readonly kind: 'heater' }
   | { readonly kind: 'heaterSwitch' }
   | { readonly kind: 'faucet' }
+  | { readonly kind: 'sink' }
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
   | { readonly kind: 'lid'; readonly itemId: string }
   | { readonly kind: 'figurine'; readonly figurineId: string }
@@ -58,6 +59,7 @@ type Press = {
 type CloseUpAction = {
   readonly act: () => void
   readonly isDoneWithTheChosenItem: boolean
+  readonly isAControl: boolean
 }
 
 const fullSpoonDepth = 1
@@ -141,9 +143,10 @@ export class RoomPlay {
     return stroke === null ? null : { clothId: stroke.clothId, at: stroke.lastPoint }
   }
 
-  canTheChosenItemActOn(target: RoomTapTarget): boolean {
+  doesATapReachPastTheChosenHand(target: RoomTapTarget): boolean {
     if (this.chosenItemId() === null || this.view.kind !== 'closeUp') return false
-    return this.closeUpActionOn(target)?.isDoneWithTheChosenItem === true
+    const action = this.closeUpActionOn(target)
+    return action !== null && (action.isDoneWithTheChosenItem || action.isAControl)
   }
 
   pressStarted(target: RoomTapTarget): void {
@@ -344,19 +347,21 @@ export class RoomPlay {
   private closeUpActionOn(target: RoomTapTarget): CloseUpAction | null {
     switch (target.kind) {
       case 'item':
-        return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId || this.canAimAPourAt(target.itemId) }
+        return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId || this.canAimAPourAt(target.itemId), isAControl: false }
       case 'lid':
-        return { act: () => this.toggleLidOf(target.itemId), isDoneWithTheChosenItem: false }
+        return { act: () => this.toggleLidOf(target.itemId), isDoneWithTheChosenItem: false, isAControl: false }
       case 'figurine':
-        return { act: () => this.offerTheChosenCupTo(target.figurineId), isDoneWithTheChosenItem: true }
+        return { act: () => this.offerTheChosenCupTo(target.figurineId), isDoneWithTheChosenItem: true, isAControl: false }
       case 'surface':
-        return { act: () => this.putDownTheChosenItemAt(target.furnitureId, target.point), isDoneWithTheChosenItem: true }
+        return { act: () => this.putDownTheChosenItemAt(target.furnitureId, target.point), isDoneWithTheChosenItem: true, isAControl: false }
       case 'heater':
-        return { act: () => this.putTheChosenItemOnTheHeater(), isDoneWithTheChosenItem: true }
+        return { act: () => this.putTheChosenItemOnTheHeater(), isDoneWithTheChosenItem: true, isAControl: false }
+      case 'sink':
+        return { act: () => this.putTheChosenItemInTheSink(), isDoneWithTheChosenItem: true, isAControl: false }
       case 'heaterSwitch':
-        return { act: () => this.switchTheHeater(), isDoneWithTheChosenItem: false }
+        return { act: () => this.switchTheHeater(), isDoneWithTheChosenItem: false, isAControl: true }
       case 'faucet':
-        return { act: () => this.useTheSink(), isDoneWithTheChosenItem: true }
+        return { act: () => this.turnTheTap(), isDoneWithTheChosenItem: false, isAControl: true }
       default:
         return null
     }
@@ -419,11 +424,13 @@ export class RoomPlay {
     return tiltWhereTheStreamSplashes(definitionIn(this.catalog, 'vessels', source.definitionId), definitionIn(this.catalog, 'vessels', target.definitionId))
   }
 
-  private useTheSink(): void {
+  private putTheChosenItemInTheSink(): void {
     const itemId = this.chosenItemId()
-    const itemIdInTheSink = this.ritual.state.sink.itemIdInside
-    if (itemId !== null && itemIdInTheSink === null) return this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'putInTheSink', itemId }))
-    if (itemId !== null) this.log(`${itemId} stays in hand: ${itemIdInTheSink} is in the sink, so the tap is turned instead`)
+    if (itemId === null) return this.log('tap on the sink ignored: no hand is chosen')
+    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'putInTheSink', itemId }))
+  }
+
+  private turnTheTap(): void {
     this.ritual.dispatch({ type: this.ritual.state.sink.runningWater === null ? 'turnTheTapOn' : 'turnTheTapOff' })
   }
 
@@ -572,6 +579,7 @@ export class RoomPlay {
       case 'heaterSwitch':
         return this.furnitureWithPlace(this.heaterSpot().placeId)
       case 'faucet':
+      case 'sink':
         return this.furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.sinkSpot.placeId ?? null)
       case 'item':
       case 'lid':

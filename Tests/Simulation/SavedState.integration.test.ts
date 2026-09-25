@@ -81,6 +81,7 @@ test('savedState_fromBeforeTheTapRememberedWhatItRanOnto_resumesCountingTheItemI
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
   const savedState = ritual.savedState as { heater: Record<string, unknown>; sink: { runningWater: Record<string, unknown> } }
   delete savedState.heater['secondsHeatedByItemId']
   delete savedState.sink.runningWater['hasRunOntoAnItem']

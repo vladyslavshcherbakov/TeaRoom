@@ -220,6 +220,7 @@ test('charredCloth_whenWashedUnderTheTap_isAsGoodAsNew', () => {
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
 
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(5)
 
   assert.equal(ritual.cloth().charring, 0)
@@ -233,6 +234,7 @@ test('washedBurntCloth_whenTakenOutOfTheSink_isNoticedAsNew', () => {
   ritual.do({ type: 'switchHeaterOff' })
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(5)
 
   const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })

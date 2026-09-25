@@ -109,6 +109,7 @@ function holdTheCaddyWithColdTapWater(room: TestRoom): void {
   room.walkTo('counter')
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
   room.session.dispatch({ type: 'putInTheSink', itemId: 'caddy' })
+  room.session.dispatch({ type: 'turnTheTapOn' })
   room.advance(4)
   room.session.dispatch({ type: 'turnTheTapOff' })
   room.session.dispatch({ type: 'pickUp', itemId: 'caddy' })

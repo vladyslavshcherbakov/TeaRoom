@@ -77,6 +77,7 @@ export class TestRitual {
   fillInTheSink(vesselId: string, seconds: number): readonly RitualEvent[] {
     return [
       ...this.do({ type: 'putInTheSink', itemId: vesselId }),
+      ...this.do({ type: 'turnTheTapOn' }),
       ...this.wait(seconds),
       ...this.do({ type: 'turnTheTapOff' }),
       ...this.do({ type: 'pickUp', itemId: vesselId }),

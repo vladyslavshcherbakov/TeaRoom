@@ -6,13 +6,23 @@ import { testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
-test('kettle_whenPutInTheSink_turnsTheTapOnAndFillsAtItsFlow', () => {
+test('kettle_whenPutInTheSink_waitsWithTheTapClosed', () => {
   const ritual = openKettleInHandAtTheCounter()
 
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
   ritual.wait(2)
 
-  assert.notEqual(ritual.state.sink.runningWater, null)
+  assert.equal(ritual.state.sink.runningWater, null)
+  assertNear(ritual.vessel('kettle').liquid.volumeMl, 500)
+})
+
+test('kettle_inTheSinkWhenTheTapIsTurnedOn_fillsAtItsFlow', () => {
+  const ritual = openKettleInHandAtTheCounter()
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+
+  ritual.do({ type: 'turnTheTapOn' })
+  ritual.wait(2)
+
   assertNear(ritual.vessel('kettle').liquid.volumeMl, 700)
 })
 
@@ -51,6 +61,7 @@ test('kettle_whenItsLidIsOpenedInTheSinkUnderTheRunningTap_startsFilling', () =>
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'closeVesselLid', vesselId: 'kettle' })
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(1)
 
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
@@ -73,6 +84,7 @@ test('kettle_whenTakenOutOfTheSink_comesOutWithTheLidClosed', () => {
 test('tap_whenTheKeeperWalksAway_keepsRunningIntoTheKettle', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
 
   ritual.do({ type: 'standAt', placeId: 'table' })
   ritual.wait(3)
@@ -83,6 +95,7 @@ test('tap_whenTheKeeperWalksAway_keepsRunningIntoTheKettle', () => {
 test('tap_whenTheKettleIsTakenOut_keepsRunningIntoTheEmptySink', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(1)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
@@ -95,6 +108,7 @@ test('tap_whenTheKettleIsTakenOut_keepsRunningIntoTheEmptySink', () => {
 test('tap_whenTurnedOffWithTheKettleInTheSink_stopsFillingIt', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(1)
 
   ritual.do({ type: 'turnTheTapOff' })
@@ -120,6 +134,7 @@ test('caddy_underTheRunningTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', (
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
   ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
   const events = ritual.wait(60)
@@ -169,6 +184,7 @@ test('teaInABowl_whenTheTapRunsOverItsRim_fadesToPlainWater', () => {
   const strengthBefore = ritual.vessel('cup1').liquid.strength
 
   ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(5)
 
   assert.ok(strengthBefore > 30, `strength before ${strengthBefore}`)
@@ -181,6 +197,7 @@ test('leavesInABowl_whenTheTapRunsOverItsRim_areWashedOut', () => {
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
 
   ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(5)
 
   assert.equal(ritual.vessel('cup1').leaves, null)
@@ -200,6 +217,7 @@ test('leavesInABowl_whileTheTapFillsItBelowTheRim_stayAndFloat', () => {
 test('bowl_whenTakenOutAfterTheTapRanOverItsRim_isPouredEmpty', () => {
   const ritual = cupOfTeaInHand()
   ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(3)
   ritual.do({ type: 'turnTheTapOff' })
 
@@ -212,6 +230,7 @@ test('bowl_whenTakenOutBeforeTheTapRanOverItsRim_keepsItsWater', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
   ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(0.5)
   ritual.do({ type: 'turnTheTapOff' })
 
@@ -251,6 +270,7 @@ test('boilingWaterInTheThermos_whenTheTapRunsOverItsRim_coolsToTheTapWater', () 
   const temperatureBefore = ritual.vessel('thermos').liquid.temperatureC
 
   ritual.do({ type: 'putInTheSink', itemId: 'thermos' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(30)
 
   assert.ok(temperatureBefore > 90, `temperature before ${temperatureBefore}`)
@@ -260,6 +280,7 @@ test('boilingWaterInTheThermos_whenTheTapRunsOverItsRim_coolsToTheTapWater', () 
 test('tap_whenTurnedOff_saysHowLongItRanAndHowMuchWentDownTheDrain', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(10)
 
   const events = ritual.do({ type: 'turnTheTapOff' })
@@ -297,6 +318,7 @@ test('tap_whenTurnedOffAfterRunningIntoTheEmptySinkAllAlong_saysItRanOntoNothing
 test('tap_whenTurnedOffAfterTheKettleWasTakenOutOfTheSink_saysItRanOntoAnItem', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
   ritual.wait(1)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.wait(3)

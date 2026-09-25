@@ -53,6 +53,7 @@ export type TapTargetTag =
   | { readonly isHeater: true }
   | { readonly isHeaterSwitch: true }
   | { readonly isFaucet: true }
+  | { readonly isSink: true }
   | { readonly itemId: string }
   | { readonly handIndex: HandIndex }
   | { readonly lidOfItemId: string }
@@ -335,8 +336,9 @@ export class RoomModel {
     post.castShadow = true
     arm.castShadow = true
     turned.add(post, arm, this.faucetTouchArea(reach, postHeight))
-    faucet.add(turned, ...this.sinkBasinInside(base.y))
+    faucet.add(turned)
     this.root.add(faucet)
+    this.addSinkBasin(base.y)
     return faucet
   }
 
@@ -348,6 +350,13 @@ export class RoomModel {
     const area = this.touchArea(faucetTouchAreaWidthMetres, top - bottom, front - back)
     area.position.set(0, (bottom + top) / 2, (back + front) / 2)
     return area
+  }
+
+  private addSinkBasin(counterHeight: number): void {
+    const basin = new THREE.Group()
+    basin.add(...this.sinkBasinInside(counterHeight))
+    this.root.add(basin)
+    this.tag(basin, { isSink: true })
   }
 
   private sinkBasinInside(counterHeight: number): THREE.Mesh[] {

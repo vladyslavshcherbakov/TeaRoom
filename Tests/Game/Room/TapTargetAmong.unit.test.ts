@@ -9,6 +9,7 @@ const bowlOnTheShelf: TapHit = { target: { kind: 'item', itemId: 'bowl7' }, isFo
 const bowlsTouchPad: TapHit = { target: { kind: 'item', itemId: 'bowl7' }, isForgivingTouchArea: true }
 const frontBowlsTouchPad: TapHit = { target: { kind: 'item', itemId: 'bowl3' }, isForgivingTouchArea: true }
 const faucetsArea: TapHit = { target: { kind: 'faucet' }, isForgivingTouchArea: true }
+const sinkBasin: TapHit = { target: { kind: 'sink' }, isForgivingTouchArea: false }
 const kettlesLid: TapHit = { target: { kind: 'lid', itemId: 'kettle' }, isForgivingTouchArea: false }
 const kettle: TapHit = { target: { kind: 'item', itemId: 'kettle' }, isForgivingTouchArea: false }
 const canActOnAnything = (): boolean => true
@@ -60,4 +61,16 @@ test('tap_throughTheFaucetsAreaOnAKettlesLidInTheSink_reachesTheLidAndNotTheKett
   const target = tapTargetAmong([faucetsArea, kettlesLid, kettle], null, canActOnNothing)
 
   assert.deepEqual(target, kettlesLid.target)
+})
+
+test('tap_throughTheFaucetsAreaOnTheSinkUnderIt_reachesTheSink', () => {
+  const target = tapTargetAmong([faucetsArea, sinkBasin], null, canActOnNothing)
+
+  assert.deepEqual(target, sinkBasin.target)
+})
+
+test('tap_throughAHandsAreaOnTheSinkBehind_staysOnTheHand', () => {
+  const target = tapTargetAmong([firstHandsArea, sinkBasin], null, canActOnNothing)
+
+  assert.deepEqual(target, { kind: 'hand', handIndex: 0 } satisfies RoomTapTarget)
 })

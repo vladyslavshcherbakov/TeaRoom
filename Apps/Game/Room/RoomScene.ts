@@ -459,7 +459,7 @@ export class RoomScene {
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes, ...this.garden.tappableMeshes]
     const hits = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
     const nearestFirst = hits.map((hit) => ({ target: tapTargetOf(hit), isForgivingTouchArea: isAForgivingTouchArea(hit.object) }))
-    return tapTargetAmong(nearestFirst, this.play.chosenHandIndex, (target) => this.play.canTheChosenItemActOn(target))
+    return tapTargetAmong(nearestFirst, this.play.chosenHandIndex, (target) => this.play.doesATapReachPastTheChosenHand(target))
   }
 
   private fitToWindow(): void {
@@ -501,6 +501,7 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   if ('isHeater' in tag) return { kind: 'heater' }
   if ('isHeaterSwitch' in tag) return { kind: 'heaterSwitch' }
   if ('isFaucet' in tag) return { kind: 'faucet' }
+  if ('isSink' in tag) return { kind: 'sink' }
   if ('isFloor' in tag) return { kind: 'floor', point: { x: hit.point.x, z: hit.point.z } }
   if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
   if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }

@@ -22,6 +22,26 @@ test('heaterSwitch_whenTapped_switchesTheHeaterOn', () => {
   assert.equal(room.state.heater.isOn, true)
 })
 
+test('heaterSwitch_whenTappedWithBothHandsFullAndOneChosen_switchesTheHeaterOn', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'item', itemId: 'thermos' })
+
+  room.tap({ kind: 'heaterSwitch' })
+
+  assert.equal(room.state.heater.isOn, true)
+  assert.deepEqual(room.state.keeper.hands, ['kettle', 'thermos', null])
+})
+
+test('heaterSwitch_behindTheChosenHandsTouchArea_isReachedByATap', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  assert.equal(room.play.doesATapReachPastTheChosenHand({ kind: 'heaterSwitch' }), true)
+})
+
 test('heaterTap_withNoHandChosen_leavesTheHeaterEmpty', () => {
   const room = new TestRoom()
   room.walkTo('counter')
