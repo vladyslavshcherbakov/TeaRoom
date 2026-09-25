@@ -4,6 +4,7 @@ import { isEmpty } from '../Physics/Liquid.ts'
 import type { ClothState, ItemLocation, SessionState, VesselState } from '../State/SessionState.ts'
 import { noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { stepTheWorld } from './SimulationStep.ts'
+import { percent } from './Percent.ts'
 
 export const worldReportSeconds = 5
 
@@ -125,10 +126,6 @@ function where(state: SessionState, itemId: string, location: ItemLocation): str
 
 function signed(value: number, digits: number): string {
   return `${value >= 0 ? '+' : ''}${value.toFixed(digits)}`
-}
-
-function percent(share: number): string {
-  return `${(share * 100).toFixed(0)}%`
 }
 
 function signedPercent(share: number): string {

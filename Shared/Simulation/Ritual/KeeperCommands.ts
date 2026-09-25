@@ -9,6 +9,7 @@ import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { emptyTheHand, isWithinReach, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 import { doesTheSpoonCrumble, isTooHotToHold } from '../Physics/Heat.ts'
+import { percent } from './Percent.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
@@ -29,7 +30,7 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   if (!isWithinReach(draft, location)) return refuse(draft, command, 'outOfReach', `${command.itemId} is ${whereIs(location)}, ${whereTheKeeperStands(draft)}`)
   if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
   const shellHeat = draft.state.vessels[command.itemId]?.shellHeat ?? 0
-  if (isTooHotToHold(shellHeat)) return refuse(draft, command, 'tooHotToHold', `${command.itemId}'s metal is at ${(shellHeat * 100).toFixed(0)}% of red heat`)
+  if (isTooHotToHold(shellHeat)) return refuse(draft, command, 'tooHotToHold', `${command.itemId}'s metal is at ${percent(shellHeat)} of red heat`)
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((itemId) => itemId !== null).join(' and ')}`)
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
@@ -75,7 +76,7 @@ export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
 function crumbleTheSpoon(draft: Draft): void {
   const spoon = draft.state.spoon
   const gramsLost = spoon.grams
-  note(draft, `the spoon, ${(spoon.charring * 100).toFixed(0)}% charred, crumbles to ash as it is taken, and ${gramsLost.toFixed(2)} g of leaves on it are lost`)
+  note(draft, `the spoon, ${percent(spoon.charring)} charred, crumbles to ash as it is taken, and ${gramsLost.toFixed(2)} g of leaves on it are lost`)
   spoon.grams = 0
   spoon.location = { kind: 'gone' }
   draft.events.push({ type: 'spoonCrumbled', gramsLost })

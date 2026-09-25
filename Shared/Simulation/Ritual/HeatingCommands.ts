@@ -5,6 +5,7 @@ import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { emptyTheHand, heaterSpotOf, isACloth, isKeeperAt, isWithinReach, locationOfItem, moveItem, spoonItemId, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { percent } from './Percent.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
@@ -33,7 +34,7 @@ export function liftOffTheHeater(draft: Draft, itemId: string): void {
   draft.events.push({ type: 'takenOffHeater', itemId, waterJudgement })
   const cloth = draft.state.cloths[itemId]
   if (cloth === undefined) return
-  note(draft, `${cloth.id} is taken off the heater ${(cloth.charring * 100).toFixed(0)}% charred`)
+  note(draft, `${cloth.id} is taken off the heater ${percent(cloth.charring)} charred`)
   draft.events.push({ type: 'clothTakenOffTheHeater', clothId: cloth.id, charring: cloth.charring })
 }
 
@@ -101,8 +102,8 @@ function canSitOnTheHeater(draft: Draft, itemId: string): boolean {
 function describeWhatSitsOnTheHeater(draft: Draft, itemId: string): string {
   const vessel = draft.state.vessels[itemId]
   if (vessel !== undefined) return describeLiquid(vessel)
-  if (itemId === spoonItemId) return `the spoon, ${(draft.state.spoon.charring * 100).toFixed(0)}% charred`
+  if (itemId === spoonItemId) return `the spoon, ${percent(draft.state.spoon.charring)} charred`
   const cloth = draft.state.cloths[itemId]
   if (cloth === undefined) return itemId
-  return `${cloth.id} holding ${cloth.wetMl.toFixed(1)} ml, ${(cloth.charring * 100).toFixed(0)}% charred`
+  return `${cloth.id} holding ${cloth.wetMl.toFixed(1)} ml, ${percent(cloth.charring)} charred`
 }

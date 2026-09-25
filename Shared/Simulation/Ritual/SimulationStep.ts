@@ -12,6 +12,7 @@ import { startOrEndBrews } from './Brews.ts'
 import { chosenTea, describeLiquid, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { spoonItemId, tapOf } from './Reach.ts'
 import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
+import { percent } from './Percent.ts'
 
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
@@ -62,12 +63,12 @@ function heatOrCoolMetalShells(draft: Draft, seconds: number): void {
     vessel.shellHeat = shellHeatAfter(vessel.shellHeat, heater.isOn && heater.itemIdOnTop === vessel.id, seconds)
     const isNowTooHotToHold = isTooHotToHold(vessel.shellHeat)
     if (!wasTooHotToHold && isNowTooHotToHold) glowTooHotToHold(draft, vessel)
-    if (wasTooHotToHold && !isNowTooHotToHold) note(draft, `${vessel.id}'s metal has cooled enough to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
+    if (wasTooHotToHold && !isNowTooHotToHold) note(draft, `${vessel.id}'s metal has cooled enough to hold, at ${percent(vessel.shellHeat)} of red heat`)
   }
 }
 
 function glowTooHotToHold(draft: Draft, vessel: VesselState): void {
-  note(draft, `${vessel.id}'s metal glows too hot to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
+  note(draft, `${vessel.id}'s metal glows too hot to hold, at ${percent(vessel.shellHeat)} of red heat`)
   draft.events.push({ type: 'metalGlowsTooHotToHold', vesselId: vessel.id })
 }
 

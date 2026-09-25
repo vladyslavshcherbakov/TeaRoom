@@ -3,6 +3,7 @@ import type { ClothState, PuddleState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, noteDetail, refuse, type Draft } from './Draft.ts'
 import { isKeeperAt, isWithinReach, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { percent } from './Percent.ts'
 
 export function wipeTable(draft: Draft, command: CommandOfType<'wipeTable'>): void {
   const cloth = draft.state.cloths[command.clothId]
@@ -17,7 +18,7 @@ export function wipeTable(draft: Draft, command: CommandOfType<'wipeTable'>): vo
   noteDetail(
     draft,
     `the ${placeId} wiped at ${command.strokeSpeedCmPerSecond.toFixed(0)} cm/s over ${(command.coveredFraction * 100).toFixed(1)}%: ` +
-      `${wetMlBefore.toFixed(2)} → ${puddle.wetMl.toFixed(2)} ml wet at strength ${puddle.strength.toFixed(1)}, ${cloth.id} holds ${cloth.wetMl.toFixed(2)} ml with a tea stain of ${(cloth.teaStain * 100).toFixed(0)}%`,
+      `${wetMlBefore.toFixed(2)} → ${puddle.wetMl.toFixed(2)} ml wet at strength ${puddle.strength.toFixed(1)}, ${cloth.id} holds ${cloth.wetMl.toFixed(2)} ml with a tea stain of ${percent(cloth.teaStain)}`,
   )
   draft.events.push({ type: 'tableWiped', placeId, wetMlLeft: puddle.wetMl })
 }

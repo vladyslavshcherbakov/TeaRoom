@@ -5,6 +5,7 @@ import { describeLiquid, isClosedAgainstFilling, note, noteDetail, refuse, vesse
 import { isWithinReach } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
+import { percent } from './Percent.ts'
 
 export function startPouring(draft: Draft, command: CommandOfType<'startPouring'>): void {
   const pourInProgress = draft.state.pour
@@ -37,7 +38,7 @@ export function adjustPour(draft: Draft, command: CommandOfType<'adjustPour'>): 
   draft.state.pour.streamOnTargetFraction = command.streamOnTargetFraction
   draft.state.pour.missedStreamLandsAt = command.missedStreamLandsAt
   const landing = command.missedStreamLandsAt
-  noteDetail(draft, `pour tilted to ${command.tiltDegrees.toFixed(1)}°, ${(command.streamOnTargetFraction * 100).toFixed(0)}% on target${landing === null ? '' : `, the rest falls on the ${landing.placeId} at (${landing.x.toFixed(2)}, ${landing.z.toFixed(2)})`}`)
+  noteDetail(draft, `pour tilted to ${command.tiltDegrees.toFixed(1)}°, ${percent(command.streamOnTargetFraction)} on target${landing === null ? '' : `, the rest falls on the ${landing.placeId} at (${landing.x.toFixed(2)}, ${landing.z.toFixed(2)})`}`)
 }
 
 export function stopPouring(draft: Draft, command: CommandOfType<'stopPouring'>): void {
