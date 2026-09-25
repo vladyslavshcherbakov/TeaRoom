@@ -15,6 +15,7 @@ test('sipLine_answersTheVerdictWithOneOfItsFeelingsPhrases', () => {
     [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'overbrewed', reaction: 'strongGrimace' }, 'overbrewed'],
     [{ temperature: 'pleasant', strength: 'balanced', bitterness: 'high', reaction: 'grimace' }, 'bitter'],
     [{ temperature: 'pleasant', strength: 'heavy', bitterness: 'soft', reaction: 'grimace' }, 'tooStrong'],
+    [{ temperature: 'pleasant', strength: 'extreme', bitterness: 'high', reaction: 'grimace' }, 'extremelyStrong'],
     [{ temperature: 'cold', strength: 'balanced', bitterness: 'soft', reaction: 'shrug' }, 'cold'],
     [{ temperature: 'pleasant', strength: 'weak', bitterness: 'soft', reaction: 'shrug' }, 'weak'],
     [{ temperature: 'pleasant', strength: 'rich', bitterness: 'soft', reaction: 'contentSigh' }, 'rich'],

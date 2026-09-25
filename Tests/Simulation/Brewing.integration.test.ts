@@ -41,7 +41,20 @@ test('tea_whenLeftSteepingForFiveMinutes_tastesOverbrewed', () => {
 
   const verdict = tasteFromCup(ritual)
 
-  assert.deepEqual(verdict, { temperature: 'pleasant', strength: 'heavy', bitterness: 'overbrewed', reaction: 'strongGrimace' })
+  assert.deepEqual(verdict, { temperature: 'pleasant', strength: 'extreme', bitterness: 'overbrewed', reaction: 'strongGrimace' })
+})
+
+test('tea_whenBrewedWithSixTimesTheLeavesForAMinute_tastesExtremelyStrongButNotOverbrewed', () => {
+  const ritual = TestRitual.begun(testCatalog({ cup: 0.05 }))
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(30)
+  ritual.wait(60)
+
+  const verdict = tasteFromCup(ritual)
+
+  assert.equal(verdict?.strength, 'extreme')
+  assert.notEqual(verdict?.bitterness, 'overbrewed')
+  assert.equal(verdict?.reaction, 'grimace')
 })
 
 test('tea_whenBrewedWithBoilingWater_turnsMoreBitterThanWithGoodWater', () => {

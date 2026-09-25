@@ -2,7 +2,7 @@ import type { GodsRemark } from '../../../Shared/Simulation/Judgement/GodsMood.t
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { phraseVariantFor, text } from '../Texts/Texts.ts'
 
-type SipFeeling = 'noTea' | 'tooHot' | 'overbrewed' | 'bitter' | 'tooStrong' | 'cold' | 'weak' | 'rich' | 'coolingButGood' | 'justRight'
+type SipFeeling = 'noTea' | 'tooHot' | 'overbrewed' | 'extremelyStrong' | 'bitter' | 'tooStrong' | 'cold' | 'weak' | 'rich' | 'coolingButGood' | 'justRight'
 
 export function remarkText(remark: GodsRemark): string {
   return text(`gods.${remark}`)
@@ -21,6 +21,7 @@ function sipFeeling(verdict: TasteVerdict): SipFeeling {
     case 'strongGrimace':
       return 'overbrewed'
     case 'grimace':
+      if (verdict.strength === 'extreme') return 'extremelyStrong'
       return verdict.bitterness === 'high' ? 'bitter' : 'tooStrong'
     case 'shrug':
       return verdict.temperature === 'cold' ? 'cold' : 'weak'

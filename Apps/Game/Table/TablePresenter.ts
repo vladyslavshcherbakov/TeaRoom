@@ -99,6 +99,8 @@ function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.
     case 'rich':
     case 'heavy':
       return verdict.strength
+    case 'extreme':
+      return 'heavy'
   }
 }
 
