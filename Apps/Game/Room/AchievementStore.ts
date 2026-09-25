@@ -2,7 +2,7 @@ import { achievementIds, type AchievementId, type AchievementRecord, type Achiev
 import type { RoomLog } from './RoomNavigator.ts'
 
 const storageKey = 'achievements'
-const nothingUnlocked: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false }
+const nothingUnlocked: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0 }
 
 export class AchievementStore implements AchievementStorage {
   private readonly log: RoomLog
@@ -21,7 +21,8 @@ export class AchievementStore implements AchievementStorage {
     }
     const record = saved as Partial<Record<keyof AchievementRecord, unknown>>
     const unlocked = Array.isArray(record.unlocked) ? record.unlocked.filter(isAchievementId) : []
-    return { unlocked, hasTheTapRunLong: record.hasTheTapRunLong === true, hasTheHeaterRunLong: record.hasTheHeaterRunLong === true }
+    const puddlesWiped = typeof record.puddlesWiped === 'number' ? record.puddlesWiped : 0
+    return { unlocked, hasTheTapRunLong: record.hasTheTapRunLong === true, hasTheHeaterRunLong: record.hasTheHeaterRunLong === true, puddlesWiped }
   }
 
   readonly keep = (record: AchievementRecord): void => {

@@ -45,6 +45,32 @@ test('achievement_ofAJustRightSip_isSommelier', () => {
   assert.deepEqual(room.announced, ['perfectTea'])
 })
 
+test('achievement_whenOnePuddleIsWipedTwice_isNotYetOcd', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.eventsHappened([wipeOnTheTeaTable, wipeOnTheTeaTable], room.ritual.state)
+
+  assert.deepEqual(room.announced, [])
+})
+
+test('achievement_whenPuddlesOnTwoPlacesAreWiped_isOcd', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.eventsHappened([wipeOnTheTeaTable, { type: 'tableWiped', placeId: 'counter', wetMlLeft: 3 }], room.ritual.state)
+
+  assert.deepEqual(room.announced, ['tableWiped'])
+})
+
+test('achievement_whenANewPuddleIsWipedWhereTheWipedOneHasGone_isOcd', () => {
+  const room = new AchievementsInTheRoom()
+  room.achievements.eventsHappened([wipeOnTheTeaTable], room.ritual.state)
+  room.achievements.worldAdvanced(room.ritual.state)
+
+  room.achievements.eventsHappened([wipeOnTheTeaTable], room.ritual.state)
+
+  assert.deepEqual(room.announced, ['tableWiped'])
+})
+
 test('achievement_ofTheHeaterTesterRemark_isHopeless', () => {
   const room = new AchievementsInTheRoom()
 
@@ -93,12 +119,14 @@ test('achievements_afterAReset_areAllLocked', () => {
   assert.deepEqual([...room.achievements.unlocked], [])
 })
 
+const wipeOnTheTeaTable = { type: 'tableWiped', placeId: 'teaTable', wetMlLeft: 4 } as const
+
 const strongButFine: TasteVerdict = { temperature: 'pleasant', strength: 'heavy', bitterness: 'soft', reaction: 'grimace' }
 
 const justRight: TasteVerdict = { temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }
 
 class StorageInMemory implements AchievementStorage {
-  private record: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false }
+  private record: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0 }
 
   readonly load = (): AchievementRecord => this.record
 

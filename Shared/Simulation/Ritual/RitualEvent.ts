@@ -93,7 +93,7 @@ export type RitualEvent =
   | { readonly type: 'brewStarted'; readonly vesselId: string; readonly waterJudgement: WaterJudgement }
   | { readonly type: 'teaTasted'; readonly cupId: string; readonly verdict: TasteVerdict; readonly cupHeldLeaves: boolean }
   | { readonly type: 'figurineAcceptedTea'; readonly figurineId: string; readonly response: OfferingResponse }
-  | { readonly type: 'tableWiped'; readonly wetMlLeft: number }
+  | { readonly type: 'tableWiped'; readonly placeId: string; readonly wetMlLeft: number }
   | { readonly type: 'clothLaidInThePuddle' }
   | { readonly type: 'burntClothWashedBackToNew' }
   | { readonly type: 'spoonCrumbled'; readonly gramsLost: number }

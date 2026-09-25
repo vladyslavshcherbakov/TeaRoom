@@ -18,7 +18,7 @@ export function wipeTable(draft: Draft, command: CommandOfType<'wipeTable'>): vo
     `the ${placeId} wiped at ${command.strokeSpeedCmPerSecond.toFixed(0)} cm/s over ${(command.coveredFraction * 100).toFixed(1)}%: ` +
       `${wetMlBefore.toFixed(2)} → ${puddle.wetMl.toFixed(2)} ml wet at strength ${puddle.strength.toFixed(1)}, the cloth holds ${cloth.wetMl.toFixed(2)} ml with a tea stain of ${(cloth.teaStain * 100).toFixed(0)}%`,
   )
-  draft.events.push({ type: 'tableWiped', wetMlLeft: puddle.wetMl })
+  draft.events.push({ type: 'tableWiped', placeId, wetMlLeft: puddle.wetMl })
 }
 
 export function soakUpThePuddle(draft: Draft, command: CommandOfType<'soakUpThePuddle'>): void {

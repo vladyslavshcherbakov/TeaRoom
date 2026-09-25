@@ -28,6 +28,7 @@ export type AchievementRecord = {
   readonly unlocked: readonly AchievementId[]
   readonly hasTheTapRunLong: boolean
   readonly hasTheHeaterRunLong: boolean
+  readonly puddlesWiped: number
 }
 
 export type AchievementStorage = {
@@ -38,6 +39,7 @@ export type AchievementStorage = {
 export type AchievementUnlocked = (id: AchievementId) => void
 
 const longRunSeconds = 120
+const puddlesWipedForOcd = 2
 
 const achievementByRemark: Partial<Record<RoomRemarkKind, AchievementId>> = {
   bowlKeptOffTheHeater: 'bowlTriedOnTheHeater',
@@ -50,6 +52,7 @@ export class Achievements {
   private readonly log: RoomLog
   private readonly unlockedNow: AchievementUnlocked
   private record: AchievementRecord
+  private readonly placesWithAPuddleBeingWiped = new Set<string>()
 
   constructor(storage: AchievementStorage, log: RoomLog, unlockedNow: AchievementUnlocked) {
     this.storage = storage
@@ -65,6 +68,7 @@ export class Achievements {
 
   eventsHappened(events: readonly RitualEvent[], state: DeepReadonly<SessionState>): void {
     for (const event of events) {
+      if (event.type === 'tableWiped') this.puddleWipedOn(event.placeId)
       const id = achievementOf(event, state)
       if (id !== null) this.unlock(id, `the ritual reported ${event.type}`)
     }
@@ -84,6 +88,7 @@ export class Achievements {
   }
 
   worldAdvanced(state: DeepReadonly<SessionState>): void {
+    this.forgetPuddlesThatAreGone(state)
     const runningWater = state.sink.runningWater
     const hasTheTapRunLong = this.record.hasTheTapRunLong || (runningWater !== null && state.elapsedSeconds - runningWater.openedAtSeconds >= longRunSeconds)
     const hasTheHeaterRunLong = this.record.hasTheHeaterRunLong || (state.heater.isOn && state.elapsedSeconds - state.heater.switchedOnAtSeconds >= longRunSeconds)
@@ -94,8 +99,25 @@ export class Achievements {
   }
 
   reset(): void {
-    this.keep({ unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false })
+    this.keep({ unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0 })
     this.log('every achievement is reset')
+  }
+
+  private puddleWipedOn(placeId: string): void {
+    if (this.placesWithAPuddleBeingWiped.has(placeId)) return
+    this.placesWithAPuddleBeingWiped.add(placeId)
+    const puddlesWiped = this.record.puddlesWiped + 1
+    this.keep({ ...this.record, puddlesWiped })
+    this.log(`the puddle on the ${placeId} is wiped, the ${puddlesWiped}th different puddle over every visit`)
+    if (puddlesWiped >= puddlesWipedForOcd) this.unlock('tableWiped', `${puddlesWiped} different puddles have been wiped`)
+  }
+
+  private forgetPuddlesThatAreGone(state: DeepReadonly<SessionState>): void {
+    for (const placeId of this.placesWithAPuddleBeingWiped) {
+      if (state.puddles[placeId] !== undefined) continue
+      this.placesWithAPuddleBeingWiped.delete(placeId)
+      this.log(`the wiped puddle on the ${placeId} is gone, so a new one there is another puddle`)
+    }
   }
 
   private unlock(id: AchievementId, reason: string): void {
@@ -117,8 +139,6 @@ function achievementOf(event: RitualEvent, state: DeepReadonly<SessionState>): A
       return 'burntClothWashed'
     case 'spoonCrumbled':
       return 'spoonBurnt'
-    case 'tableWiped':
-      return 'tableWiped'
     case 'metalGlowsTooHotToHold':
       return carriedShapeOf(state, event.vesselId) === 'thermos' ? 'thermosGlowing' : null
     case 'boiledDry':
