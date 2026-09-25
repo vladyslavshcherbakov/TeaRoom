@@ -70,9 +70,18 @@ const tablesByWindow: Readonly<Record<WindowPlace, readonly [readonly [TablePlac
   ],
 }
 
+export const sinkOnTheCounter = { across: 0.35, forward: -0.05, y: 0.82 } as const
+
+export const shelfBoards = { centreHeightsMetres: [0.05, 0.7, 1.2], thicknessMetres: 0.04 } as const
+
+const [bottomBoardHeight, middleBoardHeight, upperBoardHeight] = shelfBoards.centreHeightsMetres
+const onTheBottomBoard = bottomBoardHeight + shelfBoards.thicknessMetres / 2
+const onTheMiddleBoard = middleBoardHeight + shelfBoards.thicknessMetres / 2
+const onTheUpperBoard = upperBoardHeight + shelfBoards.thicknessMetres / 2
+
 const onTheCounter = {
   heater: { across: -0.55, forward: 0, y: 0.95 },
-  sink: { across: 0.35, forward: -0.05, y: 0.82 },
+  sink: sinkOnTheCounter,
   kettle: { across: -0.1, forward: 0.05, y: 0.9 },
   thermos: { across: 0.8, forward: -0.05, y: 0.9 },
   spoonApart: { across: -0.85, forward: 0.15, y: 0.9 },
@@ -81,19 +90,19 @@ const onTheCounter = {
 
 const onTheShelf = {
   bowls: [
-    { across: 0.3, forward: 0, y: 0.72 },
-    { across: -0.05, forward: 0, y: 0.72 },
-    { across: -0.4, forward: 0, y: 0.72 },
-    { across: 0.3, forward: 0, y: 0.07 },
-    { across: -0.05, forward: 0, y: 0.07 },
-    { across: -0.4, forward: 0, y: 0.07 },
-    { across: -0.75, forward: 0, y: 0.72 },
-    { across: -0.75, forward: 0, y: 0.07 },
-    { across: 0.65, forward: 0, y: 0.72 },
-    { across: 0.65, forward: 0, y: 0.07 },
+    { across: 0.3, forward: 0, y: onTheMiddleBoard },
+    { across: -0.05, forward: 0, y: onTheMiddleBoard },
+    { across: -0.4, forward: 0, y: onTheMiddleBoard },
+    { across: 0.3, forward: 0, y: onTheBottomBoard },
+    { across: -0.05, forward: 0, y: onTheBottomBoard },
+    { across: -0.4, forward: 0, y: onTheBottomBoard },
+    { across: -0.75, forward: 0, y: onTheMiddleBoard },
+    { across: -0.75, forward: 0, y: onTheBottomBoard },
+    { across: 0.65, forward: 0, y: onTheMiddleBoard },
+    { across: 0.65, forward: 0, y: onTheBottomBoard },
   ],
-  caddy: { across: 0.5, forward: 0, y: 1.22 },
-  clothApart: { across: -0.5, forward: 0, y: 1.22 },
+  caddy: { across: 0.5, forward: 0, y: onTheUpperBoard },
+  clothApart: { across: -0.5, forward: 0, y: onTheUpperBoard },
 } as const
 
 const onTheTeaTable = {

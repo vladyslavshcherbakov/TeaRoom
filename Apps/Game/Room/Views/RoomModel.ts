@@ -16,7 +16,7 @@ import {
   type WallWindow,
   type WorldPoint,
 } from '../RoomLayout.ts'
-import { facingDirection, type Facing } from '../../../../Shared/Content/Rooms.ts'
+import { facingDirection, shelfBoards, type Facing } from '../../../../Shared/Content/Rooms.ts'
 import type { RoomArrangement } from '../RoomArrangement.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
@@ -252,8 +252,8 @@ export class RoomModel {
 
   private addShelf(piece: Furniture): void {
     const { footprint, height } = piece
-    for (const boardHeight of [0.05, 0.7, 1.2, height]) {
-      this.tag(this.box('darkWood', footprint.width, 0.04, footprint.depth, { x: footprint.x, y: boardHeight, z: footprint.z }), { furnitureId: piece.id })
+    for (const boardHeight of [...shelfBoards.centreHeightsMetres, height]) {
+      this.tag(this.box('darkWood', footprint.width, shelfBoards.thicknessMetres, footprint.depth, { x: footprint.x, y: boardHeight, z: footprint.z }), { furnitureId: piece.id })
     }
     const runsAlongX = footprint.width > footprint.depth
     for (const side of [-1, 1]) {

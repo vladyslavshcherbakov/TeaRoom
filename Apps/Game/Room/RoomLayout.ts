@@ -1,4 +1,4 @@
-import { facingDirection, furniturePlacementsFor, pointOn, type Facing, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
+import { facingDirection, furniturePlacementsFor, pointOn, sinkOnTheCounter, type Facing, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
 
 export type FloorPoint = {
   readonly x: number
@@ -152,10 +152,13 @@ const teaTableShape: PieceShape = {
   closeUp: { targetForwardMetres: -0.05, targetHeight: 0.42, acrossToCamera: 0, upToCamera: 1.6, widthMetres: 1.7, heightMetres: 1.3 },
 }
 
+const sinkPlateMetres = 0.004
+const sinkBasinCentreForwardOfTheSinkSpotMetres = 0.02
+
 const onTheCounter = {
-  sinkBasin: { across: 0.35, forward: -0.03, widthMetres: 0.36, depthMetres: 0.34, floorHeight: 0.816, plateMetres: 0.004 },
-  faucetBase: { across: 0.35, forward: -0.25, y: 0.9 },
-  faucetSpout: { across: 0.35, forward: -0.07, y: 1.3 },
+  sinkBasin: { across: sinkOnTheCounter.across, forward: sinkOnTheCounter.forward + sinkBasinCentreForwardOfTheSinkSpotMetres, widthMetres: 0.36, depthMetres: 0.34, floorHeight: sinkOnTheCounter.y - sinkPlateMetres, plateMetres: sinkPlateMetres },
+  faucetBase: { across: sinkOnTheCounter.across, forward: -0.25, y: 0.9 },
+  faucetSpout: { across: sinkOnTheCounter.across, forward: -0.07, y: 1.3 },
 } as const
 
 const secondCushionBeyondTheTableEndMetres = 0.55
@@ -223,7 +226,7 @@ export function puddleCentreOn(layout: RoomLayout, placeId: string, spilledAroun
 }
 
 function pieceAt(shape: PieceShape, placement: PiecePlacement, facings: readonly [Facing, ...Facing[]]): Furniture {
-  const isAlongX = placement.facing === 'towardsTheFront' || placement.facing === 'towardsTheBack'
+  const isAlongX = runsAlongX(placement.facing)
   const [first, ...rest] = facings.map((facing) => sideOf(shape, { ...placement, facing }))
   return {
     id: shape.id,
@@ -269,7 +272,7 @@ function medalFor(arrangement: FurnitureArrangement): SpotOnAWall {
 function sinkBasinIn(counter: PiecePlacement): SinkBasin {
   const basin = onTheCounter.sinkBasin
   const centre = pointOn(counter, basin.across, basin.forward)
-  const isAlongX = counter.facing === 'towardsTheFront' || counter.facing === 'towardsTheBack'
+  const isAlongX = runsAlongX(counter.facing)
   return {
     placeId: 'counter',
     x: centre.x,
@@ -284,4 +287,8 @@ function sinkBasinIn(counter: PiecePlacement): SinkBasin {
 function worldPointOn(placement: PiecePlacement, spot: { readonly across: number; readonly forward: number; readonly y: number }): WorldPoint {
   const { x, z } = pointOn(placement, spot.across, spot.forward)
   return { x, y: spot.y, z }
+}
+
+function runsAlongX(facing: Facing): boolean {
+  return facing === 'towardsTheFront' || facing === 'towardsTheBack'
 }
