@@ -34,8 +34,6 @@ const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
 const leavesAboveTheWaterMetres = 0.0015
-const leavesBelowTheLiquidMetres = 0.004
-const flattestSoakedHeapShare = 0.05
 const oilySheenOfTar = 0.9
 const redHotMetal = new THREE.Color('#3a0904')
 const dullRedHeat = new THREE.Color('#8a1000')
@@ -94,14 +92,13 @@ function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItem
   }
   const fillShare = looseLeaves.fillShareIn(scene.table)
   model.leaves.pile.showFill(fillShare)
-  holder.scale.y = heapSquashUnderTheLiquid(model, looseLeaves, fillShare, scene.table.vessels[model.itemId])
+  holder.position.y = looseLeaves.heapStartsAt.y + heapLiftedByTheLiquid(model, looseLeaves, fillShare, scene.table.vessels[model.itemId])
 }
 
-function heapSquashUnderTheLiquid(model: CarriedModel, looseLeaves: LooseLeavesLook, fillShare: number, vessel: TableViewState.Vessel | undefined): number {
-  const heapHeight = fillShare * looseLeaves.pile.heightMetres
-  if (vessel === undefined || vessel.fillShare <= 0 || model.liquidLevel === null || heapHeight <= 0) return 1
-  const roomUnderTheSurface = model.liquidLevel(vessel.fillShare).heightMetres - leavesBelowTheLiquidMetres - looseLeaves.heapStartsAt.y
-  return Math.min(1, Math.max(flattestSoakedHeapShare, roomUnderTheSurface / heapHeight))
+function heapLiftedByTheLiquid(model: CarriedModel, looseLeaves: LooseLeavesLook, fillShare: number, vessel: TableViewState.Vessel | undefined): number {
+  if (vessel === undefined || vessel.fillShare <= 0 || model.liquidLevel === null) return 0
+  const heapTop = looseLeaves.heapStartsAt.y + fillShare * looseLeaves.pile.heightMetres
+  return Math.max(0, model.liquidLevel(vessel.fillShare).heightMetres - heapTop)
 }
 
 function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
