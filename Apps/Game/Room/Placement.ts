@@ -38,7 +38,7 @@ function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: st
     const isInsideTheTop = Math.abs(spot.x - footprint.x) <= footprint.width / 2 - radius && Math.abs(spot.z - footprint.z) <= footprint.depth / 2 - radius
     if (!isInsideTheTop) return 'offTheEdge'
     if (isNear(spot, heaterSpot, radius + heaterFootprintRadiusMetres)) return 'theHeaterIsThere'
-    if (spot.placeId === 'counter' && overlapsTheSink(spot, radius)) return 'theSinkIsThere'
+    if (spot.placeId === sinkBasin.placeId && overlapsTheSink(spot, radius)) return 'theSinkIsThere'
   }
   const neighbourCircles = itemsOnSurfaces(state).filter((item) => item.itemId !== movingItemId).flatMap((item) => footprintOf(state, item.itemId, item.spot))
   const isTouchingANeighbour = circles.some((circle) => neighbourCircles.some((neighbour) => isNear(circle.spot, neighbour.spot, circle.radius + neighbour.radius)))
