@@ -20,6 +20,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies from the lockfile
         run: npm ci --no-audit --no-fund
       - name: Type-check and run the tests
@@ -40,10 +41,21 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies from the lockfile
         run: npm ci --no-audit --no-fund
+      - name: Restore the browser for the UI tests
+        id: browser-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
       - name: Install the browser for the UI tests
+        if: steps.browser-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Install the system libraries of the restored browser
+        if: steps.browser-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ matrix.browser }}
       - name: Build the site and run the UI tests on ${{ matrix.project }}
         run: Scripts/test-ui.sh --project=${{ matrix.project }}
 
@@ -54,6 +66,7 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies from the lockfile
         run: npm ci --no-audit --no-fund
       - name: Build the site
