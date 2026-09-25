@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { roomLayers } from './RoomLayers.ts'
+import { touchAreaOf } from './RoomLayers.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
   faucetSpout,
@@ -63,7 +63,6 @@ export class RoomModel {
   private readonly materials: RoomMaterials
   private readonly heaterPlate: THREE.Mesh
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
-  private readonly touchAreaMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
@@ -165,8 +164,7 @@ export class RoomModel {
   }
 
   private touchArea(width: number, height: number, depth: number): THREE.Mesh {
-    const area = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), this.touchAreaMaterial)
-    area.layers.set(roomLayers.touchAreas)
+    const area = touchAreaOf(new THREE.BoxGeometry(width, height, depth))
     area.userData = { isForgivingTouchArea: true }
     return area
   }

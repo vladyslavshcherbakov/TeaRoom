@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { touchAreaOf } from '../RoomLayers.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
@@ -42,7 +43,7 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
   spout.rotation.z = -0.9
   const lid = new THREE.Group()
   const lidTop = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.03, 14), materials.room.materialFor('darkWood'))
-  const lidTouchPad = new THREE.Mesh(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, 0.04, 12), materials.touchPad)
+  const lidTouchPad = touchAreaOf(new THREE.CylinderGeometry(lidTouchPadRadiusMetres, lidTouchPadRadiusMetres, 0.04, 12))
   lid.add(lidTop, lidTouchPad)
   lid.position.y = 0.215
   const gauge = waterGauge(materials.room)

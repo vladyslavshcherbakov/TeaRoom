@@ -8,6 +8,7 @@ import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/View
 import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
 import type { CarriedModelMaterials } from '../../../Apps/Game/Room/Views/Carried/ItemParts.ts'
 import { overflowSideFromTheGaugeRadians, overflowStreamRadiusMetres } from '../../../Apps/Game/Room/Views/Carried/WaterStreams.ts'
+import { isATouchArea, putOnLayer, roomLayers } from '../../../Apps/Game/Room/Views/RoomLayers.ts'
 import type { SurfaceMaterials } from '../../../Apps/Game/Room/Views/RoomMaterials.ts'
 import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
@@ -67,6 +68,44 @@ test('fire_ofEveryShape_isDrawnExactlyWhenTheItemCanCharAndTheTableSaysHowFar', 
     const hasFire = model.look.fire !== null
     assert.equal(model.charTo !== null, hasFire, model.itemId)
     assert.equal(charringByItem[model.itemId] !== undefined, hasFire, model.itemId)
+  }
+})
+
+test('touchAreas_ofEveryShapeStandingHeldOrWiping_areNeverDrawnByTheCamera', () => {
+  const layersTheCameraDraws = new THREE.Layers()
+  for (const layer of [roomLayers.room, roomLayers.untappableRoom, roomLayers.heldInView]) layersTheCameraDraws.enable(layer)
+
+  for (const model of modelsInTheQuietRoom()) {
+    for (const layer of [roomLayers.room, roomLayers.heldInView, roomLayers.untappableRoom]) {
+      putOnLayer(model.root, layer)
+
+      const drawnTouchAreas = meshesUnder(model.root).filter((mesh) => isATouchArea(mesh) && mesh.layers.test(layersTheCameraDraws))
+      assert.deepEqual(drawnTouchAreas.map((mesh) => mesh.name), [], `${model.itemId} on layer ${layer}`)
+    }
+  }
+})
+
+test('touchAreas_ofEveryShape_catchTapsWhileStandingOrHeldAndLetThemThroughWhileWiping', () => {
+  const raycaster = new THREE.Raycaster()
+  raycaster.layers.enableAll()
+  raycaster.layers.disable(roomLayers.untappableRoom)
+  const layersAndWhetherTapsAreCaught = [[roomLayers.room, true], [roomLayers.heldInView, true], [roomLayers.untappableRoom, false]] as const
+
+  for (const model of modelsInTheQuietRoom()) {
+    for (const [layer, isCaught] of layersAndWhetherTapsAreCaught) {
+      putOnLayer(model.root, layer)
+
+      const touchAreas = meshesUnder(model.root).filter((mesh) => isATouchArea(mesh))
+      assert.ok(touchAreas.every((mesh) => mesh.layers.test(raycaster.layers) === isCaught), `${model.itemId} on layer ${layer}`)
+    }
+  }
+})
+
+test('invisibleMeshes_ofEveryShape_areAllTouchAreas', () => {
+  for (const model of modelsInTheQuietRoom()) {
+    const invisibleMeshes = meshesUnder(model.root).filter((mesh) => mesh.material instanceof THREE.Material && mesh.material.transparent && mesh.material.opacity === 0)
+
+    assert.ok(invisibleMeshes.every((mesh) => isATouchArea(mesh)), model.itemId)
   }
 })
 
@@ -133,15 +172,14 @@ function vesselModelsInTheQuietRoom(): CarriedModel[] {
 function plainMaterials(): CarriedModelMaterials {
   const plain = (): THREE.MeshStandardMaterial => new THREE.MeshStandardMaterial({ side: THREE.DoubleSide })
   const room: SurfaceMaterials = { materialFor: plain, unsharedMaterialFor: plain, colourOf: () => new THREE.Color() }
-  return { room, claySeenFromInside: plain(), touchPad: new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }), cloth: plain() }
+  return { room, claySeenFromInside: plain(), cloth: plain() }
 }
 
 function drawnMeshesUnder(object: THREE.Object3D, model: CarriedModel): THREE.Mesh[] {
   const meshes: THREE.Mesh[] = []
   object.traverseVisible((part) => {
-    const isInvisibleTouchArea = part instanceof THREE.Mesh && part.material instanceof THREE.MeshBasicMaterial && part.material.opacity === 0
     const isLiquid = part === model.liquid || part === model.liquidVolume
-    if (part instanceof THREE.Mesh && !isInvisibleTouchArea && !isLiquid) meshes.push(part)
+    if (part instanceof THREE.Mesh && !isATouchArea(part) && !isLiquid) meshes.push(part)
   })
   return meshes
 }
@@ -189,6 +227,14 @@ function wallDistanceAt(model: CarriedModel, height: number): number | null {
   const outside = overflowSide.clone().setY(height)
   const [nearestHit] = new THREE.Raycaster(outside, overflowSide.clone().negate()).intersectObjects(walls, false)
   return nearestHit === undefined ? null : 1 - nearestHit.distance
+}
+
+function meshesUnder(object: THREE.Object3D): THREE.Mesh[] {
+  const meshes: THREE.Mesh[] = []
+  object.traverse((part) => {
+    if (part instanceof THREE.Mesh) meshes.push(part)
+  })
+  return meshes
 }
 
 function isPartOf(mesh: THREE.Object3D, group: THREE.Object3D | null): boolean {

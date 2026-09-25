@@ -114,7 +114,7 @@ The plan is in `docs/roadmap.md`.
 
 **Water is pale and clear, and moves only while it heats.** Plain water is a pale blue that reads as clear, and tea blends out of it as it steeps in the kettle. Streams grow from the spout and fall away, and an overflow creeps down the kettle's side, because water that appears whole in one frame reads as a drawing. The water shimmers, simmers and boils on a working heater and goes still off it, while its steam follows the temperature and so stays a while.
 
-**Invisible touch areas are on their own render layer.** The medal, the tap and the gear answer taps in areas larger than they are, drawn with no colour. Ambient occlusion reads depth, so it drew those areas as grey boxes. On `roomLayers.touchAreas` the camera never draws them, and the raycaster still sees every layer.
+**Invisible touch areas are on their own render layer, and one function builds them all.** The medal, the tap, the gear, every carried item, the kettle's lid and the hands answer taps in areas larger than they are, drawn with no colour. Ambient occlusion reads depth, so it drew those areas as grey boxes and rings. The first fix moved only the room's areas and missed the items', because each place built its own invisible mesh. Now `touchAreaOf` in `Views/RoomLayers.ts` is the only way to build one, and `putOnLayer` keeps it on `roomLayers.touchAreas`, which the camera never draws and the raycaster sees. `Tests/Game/Room/CarriedItems.integration.test.ts` checks every item standing, held and wiping.
 
 **Items standing on furniture cast no shadows.** Their shadows on the tea table and the shelves read as clutter at this size.
 

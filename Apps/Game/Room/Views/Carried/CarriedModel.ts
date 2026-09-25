@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { layoutByShape, type CarriedShape } from '../../CarriedShapes.ts'
+import { isATouchArea, touchAreaOf } from '../RoomLayers.ts'
 import { bowlShapeLook } from './BowlParts.ts'
 import { caddyShapeLook } from './CaddyParts.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
@@ -78,12 +79,12 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   }
   const liquidVolume = parts.liquidVolumeAt !== null ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
   if (liquidVolume !== null) root.add(liquidVolume)
-  if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight, materials.touchPad))
+  if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight))
   const leafHolder = look.looseLeaves === null ? null : leafHolderAt(look.looseLeaves.heapStartsAt)
   if (leafHolder !== null) root.add(leafHolder)
   const soakedLeafHolder = look.soakedLeaves === null ? null : new THREE.Group()
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
-  root.traverse((part) => (part.castShadow = !(part instanceof THREE.Mesh && part.material === materials.touchPad)))
+  root.traverse((part) => (part.castShadow = !isATouchArea(part)))
   const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 6), materials.room.materialFor('steam')))
   for (const puff of puffs) puff.castShadow = false
   return {
@@ -122,10 +123,10 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   }
 }
 
-function forgivingTouchPad(shape: CarriedShape, rimHeight: number, touchPad: THREE.Material): THREE.Mesh {
+function forgivingTouchPad(shape: CarriedShape, rimHeight: number): THREE.Mesh {
   const radius = layoutByShape[shape].footprintRadiusMetres * touchPadShareOfTheFootprint
   const height = rimHeight + touchPadAboveTheRimMetres
-  const pad = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 16), touchPad)
+  const pad = touchAreaOf(new THREE.CylinderGeometry(radius, radius, height, 16))
   pad.position.y = height / 2
   pad.userData = { isForgivingTouchArea: true }
   return pad

@@ -16,7 +16,7 @@ import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
-import { roomLayers } from './RoomLayers.ts'
+import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
@@ -28,7 +28,6 @@ const everyHandIndex: readonly HandIndex[] = [0, 1, middleHandIndex]
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
-  private readonly touchPadMaterial = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
   private readonly clothMaterial: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
   private readonly models: CarriedModel[]
   private readonly waterStreams: WaterStreams
@@ -46,7 +45,7 @@ export class CarriedItems {
     this.clothMaterial = materials.unsharedMaterialFor('cloth')
     const claySeenFromInside = materials.unsharedMaterialFor('clay')
     claySeenFromInside.side = THREE.DoubleSide
-    const modelMaterials = { room: materials, claySeenFromInside, touchPad: this.touchPadMaterial, cloth: this.clothMaterial }
+    const modelMaterials = { room: materials, claySeenFromInside, cloth: this.clothMaterial }
     this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, modelMaterials))
     for (const model of this.models) {
       this.root.add(model.root, ...model.puffs)
@@ -130,12 +129,11 @@ export class CarriedItems {
   private castShadowUnlessStanding(model: CarriedModel, shouldCast: boolean): void {
     if (model.castsShadow === shouldCast) return
     model.castsShadow = shouldCast
-    model.root.traverse((part) => (part.castShadow = shouldCast && !(part instanceof THREE.Mesh && part.material === this.touchPadMaterial)))
+    model.root.traverse((part) => (part.castShadow = shouldCast && !isATouchArea(part)))
   }
 
   private handTouchArea(handIndex: HandIndex): THREE.Mesh {
-    const area = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.touchPadMaterial)
-    area.layers.set(roomLayers.heldInView)
+    const area = touchAreaOf(new THREE.PlaneGeometry(1, 1))
     area.visible = false
     const tag: TapTargetTag = { handIndex }
     area.userData = { tapTarget: tag, isForgivingTouchArea: true }
@@ -167,7 +165,7 @@ function moveToLayer(model: CarriedModel, layer: number): void {
   if (model.layer === layer) return
   model.layer = layer
   model.isHeldInView = layer === roomLayers.heldInView
-  model.root.traverse((part) => part.layers.set(layer))
+  putOnLayer(model.root, layer)
   const look = model.heldInViewLook
   if (look !== null) look.mesh.material = model.isHeldInView ? look.heldInView : look.inRoom
 }

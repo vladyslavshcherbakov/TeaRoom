@@ -41,7 +41,6 @@ export type HeldInViewLook = {
 export type CarriedModelMaterials = {
   readonly room: SurfaceMaterials
   readonly claySeenFromInside: THREE.Material
-  readonly touchPad: THREE.Material
   readonly cloth: THREE.Material
 }
 
