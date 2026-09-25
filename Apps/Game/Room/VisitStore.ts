@@ -22,11 +22,16 @@ export type SavedVisit = {
   readonly arrangement: RoomArrangement
 }
 
+type VisitShape = { readonly [key: string]: unknown }
+
+type VisitMigration = (visit: VisitShape) => { readonly migrated: VisitShape; readonly change: string } | null
+
 export type FoundVisit = { readonly kind: 'none' } | { readonly kind: 'found'; readonly visit: SavedVisit } | { readonly kind: 'brokenByAnUpdate' }
 
 const storageKey = 'visit'
 const cameraModes: readonly CameraMode[] = ['room', 'firstPerson']
 const stickLayouts: readonly StickLayout[] = ['walkOnTheLeft', 'lookOnTheLeft']
+const migrationsOldestFirst: readonly VisitMigration[] = [withItsArrangement, withTheArrangementInTodaysWords]
 
 export class VisitStore {
   private readonly log: RoomLog
@@ -48,13 +53,13 @@ export class VisitStore {
       this.log('the saved visit cannot be read as JSON, so the room opens anew')
       return { kind: 'brokenByAnUpdate' }
     }
-    const visit = this.withTheArrangementInTodaysWords(parsedVisit)
+    const visit = this.visitInTodaysShape(parsedVisit)
     const problem = problemWith(visit)
     if (problem !== null) {
       this.log(`the saved visit does not fit this version of the game: ${problem}`)
       return { kind: 'brokenByAnUpdate' }
     }
-    const saved = this.withItsArrangement(visit as Omit<SavedVisit, 'arrangement'> & { readonly arrangement?: RoomArrangement })
+    const saved = visit as SavedVisit
     this.log(`found a visit saved at ${new Date(saved.savedAtMilliseconds).toISOString()} in a room with ${describeArrangement(saved.arrangement)}`)
     return { kind: 'found', visit: saved }
   }
@@ -76,18 +81,14 @@ export class VisitStore {
     else this.log(`the saved visit could not be forgotten (${reason}): ${write.error}`)
   }
 
-  private withTheArrangementInTodaysWords(visit: unknown): unknown {
-    if (typeof visit !== 'object' || visit === null || !('arrangement' in visit)) return visit
-    const arrangement = arrangementOfAnEarlierSave(visit.arrangement)
-    if (arrangement === visit.arrangement) return visit
-    this.log('the saved visit names its room by its kitchen alone, from before the furniture could move, so it keeps its window with the kitchen beside it and the tea table by the window')
-    return { ...visit, arrangement }
-  }
-
-  private withItsArrangement(visit: Omit<SavedVisit, 'arrangement'> & { readonly arrangement?: RoomArrangement }): SavedVisit {
-    if (visit.arrangement !== undefined) return { ...visit, arrangement: visit.arrangement }
-    this.log('the saved visit is from before the room was arranged anew for each game, so it continues in the room it was played in')
-    return { ...visit, arrangement: arrangementBeforeRoomsVaried }
+  private visitInTodaysShape(visit: unknown): unknown {
+    if (!isVisitShape(visit)) return visit
+    return migrationsOldestFirst.reduce((shape, migrate) => {
+      const migration = migrate(shape)
+      if (migration === null) return shape
+      this.log(migration.change)
+      return migration.migrated
+    }, visit)
   }
 }
 
@@ -104,7 +105,27 @@ function problemWith(visit: unknown): string | null {
   const look = camera?.look as Partial<Record<keyof FirstPersonLook, unknown>> | undefined
   if (!cameraModes.includes(camera?.mode as CameraMode) || !stickLayouts.includes(camera?.stickLayout as StickLayout)) return 'its camera is not one the game has'
   if (typeof look?.headingRadians !== 'number' || typeof look.pitchRadians !== 'number') return 'its first-person look is missing'
-  if (saved.arrangement === undefined) return null
   const arrangementProblem = problemWithArrangement(saved.arrangement)
   return arrangementProblem === null ? null : `its room ${arrangementProblem}`
+}
+
+function withItsArrangement(visit: VisitShape): ReturnType<VisitMigration> {
+  if (visit['arrangement'] !== undefined) return null
+  return {
+    migrated: { ...visit, arrangement: arrangementBeforeRoomsVaried },
+    change: 'the saved visit is from before the room was arranged anew for each game, so it continues in the room it was played in',
+  }
+}
+
+function withTheArrangementInTodaysWords(visit: VisitShape): ReturnType<VisitMigration> {
+  const arrangement = arrangementOfAnEarlierSave(visit['arrangement'])
+  if (arrangement === visit['arrangement']) return null
+  return {
+    migrated: { ...visit, arrangement },
+    change: 'the saved visit names its room by its kitchen alone, from before the furniture could move, so it keeps its window with the kitchen beside it and the tea table by the window',
+  }
+}
+
+function isVisitShape(value: unknown): value is VisitShape {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
