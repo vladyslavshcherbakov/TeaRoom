@@ -655,6 +655,33 @@ test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable',
   assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0, 'the bowl stayed empty')
 })
 
+test('bowl_whenPutOnTheHeater_staysInHandAndIsRemarkedOn', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'heater' })
+
+  assert.equal(room.state.heater.itemIdOnTop, null)
+  assert.deepEqual(room.remarks, [{ kind: 'bowlKeptOffTheHeater', timesTapped: 1 }])
+})
+
+test('caddy_whenPutOnTheHeaterTwice_isRemarkedOnEachTime', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('caddy')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'heater' })
+  room.tap({ kind: 'heater' })
+
+  assert.deepEqual(room.remarks, [
+    { kind: 'caddyKeptOffTheHeater', timesTapped: 1 },
+    { kind: 'caddyKeptOffTheHeater', timesTapped: 2 },
+  ])
+})
+
 test('roseBush_whenTappedTenTimesInARow_asksForTheDebugMenu', () => {
   const room = new RoomVisit()
 

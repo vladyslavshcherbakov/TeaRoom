@@ -10,7 +10,7 @@ import { AimedPour, type AimedPourView, type PourTarget } from './AimedPour.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
-import { layoutOf } from './CarriedShapes.ts'
+import { carriedShapeOf, layoutOf, type CarriedShape } from './CarriedShapes.ts'
 import { furniture, furnitureWithId, puddleCentreOn, puddleRadiusMetres, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, type RoomLog, type RoomView } from './RoomNavigator.ts'
 import type { Walk } from './Walking/Walk.ts'
@@ -57,8 +57,11 @@ const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
+const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
-export type RoomRemark = { readonly kind: 'sillIsTheRoomsOwn'; readonly timesTapped: number }
+export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater'
+
+export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: number }
 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
@@ -74,7 +77,7 @@ export class RoomPlay {
   private choice: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
-  private sillTapsFromAfar = 0
+  private readonly timesRemarked = new Map<RoomRemarkKind, number>()
   private roseBushTapsInARow = 0
 
   constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, listener: RoomPlayListener) {
@@ -250,9 +253,8 @@ export class RoomPlay {
   }
 
   private keepTheSillForTheRoom(figurineId: string): void {
-    this.sillTapsFromAfar += 1
-    this.log(`tap on ${figurineId} from afar leaves the keeper in place: it stands on the sill, tapped from afar ${this.sillTapsFromAfar} times`)
-    this.listener.remarked({ kind: 'sillIsTheRoomsOwn', timesTapped: this.sillTapsFromAfar })
+    const timesTapped = this.remark('sillIsTheRoomsOwn')
+    this.log(`tap on ${figurineId} from afar leaves the keeper in place: it stands on the sill, tapped from afar ${timesTapped} times`)
   }
 
   private navigate(target: RoomTapTarget, targetFurnitureId: FurnitureId | null): void {
@@ -443,7 +445,21 @@ export class RoomPlay {
   private putTheChosenItemOnTheHeater(): void {
     const itemId = this.chosenItemId()
     if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
-    this.letGoOfTheChoiceUnlessRefused(this.ritual.dispatch({ type: 'placeOnHeater', itemId }))
+    const events = this.ritual.dispatch({ type: 'placeOnHeater', itemId })
+    this.letGoOfTheChoiceUnlessRefused(events)
+    const isKeptOff = events.some((event) => event.type === 'actionRefused' && event.reason === 'cannotSitOnHeater')
+    const shape = carriedShapeOf(this.ritual.state, itemId)
+    const remarkKind = isKeptOff && shape !== undefined ? remarkWhenKeptOffTheHeater[shape] : undefined
+    if (remarkKind === undefined) return
+    const timesTapped = this.remark(remarkKind)
+    this.log(`${itemId} is kept off the heater, remarked on ${timesTapped} times`)
+  }
+
+  private remark(kind: RoomRemarkKind): number {
+    const timesTapped = (this.timesRemarked.get(kind) ?? 0) + 1
+    this.timesRemarked.set(kind, timesTapped)
+    this.listener.remarked({ kind, timesTapped })
+    return timesTapped
   }
 
   private chosenItemId(): string | null {

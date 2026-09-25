@@ -69,6 +69,14 @@ test('remark_ofTheSillTappedTwice_changesItsLine', () => {
   assert.notEqual(secondLine, firstLine)
 })
 
+test('remark_ofABowlKeptOffTheHeaterAgain_changesItsLine', () => {
+  const firstLine = roomRemarkLine({ kind: 'bowlKeptOffTheHeater', timesTapped: 1 }, 7)
+
+  const secondLine = roomRemarkLine({ kind: 'bowlKeptOffTheHeater', timesTapped: 2 }, 7)
+
+  assert.notEqual(secondLine, firstLine)
+})
+
 const burntClothLines = [
   "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'Not a trace of the fire. This world forgives things. I could live here.',

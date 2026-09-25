@@ -75,6 +75,16 @@ export const englishTexts = {
   'sillIsTheRoomsOwn.3': 'You have touched almost everything here. Let the room keep these two for itself.',
   'sillIsTheRoomsOwn.4': 'Not these ones. The room likes to keep a few things just for itself.',
 
+  'bowlKeptOffTheHeater.1': 'Have you lost your mind? That bowl is the dearest thing in this house. Put your own hand there instead.',
+  'bowlKeptOffTheHeater.2': 'The Guild of Beautiful Bowls has received a complaint about us. It is not amused.',
+  'bowlKeptOffTheHeater.3': 'A potter shaped this bowl five centuries ago. They would never forgive us.',
+  'bowlKeptOffTheHeater.4': 'A bowl on a hot plate? The bowl says no. I say no. Even the plate looks worried.',
+
+  'caddyKeptOffTheHeater.1': 'If these were coffee beans, maybe. This tea was roasted long ago and is ready to drink. Shoo.',
+  'caddyKeptOffTheHeater.2': 'The leaves are dry enough, thank you. Nobody ordered tea toast.',
+  'caddyKeptOffTheHeater.3': 'The leaves would like to stay leaves, not turn into charcoal.',
+  'caddyKeptOffTheHeater.4': 'The caddy has lived a quiet life on the shelf. It does not need a sauna.',
+
   'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',
   'burntClothWashed.3': "Magic sink! The burn is gone. I'm never leaving.",
