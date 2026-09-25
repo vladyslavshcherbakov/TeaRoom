@@ -1,9 +1,8 @@
 import { browserStorage, parsedJsonOrNull } from './BrowserStorage.ts'
-import { achievementIds, type AchievementId, type AchievementRecord, type AchievementStorage } from './Achievements.ts'
+import { achievementIds, nothingUnlocked, type AchievementId, type AchievementRecord, type AchievementStorage } from './Achievements.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 
 const storageKey = 'achievements'
-const nothingUnlocked: AchievementRecord = { unlocked: [], hasTheTapRunForNothing: false, hasTheHeaterRunForNothing: false, puddlesWiped: 0, visitsBegun: 0 }
 
 export class AchievementStore implements AchievementStorage {
   private readonly log: RoomLog

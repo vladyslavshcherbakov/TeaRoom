@@ -35,6 +35,8 @@ export type AchievementRecord = {
   readonly visitsBegun: number
 }
 
+export const nothingUnlocked: AchievementRecord = { unlocked: [], hasTheTapRunForNothing: false, hasTheHeaterRunForNothing: false, puddlesWiped: 0, visitsBegun: 0 }
+
 export type AchievementStorage = {
   readonly load: () => AchievementRecord
   readonly keep: (record: AchievementRecord) => void
@@ -120,7 +122,7 @@ export class Achievements {
   }
 
   reset(): void {
-    this.keep({ unlocked: [], hasTheTapRunForNothing: false, hasTheHeaterRunForNothing: false, puddlesWiped: 0, visitsBegun: 0 })
+    this.keep(nothingUnlocked)
     this.log('every achievement is reset')
   }
 
