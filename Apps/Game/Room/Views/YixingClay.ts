@@ -1,3 +1,6 @@
+import { pseudoRandom } from './PseudoRandom.ts'
+
+const noisePhase = 78.233
 const canvasWidth = 1024
 const canvasHeight = 512
 const clayBrown = '#74402b'
@@ -24,9 +27,9 @@ function paintColours(): HTMLCanvasElement {
   context.fillStyle = clayBrown
   context.fillRect(0, 0, canvasWidth, canvasHeight)
   for (let blotch = 0; blotch < blotchCount; blotch += 1) {
-    const x = pseudoRandom(blotch * 3 + 1) * canvasWidth
-    const y = pseudoRandom(blotch * 3 + 2) * canvasHeight
-    const radius = 40 + pseudoRandom(blotch * 3 + 3) * 90
+    const x = pseudoRandom(blotch * 3 + 1, noisePhase) * canvasWidth
+    const y = pseudoRandom(blotch * 3 + 2, noisePhase) * canvasHeight
+    const radius = 40 + pseudoRandom(blotch * 3 + 3, noisePhase) * 90
     for (const shift of [-canvasWidth, 0, canvasWidth]) {
       const shade = context.createRadialGradient(x + shift, y, 0, x + shift, y, radius)
       shade.addColorStop(0, blotch % 2 === 0 ? 'rgba(40, 18, 10, 0.18)' : 'rgba(150, 90, 60, 0.14)')
@@ -52,9 +55,9 @@ function paintPores(): HTMLCanvasElement {
 function scatterDots(context: CanvasRenderingContext2D, count: number, colour: string, widestPx: number, salt: number): void {
   context.fillStyle = colour
   for (let dot = 0; dot < count; dot += 1) {
-    const x = pseudoRandom(dot * 2 + salt) * canvasWidth
-    const y = pseudoRandom(dot * 2 + 1 + salt * 5) * canvasHeight
-    const radius = 0.4 + pseudoRandom(dot + salt * 13) * widestPx
+    const x = pseudoRandom(dot * 2 + salt, noisePhase) * canvasWidth
+    const y = pseudoRandom(dot * 2 + 1 + salt * 5, noisePhase) * canvasHeight
+    const radius = 0.4 + pseudoRandom(dot + salt * 13, noisePhase) * widestPx
     for (const shift of [-canvasWidth, 0, canvasWidth]) {
       context.beginPath()
       context.arc(x + shift, y, radius, 0, Math.PI * 2)
@@ -68,9 +71,4 @@ function newCanvas(): { canvas: HTMLCanvasElement; context: CanvasRenderingConte
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   return { canvas, context: canvas.getContext('2d') }
-}
-
-function pseudoRandom(seed: number): number {
-  const wave = Math.sin(seed * 12.9898 + 78.233) * 43758.5453
-  return wave - Math.floor(wave)
 }

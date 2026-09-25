@@ -1,3 +1,5 @@
+import { pseudoRandom } from './PseudoRandom.ts'
+
 const canvasWidth = 1024
 const canvasHeight = 512
 const skyBlue = [159, 208, 234] as const
@@ -69,11 +71,6 @@ function crackAt(around: number, along: number, seeds: readonly Seed[], width: n
 function distanceBetween(around: number, along: number, otherAround: number, otherAlong: number): number {
   const acrossTheSeam = Math.abs(around - otherAround)
   return Math.hypot(Math.min(acrossTheSeam, 1 - acrossTheSeam), (along - otherAlong) / cellsStretchAlong)
-}
-
-function pseudoRandom(seed: number): number {
-  const wave = Math.sin(seed * 12.9898) * 43758.5453
-  return wave - Math.floor(wave)
 }
 
 function mix(from: Rgb, to: Rgb, share: number): Rgb {

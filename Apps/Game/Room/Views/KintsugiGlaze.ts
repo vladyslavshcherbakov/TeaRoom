@@ -1,6 +1,8 @@
 import { bowlProfile } from './Carried/BowlProfile.ts'
 import { clampedToShare } from '../../../../Shared/Simulation/Physics/ClampedToShare.ts'
+import { pseudoRandom } from './PseudoRandom.ts'
 
+const noisePhase = 4.1414
 const canvasWidth = 1024
 const canvasHeight = 512
 const lapisBlue: Rgb = [2, 6, 38]
@@ -141,10 +143,10 @@ function valueNoise(x: number, y: number, period: number): number {
   const alongX = smoothed(x - cellX)
   const alongY = smoothed(y - cellY)
   const wrapped = (cell: number) => ((cell % period) + period) % period
-  const topLeft = pseudoRandom(wrapped(cellX) * 157 + cellY * 311)
-  const topRight = pseudoRandom(wrapped(cellX + 1) * 157 + cellY * 311)
-  const bottomLeft = pseudoRandom(wrapped(cellX) * 157 + (cellY + 1) * 311)
-  const bottomRight = pseudoRandom(wrapped(cellX + 1) * 157 + (cellY + 1) * 311)
+  const topLeft = pseudoRandom(wrapped(cellX) * 157 + cellY * 311, noisePhase)
+  const topRight = pseudoRandom(wrapped(cellX + 1) * 157 + cellY * 311, noisePhase)
+  const bottomLeft = pseudoRandom(wrapped(cellX) * 157 + (cellY + 1) * 311, noisePhase)
+  const bottomRight = pseudoRandom(wrapped(cellX + 1) * 157 + (cellY + 1) * 311, noisePhase)
   const top = topLeft + (topRight - topLeft) * alongX
   const bottom = bottomLeft + (bottomRight - bottomLeft) * alongX
   return top + (bottom - top) * alongY
@@ -183,7 +185,7 @@ function lostChip(cracks: readonly (readonly DiscPoint[])[]): DiscPoint[] {
   const along = { x: Math.cos(turn), y: Math.sin(turn) }
   return Array.from({ length: patchCorners }, (_, corner) => {
     const angle = (corner / patchCorners) * Math.PI * 2
-    const reach = patchSmallestReachMetres + patchReachSpreadMetres * pseudoRandom(corner + 900)
+    const reach = patchSmallestReachMetres + patchReachSpreadMetres * pseudoRandom(corner + 900, noisePhase)
     const acrossMetres = Math.cos(angle) * reach * patchWidthToHeight
     const alongMetres = Math.sin(angle) * reach
     return { x: centre.x + across.x * acrossMetres + along.x * alongMetres, y: centre.y + across.y * acrossMetres + along.y * alongMetres }
@@ -199,7 +201,7 @@ function jaggedCrack(from: DiscPoint, to: DiscPoint, salt: number): DiscPoint[] 
       const start = points[index - 1] ?? from
       const end = points[index] ?? to
       const length = Math.hypot(end.x - start.x, end.y - start.y)
-      const push = (pseudoRandom(salt + level * 131 + index) - 0.5) * 2 * roughness
+      const push = (pseudoRandom(salt + level * 131 + index, noisePhase) - 0.5) * 2 * roughness
       const middle = { x: (start.x + end.x) / 2 - ((end.y - start.y) / length) * push, y: (start.y + end.y) / 2 + ((end.x - start.x) / length) * push }
       finer.push(middle, end)
     }
@@ -337,9 +339,4 @@ function cumulativeLengths(): number[] {
     lengths.push(before === undefined || point === undefined ? soFar : soFar + before.distanceTo(point))
   }
   return lengths
-}
-
-function pseudoRandom(seed: number): number {
-  const wave = Math.sin(seed * 12.9898 + 4.1414) * 43758.5453
-  return wave - Math.floor(wave)
 }

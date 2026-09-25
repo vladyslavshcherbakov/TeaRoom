@@ -1,3 +1,6 @@
+import { pseudoRandom } from './PseudoRandom.ts'
+
+const noisePhase = 5.1
 const canvasWidth = 1024
 const canvasHeight = 648
 const fujiCentreX = canvasWidth / 2
@@ -53,7 +56,7 @@ export function paintSakuraOverFuji(): HTMLCanvasElement {
   context.drawImage(mountain, 0, 0)
   paintLake(context, mountain)
   paintBranches(context)
-  for (let petal = 0; petal < fallingPetalCount; petal += 1) paintFallingPetal(context, pseudoRandom(petal * 3) * canvasWidth, 40 + pseudoRandom(petal * 3 + 1) * (canvasHeight - 80), pseudoRandom(petal * 3 + 2) * Math.PI)
+  for (let petal = 0; petal < fallingPetalCount; petal += 1) paintFallingPetal(context, pseudoRandom(petal * 3, noisePhase) * canvasWidth, 40 + pseudoRandom(petal * 3 + 1, noisePhase) * (canvasHeight - 80), pseudoRandom(petal * 3 + 2, noisePhase) * Math.PI)
   return canvas
 }
 
@@ -83,7 +86,7 @@ function paintTreeline(context: CanvasRenderingContext2D): void {
   context.moveTo(0, fujiBaseY)
   const crownWidth = canvasWidth / treeCrownsAcross
   for (let crown = 0; crown < treeCrownsAcross; crown += 1) {
-    const crownHeight = treelineHeightPx * (0.5 + 0.5 * pseudoRandom(crown + 300))
+    const crownHeight = treelineHeightPx * (0.5 + 0.5 * pseudoRandom(crown + 300, noisePhase))
     context.quadraticCurveTo((crown + 0.5) * crownWidth, fujiBaseY - crownHeight * 2, (crown + 1) * crownWidth, fujiBaseY)
   }
   context.closePath()
@@ -100,7 +103,7 @@ function paintLake(context: CanvasRenderingContext2D, mountain: HTMLCanvasElemen
   for (let depth = 0; depth < lakeDepth; depth += reflectionRowPx) {
     const sourceHeight = reflectionRowPx / reflectionSquash
     const sourceY = fujiBaseY - depth / reflectionSquash - sourceHeight
-    const sway = Math.sin(depth / rippleWavelengthPx * Math.PI * 2 + pseudoRandom(depth) * 0.8) * rippleSwayPx * (1 + depth * rippleSwayGrowthPerPx)
+    const sway = Math.sin(depth / rippleWavelengthPx * Math.PI * 2 + pseudoRandom(depth, noisePhase) * 0.8) * rippleSwayPx * (1 + depth * rippleSwayGrowthPerPx)
     context.globalAlpha = reflectionOpacity * (1 - (0.6 * depth) / lakeDepth)
     for (const shift of [-canvasWidth, 0, canvasWidth]) context.drawImage(mountain, 0, sourceY, canvasWidth, sourceHeight, sway + shift, fujiBaseY + depth, canvasWidth, reflectionRowPx)
   }
@@ -108,9 +111,9 @@ function paintLake(context: CanvasRenderingContext2D, mountain: HTMLCanvasElemen
   context.strokeStyle = 'rgba(200, 215, 240, 0.35)'
   context.lineWidth = 1.5
   for (let ripple = 0; ripple < rippleHighlights; ripple += 1) {
-    const x = pseudoRandom(ripple * 5 + 500) * canvasWidth
-    const y = fujiBaseY + 6 + pseudoRandom(ripple * 5 + 501) * (lakeDepth - 12)
-    const length = 12 + 30 * pseudoRandom(ripple * 5 + 502)
+    const x = pseudoRandom(ripple * 5 + 500, noisePhase) * canvasWidth
+    const y = fujiBaseY + 6 + pseudoRandom(ripple * 5 + 501, noisePhase) * (lakeDepth - 12)
+    const length = 12 + 30 * pseudoRandom(ripple * 5 + 502, noisePhase)
     context.beginPath()
     context.moveTo(x, y)
     context.lineTo(x + length, y)
@@ -147,7 +150,7 @@ function paintFuji(context: CanvasRenderingContext2D): void {
   context.lineTo(fujiCentreX + fujiHalfBase, fujiPeakY - 20)
   for (let step = 0; step <= snowEdgeSteps; step += 1) {
     const x = fujiCentreX + snowCapHalfWidthPx - (step / snowEdgeSteps) * snowCapHalfWidthPx * 2
-    context.lineTo(x, snowLineY + (pseudoRandom(step + 60) - 0.5) * 2 * snowEdgeWobblePx)
+    context.lineTo(x, snowLineY + (pseudoRandom(step + 60, noisePhase) - 0.5) * 2 * snowEdgeWobblePx)
   }
   context.closePath()
   context.fill()
@@ -223,9 +226,4 @@ function paintFallingPetal(context: CanvasRenderingContext2D, x: number, y: numb
   context.beginPath()
   context.ellipse(x, y, 6, 3.5, turn, 0, Math.PI * 2)
   context.fill()
-}
-
-function pseudoRandom(seed: number): number {
-  const wave = Math.sin(seed * 12.9898 + 5.1) * 43758.5453
-  return wave - Math.floor(wave)
 }

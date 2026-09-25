@@ -1,4 +1,5 @@
 import type { ClothPattern } from '../RoomArrangement.ts'
+import { pseudoRandom } from './PseudoRandom.ts'
 
 const canvasWidth = 560
 const canvasHeight = 400
@@ -87,11 +88,6 @@ function paintCrossings(context: CanvasRenderingContext2D): void {
 function threadShade(seed: number, strongest: number): string {
   const shade = pseudoRandom(seed)
   return shade < 0.5 ? `rgba(255, 252, 244, ${(strongest * (0.5 - shade) * 2).toFixed(3)})` : `rgba(90, 72, 52, ${(strongest * (shade - 0.5) * 2).toFixed(3)})`
-}
-
-function pseudoRandom(seed: number): number {
-  const wave = Math.sin(seed * 12.9898) * 43758.5453
-  return wave - Math.floor(wave)
 }
 
 function paintHem(context: CanvasRenderingContext2D): void {

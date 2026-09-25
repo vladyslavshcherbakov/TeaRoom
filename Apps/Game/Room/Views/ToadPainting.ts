@@ -1,3 +1,5 @@
+import { pseudoRandom } from './PseudoRandom.ts'
+
 const canvasSize = 768
 const centre = canvasSize / 2
 const skinLight = '#a4905a'
@@ -315,9 +317,4 @@ function paintEye(context: CanvasRenderingContext2D, x: number, y: number): void
 function circle(context: CanvasRenderingContext2D, x: number, y: number, radius: number): void {
   context.beginPath()
   context.arc(x, y, radius, 0, Math.PI * 2)
-}
-
-function pseudoRandom(seed: number): number {
-  const wave = Math.sin(seed * 12.9898) * 43758.5453
-  return wave - Math.floor(wave)
 }
