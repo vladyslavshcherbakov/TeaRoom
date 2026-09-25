@@ -7,12 +7,21 @@ export type TapFill = {
   readonly overflowedMl: number
 }
 
+const leavesWashedOutPerFullVolumeRunOver = 2
+const leavesGoneBelowGrams = 0.1
+
 export function fillFromTap(liquid: Liquid, capacityMl: number, tap: TapDefinition, seconds: number): TapFill {
   const runningMl = tap.flowMlPerSecond * seconds
-  const filledMl = Math.min(runningMl, Math.max(0, capacityMl - liquid.volumeMl))
+  const mixed = mixLiquids(liquid, water(runningMl, tap.waterTemperatureC))
+  const overflowedMl = Math.max(0, mixed.volumeMl - Math.max(capacityMl, liquid.volumeMl))
   return {
-    liquid: mixLiquids(liquid, water(filledMl, tap.waterTemperatureC)),
-    filledMl,
-    overflowedMl: runningMl - filledMl,
+    liquid: { ...mixed, volumeMl: mixed.volumeMl - overflowedMl },
+    filledMl: runningMl - overflowedMl,
+    overflowedMl,
   }
+}
+
+export function leafGramsLeftAfterRunningOver(grams: number, overflowedMl: number, capacityMl: number): number {
+  const gramsLeft = grams * Math.exp((-leavesWashedOutPerFullVolumeRunOver * overflowedMl) / capacityMl)
+  return gramsLeft < leavesGoneBelowGrams ? 0 : gramsLeft
 }

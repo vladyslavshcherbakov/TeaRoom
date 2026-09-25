@@ -82,6 +82,15 @@ export class TestRitual {
     return events
   }
 
+  tipASpoonOfLeavesInto(vesselId: string): readonly RitualEvent[] {
+    return [
+      ...this.do({ type: 'pickUp', itemId: 'spoon' }),
+      ...this.do({ type: 'openCaddy' }),
+      ...this.do({ type: 'scoopTea', depth: 1 }),
+      ...this.do({ type: 'tipSpoonInto', vesselId }),
+    ]
+  }
+
   pour(
     sourceId: string,
     targetId: string | null,

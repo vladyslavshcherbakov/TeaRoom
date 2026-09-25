@@ -1,8 +1,9 @@
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
+import { water } from '../Physics/Liquid.ts'
 import { clothWetMlAfterWringing } from '../Physics/Table.ts'
 import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { isClosedAgainstFilling, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
+import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { caddyItemId, clothItemId, isKeeperAt, locationOfItem, moveItem, spoonItemId, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 const itemsKeptOutOfTheSink: ReadonlySet<string> = new Set([caddyItemId, spoonItemId])
@@ -21,6 +22,7 @@ export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'
   draft.state.keeper.hands[location.handIndex] = null
   moveItem(draft, command.itemId, { kind: 'onSurface', spot: tap.sinkSpot })
   draft.state.sink.itemIdInside = command.itemId
+  draft.state.sink.hasRunOverTheItemInside = false
   note(draft, `${command.itemId} put in the sink from hand ${location.handIndex}`)
   draft.events.push({ type: 'putInTheSink', itemId: command.itemId })
   if (draft.state.sink.runningWater === null) return openTheTap(draft, tap)
@@ -52,6 +54,8 @@ export function liftOutOfTheSink(draft: Draft, itemId: string): void {
   if (sink.itemIdInside !== itemId) return
   sink.itemIdInside = null
   if (itemId === clothItemId) wringOutTheCloth(draft)
+  if (sink.hasRunOverTheItemInside) pourAwayTheRinseWater(draft, itemId)
+  sink.hasRunOverTheItemInside = false
   const runningWater = sink.runningWater
   if (runningWater === null) return note(draft, `${itemId} lifted out of the sink, the tap is closed`)
   note(draft, `${itemId} lifted out of the sink after ${runningWater.filledMl.toFixed(1)} ml went in, the tap keeps running into the empty sink`)
@@ -72,6 +76,13 @@ function openTheTap(draft: Draft, tap: TapDefinition): void {
 function runningWaterOver(draft: Draft, itemId: string | null): RunningWaterState {
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   return { filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel) }
+}
+
+function pourAwayTheRinseWater(draft: Draft, itemId: string): void {
+  const vessel = draft.state.vessels[itemId]
+  if (vessel === undefined || !vesselDefinitionOf(draft, vessel).isDrinkable) return
+  note(draft, `${itemId} was rinsed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
+  vessel.liquid = water(0, vessel.liquid.temperatureC)
 }
 
 function wringOutTheCloth(draft: Draft): void {

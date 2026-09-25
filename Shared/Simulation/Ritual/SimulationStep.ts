@@ -4,12 +4,12 @@ import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, heatLiquid, isTooHotToHold, liquidBoiledAway, shellHeatAfter } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
-import { fillFromTap } from '../Physics/TapWater.ts'
+import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
 import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
-import type { RunningWaterState, SessionState } from '../State/SessionState.ts'
+import type { RunningWaterState, SessionState, VesselState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
-import { chosenTea, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { chosenTea, describeLiquid, isClosedAgainstFilling, note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { clothItemId, tapOf } from './Reach.ts'
 import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
 
@@ -142,15 +142,31 @@ function runTheTap(draft: Draft, seconds: number): void {
     runningWater.drainedMl += tap.flowMlPerSecond * seconds
     return
   }
-  const fill = fillFromTap(vessel.liquid, vesselDefinitionOf(draft, vessel).capacityMl, tap, seconds)
+  const capacityMl = vesselDefinitionOf(draft, vessel).capacityMl
+  const fill = fillFromTap(vessel.liquid, capacityMl, tap, seconds)
   vessel.liquid = fill.liquid
   runningWater.filledMl += fill.filledMl
   runningWater.drainedMl += fill.overflowedMl
+  if (fill.overflowedMl > 0) {
+    draft.state.sink.hasRunOverTheItemInside = true
+    washTheLeavesOut(draft, vessel, fill.overflowedMl, capacityMl)
+  }
   if (fill.overflowedMl > 0 && !runningWater.hasOverflowed) {
     runningWater.hasOverflowed = true
     note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the drain`)
     draft.events.push({ type: 'vesselOverflowed', vesselId: vessel.id })
   }
+}
+
+function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: number, capacityMl: number): void {
+  if (vessel.leaves === null) return
+  const grams = leafGramsLeftAfterRunningOver(vessel.leaves.grams, overflowedMl, capacityMl)
+  if (grams > 0) {
+    vessel.leaves = { ...vessel.leaves, grams }
+    return
+  }
+  vessel.leaves = null
+  note(draft, `the running water washed the last leaves out of ${vessel.id}, which holds ${describeLiquid(vessel)}`)
 }
 
 function washTheCloth(draft: Draft, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {

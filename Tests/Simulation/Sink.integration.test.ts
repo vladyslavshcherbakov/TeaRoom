@@ -162,6 +162,70 @@ test('sink_inARoomWithoutATap_isRefused', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'putInTheSink', reason: 'noTapInThisRoom' }])
 })
 
+test('teaInABowl_whenTheTapRunsOverItsRim_fadesToPlainWater', () => {
+  const ritual = cupOfTeaInHand()
+  const strengthBefore = ritual.vessel('cup1').liquid.strength
+
+  ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.wait(5)
+
+  assert.ok(strengthBefore > 30, `strength before ${strengthBefore}`)
+  assert.ok(ritual.vessel('cup1').liquid.strength < 1, `strength ${ritual.vessel('cup1').liquid.strength}`)
+})
+
+test('leavesInABowl_whenTheTapRunsOverItsRim_areWashedOut', () => {
+  const ritual = TestRitual.begun()
+  ritual.tipASpoonOfLeavesInto('cup1')
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+
+  ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.wait(5)
+
+  assert.equal(ritual.vessel('cup1').leaves, null)
+})
+
+test('leavesInABowl_whileTheTapFillsItBelowTheRim_stayAndFloat', () => {
+  const ritual = TestRitual.begun()
+  ritual.tipASpoonOfLeavesInto('cup1')
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+
+  ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.wait(0.5)
+
+  assert.equal(ritual.vessel('cup1').leaves?.grams, 5)
+})
+
+test('bowl_whenTakenOutAfterTheTapRanOverItsRim_isPouredEmpty', () => {
+  const ritual = cupOfTeaInHand()
+  ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.wait(3)
+  ritual.do({ type: 'turnTheTapOff' })
+
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+
+  assert.equal(ritual.vessel('cup1').liquid.volumeMl, 0)
+})
+
+test('bowl_whenTakenOutBeforeTheTapRanOverItsRim_keepsItsWater', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.wait(0.5)
+  ritual.do({ type: 'turnTheTapOff' })
+
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+
+  assertNear(ritual.vessel('cup1').liquid.volumeMl, 50)
+})
+
+test('kettle_whenTakenOutAfterTheTapRanOverItsRim_keepsItsWater', () => {
+  const ritual = openKettleInHandAtTheCounter()
+
+  ritual.fillInTheSink('kettle', 7)
+
+  assertNear(ritual.vessel('kettle').liquid.volumeMl, 1000)
+})
+
 function openKettleInHandAtTheCounter(): TestRitual {
   const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })
@@ -175,4 +239,14 @@ function catalogWithoutATap(): Catalog {
   const room = catalog.rooms.testRoom
   if (room === undefined) throw new Error('the test catalog lost its room')
   return { ...catalog, rooms: { testRoom: { ...room, tap: null } } }
+}
+
+function cupOfTeaInHand(): TestRitual {
+  const ritual = TestRitual.begun(testCatalog({ cup: 0 }))
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(5)
+  ritual.wait(60)
+  ritual.pour('kettle', 'cup1', 9)
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  return ritual
 }

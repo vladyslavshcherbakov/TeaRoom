@@ -75,6 +75,7 @@ export type RunningWaterState = {
 export type SinkState = {
   itemIdInside: string | null
   runningWater: RunningWaterState | null
+  hasRunOverTheItemInside: boolean
 }
 
 export type FigurineState = {
