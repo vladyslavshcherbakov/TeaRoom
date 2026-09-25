@@ -122,7 +122,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   temperGlaze: '#7a6650',
   glass: '#ffffff',
   gildedRim: '#e2b451',
-  clearGlassHeldInView: '#eef7f2',
+  clearGlassHeldInView: '#26302c',
   koiPainting: '#ffffff',
   lotusPainting: '#ffffff',
   heronPainting: '#ffffff',
@@ -141,7 +141,20 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
 const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const smokeOpacity = 0.4
-const clearGlassOpacity = 0.28
+const glassEdgeSharpness = 2
+const glassGlintFrom = 0.7
+const glassGlintFull = 1.4
+const glassEdgeShade = 0.25
+const glassEdgeDarkening = 0.5
+const glassFacingOpacity = 0.1
+const glassEdgeOpacity = 0.9
+const glassSeenEdgeOnFragment = `
+  float glassFacing = abs(dot(normalize(normal), normalize(vViewPosition)));
+  float glassEdge = pow(1.0 - glassFacing, ${glassEdgeSharpness.toFixed(1)});
+  float glassGlint = smoothstep(${glassGlintFrom.toFixed(2)}, ${glassGlintFull.toFixed(2)}, max(max(gl_FragColor.r, gl_FragColor.g), gl_FragColor.b));
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(${glassEdgeShade.toFixed(2)}), glassEdge * ${glassEdgeDarkening.toFixed(2)});
+  gl_FragColor.a = max(mix(${glassFacingOpacity.toFixed(2)}, ${glassEdgeOpacity.toFixed(2)}, glassEdge), glassGlint);
+`
 const clayPoreDepth = 1.5
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
@@ -236,16 +249,19 @@ export class RoomMaterials {
   }
 
   private clearGlassMaterial(color: string): THREE.MeshPhysicalMaterial {
-    return new THREE.MeshPhysicalMaterial({
+    const material = new THREE.MeshPhysicalMaterial({
       color,
       metalness: 0,
       roughness: 0.05,
       transparent: true,
-      opacity: clearGlassOpacity,
       specularIntensity: 1,
       envMap: this.reflections,
-      envMapIntensity: 1.2,
+      envMapIntensity: 1.6,
     })
+    material.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `#include <opaque_fragment>\n${glassSeenEdgeOnFragment}`)
+    }
+    return material
   }
 
   private aluminiumMaterial(color: string): THREE.MeshPhysicalMaterial {
