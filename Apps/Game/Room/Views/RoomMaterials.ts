@@ -282,13 +282,8 @@ export class RoomMaterials {
 
   private kintsugiMaterial(): THREE.MeshPhysicalMaterial {
     const kintsugi = paintKintsugi()
-    const colours = new THREE.CanvasTexture(kintsugi.colours)
-    colours.colorSpace = THREE.SRGBColorSpace
-    const surface = new THREE.CanvasTexture(kintsugi.surface)
-    for (const texture of [colours, surface]) {
-      texture.wrapS = THREE.RepeatWrapping
-      texture.anisotropy = paintingSharpness
-    }
+    const colours = paintedTexture(kintsugi.colours, { holdsColours: true, wrapsAround: true })
+    const surface = paintedTexture(kintsugi.surface, { holdsColours: false, wrapsAround: true })
     return new THREE.MeshPhysicalMaterial({
       map: colours,
       metalnessMap: surface,
@@ -340,9 +335,7 @@ export class RoomMaterials {
   }
 
   private thermosPaintingMaterial(): THREE.MeshPhysicalMaterial {
-    const texture = new THREE.CanvasTexture(paintSakuraOverFuji())
-    texture.colorSpace = THREE.SRGBColorSpace
-    texture.anisotropy = paintingSharpness
+    const texture = paintedTexture(paintSakuraOverFuji(), { holdsColours: true, wrapsAround: false })
     return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.35, clearcoat: 0.8, envMap: this.reflections, envMapIntensity: 0.8 })
   }
 
@@ -372,9 +365,7 @@ export class RoomMaterials {
 }
 
 function paintingMaterial(painting: HTMLCanvasElement): THREE.MeshStandardMaterial {
-  const texture = new THREE.CanvasTexture(painting)
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.anisotropy = paintingSharpness
+  const texture = paintedTexture(painting, { holdsColours: true, wrapsAround: false })
   texture.premultiplyAlpha = true
   return new THREE.MeshStandardMaterial({
     map: texture,
@@ -389,29 +380,27 @@ function paintingMaterial(painting: HTMLCanvasElement): THREE.MeshStandardMateri
 }
 
 function wovenClothMaterial(pattern: ClothPattern): THREE.MeshStandardMaterial {
-  const texture = new THREE.CanvasTexture(weaveCloth(pattern))
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.anisotropy = paintingSharpness
+  const texture = paintedTexture(weaveCloth(pattern), { holdsColours: true, wrapsAround: false })
   return new THREE.MeshStandardMaterial({ map: texture, color: lookBySurface.cloth.colour, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })
 }
 
 function glazeMaterial(paintGlaze: (() => HTMLCanvasElement) | null, color: string): THREE.MeshPhysicalMaterial {
   if (paintGlaze === null) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
-  const texture = new THREE.CanvasTexture(paintGlaze())
-  texture.colorSpace = THREE.SRGBColorSpace
-  texture.wrapS = THREE.RepeatWrapping
-  texture.anisotropy = paintingSharpness
+  const texture = paintedTexture(paintGlaze(), { holdsColours: true, wrapsAround: true })
   return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.3, clearcoat: 0.7 })
 }
 
 function yixingClayMaterial(): THREE.MeshStandardMaterial {
   const clay = paintYixingClay()
-  const colours = new THREE.CanvasTexture(clay.colours)
-  colours.colorSpace = THREE.SRGBColorSpace
-  const pores = new THREE.CanvasTexture(clay.pores)
-  for (const texture of [colours, pores]) {
-    texture.wrapS = THREE.RepeatWrapping
-    texture.anisotropy = paintingSharpness
-  }
+  const colours = paintedTexture(clay.colours, { holdsColours: true, wrapsAround: true })
+  const pores = paintedTexture(clay.pores, { holdsColours: false, wrapsAround: true })
   return new THREE.MeshStandardMaterial({ map: colours, bumpMap: pores, bumpScale: clayPoreDepth, roughness: 0.9, metalness: 0 })
+}
+
+function paintedTexture(painting: HTMLCanvasElement, use: { readonly holdsColours: boolean; readonly wrapsAround: boolean }): THREE.CanvasTexture {
+  const texture = new THREE.CanvasTexture(painting)
+  if (use.holdsColours) texture.colorSpace = THREE.SRGBColorSpace
+  if (use.wrapsAround) texture.wrapS = THREE.RepeatWrapping
+  texture.anisotropy = paintingSharpness
+  return texture
 }
