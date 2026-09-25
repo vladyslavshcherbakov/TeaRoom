@@ -32,6 +32,6 @@ export const teaBowl: VesselDefinition = {
   lid: null,
   canSitOnHeater: false,
   hasAMetalShell: false,
-  canHoldLeaves: false,
+  canHoldLeaves: true,
   isDrinkable: true,
 }

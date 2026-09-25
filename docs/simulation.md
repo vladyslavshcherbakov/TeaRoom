@@ -52,7 +52,7 @@ An item leaves the sink when it is picked up or put on the heater. Picking it up
 
 ## Leaves and brewing
 
-The caddy opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open.
+The caddy opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from.
 
 A brew starts when leaves and water first share a vessel, whichever arrives second. While it lasts:
 
@@ -65,7 +65,7 @@ Tea poured out of the brewing vessel stops changing, apart from cooling. When th
 
 ## Tasting
 
-A sip takes 20 ml. The verdict has four parts.
+A sip takes 20 ml, and it says whether the bowl held leaves. The verdict has four parts.
 
 | Part | Values |
 |---|---|

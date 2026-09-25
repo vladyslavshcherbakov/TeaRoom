@@ -30,13 +30,14 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
   const { taken: sip, left } = splitLiquid(cup.liquid, sipMl)
   cup.liquid = left
   const verdict = judgeTaste(sip, tea)
+  const cupHeldLeaves = cup.leaves !== null && cup.leaves.grams > 0
   note(
     draft,
-    `sipped ${sip.volumeMl.toFixed(1)} ml of ${tea.id} from ${cup.id} at ${sip.temperatureC.toFixed(1)} °C, ` +
+    `sipped ${sip.volumeMl.toFixed(1)} ml of ${tea.id} from ${cup.id}${cupHeldLeaves ? ', with leaves in it,' : ''} at ${sip.temperatureC.toFixed(1)} °C, ` +
       `strength ${sip.strength.toFixed(0)}, bitterness ${sip.bitterness.toFixed(0)}: ` +
       `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}`,
   )
-  draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict })
+  draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict, cupHeldLeaves })
   letTheGodsJudgeTheFirstSip(draft, verdict.reaction)
 }
 

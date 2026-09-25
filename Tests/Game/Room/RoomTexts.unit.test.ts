@@ -14,7 +14,7 @@ test('caption_ofAnOffering_namesTheFigurineAndThenTheGods', () => {
 
 test('caption_ofASipThatMovesTheGods_leavesTheGodsUnnamed', () => {
   const lines = captionLinesFor([
-    { type: 'teaTasted', cupId: 'bowl1', verdict: { temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' } },
+    { type: 'teaTasted', cupId: 'bowl1', verdict: { temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, cupHeldLeaves: false },
     { type: 'godsMoodChanged', delta: 4, satisfaction: 54, remark: 'pleasedWithTheTea' },
   ], 7)
 

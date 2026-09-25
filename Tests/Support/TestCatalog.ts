@@ -54,7 +54,7 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         lid: null,
         canSitOnHeater: false,
         hasAMetalShell: false,
-        canHoldLeaves: false,
+        canHoldLeaves: true,
         isDrinkable: true,
       },
     },
