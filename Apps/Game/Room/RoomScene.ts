@@ -63,8 +63,8 @@ const transmissionResolutionShare = 0.5
 const firstPersonSettleSeconds = 1.5
 const fieldOfViewSettleSeconds = 0.35
 const secondsBetweenKeepingTheVisit = 2
-const ambientOcclusionRadiusMetres = 0.35
-const ambientOcclusionStrength = 0.85
+const ambientOcclusionRadiusMetres = 0.2
+const ambientOcclusionStrength = 0.7
 
 export type RoomArrival = {
   readonly place: RoomPlace
