@@ -127,6 +127,7 @@ export class RoomScene {
   private look: FirstPersonLook = { headingRadians: Math.PI, pitchRadians: 0 }
   private shadowPoseLastDrawn = ''
   private secondsSinceTheVisitWasKept = 0
+  private lastSavedPlace: string | null = null
   private hasTheKeeperDied = false
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, heaterItemsBeforeTheTesterJoke: number, bowlPaintings: BowlPaintings, arrival: RoomArrival, visitStore: VisitStore) {
@@ -323,6 +324,14 @@ export class RoomScene {
       arrangement: this.arrangement,
     })
     if (reason !== null) this.log(`the visit is saved because ${reason}`)
+    this.logTheSavedPlaceWhenItChanged(this.play.place)
+  }
+
+  private logTheSavedPlaceWhenItChanged(place: RoomPlace): void {
+    const savedPlace = `(${place.position.x.toFixed(2)}, ${place.position.z.toFixed(2)})${place.closeUpOf === null ? '' : ` in the ${place.closeUpOf} close-up`}`
+    if (savedPlace === this.lastSavedPlace) return
+    this.lastSavedPlace = savedPlace
+    this.log(`the visit is saved with the walker at ${savedPlace}`)
   }
 
   private changeTheSettings(change: Partial<RoomSettings>, how: string): void {
