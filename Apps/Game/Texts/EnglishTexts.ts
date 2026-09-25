@@ -89,6 +89,7 @@ export const englishTexts = {
   'visit.welcomeBack': 'The room waited for you. The tea may not have.',
   'visit.continue': 'Continue',
   'visit.startOver': 'Start over',
+  'visit.startOverNote': 'Your achievements will most likely stay, and the rest are still yours to earn. The world you know may change a little.',
   'visit.lostToAnUpdate': 'The house was rebuilt while you were away. Your last visit did not survive the renovation.',
   'spoonReturned.1': 'The spoon is back on the tea table. Bamboo grows fast, apparently.',
   'spoonReturned.2': 'There is a spoon on the table again. It knows nothing about the last one, and let us keep it that way.',

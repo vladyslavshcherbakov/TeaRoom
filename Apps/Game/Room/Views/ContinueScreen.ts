@@ -16,7 +16,10 @@ export class ContinueScreen {
     title.textContent = text('visit.welcomeBack')
     const continueButton = this.button('visit.continue', 'continue-primary', choice.continued)
     const startOverButton = this.button('visit.startOver', 'continue-secondary', choice.startedOver)
-    this.element.append(title, continueButton, startOverButton)
+    const startOverNote = document.createElement('p')
+    startOverNote.className = 'continue-note'
+    startOverNote.textContent = text('visit.startOverNote')
+    this.element.append(title, continueButton, startOverButton, startOverNote)
     container.append(this.element)
   }
 
