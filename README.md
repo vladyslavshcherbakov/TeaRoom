@@ -31,16 +31,16 @@ Node.js 22.18 or newer. It runs TypeScript directly, so the tests need no build 
 
 ```sh
 npm install
-./test.sh
+Scripts/test.sh
 ```
 
-`test.sh` type-checks everything and runs every test with Node's built-in test runner.
+`Scripts/test.sh` type-checks everything and runs every test with Node's built-in test runner.
 
 ```sh
-./test-ui.sh
+Scripts/test-ui.sh
 ```
 
-`test-ui.sh` builds the site and plays it in a browser with Playwright, on iPhone WebKit and Android Chromium. The browsers are installed once with `npx playwright install webkit chromium`.
+`Scripts/test-ui.sh` builds the site and plays it in a browser with Playwright, on iPhone WebKit and Android Chromium. The browsers are installed once with `npx playwright install webkit chromium`.
 
 ## Run locally
 
@@ -54,13 +54,13 @@ Each command prints an address that a phone on the same network can open.
 ## Build
 
 ```sh
-./build.sh
+Scripts/build.sh
 ```
 
-`build.sh` builds the room into `dist/` and the bench into `dist/bench/`.
+`Scripts/build.sh` builds the room into `dist/` and the bench into `dist/bench/`.
 
 ## Deploy
 
-GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `./test.sh`, `./test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages at <https://vladyslavshcherbakov.github.io/TeaRoom/>.
+GitHub Actions runs `.github/workflows/test-and-deploy.yml` on every push and pull request: `npm ci`, `Scripts/test.sh`, `Scripts/test-ui.sh`. On a push to the default branch it publishes `dist/` to GitHub Pages at <https://vladyslavshcherbakov.github.io/TeaRoom/>.
 
 Pages must be enabled once in the repository settings: Settings → Pages → Build and deployment → Source: GitHub Actions.

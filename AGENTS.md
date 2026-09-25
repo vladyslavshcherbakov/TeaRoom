@@ -6,7 +6,7 @@
 
 Commits: yes, without asking, on the working branch. Push: only the branch named for the session. Force-push and history rewrites: ask every time.
 
-Done means `./test.sh` and `./build.sh` both pass locally, and every new rule has an integration test.
+Done means `Scripts/test.sh` and `Scripts/build.sh` both pass locally, and every new rule has an integration test.
 
 The README has the commands. CI runs the same two scripts.
 
@@ -14,7 +14,7 @@ The README has the commands. CI runs the same two scripts.
 
 Layers: `Shared/Simulation` (the rules, imports nothing outside itself) ← `Shared/Content` (data) ← `Apps/*` (presentation). Dependencies point toward `Shared/Simulation`.
 
-Apps: `Apps/Game` is the game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `build.sh`. `Apps/Game/Room` is the walkable 3D room in Three.js, served at the site's root. `Apps/Game/Table/TablePresenter.ts` turns the ritual's state into what vessels show (fill, liquor colour, steam, brew stage). `Table/TeaLooks.ts` holds how each tea looks. `Apps/Game/Texts/EnglishTexts.ts` holds every text the player reads, and `Table/TableTexts.ts` and `Room/RoomTexts.ts` turn the simulation's ids into its keys. `RoomTexts.ts` also decides which events become a caption.
+Apps: `Apps/Game` is the game, `Apps/Bench` the debug page. Both are type-checked by `Apps/tsconfig.json` and built by Vite from `Scripts/build.sh`. `Apps/Game/Room` is the walkable 3D room in Three.js, served at the site's root. `Apps/Game/Table/TablePresenter.ts` turns the ritual's state into what vessels show (fill, liquor colour, steam, brew stage). `Table/TeaLooks.ts` holds how each tea looks. `Apps/Game/Texts/EnglishTexts.ts` holds every text the player reads, and `Table/TableTexts.ts` and `Room/RoomTexts.ts` turn the simulation's ids into its keys. `RoomTexts.ts` also decides which events become a caption.
 
 In the room, `Room/RoomLayout.ts` holds every position in metres. `Room/RoomPlay.ts` is the only place that turns presses into ritual commands: taking, choosing a hand, putting down, lids, the heater, the tap, pouring, the spoon, sipping, offering and wiping. It hands walking and close-ups to `Room/RoomNavigator.ts`, and an aimed pour to `Room/AimedPour.ts`. `Room/RoomGestures.ts` tells taps, strokes, pinches and the aiming finger apart before they reach `RoomPlay`. `Room/Placement.ts` decides whether an item fits where the player tapped. None of them knows Three.js. `Room/Walking/` finds paths on the floor grid and moves the walker. `Room/Camera/CameraPoses.ts` computes where the camera looks. `Room/Views/` builds the meshes: `RoomModel.ts` the room, `CarriedItems.ts` the items the keeper can carry, placed from the ritual's state every frame and, in a close-up, held in the corners of the view, with its parts in `Views/Carried/` (the meshes, what an item holds, the water streams, the chosen glow), `SipButton.ts` the Sip button, `PourControls.ts` the tilt button and the first-time note of an aimed pour, and `RoomCaption.ts` the short caption that answers a sip or an offering. `Room/Views/RoomMaterials.ts` is the one place that decides how each surface looks, so generated textures replace colours there. `Views/RoomLayers.ts` names the render layers. `RoomScene.ts` renders, raycasts and forwards pointer events to `RoomGestures`. `RoomMain.ts` opens the ritual session.
 
@@ -72,7 +72,7 @@ End-to-end UI tests in `Tests/Browser/` play the built site with Playwright and 
 
 Integration tests run the real `RitualSession` over `Tests/Support/TestCatalog.ts`, whose round numbers make expected values checkable by hand. Its vessels do not cool unless a test asks for cooling. Content tests run the real catalog. Unit tests are written only for a decision table that has stopped moving.
 
-CI runs `./test.sh` on every push and pull request.
+CI runs `Scripts/test.sh` on every push and pull request.
 
 ## Open questions
 

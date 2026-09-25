@@ -23,11 +23,11 @@ jobs:
       - name: Install dependencies from the lockfile
         run: npm ci --no-audit --no-fund
       - name: Type-check and run the tests
-        run: ./test.sh
+        run: Scripts/test.sh
       - name: Install the browsers for the UI tests
         run: npx playwright install --with-deps webkit chromium
       - name: Build the site and run the UI tests on iPhone WebKit and Android Chromium
-        run: ./test-ui.sh
+        run: Scripts/test-ui.sh
       - name: Upload the site for GitHub Pages
         if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
         uses: actions/upload-pages-artifact@v5
