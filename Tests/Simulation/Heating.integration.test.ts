@@ -233,3 +233,39 @@ test('water_belowTheBoil_doesNotBoilAway', () => {
 
   assert.equal(ritual.vessel('kettle').liquid.volumeMl, 500)
 })
+
+test('thermos_afterHalfAMinuteOnAWorkingHeater_isTooHotToPickUp', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'thermos' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'tooHotToHold' }])
+  assert.equal(ritual.state.heater.itemIdOnTop, 'thermos')
+})
+
+test('thermos_aMinuteAfterTheHeaterIsSwitchedOff_canBePickedUpAgain', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+  ritual.do({ type: 'switchHeaterOff' })
+  ritual.wait(60)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'thermos' })
+
+  assert.equal(events.some((event) => event.type === 'pickedUp'), true, JSON.stringify(events))
+})
+
+test('thermos_onAHeaterThatIsOff_staysCoolAndCanBePickedUp', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.wait(30)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'thermos' })
+
+  assert.equal(events.some((event) => event.type === 'pickedUp'), true, JSON.stringify(events))
+  assert.equal(ritual.vessel('thermos').shellHeat, 0)
+})

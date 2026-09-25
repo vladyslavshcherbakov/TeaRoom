@@ -66,6 +66,10 @@ export const englishTexts = {
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',
   'burntClothWashed.3': "Magic sink! The burn is gone. I'm never leaving.",
   'burntClothWashed.4': 'Burnt, rinsed, reborn. What a kind little world.',
+  'tooHotToHold.1': "Ouch! It's glowing red. Let it cool first.",
+  'tooHotToHold.2': 'Red-hot thermos. My fingers politely decline.',
+  'tooHotToHold.3': 'A thermos is not a kettle. Especially not a glowing one.',
+  'tooHotToHold.4': 'Not until it stops glowing. I like my fingers.',
 
   'gods.temperatureIsPerfect': 'The temperature is perfect. The gods are content.',
   'gods.pretendNotToNotice': 'The gods pretend not to notice.',

@@ -8,6 +8,7 @@ import { finishPour } from './PouringCommands.ts'
 import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { clothItemId, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { isTooHotToHold } from '../Physics/Heat.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
@@ -26,6 +27,8 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   if (location.kind === 'inHand') return refuse(draft, command, 'alreadyInHand')
   if (!isWithinReach(draft, location)) return refuse(draft, command, 'outOfReach', `${command.itemId} is ${whereIs(location)}, ${whereTheKeeperStands(draft)}`)
   if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
+  const shellHeat = draft.state.vessels[command.itemId]?.shellHeat ?? 0
+  if (isTooHotToHold(shellHeat)) return refuse(draft, command, 'tooHotToHold', `${command.itemId}'s metal is at ${(shellHeat * 100).toFixed(0)}% of red heat`)
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.join(' and ')}`)
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)

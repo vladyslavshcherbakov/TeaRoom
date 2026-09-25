@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { captionLinesFor, roomRemarkLine } from '../../../Apps/Game/Room/RoomTexts.ts'
+import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
 
 test('caption_ofAnOffering_namesTheFigurineAndThenTheGods', () => {
   const lines = captionLinesFor([
@@ -26,6 +27,17 @@ test('caption_ofABurntClothWashedBackToNew_marvelsAtTheWorld', () => {
 
   assert.equal(lines.length, 1)
   assert.ok(burntClothLines.includes(lines[0] ?? ''), lines.join(' / '))
+})
+
+test('caption_ofTakingAThermosTooHotToHold_warnsOfItsGlow', () => {
+  const lines = captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'tooHotToHold' }], 7)
+
+  assert.equal(lines.length, 1)
+  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('tooHotToHold.') && line === lines[0]), lines.join(' / '))
+})
+
+test('caption_ofAnOrdinaryRefusal_staysSilent', () => {
+  assert.deepEqual(captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }], 7), [])
 })
 
 test('remark_ofTheSillTappedTwice_changesItsLine', () => {

@@ -32,6 +32,7 @@ export declare namespace TableViewState {
     readonly brewStage: BrewStage
     readonly isLidOpen: boolean | null
     readonly floatingLeaves: FloatingLeaves | null
+    readonly shellGlow: number
   }
 
   type FloatingLeaves = {

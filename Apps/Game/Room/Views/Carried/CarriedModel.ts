@@ -33,6 +33,7 @@ export type CarriedModel = {
   readonly kettleWater: THREE.Mesh | null
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
+  readonly glowingShell: GlowingShell | null
   tagKey: string
   layer: number
   isHeldInView: boolean
@@ -42,6 +43,12 @@ export type CarriedModel = {
 export type PointDownTheSide = { readonly distance: number; readonly height: number }
 
 export type LiquidLevel = (fillShare: number) => { readonly heightMetres: number; readonly radiusMetres: number }
+
+export type GlowingShell = {
+  readonly metal: THREE.MeshStandardMaterial
+  readonly coolColour: THREE.Color
+  readonly coolMetalness: number
+}
 
 export type HeldInViewLook = {
   readonly mesh: THREE.Mesh
@@ -79,6 +86,7 @@ type ItemParts = {
   readonly rimHeight: number
   readonly liquidLevel: LiquidLevel | null
   readonly heldInViewLook?: HeldInViewLook
+  readonly glowingShell?: GlowingShell | undefined
   readonly isSeeThrough?: boolean
   readonly pointsDownTheSide?: readonly PointDownTheSide[]
 }
@@ -208,6 +216,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     kettleWater,
     puffs,
     heldInViewLook: parts.heldInViewLook ?? null,
+    glowingShell: parts.glowingShell ?? null,
     tagKey: '',
     layer: 0,
     isHeldInView: false,
@@ -309,7 +318,8 @@ function thermosParts(materials: RoomMaterials): ItemParts {
   floor.rotation.x = -Math.PI / 2
   floor.position.y = thermosFloorMetres
   const meshes = [foot, base, body, shoulder, neck, ...ridges, lip, inside, floor]
-  return { meshes, lid: thermosCup(aluminium), spoutTip: new THREE.Vector3(thermosNeckRadiusMetres, thermosMouthMetres, 0), rimHeight: thermosMouthMetres, liquidLevel: thermosLiquidLevel, pointsDownTheSide: pointsDownTheThermos }
+  const glowingShell = aluminium instanceof THREE.MeshStandardMaterial ? { metal: aluminium, coolColour: aluminium.color.clone(), coolMetalness: aluminium.metalness } : undefined
+  return { meshes, lid: thermosCup(aluminium), glowingShell, spoutTip: new THREE.Vector3(thermosNeckRadiusMetres, thermosMouthMetres, 0), rimHeight: thermosMouthMetres, liquidLevel: thermosLiquidLevel, pointsDownTheSide: pointsDownTheThermos }
 }
 
 function thermosCup(aluminium: THREE.Material): THREE.Group {

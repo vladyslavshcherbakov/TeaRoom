@@ -21,6 +21,8 @@ function captionLinesOf(event: RitualEvent, voiceSeed: number): readonly string[
       return [sipText(event.verdict, voiceSeed)]
     case 'pourFinished':
       return event.spilledMl >= spillTheKeeperRemarksOnMl ? [text(`spill.${phraseVariantFor('spill', voiceSeed)}`)] : []
+    case 'actionRefused':
+      return event.reason === 'tooHotToHold' ? [text(`tooHotToHold.${phraseVariantFor('tooHotToHold', voiceSeed)}`)] : []
     case 'burntClothWashedBackToNew':
       return [text(`burntClothWashed.${phraseVariantFor('burntClothWashed', voiceSeed)}`)]
     case 'figurineAcceptedTea':

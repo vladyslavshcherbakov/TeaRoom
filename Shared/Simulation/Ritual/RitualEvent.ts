@@ -22,6 +22,7 @@ export type RefusalReason =
   | 'lidAlreadyClosed'
   | 'lidClosed'
   | 'cannotSitOnHeater'
+  | 'tooHotToHold'
   | 'heaterOccupied'
   | 'heaterAlreadyOn'
   | 'heaterAlreadyOff'

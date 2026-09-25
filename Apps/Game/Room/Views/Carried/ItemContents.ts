@@ -7,7 +7,7 @@ import { mostFloatingLeaves } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
-import { bowlLiquidGeometry, mostPuffsFromOneSource, type CarriedModel } from './CarriedModel.ts'
+import { bowlLiquidGeometry, mostPuffsFromOneSource, type CarriedModel, type GlowingShell } from './CarriedModel.ts'
 import { kettleShape } from './KettleShape.ts'
 import { LeafPile, type LeafPileSize } from './LeafPile.ts'
 
@@ -33,6 +33,11 @@ const leavesInTheCaddy: LeafPileSize = { leafCount: 480, radiusMetres: 0.062, he
 const leavesOnTheSpoon: LeafPileSize = { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false }
 const leavesOnTheWater: LeafPileSize = { leafCount: mostFloatingLeaves, radiusMetres: 0.06, heightMetres: 0, isLyingFlat: true }
 const leavesAboveTheWaterMetres = 0.0015
+const redHotMetal = new THREE.Color('#3a0904')
+const dullRedHeat = new THREE.Color('#8a1000')
+const brightRedHeat = new THREE.Color('#ff2a00')
+const redHeatRisesWithGlow = 1.5
+const brightestRedHeatIntensity = 2.2
 const leavesDriftRadiansPerSecond = 0.05
 const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
 const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
@@ -54,6 +59,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, he
   if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
   if (model.floatingLeafHolder !== null && vessel !== undefined) showLeavesOnTheKettlesWater(model, model.floatingLeafHolder, vessel, wave, scene.timeSeconds)
   if (model.leafHolder !== null) showLeaves(model, model.leafHolder, scene)
+  if (model.glowingShell !== null && vessel !== undefined) showRedHeat(model.glowingShell, vessel.shellGlow)
   const puffsPerSource = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
   showSteam(model, steamSourcesOf(model, model.lid === null || isOpen), puffsPerSource, scene.timeSeconds)
 }
@@ -137,6 +143,14 @@ function showLeavesOnTheKettlesWater(model: CarriedModel, holder: THREE.Group, v
   model.floatingLeaves.pile.showFill(floating.count / mostFloatingLeaves)
   holder.position.y = kettleSurfaceHeight(vessel) + wave.riseMetres + leavesAboveTheWaterMetres
   holder.rotation.set(wave.tiltXRadians, timeSeconds * leavesDriftRadiansPerSecond, wave.tiltZRadians)
+}
+
+function showRedHeat(shell: GlowingShell, glow: number): void {
+  const { metal, coolColour, coolMetalness } = shell
+  metal.color.copy(coolColour).lerp(redHotMetal, glow)
+  metal.metalness = coolMetalness * (1 - glow)
+  metal.emissive.copy(dullRedHeat).lerp(brightRedHeat, glow)
+  metal.emissiveIntensity = glow ** redHeatRisesWithGlow * brightestRedHeatIntensity
 }
 
 function kettleSurfaceHeight(vessel: TableViewState.Vessel): number {

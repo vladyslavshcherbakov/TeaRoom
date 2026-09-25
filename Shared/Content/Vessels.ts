@@ -7,6 +7,7 @@ export const clayKettle: VesselDefinition = {
   coolingPerSecond: 0.003,
   lid: { mustBeOpenToPour: false, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 1.5 },
   canSitOnHeater: true,
+  hasAMetalShell: false,
   canHoldLeaves: true,
   isDrinkable: false,
 }
@@ -17,7 +18,8 @@ export const thermos: VesselDefinition = {
   maxPourMlPerSecond: 20,
   coolingPerSecond: 0.0004,
   lid: { mustBeOpenToPour: true, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 8 },
-  canSitOnHeater: false,
+  canSitOnHeater: true,
+  hasAMetalShell: true,
   canHoldLeaves: false,
   isDrinkable: false,
 }
@@ -29,6 +31,7 @@ export const teaBowl: VesselDefinition = {
   coolingPerSecond: 0.01,
   lid: null,
   canSitOnHeater: false,
+  hasAMetalShell: false,
   canHoldLeaves: false,
   isDrinkable: true,
 }

@@ -20,6 +20,7 @@ export type VesselState = {
   liquid: Liquid
   leaves: Leaves | null
   isLidOpen: boolean
+  shellHeat: number
   location: ItemLocation
 }
 

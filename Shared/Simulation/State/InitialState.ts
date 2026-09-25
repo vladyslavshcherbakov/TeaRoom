@@ -37,6 +37,7 @@ function vesselsInTheRoom(room: RoomDefinition): Record<string, VesselState> {
       liquid: water(vessel.initialWaterMl, room.ambientTemperatureC),
       leaves: null,
       isLidOpen: false,
+      shellHeat: 0,
       location: { kind: 'onSurface', spot: vessel.startsAt },
     }
   }

@@ -76,6 +76,7 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
     brewStage,
     isLidOpen: definition.lid === null ? null : vessel.isLidOpen,
     floatingLeaves: floatingLeavesOf(vessel),
+    shellGlow: vessel.shellHeat,
   }
 }
 

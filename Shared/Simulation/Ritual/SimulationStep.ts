@@ -1,7 +1,7 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
-import { coolingPerSecondOf, coolLiquid, heatLiquid, liquidBoiledAway } from '../Physics/Heat.ts'
+import { coolingPerSecondOf, coolLiquid, heatLiquid, isTooHotToHold, liquidBoiledAway, shellHeatAfter } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream } from '../Physics/Pouring.ts'
 import { fillFromTap } from '../Physics/TapWater.ts'
@@ -18,6 +18,7 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
   if (state.phase === 'ended') return outcomeOf(draft)
   coolVessels(draft, seconds)
   heatVesselOnHeater(draft, seconds)
+  heatOrCoolMetalShells(draft, seconds)
   heatTheClothOnTheHeater(draft, seconds)
   continuePour(draft, seconds)
   runTheTap(draft, seconds)
@@ -39,6 +40,18 @@ function heatVesselOnHeater(draft: Draft, seconds: number): void {
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
   if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)
+}
+
+function heatOrCoolMetalShells(draft: Draft, seconds: number): void {
+  const heater = draft.state.heater
+  for (const vessel of Object.values(draft.state.vessels)) {
+    if (!vesselDefinitionOf(draft, vessel).hasAMetalShell) continue
+    const wasTooHotToHold = isTooHotToHold(vessel.shellHeat)
+    vessel.shellHeat = shellHeatAfter(vessel.shellHeat, heater.isOn && heater.itemIdOnTop === vessel.id, seconds)
+    const isNowTooHotToHold = isTooHotToHold(vessel.shellHeat)
+    if (!wasTooHotToHold && isNowTooHotToHold) note(draft, `${vessel.id}'s metal glows too hot to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
+    if (wasTooHotToHold && !isNowTooHotToHold) note(draft, `${vessel.id}'s metal has cooled enough to hold, at ${(vessel.shellHeat * 100).toFixed(0)}% of red heat`)
+  }
 }
 
 function heatTheClothOnTheHeater(draft: Draft, seconds: number): void {
