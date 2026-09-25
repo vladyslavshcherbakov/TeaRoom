@@ -177,7 +177,7 @@ export const englishTexts = {
   'achievement.perfectTea.done': 'Brewed a bowl of tea that was just right.',
   'achievement.teaBrewedInTheBowl.title': 'Enlightened',
   'achievement.teaBrewedInTheBowl.done': 'Skipped the kettle, brewed the leaves right in a tea bowl and drank it.',
-  'achievement.visitContinued.title': 'The Usual',
+  'achievement.visitContinued.title': 'The Usual, Please',
   'achievement.visitContinued.done': 'Came back and continued a visit.',
   'achievement.tapAndHeaterLeftOn.title': "Parents Wouldn't Approve",
   'achievement.tapAndHeaterLeftOn.done': 'Left the tap running for two minutes, and the heater on for two minutes.',
