@@ -12,13 +12,17 @@ export type Plant = {
   readonly bloomColour: string
 }
 
-type Bed = {
+type Scatter = {
   readonly kinds: readonly PlantKind[]
-  readonly fromX: number
-  readonly toX: number
-  readonly fromZ: number
-  readonly toZ: number
   readonly count: number
+  readonly footprintRadiusMetres: number
+  readonly mayStandThere: (x: number, z: number) => boolean
+}
+
+type TakenCircle = {
+  readonly x: number
+  readonly z: number
+  readonly radius: number
 }
 
 const clearOfTheWallsMetres = 0.35
@@ -31,17 +35,15 @@ export const roseBushSquash = 0.8
 const lowestRoseOnTheBushRadians = 0.25
 const roseHeightSpreadRadians = 1
 const sunflowersFaceTheCameraRadians = (3 * Math.PI) / 4
+const sidesClearOfTheCamerasViewMetres = 7.5
+const triesForEachPlant = 30
 const layoutSeed = 20260925
 const outside = roomHalfSize + clearOfTheWallsMetres
 
-const flowerBeds: readonly Bed[] = [
-  { kinds: ['tulip', 'daisy', 'marigold', 'poppy'], fromX: -3.2, toX: 3.4, fromZ: outside, toZ: outside + 0.9, count: 150 },
-  { kinds: ['roseBush'], fromX: outside + 0.1, toX: outside + 0.8, fromZ: -2.8, toZ: 2.8, count: 7 },
-  { kinds: ['marigold', 'daisy', 'tulip'], fromX: outside, toX: outside + 0.5, fromZ: -3.2, toZ: 3.2, count: 60 },
-  { kinds: ['sunflower'], fromX: outside + 0.3, toX: outside + 1.2, fromZ: -outside - 1.5, toZ: -outside, count: 5 },
-  { kinds: ['sunflower'], fromX: -outside - 1.5, toX: -outside, fromZ: outside + 0.3, toZ: outside + 1.2, count: 5 },
-  { kinds: ['poppy', 'daisy'], fromX: -gardenReachMetres + 2, toX: gardenReachMetres - 2, fromZ: outside + 1.4, toZ: gardenReachMetres - 1, count: 90 },
-  { kinds: ['poppy', 'daisy'], fromX: outside + 1.4, toX: gardenReachMetres - 1, fromZ: -gardenReachMetres + 2, toZ: gardenReachMetres - 2, count: 90 },
+const scatters: readonly Scatter[] = [
+  { kinds: ['roseBush'], count: 9, footprintRadiusMetres: 0.4, mayStandThere: isOutsideTheRoom },
+  { kinds: ['sunflower'], count: 12, footprintRadiusMetres: 0.2, mayStandThere: isOutOfTheCamerasView },
+  { kinds: ['tulip', 'daisy', 'marigold', 'poppy'], count: 650, footprintRadiusMetres: 0.08, mayStandThere: isOutsideTheRoom },
 ]
 
 const bloomColoursByKind: Readonly<Record<PlantKind, readonly string[]>> = {
@@ -58,20 +60,44 @@ const bloomColoursByKind: Readonly<Record<PlantKind, readonly string[]>> = {
 export function gardenPlants(): Plant[] {
   const nextRandom = seededRandom(layoutSeed)
   const plants: Plant[] = []
-  for (const bed of flowerBeds) {
-    for (let index = 0; index < bed.count; index += 1) {
-      const kind = bed.kinds[Math.floor(nextRandom() * bed.kinds.length)] ?? 'daisy'
-      const plant = plantAt(kind, bed.fromX + nextRandom() * (bed.toX - bed.fromX), bed.fromZ + nextRandom() * (bed.toZ - bed.fromZ), nextRandom)
+  const takenCircles: TakenCircle[] = []
+  for (const scatter of scatters) {
+    for (let index = 0; index < scatter.count; index += 1) {
+      const spot = freeSpotFor(scatter, takenCircles, nextRandom)
+      if (spot === null) continue
+      takenCircles.push({ ...spot, radius: scatter.footprintRadiusMetres })
+      const kind = scatter.kinds[Math.floor(nextRandom() * scatter.kinds.length)] ?? 'daisy'
+      const plant = plantAt(kind, spot.x, spot.z, nextRandom)
       plants.push(plant)
       if (kind === 'roseBush') plants.push(...rosesOn(plant, nextRandom))
     }
   }
-  while (plants.filter((plant) => plant.kind === 'grassTuft').length < grassTufts) {
-    const x = (nextRandom() * 2 - 1) * gardenReachMetres
-    const z = (nextRandom() * 2 - 1) * gardenReachMetres
-    if (isOutsideTheRoom(x, z)) plants.push(plantAt('grassTuft', x, z, nextRandom))
+  let tuftsPlanted = 0
+  while (tuftsPlanted < grassTufts) {
+    const spot = spotAnywhere(nextRandom)
+    if (!isOutsideTheRoom(spot.x, spot.z)) continue
+    plants.push(plantAt('grassTuft', spot.x, spot.z, nextRandom))
+    tuftsPlanted += 1
   }
   return plants
+}
+
+function freeSpotFor(scatter: Scatter, takenCircles: readonly TakenCircle[], nextRandom: () => number): { x: number; z: number } | null {
+  for (let attempt = 0; attempt < triesForEachPlant; attempt += 1) {
+    const spot = spotAnywhere(nextRandom)
+    if (!scatter.mayStandThere(spot.x, spot.z)) continue
+    const isCrowded = takenCircles.some((circle) => Math.hypot(circle.x - spot.x, circle.z - spot.z) < circle.radius + scatter.footprintRadiusMetres)
+    if (!isCrowded) return spot
+  }
+  return null
+}
+
+function spotAnywhere(nextRandom: () => number): { x: number; z: number } {
+  return { x: (nextRandom() * 2 - 1) * gardenReachMetres, z: (nextRandom() * 2 - 1) * gardenReachMetres }
+}
+
+function isOutOfTheCamerasView(x: number, z: number): boolean {
+  return isOutsideTheRoom(x, z) && (x + z < 0 || Math.abs(x - z) > sidesClearOfTheCamerasViewMetres)
 }
 
 function isOutsideTheRoom(x: number, z: number): boolean {
