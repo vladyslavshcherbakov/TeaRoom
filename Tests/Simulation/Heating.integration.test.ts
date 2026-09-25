@@ -246,6 +246,31 @@ test('thermos_afterHalfAMinuteOnAWorkingHeater_isTooHotToPickUp', () => {
   assert.equal(ritual.state.heater.itemIdOnTop, 'thermos')
 })
 
+test('thermosLid_whenTheThermosIsRedHot_staysClosed', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+
+  const events = ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'openVesselLid', reason: 'tooHotToHold' }])
+  assert.equal(ritual.vessel('thermos').isLidOpen, false)
+})
+
+test('thermosLid_whenOpenAsTheThermosTurnsRedHot_staysOpen', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(30)
+
+  const events = ritual.do({ type: 'closeVesselLid', vesselId: 'thermos' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'closeVesselLid', reason: 'tooHotToHold' }])
+  assert.equal(ritual.vessel('thermos').isLidOpen, true)
+})
+
 test('thermos_aMinuteAfterTheHeaterIsSwitchedOff_canBePickedUpAgain', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
