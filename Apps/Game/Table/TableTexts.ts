@@ -1,11 +1,11 @@
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
-import { phraseVariantFor, text } from '../Texts/Texts.ts'
+import { phraseLineAtTurn } from '../Texts/Texts.ts'
 
 type SipFeeling = 'noTea' | 'tooHot' | 'amongLeaves' | 'overbrewed' | 'extremelyStrong' | 'bitter' | 'tooStrong' | 'cold' | 'weak' | 'rich' | 'coolingButGood' | 'justRight'
 
 export function sipText(verdict: TasteVerdict, cupHeldLeaves: boolean, voiceSeed: number): string {
   const feeling = verdict.reaction !== 'waitsForItToCool' && cupHeldLeaves ? 'amongLeaves' : sipFeeling(verdict)
-  return text(`sip.${feeling}.${phraseVariantFor(feeling, voiceSeed)}`)
+  return phraseLineAtTurn(`sip.${feeling}`, voiceSeed, 1)
 }
 
 function sipFeeling(verdict: TasteVerdict): SipFeeling {

@@ -3,7 +3,7 @@ import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
-import { phraseLineAtTurn, phraseVariantFor, phraseVariantsOf, text, textOrFallback, textWith } from '../Texts/Texts.ts'
+import { phraseLineAtTurn, phraseVariantsOf, textOrFallback, textWith } from '../Texts/Texts.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import type { RoomRemark } from './RoomPlay.ts'
 
@@ -35,7 +35,7 @@ export class RoomTexts {
   }
 
   obituaryLine(): string {
-    return text(`obituary.${phraseVariantFor('obituary', this.voiceSeed)}`)
+    return phraseLineAtTurn('obituary', this.voiceSeed, 1)
   }
 
   private captionLinesOf(event: RitualEvent, elapsedSeconds: number): readonly string[] {
