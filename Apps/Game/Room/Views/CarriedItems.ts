@@ -14,6 +14,7 @@ import { ChosenGlow } from './Carried/ChosenGlow.ts'
 import { CrumblingAsh } from './Carried/CrumblingAsh.ts'
 import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
+import { inspectInView } from './Carried/InspectedInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
@@ -97,9 +98,10 @@ export class CarriedItems {
     }
     const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
     const wipingAt = scene.clothWiping?.clothId === model.itemId ? scene.clothWiping.at : null
-    const heldInView = location.kind === 'inHand' && aim === null && wipingAt === null ? scene.heldInView : null
-    moveToLayer(model, heldInView !== null ? roomLayers.heldInView : wipingAt !== null ? roomLayers.untappableRoom : roomLayers.room)
-    this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
+    const inspected = location.kind === 'inHand' && scene.inspected?.inspection.itemId === model.itemId ? scene.inspected : null
+    const heldInView = location.kind === 'inHand' && aim === null && wipingAt === null && inspected === null ? scene.heldInView : null
+    moveToLayer(model, layerFor(inspected !== null, heldInView !== null, wipingAt !== null))
+    this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null && inspected === null)
     model.root.scale.setScalar(1)
     if (aim !== null) return this.aimOverItsTarget(model, aim)
     if (wipingAt !== null) return wipeAt(model, wipingAt)
@@ -111,6 +113,7 @@ export class CarriedItems {
     }
     model.root.visible = true
     this.retag(model, { handIndex: location.handIndex })
+    if (inspected !== null) return inspectInView(model, inspected)
     if (heldInView !== null) return holdInView(model, location.handIndex, heldInView)
     model.root.position.copy(handPosition(scene.walk, location.handIndex))
     model.root.rotation.y = scene.walk.headingRadians
@@ -151,7 +154,8 @@ export class CarriedItems {
     const itemId = scene.state.keeper.hands[handIndex] ?? null
     const isPouringFromIt = itemId !== null && scene.state.pour?.sourceId === itemId
     const isWipingWithIt = itemId !== null && scene.clothWiping?.clothId === itemId
-    area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt && !isWipingWithIt
+    const isInspectingIt = scene.inspected?.inspection.handIndex === handIndex
+    area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt && !isWipingWithIt && !isInspectingIt
     if (!area.visible || scene.heldInView === null) return
     const frame = heldInViewFrame(scene.heldInView, handIndex)
     area.position.copy(scene.heldInView.camera.localToWorld(frame.centreInCamera))
@@ -166,10 +170,16 @@ function wipeAt(model: CarriedModel, point: WorldPoint): void {
   model.root.position.set(point.x, point.y, point.z)
 }
 
+function layerFor(isInspected: boolean, isHeldInView: boolean, isWiping: boolean): number {
+  if (isInspected) return roomLayers.inspected
+  if (isHeldInView) return roomLayers.heldInView
+  return isWiping ? roomLayers.untappableRoom : roomLayers.room
+}
+
 function moveToLayer(model: CarriedModel, layer: number): void {
   if (model.layer === layer) return
   model.layer = layer
-  model.isHeldInView = layer === roomLayers.heldInView
+  model.isHeldInView = layer === roomLayers.heldInView || layer === roomLayers.inspected
   putOnLayer(model.root, layer)
   const look = model.heldInViewLook
   if (look !== null) look.mesh.material = model.isHeldInView ? look.heldInView : look.inRoom

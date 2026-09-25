@@ -9,12 +9,14 @@ import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { AimedPour, type AimedPourView, type PourTarget } from './AimedPour.ts'
+import { ItemInspection, type ItemInspectionView } from './ItemInspection.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
 import { carriedShapeOf, layoutOf, type CarriedShape } from './CarriedShapes.ts'
 import { furniture, puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
+import type { ScreenPoint } from './RoomGestures.ts'
 import type { Walk } from './Walking/Walk.ts'
 import { wetMlAt } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
@@ -68,6 +70,7 @@ const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const tapsWithFullHandsThatGrowAMiddleHand = 10
+const fullTurnDegrees = 360
 const deadlyStrengthsFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
@@ -96,6 +99,7 @@ export class RoomPlay {
   private choice: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
+  private inspection: ItemInspection | null = null
   private readonly timesRemarked = new Map<RoomRemarkKind, number>()
   private readonly itemsTriedOnTheWorkingHeater = new Set<string>()
   private roseBushTapsInARow = 0
@@ -139,6 +143,10 @@ export class RoomPlay {
 
   get aimedPourView(): AimedPourView | null {
     return this.aimedPour?.view ?? null
+  }
+
+  get inspectionView(): ItemInspectionView | null {
+    return this.inspection?.view ?? null
   }
 
   get clothWiping(): ClothWiping | null {
@@ -234,6 +242,36 @@ export class RoomPlay {
     this.putDownTheChosenItemAt(target.furnitureId, target.point)
   }
 
+  handPressHeld(handIndex: HandIndex, heldSeconds: number): void {
+    this.press = null
+    const itemId = this.ritual.state.keeper.hands[handIndex] ?? null
+    if (itemId === null) return this.log(`hold on hand ${handIndex} inspects nothing: the hand is empty`)
+    this.inspection = new ItemInspection(itemId, handIndex)
+    this.log(`inspecting ${itemId} from hand ${handIndex} after a hold of ${heldSeconds.toFixed(1)} s, ${this.describeTheChoice()} and stays so`)
+  }
+
+  inspectionTurnedBy(fingerStep: ScreenPoint): void {
+    this.inspection?.turnBy(fingerStep)
+  }
+
+  inspectionZoomedTo(magnification: number): void {
+    this.inspection?.zoomTo(magnification)
+  }
+
+  inspectionPinchEnded(): void {
+    const view = this.inspectionView
+    if (view !== null) this.log(`pinched the inspected ${view.itemId} to ${view.magnification.toFixed(2)} times its size`)
+  }
+
+  inspectionTapped(target: RoomTapTarget): void {
+    const view = this.inspectionView
+    if (view === null) return this.log(`tap on ${describeTarget(target)} ignored: nothing is inspected`)
+    const isOnTheItem = (target.kind === 'hand' && target.handIndex === view.handIndex) || (target.kind === 'lid' && target.itemId === view.itemId)
+    if (isOnTheItem) return this.log(`tap on the inspected ${view.itemId} does nothing`)
+    this.inspection = null
+    this.log(`inspecting ${view.itemId} ended by a tap on ${describeTarget(target)}, turned ${turnDegreesOf(view.yawRadians)}° across and ${turnDegreesOf(view.pitchRadians)}° over at ${view.magnification.toFixed(2)} times its size, ${this.describeTheChoice()} as before`)
+  }
+
   sipTapped(): void {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
@@ -274,6 +312,10 @@ export class RoomPlay {
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)
     this.actAtCloseUp(target)
+  }
+
+  private describeTheChoice(): string {
+    return this.choice === null ? 'no hand is chosen' : `hand ${this.choice} is chosen`
   }
 
   private showTheSettings(): void {
@@ -617,6 +659,11 @@ function describeTarget(target: RoomTapTarget): string {
     default:
       return `the ${target.kind}`
   }
+}
+
+function turnDegreesOf(radians: number): number {
+  const degrees = Math.round((radians * 180) / Math.PI) % fullTurnDegrees
+  return degrees < 0 ? degrees + fullTurnDegrees : degrees
 }
 
 function placeOf(location: DeepReadonly<ItemLocation> | undefined): string | null {

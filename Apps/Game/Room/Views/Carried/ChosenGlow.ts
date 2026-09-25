@@ -36,7 +36,7 @@ export class ChosenGlow {
     const handIndex = heldInView?.chosenHandIndex ?? null
     const itemId = handIndex === null ? null : (scene.state.keeper.hands[handIndex] ?? null)
     const chosen = models.find((model) => model.itemId === itemId)
-    this.mesh.visible = heldInView !== null && handIndex !== null && chosen?.isHeldInView === true
+    this.mesh.visible = heldInView !== null && handIndex !== null && chosen?.layer === roomLayers.heldInView
     if (!this.mesh.visible || heldInView === null || handIndex === null) return
     const frame = heldInViewFrame(heldInView, handIndex)
     const pulsePhase = Math.sin(scene.timeSeconds * pulsesPerSecond * Math.PI * 2)

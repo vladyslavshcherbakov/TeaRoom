@@ -41,6 +41,7 @@ import { tapTargetAmong } from './TapTargetAmong.ts'
 import { savedVisitVersion, type SavedCamera, type VisitStore } from './VisitStore.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
+import { InspectionStage } from './Views/InspectionStage.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
 import { daylightAt, hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { DebugMenu, type CameraMode, type StickLayout } from './Views/DebugMenu.ts'
@@ -112,6 +113,7 @@ export class RoomScene {
   private readonly zoom = new CameraZoom()
   private readonly gestures: RoomGestures
   private readonly roomLights = new RoomLights()
+  private readonly inspectionStage = new InspectionStage()
   private cameraPose: CameraPose
   private cameraMode: CameraMode = 'room'
   private stickLayout: StickLayout = 'walkOnTheLeft'
@@ -187,7 +189,7 @@ export class RoomScene {
     this.joysticks = new Joysticks(container)
     this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout) })
     this.garden = new Garden(materials)
-    this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
+    this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
     this.settingsStore = new SettingsStore(log)
     this.settings = this.settingsStore.load()
     this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn), frameRateShownChosen: (isShown) => this.frameRateShownChosen(isShown), faceFeatureChosen: (feature) => this.faceFeatureChosen(feature) })
@@ -213,6 +215,7 @@ export class RoomScene {
     this.frameRateCounter.frameDrawn(secondsSinceTheLastFrame)
     const seconds = Math.min(secondsSinceTheLastFrame, longestFrameSeconds)
     this.walkAndLookInFirstPerson(seconds)
+    this.gestures.advance(secondsSinceTheLastFrame)
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
     this.caption.advance(seconds)
@@ -231,13 +234,17 @@ export class RoomScene {
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
     const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
-    this.carried.show({ state, table, walk: this.play.walk, heldInView, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime })
+    const inspection = this.play.inspectionView
+    const inspected = inspection === null ? null : { camera: this.camera, inspection }
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime })
+    if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.room.showHeater(table.isHeaterOn)
     this.room.showPuddles(table.puddles)
     const isAiming = this.play.aimedPourView !== null
-    this.sipButton.show(this.play.sippableCupId !== null && !isAiming)
+    const isInspecting = inspection !== null
+    this.sipButton.show(this.play.sippableCupId !== null && !isAiming && !isInspecting)
     this.pourControls.show(isAiming)
-    this.joysticks.show(isFirstPerson && !isCloseUp && !isAiming)
+    this.joysticks.show(isFirstPerson && !isCloseUp && !isAiming && !isInspecting)
     this.render()
   }
 
@@ -380,7 +387,15 @@ export class RoomScene {
     this.renderer.clearDepth()
     this.camera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, this.camera)
+    if (this.play.inspectionView !== null) this.drawTheInspectedItemOverTheDimmedRoom()
     this.camera.layers.set(roomLayers.room)
+  }
+
+  private drawTheInspectedItemOverTheDimmedRoom(): void {
+    this.inspectionStage.dimWhatIsDrawn(this.renderer)
+    this.renderer.clearDepth()
+    this.camera.layers.set(roomLayers.inspected)
+    this.renderer.render(this.scene, this.camera)
   }
 
   private reactTo(events: readonly RitualEvent[]): readonly RitualEvent[] {
