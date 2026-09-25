@@ -22,7 +22,9 @@ import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { captionLinesFor, roomRemarkLine } from './RoomTexts.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
+import { daylightAt, firstHourAfterSunrise, hoursAfter } from './Sky/DaylightCycle.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
+import { RoomLights } from './Views/RoomLights.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
 import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
 import { PourControls } from './Views/PourControls.ts'
@@ -54,6 +56,8 @@ export class RoomScene {
   private cameraPose: CameraPose
   private readonly zoom = new CameraZoom()
   private readonly gestures: RoomGestures
+  private readonly roomLights = new RoomLights()
+  private hoursSinceSunrise = firstHourAfterSunrise
 
   constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number) {
     this.session = session
@@ -85,7 +89,7 @@ export class RoomScene {
       tiltReleased: () => this.play.tiltReleased(),
     })
     this.caption = new RoomCaption(container)
-    this.scene.add(this.room.root, this.walker.root, this.carried.root, ...lights())
+    this.scene.add(this.room.root, this.walker.root, this.carried.root, ...this.roomLights.lights)
     this.fitToWindow()
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
     this.listenToPresses()
@@ -98,6 +102,8 @@ export class RoomScene {
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
     this.caption.advance(seconds)
+    this.hoursSinceSunrise = hoursAfter(this.hoursSinceSunrise, seconds)
+    this.roomLights.show(daylightAt(this.hoursSinceSunrise))
     const isWalkerShown = this.play.view.kind !== 'closeUp'
     this.walker.show(this.play.walk, this.clock.elapsedTime)
     this.walker.root.visible = isWalkerShown
@@ -263,22 +269,4 @@ function reflectionsOfTheRoom(renderer: THREE.WebGLRenderer): THREE.Texture {
   const reflections = generator.fromScene(new RoomEnvironment(), reflectionsBlurSigma).texture
   generator.dispose()
   return reflections
-}
-
-function lights(): THREE.Light[] {
-  const skyAndFloor = new THREE.HemisphereLight('#fff4e0', '#c9a27a', 1.6)
-  const eveningSun = new THREE.DirectionalLight('#ffd9b0', 2.2)
-  eveningSun.position.set(2.5, 5, -6)
-  eveningSun.castShadow = true
-  eveningSun.shadow.mapSize.set(1024, 1024)
-  eveningSun.shadow.camera.left = -5
-  eveningSun.shadow.camera.right = 5
-  eveningSun.shadow.camera.top = 5
-  eveningSun.shadow.camera.bottom = -5
-  eveningSun.shadow.bias = -0.0005
-  const fill = new THREE.DirectionalLight('#dfe8ff', 0.6)
-  fill.position.set(6, 4, 6)
-  const allLights = [skyAndFloor, eveningSun, fill]
-  for (const light of allLights) light.layers.enableAll()
-  return allLights
 }
