@@ -5,7 +5,7 @@ export type Liquid = {
   readonly bitterness: number
 }
 
-const smallestMeaningfulVolumeMl = 0.01
+export const smallestMeaningfulVolumeMl = 0.01
 const strengthBelowWhichItIsPlainWater = 5
 
 export function water(volumeMl: number, temperatureC: number): Liquid {

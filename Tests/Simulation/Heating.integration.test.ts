@@ -412,3 +412,17 @@ test('kettle_leftOnAWorkingHeaterUntilItsWaterIsGone_announcesOnceThatItBoiledDr
 
   assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle' }])
 })
+
+test('kettle_boilingAwayInStepsThatDoNotDivideItsWaterEvenly_stillBoilsDryAndSaysSo', () => {
+  const catalog = testCatalog()
+  const heater = catalog.heaters['testHeater']
+  if (heater === undefined) throw new Error('the test catalog lost its heater')
+  const ritual = TestRitual.begun({ ...catalog, heaters: { testHeater: { ...heater, boilingAwayMlPerSecond: 8 } } })
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const events = ritual.wait(600)
+
+  assert.equal(ritual.vessel('kettle').liquid.volumeMl, 0)
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle' }])
+})

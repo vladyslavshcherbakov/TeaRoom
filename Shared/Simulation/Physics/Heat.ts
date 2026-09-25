@@ -1,6 +1,6 @@
 import type { HeaterDefinition } from '../Definitions/HeaterDefinition.ts'
 import type { VesselDefinition } from '../Definitions/VesselDefinition.ts'
-import { isEmpty, type Liquid } from './Liquid.ts'
+import { isEmpty, smallestMeaningfulVolumeMl, type Liquid } from './Liquid.ts'
 
 const boilingPointC = 100
 const shellHeatsThroughSeconds = 20
@@ -23,7 +23,8 @@ export function kilowattHoursUsed(heater: HeaterDefinition, seconds: number): nu
 
 export function liquidBoiledAway(liquid: Liquid, heater: HeaterDefinition, seconds: number): Liquid {
   if (isEmpty(liquid) || liquid.temperatureC < boilingPointC) return liquid
-  return { ...liquid, volumeMl: Math.max(0, liquid.volumeMl - heater.boilingAwayMlPerSecond * seconds) }
+  const volumeMlLeft = liquid.volumeMl - heater.boilingAwayMlPerSecond * seconds
+  return { ...liquid, volumeMl: volumeMlLeft < smallestMeaningfulVolumeMl ? 0 : volumeMlLeft }
 }
 
 export function coolLiquid(liquid: Liquid, ambientC: number, coolingPerSecond: number, seconds: number): Liquid {
