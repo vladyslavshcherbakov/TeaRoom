@@ -23,7 +23,7 @@ The keeper stands at one place, or at none while walking. An item is within reac
 
 ## Heat
 
-A vessel on a working heater gains `degreesPerSecondPerLitre × 1000 / volume` degrees per second, up to 100 °C. Less water heats faster. Water that has reached the boil on a working heater boils away at the heater's `boilingAwayMlPerSecond`, 8 ml/s for the electric plate, so a full kettle of 800 ml boils dry about 100 seconds after it comes to the boil, two and a half minutes after it is switched on, until it is lifted off, switched off or boiled dry. A vessel that boils dry says so once with `boiledDry`.
+A vessel on a working heater gains `degreesPerSecondPerLitre × 1000 / volume` degrees per second, up to 100 °C. Less water heats faster. Water that has reached the boil on a working heater boils away at the heater's `boilingAwayMlPerSecond`, 16 ml/s for the electric plate, so a full kettle of 800 ml boils dry 50 seconds after it comes to the boil, about 97 seconds after it is switched on with cold tap water, until it is lifted off, switched off or boiled dry. A vessel that boils dry says so once with `boiledDry`.
 
 Every vessel closes a share of the gap to the room's temperature each second: `coolingPerSecond`, multiplied by the lid's `coolingMultiplierWhenOpen` while its lid is open. The thermos keeps heat far better than the kettle, and an open lid loses it faster. Cooling is applied before heating, so a vessel on a working heater still reaches boiling.
 
