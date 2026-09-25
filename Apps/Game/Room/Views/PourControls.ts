@@ -35,7 +35,7 @@ export class PourControls {
     this.isAiming = isAiming
     this.tiltButton.hidden = !isAiming
     if (isAiming) this.hint.hidden = wasHintSeen()
-    if (!isAiming && !this.hint.hidden) rememberHintSeen()
+    if (!isAiming && !this.hint.hidden) rememberHintSeenIfStorageAllows()
     if (!isAiming) this.hint.hidden = true
   }
 }
@@ -48,7 +48,7 @@ function wasHintSeen(): boolean {
   }
 }
 
-function rememberHintSeen(): void {
+function rememberHintSeenIfStorageAllows(): void {
   try {
     window.localStorage.setItem(hintSeenStorageKey, 'yes')
   } catch {
