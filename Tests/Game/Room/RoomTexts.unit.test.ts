@@ -34,7 +34,7 @@ test('caption_ofAClothTakenOffTheHeaterBeforeItSmoulders_staysSilent', () => {
   assert.deepEqual(captionLinesFor([{ type: 'clothTakenOffTheHeater', charring: 0.49 }], 7), [])
 })
 
-test('caption_ofASpoonThatCrumbled_teachesALesson', () => {
+test('caption_ofASpoonThatCrumbled_answersInOneLine', () => {
   const lines = captionLinesFor([{ type: 'spoonCrumbled', gramsLost: 2 }], 7)
 
   assert.equal(lines.length, 1)
