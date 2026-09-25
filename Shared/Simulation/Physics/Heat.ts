@@ -7,6 +7,9 @@ const shellHeatsThroughSeconds = 20
 const shellCoolsDownSeconds = 60
 const shellTooHotToHoldFrom = 0.2
 const joulesInAKilowattHour = 3_600_000
+const spoonCharsThroughSeconds = 20
+
+export const spoonCrumblesFromCharring = 0.8
 
 export function heatLiquid(liquid: Liquid, heater: HeaterDefinition, seconds: number): Liquid {
   if (isEmpty(liquid)) return liquid
@@ -35,6 +38,14 @@ export function shellHeatAfter(shellHeat: number, isOnAWorkingHeater: boolean, s
 
 export function isTooHotToHold(shellHeat: number): boolean {
   return shellHeat >= shellTooHotToHoldFrom
+}
+
+export function spoonCharringOnAHotPlate(charring: number, seconds: number): number {
+  return Math.min(1, charring + seconds / spoonCharsThroughSeconds)
+}
+
+export function doesTheSpoonCrumble(charring: number): boolean {
+  return charring >= spoonCrumblesFromCharring
 }
 
 export function coolingPerSecondOf(vessel: VesselDefinition, isLidOpen: boolean): number {

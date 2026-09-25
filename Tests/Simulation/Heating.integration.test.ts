@@ -10,6 +10,13 @@ function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitua
   return ritual
 }
 
+function ritualWithTheSpoonOnAWorkingHeater(): TestRitual {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
+  ritual.do({ type: 'switchHeaterOn' })
+  return ritual
+}
+
 test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
 
@@ -210,6 +217,62 @@ test('clothThatNeverBurnt_whenTakenOutOfTheSink_isNotRemarkedOn', () => {
   const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
 
   assert.deepEqual(eventsOfType(events, 'burntClothWashedBackToNew'), [])
+})
+
+test('spoon_onAWorkingHeater_charsThroughInTwentySeconds', () => {
+  const ritual = ritualWithTheSpoonOnAWorkingHeater()
+
+  ritual.wait(10)
+
+  assertNear(ritual.state.spoon.charring, 0.5)
+})
+
+test('spoon_onAHeaterThatIsOff_doesNotChar', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
+
+  ritual.wait(30)
+
+  assert.equal(ritual.state.spoon.charring, 0)
+})
+
+test('spoon_whenTakenBeforeItBurns_isSavedButStaysCharred', () => {
+  const ritual = ritualWithTheSpoonOnAWorkingHeater()
+  ritual.wait(10)
+
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  ritual.wait(10)
+
+  assert.deepEqual(ritual.state.spoon.location, { kind: 'inHand', handIndex: 0 })
+  assertNear(ritual.state.spoon.charring, 0.5)
+})
+
+test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
+  const ritual = TestRitual.begun()
+  ritual.tipASpoonOfLeavesInto('cup1')
+  ritual.do({ type: 'scoopTea', depth: 1 })
+  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(17)
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'spoon' })
+
+  assert.deepEqual(eventsOfType(events, 'spoonCrumbled'), [{ type: 'spoonCrumbled', gramsLost: 5 }])
+  assert.deepEqual(ritual.state.spoon.location, { kind: 'gone' })
+  assert.deepEqual(ritual.state.keeper.hands, [null, null])
+  assert.equal(ritual.state.heater.itemIdOnTop, null)
+})
+
+test('spoon_afterItCrumbled_cannotBeTakenOrScoopedWith', () => {
+  const ritual = ritualWithTheSpoonOnAWorkingHeater()
+  ritual.wait(17)
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+
+  const takeEvents = ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  const scoopEvents = ritual.do({ type: 'scoopTea', depth: 1 })
+
+  assert.deepEqual(takeEvents, [{ type: 'actionRefused', command: 'pickUp', reason: 'burntAway' }])
+  assert.deepEqual(scoopEvents, [{ type: 'actionRefused', command: 'scoopTea', reason: 'notInHand' }])
 })
 
 test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {

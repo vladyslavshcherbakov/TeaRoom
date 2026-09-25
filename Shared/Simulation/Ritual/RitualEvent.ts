@@ -53,6 +53,7 @@ export type RefusalReason =
   | 'tableIsDry'
   | 'clothIsAlreadySoaking'
   | 'vesselIsInTheSink'
+  | 'burntAway'
 
 export type RitualEvent =
   | { readonly type: 'ritualBegan'; readonly teaId: string }
@@ -95,6 +96,7 @@ export type RitualEvent =
   | { readonly type: 'tableWiped'; readonly wetMlLeft: number }
   | { readonly type: 'clothLaidInThePuddle' }
   | { readonly type: 'burntClothWashedBackToNew' }
+  | { readonly type: 'spoonCrumbled'; readonly gramsLost: number }
   | { readonly type: 'clothTakenOffTheHeater'; readonly charring: number }
   | { readonly type: 'ritualFinished' }
   | { readonly type: 'roomLeft' }

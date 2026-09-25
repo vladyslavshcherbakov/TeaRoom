@@ -10,7 +10,7 @@ The world advances in fixed steps of 0.05 s, whatever the frame rate. A frame ha
 
 ## Places and hands
 
-A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's two hands. The spot keeps the exact position where the item was put down, so the room can show it there.
+A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's two hands. A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`. The spot keeps the exact position where the item was put down, so the room can show it there.
 
 The keeper stands at one place, or at none while walking. An item is within reach when it is in a hand, or on a surface at the place where the keeper stands.
 
@@ -85,6 +85,8 @@ A bowl set before a figurine goes entirely into its saucer. Each figurine accept
 Spilled liquid makes a puddle on the place where it falls: around the vessel it was poured at when that vessel stands on a surface, otherwise where the keeper stands. Each place has its own puddle, and a puddle that dries up is gone. The wet area evaporates at 0.1 ml per second, so a full puddle of 30 ml dries by itself in five minutes. A wipe over the whole table removes 80% of the wetness when the stroke is 50 cm/s or slower, 30% at 200 cm/s or faster, and a share in between for speeds in between. A wipe over a part of the table removes `1 − (1 − that share)^part`, so many short wipes remove as much as one long wipe over the same area. The puddle has a tea strength, mixed by volume from every spill. The cloth takes in the water it wipes up, and tea stains it: 20 ml of the strongest tea stain it fully, and weaker tea or less of it stains it in proportion. A clean cloth dries at 0.1 ml per second, and a fully stained one at 0.03 ml per second, with a stain in between drying in between. A cloth in the sink under the running tap loses a full stain in 3 seconds and soaks up the tap water, up to the 40 ml it holds. The keeper wrings it out as it leaves the sink, down to 8 ml.
 
 The cloth may lie on the heater, like the kettle. On a working heater a wet cloth steams dry at 2 ml per second, and a dry one chars, fully in a minute. Charring stops when the heater is off or the cloth is lifted, and what is charred stays charred. Lifting the cloth off the heater reports how charred it is. The tap washes a full charring out in 5 seconds, and the cloth is as good as new. A cloth laid down in the puddle soaks it up at 0.5 ml per second while it lies there. It stops when the puddle is gone, when it holds 40 ml, or when it is picked up. The presentation says when the cloth lands in the puddle with `soakUpThePuddle`, because only the room knows where the puddle is. The command needs the cloth lying on a place's surface, the keeper there, and a puddle on that place.
+
+The spoon may lie on the heater too. On a working heater it chars, fully in 20 seconds, and charring stops when the heater is off or the spoon is lifted. From four fifths charred it burns, 16 seconds after it went on a working plate: taken then, it crumbles to ash in the hand, the leaves on it are lost with it, and it is gone. Taken earlier, it is saved and stays as charred as it was.
 
 ## Phases
 

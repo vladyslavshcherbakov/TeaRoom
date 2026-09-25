@@ -33,8 +33,14 @@ export function moveItem(draft: Draft, itemId: string, location: ItemLocation): 
 }
 
 export function isWithinReach(draft: Draft, location: ItemLocation): boolean {
-  if (location.kind === 'inHand') return true
-  return draft.state.keeper.placeId === location.spot.placeId
+  switch (location.kind) {
+    case 'inHand':
+      return true
+    case 'onSurface':
+      return draft.state.keeper.placeId === location.spot.placeId
+    case 'gone':
+      return false
+  }
 }
 
 export function isKeeperAt(draft: Draft, placeId: string): boolean {
@@ -55,8 +61,14 @@ export function ritualPlaceOf(draft: Draft): string {
 
 export function whereIs(location: ItemLocation | undefined): string {
   if (location === undefined) return 'nowhere'
-  if (location.kind === 'inHand') return `in hand ${location.handIndex}`
-  return `on the ${location.spot.placeId}`
+  switch (location.kind) {
+    case 'inHand':
+      return `in hand ${location.handIndex}`
+    case 'onSurface':
+      return `on the ${location.spot.placeId}`
+    case 'gone':
+      return 'gone'
+  }
 }
 
 export function whereTheKeeperStands(draft: Draft): string {

@@ -4,12 +4,13 @@ import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, isInvolvedInPour, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { clothItemId, heaterSpotOf, isKeeperAt, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { clothItemId, heaterSpotOf, spoonItemId, isKeeperAt, isWithinReach, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
   const location = locationOfItem(draft, itemId)
   if (location === undefined) return refuse(draft, command, 'unknownItem')
+  if (location.kind === 'gone') return refuse(draft, command, 'burntAway')
   if (!canSitOnTheHeater(draft, itemId)) return refuse(draft, command, 'cannotSitOnHeater')
   const occupant = draft.state.heater.itemIdOnTop
   if (occupant !== null) return refuse(draft, command, 'heaterOccupied', `${occupant} is on it`)
@@ -87,12 +88,13 @@ function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
 function canSitOnTheHeater(draft: Draft, itemId: string): boolean {
   const vessel = draft.state.vessels[itemId]
   if (vessel !== undefined) return vesselDefinitionOf(draft, vessel).canSitOnHeater
-  return itemId === clothItemId
+  return itemId === clothItemId || itemId === spoonItemId
 }
 
 function describeWhatSitsOnTheHeater(draft: Draft, itemId: string): string {
   const vessel = draft.state.vessels[itemId]
   if (vessel !== undefined) return describeLiquid(vessel)
+  if (itemId === spoonItemId) return `the spoon, ${(draft.state.spoon.charring * 100).toFixed(0)}% charred`
   const cloth = draft.state.cloth
   return `the cloth holding ${cloth.wetMl.toFixed(1)} ml, ${(cloth.charring * 100).toFixed(0)}% charred`
 }

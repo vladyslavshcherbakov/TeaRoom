@@ -82,6 +82,10 @@ export class CarriedItems {
   private place(model: CarriedModel, scene: CarriedItemsScene): void {
     const location = itemLocationIn(scene.state, model.itemId)
     if (location === undefined) return
+    if (location.kind === 'gone') {
+      model.root.visible = false
+      return
+    }
     const aim = scene.aimedPour?.sourceId === model.itemId ? scene.aimedPour : null
     const wipingAt = model.itemId === clothItemId ? scene.clothOnTheTableAt : null
     const heldInView = location.kind === 'inHand' && aim === null && wipingAt === null ? scene.heldInView : null

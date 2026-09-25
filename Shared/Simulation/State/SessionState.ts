@@ -7,7 +7,7 @@ export type Phase = 'settingUp' | 'ritual' | 'resting' | 'ended'
 
 export type HandIndex = 0 | 1
 
-export type ItemLocation = { kind: 'onSurface'; spot: Spot } | { kind: 'inHand'; handIndex: HandIndex }
+export type ItemLocation = { kind: 'onSurface'; spot: Spot } | { kind: 'inHand'; handIndex: HandIndex } | { kind: 'gone' }
 
 export type KeeperState = {
   placeId: string | null
@@ -43,6 +43,7 @@ export type CaddyState = {
 export type SpoonState = {
   grams: number
   capacityGrams: number
+  charring: number
   location: ItemLocation
 }
 
