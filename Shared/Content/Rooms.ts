@@ -3,7 +3,7 @@ import type { RoomDefinition } from '../Simulation/Definitions/RoomDefinition.ts
 export const quietRoom: RoomDefinition = {
   id: 'quietRoom',
   ambientTemperatureC: 22,
-  timesOfDay: ['dawn', 'day'],
+  timesOfDay: ['dawn', 'day', 'sunset'],
   weathers: ['rain'],
   places: ['counter', 'shelf', 'teaTable'],
   keeperStartsAt: null,

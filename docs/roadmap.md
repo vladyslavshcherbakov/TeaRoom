@@ -58,7 +58,7 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 
 ## 0.7 — Atmosphere
 
-- The window as its own layer. Dawn and day with light that changes over two to five seconds.
+- The window as its own layer. Dawn, day and sunset with light that changes over two to five seconds.
 - Rain on the glass and its ambient loop.
 - Rare window events with a cooldown, from a seeded random source so tests stay deterministic.
 

@@ -24,7 +24,7 @@ import { tapTargetAmong } from './TapTargetAmong.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
 import { Garden } from './Views/Garden.ts'
 import { roomLayers } from './Views/RoomLayers.ts'
-import { daylightFor } from './Sky/DaylightCycle.ts'
+import { daylightAt, hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { RoomCaption } from './Views/RoomCaption.ts'
 import { RoomLights } from './Views/RoomLights.ts'
 import { RoomMaterials } from './Views/RoomMaterials.ts'
@@ -48,6 +48,7 @@ export class RoomScene {
   private readonly session: RitualSession
   private readonly catalog: Catalog
   private readonly voiceSeed: number
+  private readonly shareThroughTheTimeOfDay: number
   private readonly play: RoomPlay
   private readonly room: RoomModel
   private readonly walker: WalkerModel
@@ -60,10 +61,11 @@ export class RoomScene {
   private readonly gestures: RoomGestures
   private readonly roomLights = new RoomLights()
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number) {
     this.session = session
     this.catalog = catalog
     this.voiceSeed = voiceSeed
+    this.shareThroughTheTimeOfDay = shareThroughTheTimeOfDay
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
@@ -103,7 +105,7 @@ export class RoomScene {
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))
     this.caption.advance(seconds)
-    this.roomLights.show(daylightFor(this.session.state.atmosphere.timeOfDay))
+    this.roomLights.show(daylightAt(hoursSinceSunriseFor(this.session.state.atmosphere.timeOfDay, this.shareThroughTheTimeOfDay)))
     const isWalkerShown = this.play.view.kind !== 'closeUp'
     this.walker.show(this.play.walk, this.clock.elapsedTime)
     this.walker.root.visible = isWalkerShown

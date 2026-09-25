@@ -4,6 +4,7 @@ import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { text } from '../Texts/Texts.ts'
 import { RoomScene } from './RoomScene.ts'
+import { hoursSinceSunriseFor } from './Sky/DaylightCycle.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 
 const roomId = 'quietRoom'
@@ -45,7 +46,10 @@ if (opening.kind === 'unavailable') {
   opening.session.dispatch({ type: 'beginRitual', teaId })
   const voiceSeed = 1 + Math.floor(Math.random() * largestVoiceSeed)
   roomLog(`the keeper speaks with voice ${voiceSeed}, chosen at random for this visit`)
-  new RoomScene(container, opening.session, catalog, roomLog, voiceSeed)
+  const shareThroughTheTimeOfDay = Math.random()
+  const hoursSinceSunrise = hoursSinceSunriseFor(opening.session.state.atmosphere.timeOfDay, shareThroughTheTimeOfDay)
+  roomLog(`the light stands ${hoursSinceSunrise.toFixed(1)} hours after sunrise, chosen at random within ${opening.session.state.atmosphere.timeOfDay}`)
+  new RoomScene(container, opening.session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay)
 }
 
 function catalogWithBowlsShuffled(): Catalog {
