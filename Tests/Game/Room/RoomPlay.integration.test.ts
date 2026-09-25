@@ -171,6 +171,16 @@ test('cloth_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
   assert.equal(room.state.heater.itemIdOnTop, 'cloth')
 })
 
+test('kettle_whenPutDownAtTheSinksEdge_staysInHand', () => {
+  const room = new RoomVisit()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  room.tap({ kind: 'surface', furnitureId: 'counter', point: { x: -1.22, y: 0.9, z: -2.7 } })
+
+  assert.equal(room.state.vessels['kettle']?.location.kind, 'inHand')
+})
+
 test('kettle_whenTheSinkIsTappedWithItChosen_goesInTheSinkUnderTheRunningTap', () => {
   const room = new RoomVisit()
   room.walkTo('counter')

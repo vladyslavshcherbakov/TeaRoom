@@ -39,7 +39,8 @@ const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetre
 export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene): void {
   const vessel = scene.table.vessels[model.itemId]
   const isOpen = model.shape === 'caddy' ? scene.table.caddy.isOpen : vessel?.isLidOpen === true
-  if (model.lid !== null) placeLid(model, model.lid, isOpen, itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface')
+  const isStandingOutsideTheSink = itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface' && scene.state.sink.itemIdInside !== model.itemId
+  if (model.lid !== null) placeLid(model, model.lid, isOpen, isStandingOutsideTheSink)
   if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
   if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)

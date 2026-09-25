@@ -2,11 +2,11 @@ import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition
 import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { carriedShapeOf, footprintRadiusMetres, furniture, heaterFootprintRadiusMetres } from './RoomLayout.ts'
+import { carriedShapeOf, footprintRadiusMetres, furniture, heaterFootprintRadiusMetres, sinkBasin } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
 
-export type PlacementRefusal = 'offTheEdge' | 'somethingIsThere' | 'theHeaterIsThere'
+export type PlacementRefusal = 'offTheEdge' | 'somethingIsThere' | 'theHeaterIsThere' | 'theSinkIsThere'
 
 export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReadonly<SessionState>, heaterSpot: Spot): PlacementRefusal | null {
   const radius = footprintRadiusOf(state, itemId)
@@ -16,9 +16,14 @@ export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReado
   const isInsideTheTop = Math.abs(spot.x - footprint.x) <= footprint.width / 2 - radius && Math.abs(spot.z - footprint.z) <= footprint.depth / 2 - radius
   if (!isInsideTheTop) return 'offTheEdge'
   if (isNear(spot, heaterSpot, radius + heaterFootprintRadiusMetres)) return 'theHeaterIsThere'
+  if (spot.placeId === 'counter' && overlapsTheSink(spot, radius)) return 'theSinkIsThere'
   const neighbours = itemsOnSurfaces(state).filter((item) => item.itemId !== itemId)
   if (neighbours.some((item) => isNear(spot, item.spot, radius + footprintRadiusOf(state, item.itemId)))) return 'somethingIsThere'
   return null
+}
+
+function overlapsTheSink(spot: Spot, radius: number): boolean {
+  return Math.abs(spot.x - sinkBasin.x) < sinkBasin.width / 2 + radius && Math.abs(spot.z - sinkBasin.z) < sinkBasin.depth / 2 + radius
 }
 
 function itemsOnSurfaces(state: DeepReadonly<SessionState>): { itemId: string; spot: Spot }[] {

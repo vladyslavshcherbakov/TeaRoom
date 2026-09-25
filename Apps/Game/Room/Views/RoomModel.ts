@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
   faucetSpout,
+  sinkBasin,
   furniture,
   furnitureWithId,
   itemSpots,
@@ -20,10 +21,7 @@ import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 const wallHeight = 2.6
 const wallThickness = 0.12
 const faucetPostAboveTheSpoutMetres = 0.04
-const sinkInsideWidthMetres = 0.36
-const sinkInsideDepthMetres = 0.28
-const sinkWallHeightMetres = 0.1
-const sinkWallThicknessMetres = 0.02
+const sinkPlateMetres = 0.004
 const reachOfFurnitureMetres = 0.35
 const heaterGlowColour = new THREE.Color('#e0603a')
 const heaterGlowIntensity = 0.8
@@ -110,7 +108,21 @@ export class RoomModel {
 
   private addCounter(piece: Furniture): void {
     const { footprint, height } = piece
-    this.tag(this.box('wood', footprint.width, height, footprint.depth, { x: footprint.x, y: height / 2, z: footprint.z }), { furnitureId: piece.id })
+    const left = footprint.x - footprint.width / 2
+    const right = footprint.x + footprint.width / 2
+    const back = footprint.z - footprint.depth / 2
+    const front = footprint.z + footprint.depth / 2
+    const hole = { left: sinkBasin.x - sinkBasin.width / 2, right: sinkBasin.x + sinkBasin.width / 2, back: sinkBasin.z - sinkBasin.depth / 2, front: sinkBasin.z + sinkBasin.depth / 2 }
+    const topHeight = height - sinkBasin.floorHeight
+    const topY = sinkBasin.floorHeight + topHeight / 2
+    const pieces = [
+      this.box('wood', footprint.width, sinkBasin.floorHeight, footprint.depth, { x: footprint.x, y: sinkBasin.floorHeight / 2, z: footprint.z }),
+      this.box('wood', hole.left - left, topHeight, footprint.depth, { x: (left + hole.left) / 2, y: topY, z: footprint.z }),
+      this.box('wood', right - hole.right, topHeight, footprint.depth, { x: (hole.right + right) / 2, y: topY, z: footprint.z }),
+      this.box('wood', sinkBasin.width, topHeight, hole.back - back, { x: sinkBasin.x, y: topY, z: (back + hole.back) / 2 }),
+      this.box('wood', sinkBasin.width, topHeight, front - hole.front, { x: sinkBasin.x, y: topY, z: (hole.front + front) / 2 }),
+    ]
+    for (const counterPiece of pieces) this.tag(counterPiece, { furnitureId: piece.id })
   }
 
   private addShelf(piece: Furniture): void {
@@ -183,38 +195,32 @@ export class RoomModel {
     post.position.set(base.x, base.y + postHeight / 2, base.z)
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, faucetSpout.z - base.z + 0.02), this.materials.materialFor('steel'))
     arm.position.set(base.x, faucetSpout.y + 0.02, (base.z + faucetSpout.z) / 2)
-    const sinkRim = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.012, 0.34), this.materials.materialFor('steel'))
-    sinkRim.position.set(base.x, base.y + 0.006, faucetSpout.z + 0.02)
-    const sinkHollow = new THREE.Mesh(new THREE.BoxGeometry(sinkInsideWidthMetres, 0.004, sinkInsideDepthMetres), this.materials.materialFor('sinkHollow'))
-    sinkHollow.position.set(base.x, base.y + 0.012, faucetSpout.z + 0.02)
-    sinkRim.receiveShadow = true
-    sinkHollow.receiveShadow = true
-    faucet.add(post, arm, sinkRim, sinkHollow, ...this.sinkWalls({ x: base.x, y: base.y, z: faucetSpout.z + 0.02 }))
     post.castShadow = true
     arm.castShadow = true
+    faucet.add(post, arm, ...this.sinkBasinInside(base.y))
     this.root.add(faucet)
     return faucet
   }
 
-  private sinkWalls(floorCentre: WorldPoint): THREE.Mesh[] {
-    const wallY = floorCentre.y + sinkWallHeightMetres / 2
-    const halfWidth = sinkInsideWidthMetres / 2 + sinkWallThicknessMetres / 2
-    const halfDepth = sinkInsideDepthMetres / 2 + sinkWallThicknessMetres / 2
-    const outsideWidth = sinkInsideWidthMetres + 2 * sinkWallThicknessMetres
+  private sinkBasinInside(counterHeight: number): THREE.Mesh[] {
+    const { x, z, width, depth, floorHeight } = sinkBasin
+    const wallHeight = counterHeight - floorHeight
+    const wallY = floorHeight + wallHeight / 2
+    const floor = this.plainBox('sinkHollow', width, sinkPlateMetres, depth, { x, y: floorHeight + sinkPlateMetres / 2, z })
     return [
-      this.sinkWall(outsideWidth, sinkWallThicknessMetres, { x: floorCentre.x, y: wallY, z: floorCentre.z - halfDepth }),
-      this.sinkWall(outsideWidth, sinkWallThicknessMetres, { x: floorCentre.x, y: wallY, z: floorCentre.z + halfDepth }),
-      this.sinkWall(sinkWallThicknessMetres, sinkInsideDepthMetres, { x: floorCentre.x - halfWidth, y: wallY, z: floorCentre.z }),
-      this.sinkWall(sinkWallThicknessMetres, sinkInsideDepthMetres, { x: floorCentre.x + halfWidth, y: wallY, z: floorCentre.z }),
+      floor,
+      this.plainBox('sinkWall', width, wallHeight, sinkPlateMetres, { x, y: wallY, z: z - depth / 2 + sinkPlateMetres / 2 }),
+      this.plainBox('sinkWall', width, wallHeight, sinkPlateMetres, { x, y: wallY, z: z + depth / 2 - sinkPlateMetres / 2 }),
+      this.plainBox('sinkWall', sinkPlateMetres, wallHeight, depth, { x: x - width / 2 + sinkPlateMetres / 2, y: wallY, z }),
+      this.plainBox('sinkWall', sinkPlateMetres, wallHeight, depth, { x: x + width / 2 - sinkPlateMetres / 2, y: wallY, z }),
     ]
   }
 
-  private sinkWall(width: number, depth: number, centre: WorldPoint): THREE.Mesh {
-    const wall = new THREE.Mesh(new THREE.BoxGeometry(width, sinkWallHeightMetres, depth), this.materials.materialFor('steel'))
-    wall.position.set(centre.x, centre.y, centre.z)
-    wall.castShadow = true
-    wall.receiveShadow = true
-    return wall
+  private plainBox(surface: Surface, width: number, height: number, depth: number, centre: WorldPoint): THREE.Mesh {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), this.materials.materialFor(surface))
+    mesh.position.set(centre.x, centre.y, centre.z)
+    mesh.receiveShadow = true
+    return mesh
   }
 
   private figurine(spot: ItemSpot): THREE.Object3D {

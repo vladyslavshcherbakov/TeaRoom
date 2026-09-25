@@ -42,6 +42,7 @@ export type Surface =
   | 'pouredLiquid'
   | 'steam'
   | 'sinkHollow'
+  | 'sinkWall'
   | 'caddyInside'
   | 'caddyLabel'
   | 'caddyRim'
@@ -92,7 +93,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   tapWater: '#a9d3ea',
   pouredLiquid: '#c9e3f0',
   steam: '#ffffff',
-  sinkHollow: '#4f5f66',
+  sinkHollow: '#56626a',
+  sinkWall: '#b7c2c7',
   caddyInside: '#2f3d33',
   caddyLabel: '#efe2c4',
   caddyRim: '#c9a45c',

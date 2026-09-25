@@ -131,7 +131,8 @@ export function puddleRadiusMetres(puddleShare: number): number {
   return Math.sqrt(puddleShare) * largestPuddleRadiusMetres
 }
 
-export const faucetSpout: WorldPoint = { x: -1.45, y: 1.42, z: -2.72 }
+export const faucetSpout: WorldPoint = { x: -1.45, y: 1.3, z: -2.72 }
+export const sinkBasin = { x: -1.45, z: -2.7, width: 0.36, depth: 0.28, floorHeight: 0.76 }
 
 export const itemSpots: readonly ItemSpot[] = [
   { id: 'faucet', shape: 'faucet', position: { x: -1.45, y: 0.9, z: -2.9 } },
