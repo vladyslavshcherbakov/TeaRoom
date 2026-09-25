@@ -24,7 +24,7 @@ test('bowl_whenTappedInTheShelfCloseUp_goesIntoTheFirstFreeHand', () => {
 
   room.tap({ kind: 'item', itemId: 'bowl1' })
 
-  assert.deepEqual(room.state.keeper.hands, ['bowl1', null])
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', null, null])
 })
 
 test('bowl_whenPickedUpByATap_isChosenAtOnce', () => {
@@ -34,7 +34,7 @@ test('bowl_whenPickedUpByATap_isChosenAtOnce', () => {
 
   room.tap({ kind: 'item', itemId: 'bowl2' })
 
-  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'bowl2'])
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'bowl2', null])
   assert.equal(room.play.chosenHandIndex, 1)
 })
 
@@ -57,7 +57,7 @@ test('surfaceTap_withNoHandChosen_leavesTheItemInHand', () => {
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
 
-  assert.deepEqual(room.state.keeper.hands, ['bowl1', null])
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', null, null])
   assert.ok(room.logLines.includes('tap on the teaTable ignored: no hand is chosen'), room.logLines.join('\n'))
 })
 
@@ -70,7 +70,7 @@ test('bowl_whenPutDownWhereAnotherBowlStands_staysInHandWithItsHandChosen', () =
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: { ...onTheTeaTable, x: onTheTeaTable.x + 0.1 } })
 
-  assert.deepEqual(room.state.keeper.hands, [null, 'bowl2'])
+  assert.deepEqual(room.state.keeper.hands, [null, 'bowl2', null])
   assert.equal(room.play.chosenHandIndex, 1)
   assert.ok(room.logLines.some((line) => line.startsWith('no room for bowl2') && line.endsWith('somethingIsThere')), room.logLines.join('\n'))
 })
@@ -95,7 +95,7 @@ test('bowl_whenPutDownOnTheKettlesOpenLid_staysInHand', () => {
 
   room.tap({ kind: 'surface', furnitureId: 'counter', point: behindTheKettle })
 
-  assert.deepEqual(room.state.keeper.hands, ['bowl1', null])
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', null, null])
   assert.ok(room.logLines.some((line) => line.startsWith('no room for bowl1') && line.endsWith('somethingIsThere')), room.logLines.join('\n'))
 })
 
@@ -142,7 +142,7 @@ test('kettle_whenItsHandIsChosenAndTheHeaterIsTapped_sitsOnTheHeater', () => {
   room.tap({ kind: 'heater' })
 
   assert.equal(room.state.heater.itemIdOnTop, 'kettle')
-  assert.deepEqual(room.state.keeper.hands, [null, null])
+  assert.deepEqual(room.state.keeper.hands, [null, null, null])
 })
 
 test('heaterSwitch_whenTapped_switchesTheHeaterOn', () => {
@@ -373,7 +373,7 @@ test('bowl_whenTappedShortlyWithTheKettleInHand_isPickedUp', () => {
 
   room.tap({ kind: 'item', itemId: 'bowl1' })
 
-  assert.deepEqual(room.state.keeper.hands, ['kettle', 'bowl1'])
+  assert.deepEqual(room.state.keeper.hands, ['kettle', 'bowl1', null])
   assert.equal(room.state.pour, null)
 })
 
@@ -428,7 +428,7 @@ test('cloth_whenTappedWithTheSpoonChosen_isTakenIntoTheOtherHand', () => {
 
   room.tap({ kind: 'item', itemId: 'cloth' })
 
-  assert.deepEqual(room.state.keeper.hands, ['spoon', 'cloth'])
+  assert.deepEqual(room.state.keeper.hands, ['spoon', 'cloth', null])
 })
 
 test('kettle_whenTappedWithAnEmptySpoonChosen_isTakenIntoTheOtherHand', () => {
@@ -438,7 +438,7 @@ test('kettle_whenTappedWithAnEmptySpoonChosen_isTakenIntoTheOtherHand', () => {
 
   room.tap({ kind: 'item', itemId: 'kettle' })
 
-  assert.deepEqual(room.state.keeper.hands, ['spoon', 'kettle'])
+  assert.deepEqual(room.state.keeper.hands, ['spoon', 'kettle', null])
   assert.equal(room.state.vessels['kettle']?.leaves, null)
 })
 
@@ -448,7 +448,7 @@ test('spoon_whenTappedAtTheTeaTable_goesIntoTheFirstFreeHand', () => {
 
   room.tap({ kind: 'item', itemId: 'spoon' })
 
-  assert.deepEqual(room.state.keeper.hands, ['spoon', null])
+  assert.deepEqual(room.state.keeper.hands, ['spoon', null, null])
 })
 
 test('sipButton_whenTheKettleIsPickedUp_isNotOffered', () => {
@@ -584,7 +584,7 @@ test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {
 
   room.tap({ kind: 'item', itemId: 'bowl1' })
 
-  assert.deepEqual(room.state.keeper.hands, ['cloth', 'bowl1'])
+  assert.deepEqual(room.state.keeper.hands, ['cloth', 'bowl1', null])
 })
 
 test('cloth_whileTheTableIsPressedWithoutMoving_staysInTheHand', () => {
@@ -802,7 +802,7 @@ test('thirdItem_whenBothHandsAreFull_isRemarkedOn', () => {
 
   room.tap({ kind: 'item', itemId: 'bowl2' })
 
-  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'caddy'])
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'caddy', null])
   assert.deepEqual(room.remarks, [{ kind: 'handsFull', timesTapped: 1 }])
 })
 
@@ -870,17 +870,50 @@ test('medal_whenTapped_asksForTheListOfAchievements', () => {
   assert.equal(room.achievementListsAsked, 1)
 })
 
+test('middleHand_whenTheSameItemIsTappedTenTimesWithFullHands_growsHoldingItAndChosen', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1', 'bowl2')
+  room.tapTimes(9, { kind: 'item', itemId: 'bowl3' })
+
+  room.tap({ kind: 'item', itemId: 'bowl3' })
+
+  assert.deepEqual(room.state.keeper.hands, ['bowl1', 'bowl2', 'bowl3'])
+  assert.equal(room.play.chosenHandIndex, 2)
+})
+
+test('middleHand_whenAnotherItemIsTappedInBetween_countsTheTapsAgain', () => {
+  const room = new RoomVisit()
+  room.carryFromTheShelf('bowl1', 'bowl2')
+  room.tapTimes(9, { kind: 'item', itemId: 'bowl3' })
+  room.tap({ kind: 'item', itemId: 'bowl4' })
+
+  room.tapTimes(9, { kind: 'item', itemId: 'bowl3' })
+
+  assert.equal(room.state.keeper.hasAMiddleHand, false)
+})
+
+test('middleHand_whenItHasBeenGrownBefore_doesNotGrowAgain', () => {
+  const room = new RoomVisit()
+  room.mayGrowAMiddleHand = false
+  room.carryFromTheShelf('bowl1', 'bowl2')
+
+  room.tapTimes(10, { kind: 'item', itemId: 'bowl3' })
+
+  assert.equal(room.state.keeper.hasAMiddleHand, false)
+})
+
 class RoomVisit {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
   readonly remarks: RoomRemark[] = []
   debugMenusAsked = 0
   achievementListsAsked = 0
+  mayGrowAMiddleHand = true
   deathsSeen = 0
   readonly play: RoomPlay
 
   constructor(heaterItemsBeforeTheTesterJoke = 4) {
-    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), keeperDied: () => (this.deathsSeen += 1) })
+    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1), achievementsAsked: () => (this.achievementListsAsked += 1), mayGrowAMiddleHand: () => this.mayGrowAMiddleHand, keeperDied: () => (this.deathsSeen += 1) })
   }
 
   get session() {
@@ -894,6 +927,10 @@ class RoomVisit {
   tap(target: RoomTapTarget): void {
     this.play.pressStarted(target)
     this.play.pressEnded()
+  }
+
+  tapTimes(times: number, target: RoomTapTarget): void {
+    for (let tap = 0; tap < times; tap += 1) this.tap(target)
   }
 
   takeAndChoose(itemId: string): void {

@@ -20,6 +20,7 @@ export const achievementIds = [
   'visitContinued',
   'tapAndHeaterLeftOn',
   'kettleBoiledDry',
+  'shiva',
 ] as const
 
 export type AchievementId = (typeof achievementIds)[number]
@@ -139,6 +140,8 @@ function achievementOf(event: RitualEvent, state: DeepReadonly<SessionState>): A
       return 'burntClothWashed'
     case 'spoonCrumbled':
       return 'spoonBurnt'
+    case 'middleHandGrown':
+      return 'shiva'
     case 'metalGlowsTooHotToHold':
       return carriedShapeOf(state, event.vesselId) === 'thermos' ? 'thermosGlowing' : null
     case 'boiledDry':

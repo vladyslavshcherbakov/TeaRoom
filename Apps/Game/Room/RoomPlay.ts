@@ -4,7 +4,7 @@ import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJud
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
-import { caddyItemId, carriedItemIdsIn, clothItemId, itemLocationIn, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { caddyItemId, carriedItemIdsIn, clothItemId, itemLocationIn, middleHandIndex, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -60,6 +60,7 @@ const clothWipingWidthMetres = 0.2
 const wipeEveryMetres = 0.02
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
+const tapsWithFullHandsThatGrowAMiddleHand = 10
 const deadlyStrengthsFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
@@ -73,6 +74,7 @@ export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
   readonly debugMenuAsked: () => void
   readonly achievementsAsked: () => void
+  readonly mayGrowAMiddleHand: () => boolean
   readonly keeperDied: () => void
 }
 
@@ -89,6 +91,7 @@ export class RoomPlay {
   private readonly timesRemarked = new Map<RoomRemarkKind, number>()
   private readonly itemsTriedOnTheWorkingHeater = new Set<string>()
   private roseBushTapsInARow = 0
+  private tapsWithFullHands: { readonly itemId: string; count: number } | null = null
 
   constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
     this.ritual = ritual
@@ -249,6 +252,7 @@ export class RoomPlay {
     this.log(`tap on ${describeTarget(target)}, ${chosenItemId === null ? 'no hand chosen' : `${chosenItemId} chosen in hand ${this.choice}`}`)
     if (target.kind === 'roseBush') return this.countTheRoseBushTap()
     this.forgetTheRoseBushTaps()
+    if (target.kind !== 'item' || target.itemId !== this.tapsWithFullHands?.itemId) this.forgetTheTapsWithFullHands()
     if (target.kind === 'medal') return this.showTheAchievements()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
@@ -332,7 +336,7 @@ export class RoomPlay {
 
   private pickUpAndChoose(itemId: string): void {
     const events = this.ritual.dispatch({ type: 'pickUp', itemId })
-    if (events.some((event) => event.type === 'actionRefused' && event.reason === 'handsFull')) return this.remarkOnFullHands(itemId)
+    if (events.some((event) => event.type === 'actionRefused' && event.reason === 'handsFull')) return this.tapWithFullHands(itemId)
     const pickedUp = events.find((event) => event.type === 'pickedUp')
     if (pickedUp === undefined) return
     this.choice = pickedUp.handIndex
@@ -499,9 +503,31 @@ export class RoomPlay {
     this.log(`${itemId} is kept off the heater, remarked on ${timesTapped} times`)
   }
 
+  private tapWithFullHands(itemId: string): void {
+    const count = (this.tapsWithFullHands?.count ?? 0) + 1
+    this.tapsWithFullHands = { itemId, count }
+    if (count < tapsWithFullHandsThatGrowAMiddleHand) return this.remarkOnFullHands(itemId)
+    this.tapsWithFullHands = null
+    if (!this.listener.mayGrowAMiddleHand()) {
+      this.log(`${itemId} tapped ${count} times in a row with full hands, but the middle hand has been grown before, so none grows`)
+      return this.remarkOnFullHands(itemId)
+    }
+    const events = this.ritual.dispatch({ type: 'pickUpWithAMiddleHand', itemId })
+    const pickedUp = events.find((event) => event.type === 'pickedUp')
+    if (pickedUp === undefined) return this.log(`${itemId} tapped ${count} times in a row with full hands, but it could not be taken into a middle hand`)
+    this.choice = pickedUp.handIndex
+    this.log(`${itemId} tapped ${count} times in a row with full hands grows a middle hand, which takes it and is chosen`)
+  }
+
+  private forgetTheTapsWithFullHands(): void {
+    if (this.tapsWithFullHands === null) return
+    this.log(`another tap after ${this.tapsWithFullHands.count} taps on ${this.tapsWithFullHands.itemId} with full hands starts the count again`)
+    this.tapsWithFullHands = null
+  }
+
   private remarkOnFullHands(itemId: string): void {
     const state = this.ritual.state
-    const holdsOnlyBowls = state.keeper.hands.every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
+    const holdsOnlyBowls = state.keeper.hands.slice(0, middleHandIndex).every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
     const timesTapped = this.remark(holdsOnlyBowls ? 'handsFullOfBowls' : 'handsFull')
     this.log(`${itemId} not taken: both hands are full${holdsOnlyBowls ? ' of bowls' : ''}, remarked on ${timesTapped} times`)
   }

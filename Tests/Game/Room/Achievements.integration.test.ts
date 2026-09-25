@@ -71,6 +71,14 @@ test('achievement_whenANewPuddleIsWipedWhereTheWipedOneHasGone_isOcd', () => {
   assert.deepEqual(room.announced, ['tableWiped'])
 })
 
+test('achievement_ofAMiddleHandGrown_isShiva', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.eventsHappened([{ type: 'middleHandGrown', itemId: 'bowl3' }], room.ritual.state)
+
+  assert.deepEqual(room.announced, ['shiva'])
+})
+
 test('achievement_ofTheHeaterTesterRemark_isHopeless', () => {
   const room = new AchievementsInTheRoom()
 

@@ -137,6 +137,7 @@ export class RoomScene {
         this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout })
       },
       achievementsAsked: () => this.achievementsList.show(this.achievements.unlocked),
+      mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       keeperDied: () => {
         this.hasTheKeeperDied = true
         this.visitStore.forget('the keeper died, so the next visit starts anew')

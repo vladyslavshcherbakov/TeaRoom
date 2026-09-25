@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { middleHandIndex } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../../Shared/Simulation/State/SessionState.ts'
 import type { HeldInView } from './CarriedItemsScene.ts'
 import type { CarriedModel } from './CarriedModel.ts'
@@ -11,10 +12,13 @@ export type HeldInViewFrame = {
   readonly centreInCamera: THREE.Vector3
 }
 
-export const handTouchAreaShareOfScreenWidth = 0.42
+const sideHandTouchAreaShareOfScreenWidth = 0.42
+const middleHandTouchAreaShareOfScreenWidth = 0.2
 export const handTouchAreaShareOfScreenHeight = 0.2
 
 const heldInViewDistanceMetres = 0.9
+const middleHeldInViewDistanceMetres = 0.8
+const middleHeldInViewShareOfScreenHeightFromBottom = 0.14
 const heldInViewShareOfScreenWidth = 0.24
 const heldInViewShareOfScreenHeightFromBottom = 0.07
 const chosenHeldLiftShareOfScreenHeight = 0.05
@@ -35,18 +39,25 @@ export function holdInView(model: Pick<CarriedModel, 'root' | 'footprintRadius' 
 
 export function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex): HeldInViewFrame {
   const { camera, chosenHandIndex } = heldInView
-  const screenHeight = 2 * heldInViewDistanceMetres * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+  const isMiddle = handIndex === middleHandIndex
+  const distance = isMiddle ? middleHeldInViewDistanceMetres : heldInViewDistanceMetres
+  const screenHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
   const screenWidth = screenHeight * camera.aspect
   const itemWidth = screenWidth * heldInViewShareOfScreenWidth
   const side = handIndex === 0 ? -1 : 1
-  const x = side * (screenWidth / 2 - itemWidth * heldInViewInsetShareOfItemWidth)
+  const x = isMiddle ? 0 : side * (screenWidth / 2 - itemWidth * heldInViewInsetShareOfItemWidth)
   const lift = chosenHandIndex === handIndex ? screenHeight * chosenHeldLiftShareOfScreenHeight : 0
-  const bottom = -screenHeight / 2 + screenHeight * heldInViewShareOfScreenHeightFromBottom + lift
+  const fromBottom = isMiddle ? middleHeldInViewShareOfScreenHeightFromBottom : heldInViewShareOfScreenHeightFromBottom
+  const bottom = -screenHeight / 2 + screenHeight * fromBottom + lift
   return {
     screenWidth,
     screenHeight,
     itemWidth,
-    baseInCamera: new THREE.Vector3(x, bottom, -heldInViewDistanceMetres),
-    centreInCamera: new THREE.Vector3(x, bottom + screenHeight * handTouchAreaShareOfScreenHeight * touchAreaCentreShareOfItsHeight, -heldInViewDistanceMetres),
+    baseInCamera: new THREE.Vector3(x, bottom, -distance),
+    centreInCamera: new THREE.Vector3(x, bottom + screenHeight * handTouchAreaShareOfScreenHeight * touchAreaCentreShareOfItsHeight, -distance),
   }
+}
+
+export function handTouchAreaShareOfScreenWidthFor(handIndex: HandIndex): number {
+  return handIndex === middleHandIndex ? middleHandTouchAreaShareOfScreenWidth : sideHandTouchAreaShareOfScreenWidth
 }

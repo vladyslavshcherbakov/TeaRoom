@@ -183,6 +183,8 @@ export const englishTexts = {
   'achievement.tapAndHeaterLeftOn.done': 'Left the tap running for two minutes, and the heater on for two minutes.',
   'achievement.kettleBoiledDry.title': 'Stubborn',
   'achievement.kettleBoiledDry.done': 'Waited on the heater until the kettle boiled dry.',
+  'achievement.shiva.title': 'Shiva',
+  'achievement.shiva.done': 'Wanted a third arm so badly that you tapped one into being. So proud of you.',
 
   'offering.glow': '{figurine} glows softly.',
   'offering.subtle': '{figurine} seems pleased.',

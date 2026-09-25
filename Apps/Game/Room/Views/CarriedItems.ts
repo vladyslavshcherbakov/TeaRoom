@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Spot } from '../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
-import { clothItemId, itemLocationIn } from '../../../../Shared/Simulation/Ritual/Reach.ts'
+import { clothItemId, itemLocationIn, middleHandIndex } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
@@ -13,7 +13,7 @@ import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
 import { CrumblingAsh } from './Carried/CrumblingAsh.ts'
 import { ItemFire } from './Carried/ItemFire.ts'
-import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidth, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
+import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { roomLayers } from './RoomLayers.ts'
@@ -23,6 +23,8 @@ import type { TapTargetTag } from './RoomModel.ts'
 const handHeightMetres = 0.55
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
+const middleHandForwardMetres = 0.26
+const everyHandIndex: readonly HandIndex[] = [0, 1, middleHandIndex]
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
@@ -34,7 +36,7 @@ export class CarriedItems {
   private readonly fires: readonly ItemFire[]
   private readonly ash: CrumblingAsh
   private readonly heaterSpot: Spot
-  private readonly handTouchAreas: readonly [THREE.Mesh, THREE.Mesh]
+  private readonly handTouchAreas: readonly { readonly handIndex: HandIndex; readonly area: THREE.Mesh }[]
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
@@ -54,7 +56,7 @@ export class CarriedItems {
     this.fires = this.models.flatMap((model) => (model.look.fire === null || model.charTo === null ? [] : [new ItemFire(materials, model, model.look.fire, model.charTo)]))
     this.ash = new CrumblingAsh(materials)
     this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), ...this.ash.meshes, this.chosenGlow.mesh)
-    this.handTouchAreas = [this.handTouchArea(0), this.handTouchArea(1)]
+    this.handTouchAreas = everyHandIndex.map((handIndex) => ({ handIndex, area: this.handTouchArea(handIndex) }))
   }
 
   show(scene: CarriedItemsScene): void {
@@ -64,7 +66,7 @@ export class CarriedItems {
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
     this.ash.show(scene.timeSeconds)
     this.waterStreams.show(scene, this.models)
-    this.handTouchAreas.forEach((area, handIndex) => this.placeHandTouchArea(area, handIndex === 0 ? 0 : 1, scene))
+    for (const { handIndex, area } of this.handTouchAreas) this.placeHandTouchArea(area, handIndex, scene)
     this.chosenGlow.show(scene, this.models)
   }
 
@@ -151,7 +153,7 @@ export class CarriedItems {
     const frame = heldInViewFrame(scene.heldInView, handIndex)
     area.position.copy(scene.heldInView.camera.localToWorld(frame.centreInCamera))
     area.quaternion.copy(scene.heldInView.camera.quaternion)
-    area.scale.set(frame.screenWidth * handTouchAreaShareOfScreenWidth, frame.screenHeight * handTouchAreaShareOfScreenHeight, 1)
+    area.scale.set(frame.screenWidth * handTouchAreaShareOfScreenWidthFor(handIndex), frame.screenHeight * handTouchAreaShareOfScreenHeight, 1)
   }
 }
 
@@ -171,10 +173,11 @@ function moveToLayer(model: CarriedModel, layer: number): void {
 }
 
 function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {
-  const side = handIndex === 0 ? handSideMetres : -handSideMetres
+  const side = handIndex === middleHandIndex ? 0 : handIndex === 0 ? handSideMetres : -handSideMetres
+  const forward = handIndex === middleHandIndex ? middleHandForwardMetres : handForwardMetres
   const heading = walk.headingRadians
-  const x = walk.position.x + Math.cos(heading) * side + Math.sin(heading) * handForwardMetres
-  const z = walk.position.z - Math.sin(heading) * side + Math.cos(heading) * handForwardMetres
+  const x = walk.position.x + Math.cos(heading) * side + Math.sin(heading) * forward
+  const z = walk.position.z - Math.sin(heading) * side + Math.cos(heading) * forward
   return new THREE.Vector3(x, handHeightMetres, z)
 }
 
