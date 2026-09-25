@@ -632,7 +632,7 @@ test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehi
   const room = new RoomVisit()
   room.walkTo('counter')
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-  room.fillTheKettleInTheSink()
+  room.fillInTheSink('kettle')
   room.walkTo('shelf')
   room.tap({ kind: 'hand', handIndex: 0 })
 
@@ -671,6 +671,16 @@ test('roseBush_whenAnotherTapComesBeforeTheTenth_startsCountingAgain', () => {
   room.tap({ kind: 'roseBush' })
 
   assert.equal(room.debugMenusAsked, 0)
+})
+
+test('thermosLid_whenTappedWhileAimingTheClosedThermos_opensAndKeepsTheAim', () => {
+  const room = new RoomVisit()
+  room.aimTheClosedThermosAtTheBowl()
+
+  room.play.aimingTapped({ kind: 'lid', itemId: 'thermos' })
+
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+  assert.equal(room.play.aimedPourView?.sourceId, 'thermos')
 })
 
 class RoomVisit {
@@ -732,7 +742,7 @@ class RoomVisit {
     this.walkTo('counter')
     this.putDown(0, onTheCounter)
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-    this.fillTheKettleInTheSink()
+    this.fillInTheSink('kettle')
   }
 
   aimTheKettleAtTheFirstOfTwoBowls(): void {
@@ -741,7 +751,17 @@ class RoomVisit {
     this.putDown(0, onTheCounter)
     this.putDown(1, onTheCounterBesideTheBowl)
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-    this.fillTheKettleInTheSink()
+    this.fillInTheSink('kettle')
+    this.tap({ kind: 'hand', handIndex: 0 })
+    this.tap({ kind: 'item', itemId: 'bowl1' })
+  }
+
+  aimTheClosedThermosAtTheBowl(): void {
+    this.carryFromTheShelf('bowl1')
+    this.walkTo('counter')
+    this.putDown(0, onTheCounter)
+    this.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
+    this.fillInTheSink('thermos')
     this.tap({ kind: 'hand', handIndex: 0 })
     this.tap({ kind: 'item', itemId: 'bowl1' })
   }
@@ -759,7 +779,7 @@ class RoomVisit {
     this.putDown(1, { x: 1.2, y: 0.42, z: -1.5 })
     this.walkTo('counter')
     this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-    this.fillTheKettleInTheSink()
+    this.fillInTheSink('kettle')
     this.walkTo('teaTable')
     this.putDown(0, { x: 1, y: 0.42, z: -1.8 })
   }
@@ -785,12 +805,12 @@ class RoomVisit {
     }
   }
 
-  fillTheKettleInTheSink(): void {
-    this.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
-    this.session.dispatch({ type: 'putInTheSink', itemId: 'kettle' })
+  fillInTheSink(vesselId: string): void {
+    this.session.dispatch({ type: 'openVesselLid', vesselId })
+    this.session.dispatch({ type: 'putInTheSink', itemId: vesselId })
     this.advance(10)
     this.session.dispatch({ type: 'turnTheTapOff' })
-    this.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+    this.session.dispatch({ type: 'pickUp', itemId: vesselId })
   }
 
   private advance(seconds: number): void {

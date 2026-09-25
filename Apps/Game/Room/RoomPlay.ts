@@ -189,6 +189,11 @@ export class RoomPlay {
   }
 
   aimingTapped(target: RoomTapTarget): void {
+    const sourceId = this.aimedPour?.view.sourceId
+    if (target.kind === 'lid' && target.itemId === sourceId) {
+      this.log(`tap on the lid of ${sourceId} while aiming opens or closes it and keeps the aim`)
+      return this.toggleLidOf(sourceId)
+    }
     this.pourDone()
     if (target.kind !== 'surface') return this.log(`tap on ${describeTarget(target)} while aiming returns the vessel to its hand`)
     this.log(`tap on the ${target.furnitureId} while aiming puts the vessel down there`)

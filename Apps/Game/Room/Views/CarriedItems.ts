@@ -21,6 +21,7 @@ const handHeightMetres = 0.55
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
 const spoutAboveTargetRimMetres = 0.1
+const aimedVesselAboveTheSurfaceMetres = 0.01
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
@@ -112,6 +113,8 @@ export class CarriedItems {
     model.root.visible = true
     model.root.rotation.set(0, turnRadians, tiltRadians)
     model.root.position.copy(tipGoal.sub(tipAfterTilt))
+    const lowestBase = target.root.position.y + model.footprintRadius * Math.sin(-tiltRadians) + aimedVesselAboveTheSurfaceMetres
+    model.root.position.y = Math.max(model.root.position.y, lowestBase)
   }
 
   private retag(model: CarriedModel, tag: TapTargetTag): void {
