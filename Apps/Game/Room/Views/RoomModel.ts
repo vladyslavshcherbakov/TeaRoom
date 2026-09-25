@@ -31,11 +31,14 @@ const medalRibbonWidthMetres = 0.09
 const medalRibbonLengthMetres = 0.3
 const medalRibbonTiltRadians = 0.35
 const medalTouchAreaMetres = 0.55
-const gearRadiusMetres = 0.1
+const gearRadiusMetres = 0.13
 const gearThicknessMetres = 0.03
-const gearToothMetres = 0.05
+const gearToothMetres = 0.06
 const gearTeeth = 8
-const gearTouchAreaMetres = 0.45
+const gearTouchAreaWidthMetres = 0.9
+const gearTouchAreaHeightMetres = 0.7
+const gearTouchAreaDepthMetres = 0.3
+const gearTouchAreaBelowTheGearMetres = 0.08
 const faucetPostAboveTheSpoutMetres = 0.04
 const faucetTouchAreaWidthMetres = 0.2
 const faucetTouchAreaAboveTheCounterMetres = 0.12
@@ -155,7 +158,8 @@ export class RoomModel {
     hub.rotation.x = Math.PI / 2
     gear.add(hub)
     gear.traverse((part) => (part.castShadow = true))
-    const touchArea = this.touchArea(gearTouchAreaMetres, gearTouchAreaMetres, 0.05)
+    const touchArea = this.touchArea(gearTouchAreaWidthMetres, gearTouchAreaHeightMetres, gearTouchAreaDepthMetres)
+    touchArea.position.set(0, -gearTouchAreaBelowTheGearMetres, gearTouchAreaDepthMetres / 2)
     gear.add(touchArea)
     gear.position.set(-roomHalfSize + gearThicknessMetres / 2 + 0.01, settingsGearOnLeftWall.y, settingsGearOnLeftWall.z)
     gear.rotation.y = Math.PI / 2
