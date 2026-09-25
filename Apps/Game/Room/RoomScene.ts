@@ -81,7 +81,7 @@ export class RoomScene {
   private look: FirstPersonLook = { headingRadians: Math.PI, pitchRadians: 0 }
   private shadowPoseLastDrawn = ''
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number) {
     this.session = session
     this.catalog = catalog
     this.log = log
@@ -102,7 +102,7 @@ export class RoomScene {
       },
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
-    this.play = new RoomPlay(ritual, catalog, log, {
+    this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
       remarked: (remark) => this.caption.show([roomRemarkLine(remark, this.voiceSeed)]),
       debugMenuAsked: () => this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout }),
     })

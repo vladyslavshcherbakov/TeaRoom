@@ -10,6 +10,7 @@ import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 const roomId = 'quietRoom'
 const shuffledVesselDefinitionId = 'teaBowl'
 const largestVoiceSeed = 1_000_000
+const fewestHeaterItemsBeforeTheTesterJoke = 4
 
 document.title = text('page.title')
 
@@ -49,7 +50,9 @@ if (opening.kind === 'unavailable') {
   const shareThroughTheTimeOfDay = Math.random()
   const hoursSinceSunrise = hoursSinceSunriseFor(opening.session.state.atmosphere.timeOfDay, shareThroughTheTimeOfDay)
   roomLog(`the light stands ${hoursSinceSunrise.toFixed(1)} hours after sunrise, chosen at random within ${opening.session.state.atmosphere.timeOfDay}`)
-  new RoomScene(container, opening.session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay)
+  const heaterItemsBeforeTheTesterJoke = fewestHeaterItemsBeforeTheTesterJoke + Math.floor(Math.random() * 2)
+  roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the heater, chosen at random for this visit`)
+  new RoomScene(container, opening.session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke)
 }
 
 function catalogWithBowlsShuffled(): Catalog {

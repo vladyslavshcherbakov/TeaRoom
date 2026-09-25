@@ -59,7 +59,7 @@ const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const remarkWhenKeptOffTheHeater: Partial<Record<CarriedShape, RoomRemarkKind>> = { bowl: 'bowlKeptOffTheHeater', caddy: 'caddyKeptOffTheHeater' }
 
-export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls'
+export type RoomRemarkKind = 'sillIsTheRoomsOwn' | 'bowlKeptOffTheHeater' | 'caddyKeptOffTheHeater' | 'handsFull' | 'handsFullOfBowls' | 'heaterTester'
 
 export type RoomRemark = { readonly kind: RoomRemarkKind; readonly timesTapped: number }
 
@@ -73,17 +73,20 @@ export class RoomPlay {
   private readonly catalog: Catalog
   private readonly log: RoomLog
   private readonly listener: RoomPlayListener
+  private readonly heaterItemsBeforeTheTesterJoke: number
   private readonly navigator: RoomNavigator
   private choice: HandIndex | null = null
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
   private readonly timesRemarked = new Map<RoomRemarkKind, number>()
+  private readonly itemsTriedOnTheHeater = new Set<string>()
   private roseBushTapsInARow = 0
 
-  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, listener: RoomPlayListener) {
+  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener) {
     this.ritual = ritual
     this.catalog = catalog
     this.log = log
+    this.heaterItemsBeforeTheTesterJoke = heaterItemsBeforeTheTesterJoke
     this.listener = listener
     this.navigator = new RoomNavigator(log, (furnitureId) => this.keeperMovedTo(furnitureId))
   }
@@ -448,6 +451,9 @@ export class RoomPlay {
     if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
     const events = this.ritual.dispatch({ type: 'placeOnHeater', itemId })
     this.letGoOfTheChoiceUnlessRefused(events)
+    const isNewOnTheHeater = !this.itemsTriedOnTheHeater.has(itemId)
+    this.itemsTriedOnTheHeater.add(itemId)
+    if (isNewOnTheHeater && this.itemsTriedOnTheHeater.size === this.heaterItemsBeforeTheTesterJoke) return this.teaseTheHeaterTester(itemId)
     const isKeptOff = events.some((event) => event.type === 'actionRefused' && event.reason === 'cannotSitOnHeater')
     const shape = carriedShapeOf(this.ritual.state, itemId)
     const remarkKind = isKeptOff && shape !== undefined ? remarkWhenKeptOffTheHeater[shape] : undefined
@@ -461,6 +467,11 @@ export class RoomPlay {
     const holdsOnlyBowls = state.keeper.hands.every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
     const timesTapped = this.remark(holdsOnlyBowls ? 'handsFullOfBowls' : 'handsFull')
     this.log(`${itemId} not taken: both hands are full${holdsOnlyBowls ? ' of bowls' : ''}, remarked on ${timesTapped} times`)
+  }
+
+  private teaseTheHeaterTester(itemId: string): void {
+    this.remark('heaterTester')
+    this.log(`${itemId} is the ${this.itemsTriedOnTheHeater.size}th different item tried on the heater, the tester is teased, once for this visit`)
   }
 
   private remark(kind: RoomRemarkKind): number {

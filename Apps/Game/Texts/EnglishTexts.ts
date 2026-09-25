@@ -92,6 +92,10 @@ export const englishTexts = {
   'handsFullOfBowls.2': 'Two bowls, two hands. Stacking them in one hand is a skill for another day.',
   'handsFullOfBowls.3': 'One day I will balance three bowls on one palm. Today is not that day.',
   'handsFullOfBowls.4': 'A real tea master holds two bowls in one hand. I will train when no one is watching.',
+  'heaterTester.1': 'Everything goes on the heater, I see. Looks like we have caught ourselves a tester.',
+  'heaterTester.2': "Mummy's little arsonist is at it again.",
+  'heaterTester.3': 'Is this really what you came to this game for? I may have to report some worrying behaviour.',
+  'heaterTester.4': 'allo yoba ty 4to delaesh hvatit uzhe!!!',
 
   'burntClothWashed.1': "Amazing. A burnt cloth washes back to new. I think I'll stay in this world.",
   'burntClothWashed.2': 'Not a trace of the fire. This world forgives things. I could live here.',

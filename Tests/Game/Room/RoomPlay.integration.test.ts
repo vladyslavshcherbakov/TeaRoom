@@ -679,6 +679,45 @@ test('bowl_whenPutOnTheHeater_staysInHandAndIsRemarkedOn', () => {
   assert.deepEqual(room.remarks, [{ kind: 'bowlKeptOffTheHeater', timesTapped: 1 }])
 })
 
+test('heaterTester_onTheItemThatReachesTheVisitsCount_isTeasedInPlaceOfTheItemsOwnLine', () => {
+  const room = new RoomVisit(2)
+  room.carryFromTheShelf('bowl1', 'caddy')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'heater' })
+  room.tap({ kind: 'hand', handIndex: 1 })
+
+  room.tap({ kind: 'heater' })
+
+  assert.deepEqual(room.remarks, [
+    { kind: 'bowlKeptOffTheHeater', timesTapped: 1 },
+    { kind: 'heaterTester', timesTapped: 1 },
+  ])
+})
+
+test('heaterTester_onceTeased_leavesEveryLaterTryToTheItemsOwnLine', () => {
+  const room = new RoomVisit(2)
+  room.carryFromTheShelf('bowl1', 'caddy')
+  room.walkTo('counter')
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'heater' })
+  room.tap({ kind: 'hand', handIndex: 1 })
+  room.tap({ kind: 'heater' })
+  room.putDown(1, onTheCounterBesideTheBowl)
+  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'heater' })
+
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'heater' })
+
+  assert.equal(room.state.heater.itemIdOnTop, 'kettle')
+  assert.deepEqual(room.remarks, [
+    { kind: 'bowlKeptOffTheHeater', timesTapped: 1 },
+    { kind: 'heaterTester', timesTapped: 1 },
+    { kind: 'bowlKeptOffTheHeater', timesTapped: 2 },
+  ])
+})
+
 test('thirdItem_whenBothHandsAreFull_isRemarkedOn', () => {
   const room = new RoomVisit()
   room.carryFromTheShelf('bowl1', 'caddy')
@@ -750,7 +789,11 @@ class RoomVisit {
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
   readonly remarks: RoomRemark[] = []
   debugMenusAsked = 0
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1) })
+  readonly play: RoomPlay
+
+  constructor(heaterItemsBeforeTheTesterJoke = 4) {
+    this.play = new RoomPlay(this.ritual.session, defaultCatalog, (message) => this.logLines.push(message), heaterItemsBeforeTheTesterJoke, { remarked: (remark) => this.remarks.push(remark), debugMenuAsked: () => (this.debugMenusAsked += 1) })
+  }
 
   get session() {
     return this.ritual.session
