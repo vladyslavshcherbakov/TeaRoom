@@ -420,12 +420,22 @@
         border: none;
         border-radius: 8px;
         background: rgba(40, 26, 16, 0.25);
+        display: grid;
+        place-items: center;
+        padding: 0;
         color: rgba(251, 244, 232, 0.8);
-        font-size: 20px;
-        line-height: 36px;
         opacity: 0.35;
         cursor: pointer;
         transition: opacity 0.2s;
+      }
+      .full-screen svg {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
       }
       .full-screen:hover {
         opacity: 0.9;

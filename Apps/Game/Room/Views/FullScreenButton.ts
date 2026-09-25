@@ -1,6 +1,8 @@
 import { text } from '../../Texts/Texts.ts'
 import type { RoomLog } from '../RoomNavigator.ts'
 
+const svgNamespace = 'http://www.w3.org/2000/svg'
+
 export class FullScreenButton {
   private readonly element: HTMLButtonElement
   private readonly log: RoomLog
@@ -9,7 +11,7 @@ export class FullScreenButton {
     this.log = log
     this.element = document.createElement('button')
     this.element.className = 'full-screen'
-    this.element.textContent = '⛶'
+    this.element.append(cornersIcon())
     this.element.hidden = !canGoFullScreen()
     this.element.addEventListener('click', () => this.toggle())
     document.addEventListener('fullscreenchange', () => this.showTheLabel())
@@ -37,4 +39,14 @@ export class FullScreenButton {
 
 function canGoFullScreen(): boolean {
   return document.fullscreenEnabled && window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+
+function cornersIcon(): SVGSVGElement {
+  const icon = document.createElementNS(svgNamespace, 'svg')
+  icon.setAttribute('viewBox', '0 0 24 24')
+  icon.setAttribute('aria-hidden', 'true')
+  const corners = document.createElementNS(svgNamespace, 'path')
+  corners.setAttribute('d', 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5')
+  icon.append(corners)
+  return icon
 }
