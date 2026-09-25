@@ -31,7 +31,19 @@ export function kettleParts(materials: CarriedModelMaterials): ItemParts {
   const gauge = waterGauge(materials.room)
   const kettleWater = waterInsideTheKettle(materials.room)
   const meshes = [body, spout, gauge.frame.mesh, gauge.water.mesh, kettleWater]
-  return { meshes, lid, spoutTip: new THREE.Vector3(0.205, 0.183, 0), rimHeight: 0.23, liquidLevel: null, gaugeWater: gauge.water, kettleWater, pointsDownTheSide: pointsDownTheKettle() }
+  return {
+    meshes,
+    lid,
+    spoutTip: new THREE.Vector3(0.205, 0.183, 0),
+    rimHeight: 0.23,
+    liquidLevel: null,
+    liquidVolumeAt: null,
+    pointsDownTheSide: pointsDownTheKettle(),
+    heldInViewLook: null,
+    glowingShell: null,
+    gaugeWater: gauge.water,
+    kettleWater,
+  }
 }
 
 function pointsDownTheKettle(): PointDownTheSide[] {

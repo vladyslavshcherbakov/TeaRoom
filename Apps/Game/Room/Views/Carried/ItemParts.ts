@@ -8,17 +8,19 @@ export type ItemParts = {
   readonly spoutTip: THREE.Vector3
   readonly rimHeight: number
   readonly liquidLevel: LiquidLevel | null
-  readonly heldInViewLook?: HeldInViewLook
-  readonly glowingShell?: GlowingShell | undefined
-  readonly isSeeThrough?: boolean
-  readonly pointsDownTheSide?: readonly PointDownTheSide[]
-  readonly gaugeWater?: GaugeStrip
-  readonly kettleWater?: THREE.Mesh
+  readonly liquidVolumeAt: LiquidVolumeAt | null
+  readonly pointsDownTheSide: readonly PointDownTheSide[] | null
+  readonly heldInViewLook: HeldInViewLook | null
+  readonly glowingShell: GlowingShell | null
+  readonly gaugeWater: GaugeStrip | null
+  readonly kettleWater: THREE.Mesh | null
 }
 
 export type PointDownTheSide = { readonly distance: number; readonly height: number }
 
 export type LiquidLevel = (fillShare: number) => { readonly heightMetres: number; readonly radiusMetres: number }
+
+export type LiquidVolumeAt = (surfaceHeightMetres: number) => THREE.BufferGeometry
 
 export type GlowingShell = {
   readonly metal: THREE.MeshStandardMaterial

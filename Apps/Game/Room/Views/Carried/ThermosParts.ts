@@ -65,8 +65,20 @@ export function thermosParts(materials: RoomMaterials): ItemParts {
   floor.rotation.x = -Math.PI / 2
   floor.position.y = thermosFloorMetres
   const meshes = [foot, base, body, shoulder, neck, ...ridges, lip, inside, floor]
-  const glowingShell = aluminium instanceof THREE.MeshStandardMaterial ? { metal: aluminium, coolColour: aluminium.color.clone(), coolMetalness: aluminium.metalness } : undefined
-  return { meshes, lid: thermosCup(aluminium), glowingShell, spoutTip: new THREE.Vector3(thermosNeckRadiusMetres, thermosMouthMetres, 0), rimHeight: thermosMouthMetres, liquidLevel: thermosLiquidLevel, pointsDownTheSide: pointsDownTheThermos }
+  const glowingShell = aluminium instanceof THREE.MeshStandardMaterial ? { metal: aluminium, coolColour: aluminium.color.clone(), coolMetalness: aluminium.metalness } : null
+  return {
+    meshes,
+    lid: thermosCup(aluminium),
+    spoutTip: new THREE.Vector3(thermosNeckRadiusMetres, thermosMouthMetres, 0),
+    rimHeight: thermosMouthMetres,
+    liquidLevel: thermosLiquidLevel,
+    liquidVolumeAt: null,
+    pointsDownTheSide: pointsDownTheThermos,
+    heldInViewLook: null,
+    glowingShell,
+    gaugeWater: null,
+    kettleWater: null,
+  }
 }
 
 function thermosCup(aluminium: THREE.Material): THREE.Group {

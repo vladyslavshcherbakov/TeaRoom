@@ -21,5 +21,5 @@ export function caddyParts(materials: RoomMaterials): ItemParts {
   knob.position.y = 0.023
   lid.add(lidTop, knob)
   lid.position.y = 0.174
-  return { meshes: [body, bottom, label, rim], lid, spoutTip: new THREE.Vector3(0.08, 0.16, 0), rimHeight: 0.19, liquidLevel: null }
+  return { meshes: [body, bottom, label, rim], lid, spoutTip: new THREE.Vector3(0.08, 0.16, 0), rimHeight: 0.19, liquidLevel: null, liquidVolumeAt: null, pointsDownTheSide: null, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null }
 }

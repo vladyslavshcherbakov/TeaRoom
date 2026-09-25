@@ -76,14 +76,26 @@ export function bowlParts(materials: RoomMaterials, itemId: string): ItemParts {
   const meshes: THREE.Object3D[] = [body]
   if (look.painting !== null) meshes.push(paintedOnTheBottom(materials, look.painting))
   if (look.isRimGilded) meshes.push(gildedRim(materials))
-  const bowl = { meshes, lid: null, spoutTip: new THREE.Vector3(0.083, bowlRimHeightMetres, 0), rimHeight: bowlRimHeightMetres, liquidLevel: bowlLiquidLevel, pointsDownTheSide: pointsDownTheBowl }
+  const bowl: ItemParts = {
+    meshes,
+    lid: null,
+    spoutTip: new THREE.Vector3(0.083, bowlRimHeightMetres, 0),
+    rimHeight: bowlRimHeightMetres,
+    liquidLevel: bowlLiquidLevel,
+    liquidVolumeAt: null,
+    pointsDownTheSide: pointsDownTheBowl,
+    heldInViewLook: null,
+    glowingShell: null,
+    gaugeWater: null,
+    kettleWater: null,
+  }
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
   clearGlass.side = THREE.DoubleSide
-  return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass }, isSeeThrough: true }
+  return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass }, liquidVolumeAt: bowlLiquidGeometry }
 }
 
-export function bowlLiquidGeometry(surfaceHeight: number): THREE.BufferGeometry {
+function bowlLiquidGeometry(surfaceHeight: number): THREE.BufferGeometry {
   const underTheSurface = bowlInsideProfile.filter((point) => point.y < surfaceHeight)
   const surfaceRadius = bowlInsideRadiusAt(surfaceHeight)
   const outline = [

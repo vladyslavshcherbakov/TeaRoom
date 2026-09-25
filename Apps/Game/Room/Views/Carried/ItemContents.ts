@@ -8,7 +8,6 @@ import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
-import { bowlLiquidGeometry } from './BowlParts.ts'
 import { mostPuffsFromOneSource, type CarriedModel } from './CarriedModel.ts'
 import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
@@ -108,10 +107,10 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
 function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight: number, vessel: TableViewState.Vessel): void {
   volume.visible = vessel.fillShare > 0
   if (volume.material instanceof THREE.MeshStandardMaterial) volume.material.color.set(vessel.liquorColour)
-  if (!volume.visible || model.liquidVolumeHeight === surfaceHeight) return
+  if (!volume.visible || model.liquidVolumeAt === null || model.liquidVolumeHeight === surfaceHeight) return
   model.liquidVolumeHeight = surfaceHeight
   volume.geometry.dispose()
-  volume.geometry = bowlLiquidGeometry(surfaceHeight)
+  volume.geometry = model.liquidVolumeAt(surfaceHeight)
 }
 
 function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave {

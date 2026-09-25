@@ -4,7 +4,7 @@ import { bowlParts } from './BowlParts.ts'
 import { caddyParts } from './CaddyParts.ts'
 import { clothParts } from './ClothParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
-import type { CarriedModelMaterials, GlowingShell, HeldInViewLook, ItemParts, LiquidLevel, PointDownTheSide } from './ItemParts.ts'
+import type { CarriedModelMaterials, GlowingShell, HeldInViewLook, ItemParts, LiquidLevel, LiquidVolumeAt, PointDownTheSide } from './ItemParts.ts'
 import { kettleParts } from './KettleParts.ts'
 import type { LeafPile } from './LeafPile.ts'
 import { spoonParts } from './SpoonParts.ts'
@@ -24,6 +24,7 @@ export type CarriedModel = {
   readonly liquidLevel: LiquidLevel | null
   readonly pointsDownTheSide: readonly PointDownTheSide[] | null
   readonly liquidVolume: THREE.Mesh | null
+  readonly liquidVolumeAt: LiquidVolumeAt | null
   liquidVolumeHeight: number
   readonly gaugeWater: GaugeStrip | null
   readonly leafHolder: THREE.Group | null
@@ -61,7 +62,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     liquid.renderOrder = liquidDrawnAfterThePaintingBelowIt
     root.add(liquid)
   }
-  const liquidVolume = parts.isSeeThrough === true ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
+  const liquidVolume = parts.liquidVolumeAt !== null ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
   if (liquidVolume !== null) root.add(liquidVolume)
   if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight, materials.touchPad))
   const leafHolder = leafHolderFor(shape)
@@ -83,18 +84,19 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     liquid,
     liquidMaterial,
     liquidLevel: parts.liquidLevel,
-    pointsDownTheSide: parts.pointsDownTheSide ?? null,
+    pointsDownTheSide: parts.pointsDownTheSide,
     liquidVolume,
+    liquidVolumeAt: parts.liquidVolumeAt,
     liquidVolumeHeight: 0,
-    gaugeWater: parts.gaugeWater ?? null,
+    gaugeWater: parts.gaugeWater,
     leafHolder,
     leaves: null,
     soakedLeafHolder,
     soakedLeaves: null,
-    kettleWater: parts.kettleWater ?? null,
+    kettleWater: parts.kettleWater,
     puffs,
-    heldInViewLook: parts.heldInViewLook ?? null,
-    glowingShell: parts.glowingShell ?? null,
+    heldInViewLook: parts.heldInViewLook,
+    glowingShell: parts.glowingShell,
     tagKey: '',
     layer: 0,
     isHeldInView: false,
