@@ -102,6 +102,22 @@ export class RoomPlay {
     return press !== null && press.hasMovedAway ? (press.stroke?.lastPoint ?? null) : null
   }
 
+  canTheChosenItemActOn(target: RoomTapTarget): boolean {
+    const itemId = this.chosenItemId()
+    if (itemId === null || this.view.kind !== 'closeUp') return false
+    switch (target.kind) {
+      case 'surface':
+      case 'heater':
+      case 'faucet':
+      case 'figurine':
+        return true
+      case 'item':
+        return itemId === spoonItemId || this.canAimAPourAt(target.itemId)
+      default:
+        return false
+    }
+  }
+
   pressStarted(target: RoomTapTarget): void {
     if (this.aimedPour !== null) return this.log(`press on ${describeTarget(target)} ignored while aiming a pour`)
     this.press = { target, heldSeconds: 0, hasMovedAway: false, stroke: this.wipeStrokeStartingAt(target) }

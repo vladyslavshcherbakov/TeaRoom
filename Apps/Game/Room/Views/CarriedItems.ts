@@ -126,7 +126,7 @@ export class CarriedItems {
     area.layers.set(roomLayers.heldInView)
     area.visible = false
     const tag: TapTargetTag = { handIndex }
-    area.userData = { tapTarget: tag }
+    area.userData = { tapTarget: tag, isHandTouchArea: true }
     this.root.add(area)
     this.tappableMeshes.push(area)
     return area

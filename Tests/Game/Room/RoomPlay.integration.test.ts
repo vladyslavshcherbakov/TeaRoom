@@ -429,6 +429,26 @@ test('table_whenStrokedWithTheClothAwayFromThePuddle_driesOnlyAsATableLeftAlone'
   assert.ok(Math.abs(stroked.state.tableWetMl - leftAlone.state.tableWetMl) < 0.01, `${stroked.state.tableWetMl} ml against ${leftAlone.state.tableWetMl} ml`)
 })
 
+test('chosenItem_behindItsGlow_canBePutDownOnTheTableThatTheTapHit', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.takeAndChoose('cloth')
+
+  const canActOnTheTable = room.play.canTheChosenItemActOn({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+
+  assert.equal(canActOnTheTable, true)
+})
+
+test('chosenItem_behindItsGlow_letsTheHandKeepATapOnTheFloor', () => {
+  const room = new RoomVisit()
+  room.setTheTeaTable()
+  room.takeAndChoose('cloth')
+
+  const canActOnTheFloor = room.play.canTheChosenItemActOn({ kind: 'floor', point: { x: 1, z: -0.6 } })
+
+  assert.equal(canActOnTheFloor, false)
+})
+
 test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {
   const room = new RoomVisit()
   room.setTheTeaTable()

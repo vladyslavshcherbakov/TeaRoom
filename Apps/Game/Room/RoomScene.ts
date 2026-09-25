@@ -180,20 +180,13 @@ export class RoomScene {
   private tapTargetAt(point: ScreenPoint): RoomTapTarget {
     this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes]
-    const [nearest] = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
-    const tag = nearest === undefined ? undefined : tapTargetTagOf(nearest.object)
-    if (nearest === undefined || tag === undefined) return { kind: 'nothing' }
-    if ('itemId' in tag) return { kind: 'item', itemId: tag.itemId }
-    if ('handIndex' in tag) return { kind: 'hand', handIndex: tag.handIndex }
-    if ('isHeater' in tag) return { kind: 'heater' }
-    if ('isHeaterSwitch' in tag) return { kind: 'heaterSwitch' }
-    if ('isFaucet' in tag) return { kind: 'faucet' }
-    if ('isFloor' in tag) return { kind: 'floor', point: { x: nearest.point.x, z: nearest.point.z } }
-    if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
-    if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }
-    const upwardNormal = nearest.face?.normal.clone().transformDirection(nearest.object.matrixWorld).y ?? 0
-    if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }
-    return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: nearest.point.x, y: nearest.point.y, z: nearest.point.z } }
+    const hits = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
+    const [nearest] = hits
+    if (nearest === undefined) return { kind: 'nothing' }
+    const target = tapTargetOf(nearest)
+    if (target.kind !== 'hand' || !isAHandTouchArea(nearest.object) || target.handIndex !== this.play.chosenHandIndex) return target
+    const behind = hits.map(tapTargetOf).find((hitTarget) => hitTarget.kind !== 'hand' && hitTarget.kind !== 'nothing')
+    return behind !== undefined && this.play.canTheChosenItemActOn(behind) ? behind : target
   }
 
   private fitToWindow(): void {
@@ -217,6 +210,26 @@ function shapedItemsIn(state: DeepReadonly<SessionState>, log: RoomLog): ShapedI
     const shape = carriedShapeOf(state, itemId)
     return shape === undefined ? [] : [{ itemId, shape }]
   })
+}
+
+function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
+  const tag = tapTargetTagOf(hit.object)
+  if (tag === undefined) return { kind: 'nothing' }
+  if ('itemId' in tag) return { kind: 'item', itemId: tag.itemId }
+  if ('handIndex' in tag) return { kind: 'hand', handIndex: tag.handIndex }
+  if ('isHeater' in tag) return { kind: 'heater' }
+  if ('isHeaterSwitch' in tag) return { kind: 'heaterSwitch' }
+  if ('isFaucet' in tag) return { kind: 'faucet' }
+  if ('isFloor' in tag) return { kind: 'floor', point: { x: hit.point.x, z: hit.point.z } }
+  if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
+  if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }
+  const upwardNormal = hit.face?.normal.clone().transformDirection(hit.object.matrixWorld).y ?? 0
+  if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }
+  return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: hit.point.x, y: hit.point.y, z: hit.point.z } }
+}
+
+function isAHandTouchArea(object: THREE.Object3D): boolean {
+  return object.userData['isHandTouchArea'] === true
 }
 
 function tapTargetTagOf(object: THREE.Object3D): TapTargetTag | undefined {
