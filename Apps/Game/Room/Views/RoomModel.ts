@@ -73,6 +73,7 @@ const sillDepthMetres = 0.3
 const sillIntoTheRoomMetres = 0.1
 const skyBehindTheWindowMetres = 0.3
 const skyBeyondTheWindowMetres = 0.4
+const smallestSkyGapBehindTheWallMetres = 0.01
 
 export class RoomModel {
   private readonly materials: RoomMaterials
@@ -136,13 +137,21 @@ export class RoomModel {
       this.wallBox(wall, 'wall', window.width, wallHeight - windowTop, wallThickness, { alongTheWall: window.centreAlongTheWall, y: (windowTop + wallHeight) / 2, intoTheRoom: middleOfTheWall })
       this.wallBox(wall, 'darkWood', window.width + 0.1, 0.05, sillDepthMetres, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight, intoTheRoom: middleOfTheWall + sillIntoTheRoomMetres })
       this.wallBox(wall, 'darkWood', 0.05, window.height, 0.06, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight + window.height / 2, intoTheRoom: middleOfTheWall })
-      const skySize = { width: window.width + skyBeyondTheWindowMetres, height: window.height + skyBeyondTheWindowMetres }
-      this.wallPlane(wall, 'sky', skySize, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight + window.height / 2, intoTheRoom: middleOfTheWall - skyBehindTheWindowMetres }, false)
+      this.addSkyBehind(wall, window)
       if (window.hasTheProphecyAbove) inscriptions.push(this.addProphecy(wall, { alongTheWall: window.centreAlongTheWall, y: (windowTop + wallHeight) / 2, intoTheRoom: -wallThickness - 0.002 }))
       solidFrom = window.centreAlongTheWall + window.width / 2
     }
     this.wallBox(wall, 'wall', roomHalfSize - solidFrom, wallHeight, wallThickness, { alongTheWall: (solidFrom + roomHalfSize) / 2, y: wallHeight / 2, intoTheRoom: middleOfTheWall })
     return inscriptions
+  }
+
+  private addSkyBehind(wall: WallSide, window: WallWindow): void {
+    const skyStart = Math.max(-roomHalfSize, window.centreAlongTheWall - (window.width + skyBeyondTheWindowMetres) / 2)
+    const skyEnd = Math.min(roomHalfSize, window.centreAlongTheWall + (window.width + skyBeyondTheWindowMetres) / 2)
+    const distanceToTheWallsEnd = Math.min(skyStart + roomHalfSize, roomHalfSize - skyEnd)
+    const gapBehindTheWall = Math.max(smallestSkyGapBehindTheWallMetres, Math.min(skyBehindTheWindowMetres - wallThickness / 2, distanceToTheWallsEnd))
+    const size = { width: skyEnd - skyStart, height: window.height + skyBeyondTheWindowMetres }
+    this.wallPlane(wall, 'sky', size, { alongTheWall: (skyStart + skyEnd) / 2, y: window.sillHeight + window.height / 2, intoTheRoom: -wallThickness - gapBehindTheWall }, false)
   }
 
   private addProphecy(wall: WallSide, point: PointOnAWall): THREE.Mesh {
