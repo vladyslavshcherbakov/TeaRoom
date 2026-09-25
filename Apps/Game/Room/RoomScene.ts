@@ -175,7 +175,7 @@ export class RoomScene {
     window.addEventListener('resize', () => this.fitToWindow())
     this.keepTheVisitWhenThePageIsLeft()
     this.caption.show([...this.texts.captionLinesFor(arrival.events, session.state.elapsedSeconds), ...(arrival.notice === null ? [] : [arrival.notice])])
-    if (arrival.continuesAVisit) this.achievements.visitContinued()
+    this.achievements.visitBegun(arrival.continuesAVisit)
     this.achievements.eventsHappened(arrival.events, session.state)
     this.renderer.setAnimationLoop(() => this.frame())
   }

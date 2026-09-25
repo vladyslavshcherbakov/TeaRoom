@@ -31,6 +31,7 @@ export type AchievementRecord = {
   readonly hasTheTapRunLong: boolean
   readonly hasTheHeaterRunLong: boolean
   readonly puddlesWiped: number
+  readonly visitsBegun: number
 }
 
 export type AchievementStorage = {
@@ -89,8 +90,11 @@ export class Achievements {
     this.unlock('died', 'the keeper died of tea straight from the caddy')
   }
 
-  visitContinued(): void {
-    this.unlock('visitContinued', 'the player continued a saved visit')
+  visitBegun(continuesAVisit: boolean): void {
+    const earlierVisits = this.record.visitsBegun
+    this.keep({ ...this.record, visitsBegun: earlierVisits + 1 })
+    this.log(`a visit begins${continuesAVisit ? ', continuing a saved one' : ''}, after ${earlierVisits} visits the achievements saw`)
+    if (continuesAVisit && earlierVisits > 0) this.unlock('visitContinued', 'the player came back and continued a visit the achievements saw begin')
   }
 
   worldAdvanced(state: DeepReadonly<SessionState>): void {
@@ -105,7 +109,7 @@ export class Achievements {
   }
 
   reset(): void {
-    this.keep({ unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0 })
+    this.keep({ unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0, visitsBegun: 0 })
     this.log('every achievement is reset')
   }
 

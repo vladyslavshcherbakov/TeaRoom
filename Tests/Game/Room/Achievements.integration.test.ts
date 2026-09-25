@@ -87,6 +87,24 @@ test('achievement_ofTheKeeperDying_isAnEnthusiast', () => {
   assert.deepEqual(room.announced, ['died'])
 })
 
+test('achievement_whenTheFirstVisitTheAchievementsSeeContinuesAnOlderSave_isNotTheUsual', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.visitBegun(true)
+
+  assert.deepEqual(room.announced, [])
+})
+
+test('achievement_whenAVisitTheAchievementsSawBeginIsContinued_isTheUsual', () => {
+  const storage = new StorageInMemory()
+  new AchievementsInTheRoom(storage).achievements.visitBegun(false)
+  const laterVisit = new AchievementsInTheRoom(storage)
+
+  laterVisit.achievements.visitBegun(true)
+
+  assert.deepEqual(laterVisit.announced, ['visitContinued'])
+})
+
 test('achievement_ofTheHeaterTesterRemark_isHopeless', () => {
   const room = new AchievementsInTheRoom()
 
@@ -128,7 +146,7 @@ test('achievements_unlockedInAnEarlierVisit_areStillUnlocked', () => {
 
 test('achievements_afterAReset_areAllLocked', () => {
   const room = new AchievementsInTheRoom()
-  room.achievements.visitContinued()
+  room.achievements.keeperDied()
 
   room.achievements.reset()
 
@@ -142,7 +160,7 @@ const strongButFine: TasteVerdict = { temperature: 'pleasant', strength: 'heavy'
 const justRight: TasteVerdict = { temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }
 
 class StorageInMemory implements AchievementStorage {
-  private record: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0 }
+  private record: AchievementRecord = { unlocked: [], hasTheTapRunLong: false, hasTheHeaterRunLong: false, puddlesWiped: 0, visitsBegun: 0 }
 
   readonly load = (): AchievementRecord => this.record
 
