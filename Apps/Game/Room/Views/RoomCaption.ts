@@ -1,4 +1,4 @@
-const captionSeconds = 6
+const captionSeconds = 9
 
 export class RoomCaption {
   private readonly element: HTMLElement
@@ -8,6 +8,7 @@ export class RoomCaption {
     this.element = document.createElement('div')
     this.element.className = 'caption'
     this.element.hidden = true
+    this.element.addEventListener('pointerdown', () => this.hide())
     container.append(this.element)
   }
 
