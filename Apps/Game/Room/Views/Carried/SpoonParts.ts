@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { spoonCrumblesFromCharring } from '../../../../../Shared/Simulation/Physics/Heat.ts'
+import { howTheSpoonChars } from '../../../../../Shared/Simulation/Physics/Charring.ts'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import type { ItemParts } from './ItemParts.ts'
@@ -25,7 +25,7 @@ function spoonParts(materials: SurfaceMaterials): ItemParts {
   const coolBamboo = materials.colourOf('bamboo')
   const charredBamboo = materials.colourOf('charredBamboo')
   const charTo = (charring: number): void => {
-    bamboo.color.copy(coolBamboo).lerp(charredBamboo, Math.min(1, charring / spoonCrumblesFromCharring))
+    bamboo.color.copy(coolBamboo).lerp(charredBamboo, Math.min(1, charring / howTheSpoonChars.burnsFromCharring))
   }
   return { meshes: [handle, bowl], lid: null, spoutTip: new THREE.Vector3(0.11, 0.02, 0), rimHeight: 0.025, liquidLevel: null, liquidVolumeAt: null, pointsDownTheSide: null, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, liquidTint: null, charTo }
 }

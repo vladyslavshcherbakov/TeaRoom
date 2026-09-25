@@ -3,7 +3,7 @@ import type { TeaDefinition } from '../../../Shared/Simulation/Definitions/TeaDe
 import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/VesselDefinition.ts'
 import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
-import { spoonCrumblesFromCharring } from '../../../Shared/Simulation/Physics/Heat.ts'
+import { howAClothChars, howTheSpoonChars } from '../../../Shared/Simulation/Physics/Charring.ts'
 import { caddyItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { ClothState, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -32,7 +32,6 @@ const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
 export const smoulderingFromCharring = 0.5
-const clothBurnsFromCharring = 0.8
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
@@ -62,12 +61,12 @@ export function puddleShareOf(wetMl: number): number {
 function clothHeatingOf(state: DeepReadonly<SessionState>, cloth: DeepReadonly<ClothState>): TableViewState.Heating {
   if (!isOnAWorkingHeater(state, cloth.id)) return 'none'
   if (cloth.wetMl > 0) return 'steaming'
-  return heatingAsItChars(cloth.charring, clothBurnsFromCharring)
+  return heatingAsItChars(cloth.charring, howAClothChars.burnsFromCharring)
 }
 
 function spoonHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {
   if (!isOnAWorkingHeater(state, spoonItemId)) return 'none'
-  return heatingAsItChars(state.spoon.charring, spoonCrumblesFromCharring)
+  return heatingAsItChars(state.spoon.charring, howTheSpoonChars.burnsFromCharring)
 }
 
 function isOnAWorkingHeater(state: DeepReadonly<SessionState>, itemId: string): boolean {

@@ -13,7 +13,6 @@ const strongestTea = 100
 const washingAFullStainOffSeconds = 10
 const wrungClothHoldsMl = 8
 const steamingOffAHotPlateMlPerSecond = 2
-const charringFullySeconds = 60
 const washingAFullCharringOffSeconds = 5
 const clothHoldsMl = 40
 
@@ -50,10 +49,6 @@ export function clothWetMlAfterWringing(wetMl: number): number {
 
 export function clothWetMlOnAHotPlate(wetMl: number, seconds: number): number {
   return Math.max(0, wetMl - steamingOffAHotPlateMlPerSecond * seconds)
-}
-
-export function clothCharringOnAHotPlate(charring: number, seconds: number): number {
-  return Math.min(1, charring + seconds / charringFullySeconds)
 }
 
 export function clothCharringAfterWashing(charring: number, seconds: number): number {

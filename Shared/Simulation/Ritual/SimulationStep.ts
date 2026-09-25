@@ -1,11 +1,12 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { Spot, TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
-import { coolingPerSecondOf, coolLiquid, doesTheSpoonCrumble, heatLiquid, isAtTheBoil, isTooHotToHold, liquidBoiledAway, shellHeatAfter, spoonCharringOnAHotPlate } from '../Physics/Heat.ts'
+import { charringOnAHotPlate, howAClothChars, howTheSpoonChars, isBurning } from '../Physics/Charring.ts'
+import { coolingPerSecondOf, coolLiquid, heatLiquid, isAtTheBoil, isTooHotToHold, liquidBoiledAway, shellHeatAfter } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import { pourStream, type StreamLanding } from '../Physics/Pouring.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
-import { clothCharringAfterWashing, clothCharringOnAHotPlate, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp } from '../Physics/Table.ts'
+import { clothCharringAfterWashing, clothStainAfterWashing, clothWetMlAfterDrying, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
 import type { ClothState, RunningWaterState, SessionState, VesselState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
@@ -81,7 +82,7 @@ function heatTheClothOnTheHeater(draft: Draft, seconds: number): void {
     if (cloth.wetMl === 0) note(draft, `${cloth.id} on the heater has steamed dry and starts to char`)
     return
   }
-  cloth.charring = clothCharringOnAHotPlate(cloth.charring, seconds)
+  cloth.charring = charringOnAHotPlate(cloth.charring, howAClothChars, seconds)
   if (cloth.charring === 1) note(draft, `${cloth.id} on the heater is charred through`)
 }
 
@@ -89,9 +90,9 @@ function charTheSpoonOnTheHeater(draft: Draft, seconds: number): void {
   const heater = draft.state.heater
   const spoon = draft.state.spoon
   if (!heater.isOn || heater.itemIdOnTop !== spoonItemId || spoon.charring === 1) return
-  const couldBeSaved = !doesTheSpoonCrumble(spoon.charring)
-  spoon.charring = spoonCharringOnAHotPlate(spoon.charring, seconds)
-  if (couldBeSaved && doesTheSpoonCrumble(spoon.charring)) note(draft, 'the spoon on the heater burns, and it will crumble when it is taken')
+  const couldBeSaved = !isBurning(spoon.charring, howTheSpoonChars)
+  spoon.charring = charringOnAHotPlate(spoon.charring, howTheSpoonChars, seconds)
+  if (couldBeSaved && isBurning(spoon.charring, howTheSpoonChars)) note(draft, 'the spoon on the heater burns, and it will crumble when it is taken')
 }
 
 function noteBoilingAway(draft: Draft, vesselId: string, mlPerSecond: number, volumeMlLeft: number): void {

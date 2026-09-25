@@ -8,7 +8,8 @@ import { finishPour } from './PouringCommands.ts'
 import { liftTheClothOutOfThePuddle } from './CleanupCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { emptyTheHand, isWithinReach, middleHandIndex, spoonItemId, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
-import { doesTheSpoonCrumble, isTooHotToHold } from '../Physics/Heat.ts'
+import { howTheSpoonChars, isBurning } from '../Physics/Charring.ts'
+import { isTooHotToHold } from '../Physics/Heat.ts'
 import { percent } from './Percent.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
@@ -34,7 +35,7 @@ export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((itemId) => itemId !== null).join(' and ')}`)
   if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
-  if (command.itemId === spoonItemId && doesTheSpoonCrumble(draft.state.spoon.charring)) return crumbleTheSpoon(draft)
+  if (command.itemId === spoonItemId && isBurning(draft.state.spoon.charring, howTheSpoonChars)) return crumbleTheSpoon(draft)
   draft.state.keeper.hands[handIndex] = command.itemId
   const cloth = draft.state.cloths[command.itemId]
   if (cloth !== undefined) liftTheClothOutOfThePuddle(draft, cloth)
