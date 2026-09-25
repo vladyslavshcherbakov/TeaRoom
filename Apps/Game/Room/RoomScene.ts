@@ -140,6 +140,7 @@ export class RoomScene {
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       keeperDied: () => {
         this.hasTheKeeperDied = true
+        this.achievements.keeperDied()
         this.visitStore.forget('the keeper died, so the next visit starts anew')
         this.caption.hide()
         this.youDied.show(this.texts.lastWordsLine(), this.texts.obituaryLine())

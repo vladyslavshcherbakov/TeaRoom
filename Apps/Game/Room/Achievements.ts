@@ -21,6 +21,7 @@ export const achievementIds = [
   'tapAndHeaterLeftOn',
   'kettleBoiledDry',
   'shiva',
+  'died',
 ] as const
 
 export type AchievementId = (typeof achievementIds)[number]
@@ -82,6 +83,10 @@ export class Achievements {
 
   roseBushTappedTenTimes(): void {
     this.unlock('roseBushTappedTenTimes', 'the rose bush was tapped ten times in a row')
+  }
+
+  keeperDied(): void {
+    this.unlock('died', 'the keeper died of tea straight from the caddy')
   }
 
   visitContinued(): void {

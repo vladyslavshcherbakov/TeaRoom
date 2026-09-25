@@ -79,6 +79,14 @@ test('achievement_ofAMiddleHandGrown_isShiva', () => {
   assert.deepEqual(room.announced, ['shiva'])
 })
 
+test('achievement_ofTheKeeperDying_isAnEnthusiast', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.keeperDied()
+
+  assert.deepEqual(room.announced, ['died'])
+})
+
 test('achievement_ofTheHeaterTesterRemark_isHopeless', () => {
   const room = new AchievementsInTheRoom()
 

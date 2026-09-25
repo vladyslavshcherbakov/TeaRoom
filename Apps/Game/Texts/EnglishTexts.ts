@@ -184,6 +184,8 @@ export const englishTexts = {
   'achievement.kettleBoiledDry.title': 'Stubborn',
   'achievement.kettleBoiledDry.done': 'Waited on the heater until the kettle boiled dry.',
   'achievement.shiva.title': 'Shiva',
+  'achievement.died.title': "You know, I'm something of an enthusiast myself",
+  'achievement.died.done': 'Your little heart could not take a brew that strong.',
   'achievement.shiva.done': 'Wanted a third arm so badly that you tapped one into being. So proud of you.',
 
   'offering.glow': '{figurine} glows softly.',
