@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { text } from '../../Texts/Texts.ts'
 import { weaveCloth } from './ClothWeave.ts'
+import type { ClothPattern } from '../RoomArrangement.ts'
 import { paintCrackle } from './CrackleGlaze.ts'
 import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
@@ -27,6 +28,7 @@ export type Surface =
   | 'aluminium'
   | 'caddyGreen'
   | 'cloth'
+  | 'redCheckCloth'
   | 'wetCloth'
   | 'teaStainedCloth'
   | 'charredCloth'
@@ -44,7 +46,8 @@ export type Surface =
   | 'walkerSkin'
   | 'walkerEye'
   | 'walkerHair'
-  | 'cushion'
+  | 'terracottaCushion'
+  | 'softBlueCushion'
   | 'puddle'
   | 'gaugeGlass'
   | 'gaugeTube'
@@ -99,6 +102,7 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   aluminium: '#aab0b5',
   caddyGreen: '#5f9a7c',
   cloth: '#ffffff',
+  redCheckCloth: '#ffffff',
   wetCloth: '#a4a4a6',
   teaStainedCloth: '#f2dc96',
   charredCloth: '#2e2520',
@@ -116,7 +120,8 @@ const surfaceColours: Readonly<Record<Surface, string>> = {
   walkerSkin: '#f1c9a5',
   walkerEye: '#221a16',
   walkerHair: '#2b1d15',
-  cushion: '#d4735e',
+  terracottaCushion: '#d4735e',
+  softBlueCushion: '#7f9dc4',
   puddle: '#9c6a44',
   gaugeGlass: '#f4f8f9',
   gaugeTube: '#4d5a60',
@@ -222,7 +227,8 @@ export class RoomMaterials {
     if (surface === 'heronPainting') return paintingMaterial(paintHeron())
     if (surface === 'teaCharacterPainting') return paintingMaterial(paintTeaCharacter())
     if (surface === 'yixingClay') return yixingClayMaterial()
-    if (surface === 'cloth') return wovenClothMaterial()
+    if (surface === 'cloth') return wovenClothMaterial('blueStripes')
+    if (surface === 'redCheckCloth') return wovenClothMaterial('redCheck')
     if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
     if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
     if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
@@ -338,8 +344,8 @@ function paintingMaterial(painting: HTMLCanvasElement): THREE.MeshStandardMateri
   })
 }
 
-function wovenClothMaterial(): THREE.MeshStandardMaterial {
-  const texture = new THREE.CanvasTexture(weaveCloth())
+function wovenClothMaterial(pattern: ClothPattern): THREE.MeshStandardMaterial {
+  const texture = new THREE.CanvasTexture(weaveCloth(pattern))
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = paintingSharpness
   return new THREE.MeshStandardMaterial({ map: texture, color: surfaceColours.cloth, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })

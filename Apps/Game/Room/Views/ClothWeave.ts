@@ -1,9 +1,15 @@
+import type { ClothPattern } from '../RoomArrangement.ts'
+
 const canvasWidth = 560
 const canvasHeight = 400
 const threadSpacing = 4
 const threadWidth = 2.4
 const linenColour = '#ece3cf'
 const stripeColour = '#56698a'
+const redCheckGroundColour = '#b8434a'
+const redCheckBandColour = 'rgba(255, 250, 240, 0.5)'
+const redCheckRepeat = 40
+const redCheckBandWidth = 20
 const hemWidth = 10
 const hemColour = 'rgba(120, 100, 76, 0.28)'
 const stitchColour = 'rgba(96, 80, 62, 0.45)'
@@ -19,26 +25,35 @@ const stripesNearOneEnd: readonly Stripe[] = [
   { fromShare: 0.175, toShare: 0.195 },
 ]
 
-export function weaveCloth(): HTMLCanvasElement {
+export function weaveCloth(pattern: ClothPattern): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
   if (context === null) return canvas
-  context.fillStyle = linenColour
-  context.fillRect(0, 0, canvasWidth, canvasHeight)
-  paintStripes(context)
+  if (pattern === 'blueStripes') paintBlueStripes(context)
+  else paintRedCheck(context)
   paintThreads(context)
   paintHem(context)
   return canvas
 }
 
-function paintStripes(context: CanvasRenderingContext2D): void {
+function paintBlueStripes(context: CanvasRenderingContext2D): void {
+  context.fillStyle = linenColour
+  context.fillRect(0, 0, canvasWidth, canvasHeight)
   context.fillStyle = stripeColour
   for (const stripe of stripesNearOneEnd) {
     const from = stripe.fromShare * canvasWidth
     context.fillRect(from, 0, stripe.toShare * canvasWidth - from, canvasHeight)
   }
+}
+
+function paintRedCheck(context: CanvasRenderingContext2D): void {
+  context.fillStyle = redCheckGroundColour
+  context.fillRect(0, 0, canvasWidth, canvasHeight)
+  context.fillStyle = redCheckBandColour
+  for (let x = 0; x < canvasWidth; x += redCheckRepeat) context.fillRect(x, 0, redCheckBandWidth, canvasHeight)
+  for (let y = 0; y < canvasHeight; y += redCheckRepeat) context.fillRect(0, y, canvasWidth, redCheckBandWidth)
 }
 
 function paintThreads(context: CanvasRenderingContext2D): void {

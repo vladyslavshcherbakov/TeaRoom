@@ -26,9 +26,9 @@ type SpotsOfAKitchen = {
   readonly secondCloth: Spot
 }
 
-export const kitchenPlacements: readonly KitchenPlacement[] = ['besideTheWindow', 'facingTheWindow']
-export const toolsPlacements: readonly ToolsPlacement[] = ['onTheTeaTable', 'apart']
-export const clothCounts: readonly number[] = [1, 2]
+export const kitchenPlacements: readonly [KitchenPlacement, ...KitchenPlacement[]] = ['besideTheWindow', 'facingTheWindow']
+export const toolsPlacements: readonly [ToolsPlacement, ...ToolsPlacement[]] = ['onTheTeaTable', 'apart']
+export const clothCounts: readonly [number, ...number[]] = [1, 2]
 
 const bowlCount = 10
 const clothIds = ['cloth', 'cloth2']
@@ -59,11 +59,11 @@ const spotsByKitchen: Readonly<Record<KitchenPlacement, SpotsOfAKitchen>> = {
       },
       apart: {
         caddy: { placeId: 'teaTable', x: 0.75, y: 0.42, z: -1.75 },
-        spoon: { placeId: 'counter', x: -2.65, y: 0.9, z: -2.4 },
+        spoon: { placeId: 'counter', x: -2.65, y: 0.9, z: -2.5 },
         cloth: { placeId: 'shelf', x: -2.75, y: 1.22, z: 0.9 },
       },
     },
-    secondCloth: { placeId: 'counter', x: -0.95, y: 0.9, z: -2.42 },
+    secondCloth: { placeId: 'counter', x: -0.95, y: 0.9, z: -2.46 },
   },
   facingTheWindow: {
     heater: { placeId: 'counter', x: -2, y: 0.95, z: -2.65 },
@@ -90,11 +90,11 @@ const spotsByKitchen: Readonly<Record<KitchenPlacement, SpotsOfAKitchen>> = {
       },
       apart: {
         caddy: { placeId: 'teaTable', x: -2.1, y: 0.42, z: -0.4 },
-        spoon: { placeId: 'counter', x: -2.3, y: 0.9, z: -2.4 },
+        spoon: { placeId: 'counter', x: -2.3, y: 0.9, z: -2.5 },
         cloth: { placeId: 'shelf', x: 2.3, y: 1.22, z: -2.75 },
       },
     },
-    secondCloth: { placeId: 'counter', x: -0.6, y: 0.9, z: -2.42 },
+    secondCloth: { placeId: 'counter', x: -0.6, y: 0.9, z: -2.46 },
   },
 }
 

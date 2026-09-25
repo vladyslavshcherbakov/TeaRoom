@@ -32,7 +32,7 @@ A presentation opens a room with `RitualSession.open(catalog, roomId, log, isDev
 
 In the room:
 
-- `Room/RoomLayout.ts` holds every position in metres.
+- `Room/RoomLayout.ts` holds every position in metres, as one `RoomLayout` for each place of the kitchen. `Room/RoomArrangement.ts` holds the arrangement a new game chooses at random: the kitchen, where the tools lie, the cushions and the cloths. `Shared/Content/Rooms.ts` builds the room's definition for an arrangement, and `RoomMain.ts` opens that room and saves the arrangement with the visit.
 - `Room/CarriedShapes.ts` gives each carried item its shape and holds what each shape takes up on a surface.
 - `Room/RoomPlay.ts` is the only place that turns presses into ritual commands: taking, choosing a hand, putting down, lids, the heater, the sink and its tap, pouring, the spoon, sipping, offering and wiping. It hands walking and close-ups to `Room/RoomNavigator.ts`, and an aimed pour to `Room/AimedPour.ts`.
 - `Room/RoomGestures.ts` tells taps, strokes, pinches, the aiming finger and a hold on a held item apart before they reach `RoomPlay`. `RoomPlay` hands a held item shown up close to `Room/ItemInspection.ts`, which keeps how it is turned and zoomed.

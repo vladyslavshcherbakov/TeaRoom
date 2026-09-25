@@ -1,4 +1,5 @@
 import type { FirstPersonLook } from './Camera/FirstPersonLook.ts'
+import { arrangementBeforeRoomsVaried, describeArrangement, problemWithArrangement, type RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import type { CameraMode, StickLayout } from './Views/DebugMenu.ts'
 
@@ -17,6 +18,7 @@ export type SavedVisit = {
   readonly ritual: unknown
   readonly place: RoomPlace
   readonly camera: SavedCamera
+  readonly arrangement: RoomArrangement
 }
 
 export type FoundVisit = { readonly kind: 'none' } | { readonly kind: 'found'; readonly visit: SavedVisit } | { readonly kind: 'brokenByAnUpdate' }
@@ -46,8 +48,8 @@ export class VisitStore {
       this.log(`the saved visit does not fit this version of the game: ${problem}`)
       return { kind: 'brokenByAnUpdate' }
     }
-    const saved = visit as SavedVisit
-    this.log(`found a visit saved at ${new Date(saved.savedAtMilliseconds).toISOString()}`)
+    const saved = this.withItsArrangement(visit as Omit<SavedVisit, 'arrangement'> & { readonly arrangement?: RoomArrangement })
+    this.log(`found a visit saved at ${new Date(saved.savedAtMilliseconds).toISOString()} in a room with ${describeArrangement(saved.arrangement)}`)
     return { kind: 'found', visit: saved }
   }
 
@@ -69,6 +71,12 @@ export class VisitStore {
     } catch (error) {
       this.log(`the saved visit could not be forgotten (${reason}): ${String(error)}`)
     }
+  }
+
+  private withItsArrangement(visit: Omit<SavedVisit, 'arrangement'> & { readonly arrangement?: RoomArrangement }): SavedVisit {
+    if (visit.arrangement !== undefined) return { ...visit, arrangement: visit.arrangement }
+    this.log('the saved visit is from before the room was arranged anew for each game, so it continues in the room it was played in')
+    return { ...visit, arrangement: arrangementBeforeRoomsVaried }
   }
 
   private read(): string | null {
@@ -102,5 +110,7 @@ function problemWith(visit: unknown): string | null {
   const look = camera?.look as Partial<Record<keyof FirstPersonLook, unknown>> | undefined
   if (!cameraModes.includes(camera?.mode as CameraMode) || !stickLayouts.includes(camera?.stickLayout as StickLayout)) return 'its camera is not one the game has'
   if (typeof look?.headingRadians !== 'number' || typeof look.pitchRadians !== 'number') return 'its first-person look is missing'
-  return null
+  if (saved.arrangement === undefined) return null
+  const arrangementProblem = problemWithArrangement(saved.arrangement)
+  return arrangementProblem === null ? null : `its room ${arrangementProblem}`
 }

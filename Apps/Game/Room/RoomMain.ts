@@ -1,9 +1,10 @@
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import { quietRoomArrangedAs } from '../../../Shared/Content/Rooms.ts'
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { text } from '../Texts/Texts.ts'
-import { kitchenBesideTheWindow } from './RoomLayout.ts'
+import { arrangementOfANewGame, describeArrangement, quietRoomArrangementOf, type RoomArrangement } from './RoomArrangement.ts'
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { faceFeatures } from './RoomSettings.ts'
@@ -30,7 +31,6 @@ const isBuiltToBePublishedSilently = import.meta.env.MODE === silentBuildMode
 const roomLog = isBuiltToBePublishedSilently ? (): void => {} : (message: string): void => console.info(`${new Date().toISOString()} INFO [room] ${message}`)
 const ritualLog = isBuiltToBePublishedSilently ? { write: (): void => {} } : { write: writeToTheConsole }
 
-const catalog = catalogWithBowlsShuffled()
 const visitStore = new VisitStore(roomLog)
 const foundVisit = visitStore.find()
 if (foundVisit.kind === 'found') offerToContinue(foundVisit.visit)
@@ -40,6 +40,7 @@ else if (foundVisit.kind === 'brokenByAnUpdate') {
 } else enterAnew(null)
 
 function offerToContinue(visit: SavedVisit): void {
+  const catalog = catalogArrangedAs(visit.arrangement)
   const resuming = RitualSession.resume(catalog, visit.ritual, visit.sessionStateVersion, ritualLog, import.meta.env.DEV)
   if (resuming.kind === 'unavailable') return showTheQuietScreen()
   if (resuming.kind === 'savedStateDoesNotFit') {
@@ -52,7 +53,7 @@ function offerToContinue(visit: SavedVisit): void {
       const awaySeconds = Math.max(0, (Date.now() - visit.savedAtMilliseconds) / millisecondsInASecond)
       roomLog(`the player continues the visit saved ${awaySeconds.toFixed(0)} s ago`)
       const events = resuming.session.returnAfter(awaySeconds)
-      enterTheRoom(resuming.session, { place: visit.place, camera: visit.camera, events, notice: null, continuesAVisit: true, faceOfANewGame: null })
+      enterTheRoom(resuming.session, catalog, { place: visit.place, camera: visit.camera, events, notice: null, continuesAVisit: true, faceOfANewGame: null, arrangement: visit.arrangement })
     },
     startedOver: () => {
       visitStore.forget('the player starts over')
@@ -62,6 +63,9 @@ function offerToContinue(visit: SavedVisit): void {
 }
 
 function enterAnew(notice: string | null): void {
+  const arrangement = arrangementOfANewGame(Math.random)
+  roomLog(`the room of this new game has ${describeArrangement(arrangement)}, chosen at random`)
+  const catalog = catalogArrangedAs(arrangement)
   const opening = RitualSession.open(catalog, roomId, ritualLog, import.meta.env.DEV)
   if (opening.kind === 'unavailable') return showTheQuietScreen()
   const teaId = Object.keys(catalog.teas)[0] ?? ''
@@ -69,10 +73,10 @@ function enterAnew(notice: string | null): void {
   opening.session.dispatch({ type: 'beginRitual', teaId })
   const faceOfANewGame = faceFeatures[Math.floor(Math.random() * faceFeatures.length)] ?? 'nose'
   roomLog(`the keeper of this new game has ${faceOfANewGame}, chosen at random`)
-  enterTheRoom(opening.session, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false, faceOfANewGame })
+  enterTheRoom(opening.session, catalog, { place: roomEntrance, camera: null, events: [], notice, continuesAVisit: false, faceOfANewGame, arrangement })
 }
 
-function enterTheRoom(session: RitualSession, arrival: RoomArrival): void {
+function enterTheRoom(session: RitualSession, catalog: Catalog, arrival: RoomArrival): void {
   const timesOfDay = definitionIn(catalog, 'rooms', roomId).timesOfDay
   const timeOfDay = timesOfDay[Math.floor(Math.random() * timesOfDay.length)]
   if (timeOfDay === undefined) roomLog(`the room offers no time of day, so the light stays at ${session.state.atmosphere.timeOfDay}`)
@@ -89,7 +93,7 @@ function enterTheRoom(session: RitualSession, arrival: RoomArrival): void {
   roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the working heater, chosen at random for this visit`)
   const koiPond = koiPonds[Math.floor(Math.random() * koiPonds.length)] ?? 'oneKoi'
   roomLog(`the white bowl shows the koi pond ${koiPond}, chosen at random for this visit`)
-  new RoomScene(container, session, catalog, kitchenBesideTheWindow, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, koiPond, arrival, visitStore)
+  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, koiPond, arrival, visitStore)
 }
 
 function showTheQuietScreen(): void {
@@ -99,16 +103,12 @@ function showTheQuietScreen(): void {
   container.append(quiet)
 }
 
-function catalogWithBowlsShuffled(): Catalog {
-  const room = defaultCatalog.rooms[roomId]
-  if (room === undefined) {
-    roomLog(`the bowls stay in their order, because the catalog has no room ${roomId}`)
-    return defaultCatalog
-  }
+function catalogArrangedAs(arrangement: RoomArrangement): Catalog {
+  const room = quietRoomArrangedAs(quietRoomArrangementOf(arrangement))
   const shuffledRoom = roomWithVesselsShuffled(room, shuffledVesselDefinitionId, Math.random)
   const shelfOrder = shuffledRoom.vessels.filter((vessel) => vessel.definitionId === shuffledVesselDefinitionId).map((vessel) => `${vessel.id} at ${vessel.startsAt.placeId} (${vessel.startsAt.y}, ${vessel.startsAt.z})`)
   roomLog(`the bowls stand in a random order: ${shelfOrder.join(', ')}`)
-  return { ...defaultCatalog, rooms: { ...defaultCatalog.rooms, [roomId]: shuffledRoom } }
+  return { ...defaultCatalog, rooms: { ...defaultCatalog.rooms, [shuffledRoom.id]: shuffledRoom } }
 }
 
 function writeToTheConsole(line: LogLine): void {

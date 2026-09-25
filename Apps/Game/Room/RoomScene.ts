@@ -4,6 +4,7 @@ import { GTAOPass } from 'three/examples/jsm/postprocessing/GTAOPass.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
+import type { RoomDefinition } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
@@ -23,7 +24,8 @@ import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
-import type { CameraPose, FloorPoint, RoomLayout } from './RoomLayout.ts'
+import { roomLayoutFor, type CameraPose, type FloorPoint } from './RoomLayout.ts'
+import type { ClothPattern, RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
@@ -77,6 +79,7 @@ export type RoomArrival = {
   readonly notice: string | null
   readonly continuesAVisit: boolean
   readonly faceOfANewGame: FaceFeature | null
+  readonly arrangement: RoomArrangement
 }
 
 export class RoomScene {
@@ -87,6 +90,7 @@ export class RoomScene {
   private readonly clock = new THREE.Clock()
   private readonly session: RitualSession
   private readonly catalog: Catalog
+  private readonly arrangement: RoomArrangement
   private readonly log: RoomLog
   private readonly texts: RoomTexts
   private readonly visitStore: VisitStore
@@ -125,9 +129,11 @@ export class RoomScene {
   private secondsSinceTheVisitWasKept = 0
   private hasTheKeeperDied = false
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, layout: RoomLayout, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, koiPond: KoiPond, arrival: RoomArrival, visitStore: VisitStore) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, koiPond: KoiPond, arrival: RoomArrival, visitStore: VisitStore) {
     this.session = session
     this.catalog = catalog
+    this.arrangement = arrival.arrangement
+    const layout = roomLayoutFor(arrival.arrangement.kitchen)
     this.log = log
     this.texts = new RoomTexts(voiceSeed, log)
     this.visitStore = visitStore
@@ -171,9 +177,9 @@ export class RoomScene {
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer), koiPond)
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
-    this.room = new RoomModel(materials, layout, roomDefinition.heaterSpot)
+    this.room = new RoomModel(materials, layout, arrival.arrangement, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
-    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot })
+    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot }, clothPatternsByIdIn(roomDefinition, arrival.arrangement))
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),
@@ -305,6 +311,7 @@ export class RoomScene {
       ritual: this.session.state,
       place: this.play.place,
       camera: { mode: this.cameraMode, stickLayout: this.stickLayout, look: this.look },
+      arrangement: this.arrangement,
     })
     if (reason !== null) this.log(`the visit is saved because ${reason}`)
   }
@@ -467,6 +474,13 @@ export class RoomScene {
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
   }
+}
+
+function clothPatternsByIdIn(room: RoomDefinition, arrangement: RoomArrangement): ReadonlyMap<string, ClothPattern> {
+  return new Map(room.cloths.flatMap((cloth, index) => {
+    const pattern = arrangement.clothPatterns[index]
+    return pattern === undefined ? [] : [[cloth.id, pattern] as const]
+  }))
 }
 
 function shapedItemsIn(state: DeepReadonly<SessionState>, log: RoomLog): ShapedItem[] {

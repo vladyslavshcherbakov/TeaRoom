@@ -17,6 +17,7 @@ import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, h
 import { inspectInView } from './Carried/InspectedInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import type { Surroundings } from '../Placement.ts'
+import type { ClothPattern } from '../RoomArrangement.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
@@ -37,12 +38,14 @@ export class CarriedItems {
   private readonly fires: readonly ItemFire[]
   private readonly ash: CrumblingAsh
   private readonly surroundings: Surroundings
+  private readonly clothPatternsById: ReadonlyMap<string, ClothPattern>
   private readonly handTouchAreas: readonly { readonly handIndex: HandIndex; readonly area: THREE.Mesh }[]
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
-  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, surroundings: Surroundings) {
+  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, surroundings: Surroundings, clothPatternsById: ReadonlyMap<string, ClothPattern>) {
     this.surroundings = surroundings
+    this.clothPatternsById = clothPatternsById
     this.materials = materials
     const claySeenFromInside = materials.unsharedMaterialFor('clay')
     claySeenFromInside.side = THREE.DoubleSide
@@ -78,7 +81,7 @@ export class CarriedItems {
 
   private clothMaterialFor(itemId: string, shape: CarriedShape): THREE.Material {
     if (shape !== 'cloth') return this.materials.materialFor('cloth')
-    const material = this.materials.unsharedMaterialFor('cloth')
+    const material = this.materials.unsharedMaterialFor(this.clothPatternsById.get(itemId) === 'redCheck' ? 'redCheckCloth' : 'cloth')
     this.clothMaterialsByClothId.set(itemId, material)
     return material
   }

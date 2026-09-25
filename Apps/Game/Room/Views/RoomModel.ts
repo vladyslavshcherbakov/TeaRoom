@@ -17,6 +17,7 @@ import {
   type WallWindow,
   type WorldPoint,
 } from '../RoomLayout.ts'
+import type { RoomArrangement } from '../RoomArrangement.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 
@@ -76,15 +77,17 @@ const skyBeyondTheWindowMetres = 0.4
 export class RoomModel {
   private readonly materials: RoomMaterials
   private readonly layout: RoomLayout
+  private readonly arrangement: RoomArrangement
   private readonly heaterPlate: THREE.Mesh
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
   readonly prophecyInscription: THREE.Mesh | null
 
-  constructor(materials: RoomMaterials, layout: RoomLayout, heaterSpot: WorldPoint) {
+  constructor(materials: RoomMaterials, layout: RoomLayout, arrangement: RoomArrangement, heaterSpot: WorldPoint) {
     this.materials = materials
     this.layout = layout
+    this.arrangement = arrangement
     this.addFloor()
     const inscriptions = wallSides.flatMap((wall) => this.addWall(wall, layout.windows.filter((window) => window.wall === wall)))
     this.prophecyInscription = inscriptions[0] ?? null
@@ -245,9 +248,11 @@ export class RoomModel {
     for (const boardHeight of [0.05, 0.7, 1.2, height]) {
       this.tag(this.box('darkWood', footprint.width, 0.04, footprint.depth, { x: footprint.x, y: boardHeight, z: footprint.z }), { furnitureId: piece.id })
     }
+    const runsAlongX = footprint.width > footprint.depth
     for (const side of [-1, 1]) {
-      const sideZ = footprint.z + (side * footprint.depth) / 2
-      this.tag(this.box('darkWood', footprint.width, height, 0.04, { x: footprint.x, y: height / 2, z: sideZ }), { furnitureId: piece.id })
+      const end = runsAlongX ? { x: footprint.x + (side * footprint.width) / 2, y: height / 2, z: footprint.z } : { x: footprint.x, y: height / 2, z: footprint.z + (side * footprint.depth) / 2 }
+      const [endWidth, endDepth] = runsAlongX ? [0.04, footprint.depth] : [footprint.width, 0.04]
+      this.tag(this.box('darkWood', endWidth, height, endDepth, end), { furnitureId: piece.id })
     }
   }
 
@@ -258,9 +263,10 @@ export class RoomModel {
       const position = { x: footprint.x + legX * (footprint.width / 2 - 0.08), y: (height - 0.06) / 2, z: footprint.z + legZ * (footprint.depth / 2 - 0.08) }
       this.tag(this.box('darkWood', 0.07, height - 0.06, 0.07, position), { furnitureId: piece.id })
     }
-    const [frontSide] = piece.sides
-    const cushion = this.cylinder('cushion', 0.28, 0.08, { x: frontSide.standingPoint.x, y: 0.04, z: frontSide.standingPoint.z })
-    cushion.castShadow = false
+    const cushionSurface: Surface = this.arrangement.cushionColour === 'softBlue' ? 'softBlueCushion' : 'terracottaCushion'
+    for (const spot of this.layout.cushionSpots.slice(0, this.arrangement.cushionCount)) {
+      this.cylinder(cushionSurface, 0.28, 0.08, { x: spot.x, y: 0.04, z: spot.z }).castShadow = false
+    }
   }
 
   private addItem(spot: ItemSpot): void {
