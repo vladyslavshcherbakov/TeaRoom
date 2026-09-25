@@ -1,4 +1,4 @@
-import { facingDirection, furniturePlacementsFor, pointOn, sinkOnTheCounter, type Facing, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
+import { facingDirection, figurineIds, furniturePlacementsFor, pointOn, sinkOnTheCounter, type Facing, type FigurineId, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
 
 export type FloorPoint = {
   readonly x: number
@@ -109,7 +109,7 @@ type PieceShape = {
 
 type LookOfAWindow = {
   readonly windows: readonly WallWindow[]
-  readonly figurines: readonly ItemSpot[]
+  readonly figurines: Readonly<Record<FigurineId, WorldPoint>>
 }
 
 export const roomHalfSize = 3
@@ -166,17 +166,17 @@ const secondCushionBeyondTheTableEndMetres = 0.55
 const looksOfTheWindows: Readonly<Record<WindowPlace, LookOfAWindow>> = {
   inTheBackWall: {
     windows: [{ wall: 'back', centreAlongTheWall: 1, width: 1.8, sillHeight: 0.85, height: 1.3, hasTheProphecyAbove: true }],
-    figurines: [
-      { id: 'dragon', shape: 'figurine', position: { x: 0.45, y: 0.85, z: -2.88 } },
-      { id: 'toad', shape: 'figurine', position: { x: 1.55, y: 0.85, z: -2.88 } },
-    ],
+    figurines: {
+      dragon: { x: 0.45, y: 0.85, z: -2.88 },
+      toad: { x: 1.55, y: 0.85, z: -2.88 },
+    },
   },
   alongTheLeftWall: {
     windows: [{ wall: 'left', centreAlongTheWall: 0, width: 5.6, sillHeight: 0.85, height: 1.3, hasTheProphecyAbove: false }],
-    figurines: [
-      { id: 'dragon', shape: 'figurine', position: { x: -2.88, y: 0.875, z: -1.2 } },
-      { id: 'toad', shape: 'figurine', position: { x: -2.88, y: 0.875, z: 1.2 } },
-    ],
+    figurines: {
+      dragon: { x: -2.88, y: 0.875, z: -1.2 },
+      toad: { x: -2.88, y: 0.875, z: 1.2 },
+    },
   },
 }
 
@@ -195,7 +195,7 @@ export function roomLayoutFor(arrangement: FurnitureArrangement): RoomLayout {
     settingsGear: { ...medal, y: 1 },
     faucetSpout: worldPointOn(placements.counter, onTheCounter.faucetSpout),
     sinkBasin: sinkBasinIn(placements.counter),
-    itemSpots: [{ id: 'faucet', shape: 'faucet', position: worldPointOn(placements.counter, onTheCounter.faucetBase) }, ...look.figurines],
+    itemSpots: [{ id: 'faucet', shape: 'faucet', position: worldPointOn(placements.counter, onTheCounter.faucetBase) }, ...figurineIds.map((id) => ({ id, shape: 'figurine' as const, position: look.figurines[id] }))],
     canTheProphecyBeSeen: look.windows.some((window) => window.hasTheProphecyAbove) && teaTable.alsoFacing !== null,
   }
 }

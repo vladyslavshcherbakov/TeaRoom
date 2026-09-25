@@ -70,6 +70,14 @@ const tablesByWindow: Readonly<Record<WindowPlace, readonly [readonly [TablePlac
   ],
 }
 
+export const teaBowlIds = ['bowl1', 'bowl2', 'bowl3', 'bowl4', 'bowl5', 'bowl6', 'bowl7', 'bowl8', 'bowl9', 'bowl10'] as const
+
+export type TeaBowlId = (typeof teaBowlIds)[number]
+
+export const figurineIds = ['dragon', 'toad'] as const
+
+export type FigurineId = (typeof figurineIds)[number]
+
 export const sinkOnTheCounter = { across: 0.35, forward: -0.05, y: 0.82 } as const
 
 export const shelfBoards = { centreHeightsMetres: [0.05, 0.7, 1.2], thicknessMetres: 0.04 } as const
@@ -89,18 +97,18 @@ const onTheCounter = {
 } as const
 
 const onTheShelf = {
-  bowls: [
-    { across: 0.3, forward: 0, y: onTheMiddleBoard },
-    { across: -0.05, forward: 0, y: onTheMiddleBoard },
-    { across: -0.4, forward: 0, y: onTheMiddleBoard },
-    { across: 0.3, forward: 0, y: onTheBottomBoard },
-    { across: -0.05, forward: 0, y: onTheBottomBoard },
-    { across: -0.4, forward: 0, y: onTheBottomBoard },
-    { across: -0.75, forward: 0, y: onTheMiddleBoard },
-    { across: -0.75, forward: 0, y: onTheBottomBoard },
-    { across: 0.65, forward: 0, y: onTheMiddleBoard },
-    { across: 0.65, forward: 0, y: onTheBottomBoard },
-  ],
+  bowls: {
+    bowl1: { across: 0.3, forward: 0, y: onTheMiddleBoard },
+    bowl2: { across: -0.05, forward: 0, y: onTheMiddleBoard },
+    bowl3: { across: -0.4, forward: 0, y: onTheMiddleBoard },
+    bowl4: { across: 0.3, forward: 0, y: onTheBottomBoard },
+    bowl5: { across: -0.05, forward: 0, y: onTheBottomBoard },
+    bowl6: { across: -0.4, forward: 0, y: onTheBottomBoard },
+    bowl7: { across: -0.75, forward: 0, y: onTheMiddleBoard },
+    bowl8: { across: -0.75, forward: 0, y: onTheBottomBoard },
+    bowl9: { across: 0.65, forward: 0, y: onTheMiddleBoard },
+    bowl10: { across: 0.65, forward: 0, y: onTheBottomBoard },
+  } satisfies Readonly<Record<TeaBowlId, SpotOnAPiece>>,
   caddy: { across: 0.5, forward: 0, y: onTheUpperBoard },
   clothApart: { across: -0.5, forward: 0, y: onTheUpperBoard },
 } as const
@@ -168,10 +176,10 @@ export function quietRoomArrangedAs(arrangement: QuietRoomArrangement): RoomDefi
     vessels: [
       { id: 'kettle', definitionId: 'clayKettle', initialWaterMl: 0, startsAt: spotOn('counter', counter, onTheCounter.kettle) },
       { id: 'thermos', definitionId: 'thermos', initialWaterMl: 0, startsAt: spotOn('counter', counter, onTheCounter.thermos) },
-      ...onTheShelf.bowls.map((bowl, index) => ({ id: `bowl${index + 1}`, definitionId: 'teaBowl', initialWaterMl: 0, startsAt: spotOn('shelf', shelf, bowl) })),
+      ...teaBowlIds.map((id) => ({ id, definitionId: 'teaBowl', initialWaterMl: 0, startsAt: spotOn('shelf', shelf, onTheShelf.bowls[id]) })),
       { id: 'caddy', definitionId: 'teaCaddy', initialWaterMl: 0, startsAt: caddy },
     ],
-    figurineIds: ['dragon', 'toad'],
+    figurineIds,
     caddyGrams: 60,
     spoonCapacityGrams: 3,
     spoonStartsAt: spoon,

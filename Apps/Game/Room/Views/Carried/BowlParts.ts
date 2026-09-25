@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { teaBowlIds, type TeaBowlId } from '../../../../../Shared/Content/Rooms.ts'
 import { heronPaintingAspect } from '../HeronPainting.ts'
 import { koiPondAspect, koiPondWidthMetres } from '../KoiPond.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
@@ -58,7 +59,7 @@ const flutesFullAboveTheFootMetres = 0.02
 const liquidTakesOnTheBowlsColourShare = 0.6
 const plainBowl = { relief: 'smooth', isRimGilded: false, painting: null } as const
 const porcelainBowl: BowlLook = { ...plainBowl, glaze: 'porcelain', liquidTint: '#f7f2e8' }
-const bowlLookById: Readonly<Record<string, BowlLook>> = {
+const bowlLookById: Readonly<Record<TeaBowlId, BowlLook>> = {
   bowl1: { ...plainBowl, glaze: 'whiteGlaze', liquidTint: '#eef5ff', painting: { surface: 'koiPainting', lengthMetres: koiPondWidthMetres, aspect: koiPondAspect, turnRadians: 0 } },
   bowl2: { ...plainBowl, glaze: 'pearlGlaze', liquidTint: '#fbe6ec', painting: { surface: 'lotusPainting', lengthMetres: 0.064, aspect: lotusPaintingAspect, turnRadians: 0 } },
   bowl3: { ...plainBowl, glaze: 'skyBlueGlaze', liquidTint: '#9fd0ea' },
@@ -71,7 +72,7 @@ const bowlLookById: Readonly<Record<string, BowlLook>> = {
   bowl10: { ...plainBowl, glaze: 'yixingClay', liquidTint: '#a8683f', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
 
-export const whiteBowlIds: readonly string[] = Object.entries(bowlLookById).flatMap(([bowlId, look]) => (whiteGlazes.has(look.glaze) ? [bowlId] : []))
+export const whiteBowlIds: readonly TeaBowlId[] = teaBowlIds.filter((bowlId) => whiteGlazes.has(bowlLookById[bowlId].glaze))
 
 const pointsDownTheBowl: readonly PointDownTheSide[] = [
   { distance: bowlRimTop.x - overflowOverTheLipMetres, height: bowlRimTop.y + overflowOverTheLipMetres },
@@ -92,7 +93,7 @@ export const bowlShapeLook: CarriedShapeLook = {
 }
 
 function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
-  const look = bowlLookById[itemId] ?? porcelainBowl
+  const look = isATeaBowlId(itemId) ? bowlLookById[itemId] : porcelainBowl
   const glazed = materials.unsharedMaterialFor(look.glaze)
   glazed.side = THREE.DoubleSide
   const body = new THREE.Mesh(bowlGeometryWith(look.relief), glazed)
@@ -247,4 +248,8 @@ function bowlBottomHeightAt(distanceFromTheCentre: number): number {
   if (before === undefined) return after.y
   const share = (distanceFromTheCentre - before.x) / (after.x - before.x)
   return before.y + (after.y - before.y) * share
+}
+
+function isATeaBowlId(itemId: string): itemId is TeaBowlId {
+  return (teaBowlIds as readonly string[]).includes(itemId)
 }
