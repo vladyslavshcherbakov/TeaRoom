@@ -31,6 +31,7 @@ import type { CoatColour, RoomSettings } from './RoomSettings.ts'
 import { SettingsStore } from './SettingsStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
+import { FullScreenButton } from './Views/FullScreenButton.ts'
 import { Achievements } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
@@ -189,6 +190,7 @@ export class RoomScene {
     this.settings = this.settingsStore.load()
     this.settingsScreen = new SettingsScreen(container, { coatColourChosen: (colour) => this.coatColourChosen(colour), softShadowsInCornersChosen: (isOn) => this.softShadowsInCornersChosen(isOn), frameRateShownChosen: (isShown) => this.frameRateShownChosen(isShown) })
     this.frameRateCounter = new FrameRateCounter(container)
+    new FullScreenButton(container, log)
     this.frameRateCounter.show(this.settings.isFrameRateShown)
     this.walker.paintTheBody(this.settings.coatColour)
     this.fitToWindow()

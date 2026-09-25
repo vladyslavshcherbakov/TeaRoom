@@ -160,6 +160,8 @@ export const englishTexts = {
   'settings.showFrameRate': 'Show frame rate',
   'settings.close': 'Close',
   'frameRate.reading': '{framesPerSecond} fps',
+  'fullScreen.enter': 'Full screen',
+  'fullScreen.leave': 'Leave full screen',
   'achievements.title': 'Achievements',
   'achievements.reset': 'Reset',
   'achievements.resetAgain': 'Tap again to reset',

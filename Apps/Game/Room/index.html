@@ -411,6 +411,28 @@
         background: #5f9a7c;
         color: #fbf4e8;
       }
+      .full-screen {
+        position: fixed;
+        top: calc(12px + env(safe-area-inset-top));
+        right: calc(12px + env(safe-area-inset-right));
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 8px;
+        background: rgba(40, 26, 16, 0.25);
+        color: rgba(251, 244, 232, 0.8);
+        font-size: 20px;
+        line-height: 36px;
+        opacity: 0.35;
+        cursor: pointer;
+        transition: opacity 0.2s;
+      }
+      .full-screen:hover {
+        opacity: 0.9;
+      }
+      .full-screen[hidden] {
+        display: none;
+      }
       .frame-rate {
         position: fixed;
         top: calc(8px + env(safe-area-inset-top));
