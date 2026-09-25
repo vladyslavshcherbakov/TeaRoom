@@ -184,7 +184,7 @@ export class RoomScene {
     const [nearest] = hits
     if (nearest === undefined) return { kind: 'nothing' }
     const target = tapTargetOf(nearest)
-    if (target.kind !== 'hand' || !isAHandTouchArea(nearest.object) || target.handIndex !== this.play.chosenHandIndex) return target
+    if (target.kind !== 'hand' || !isAForgivingTouchArea(nearest.object) || target.handIndex !== this.play.chosenHandIndex) return target
     const behind = hits.map(tapTargetOf).find((hitTarget) => hitTarget.kind !== 'hand' && hitTarget.kind !== 'nothing')
     return behind !== undefined && this.play.canTheChosenItemActOn(behind) ? behind : target
   }
@@ -228,8 +228,8 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: hit.point.x, y: hit.point.y, z: hit.point.z } }
 }
 
-function isAHandTouchArea(object: THREE.Object3D): boolean {
-  return object.userData['isHandTouchArea'] === true
+function isAForgivingTouchArea(object: THREE.Object3D): boolean {
+  return object.userData['isForgivingTouchArea'] === true
 }
 
 function tapTargetTagOf(object: THREE.Object3D): TapTargetTag | undefined {

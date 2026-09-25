@@ -207,6 +207,7 @@ function forgivingTouchPad(shape: CarriedShape, rimHeight: number, touchPad: THR
   const height = rimHeight + touchPadAboveTheRimMetres
   const pad = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height, 16), touchPad)
   pad.position.y = height / 2
+  pad.userData = { isForgivingTouchArea: true }
   return pad
 }
 
