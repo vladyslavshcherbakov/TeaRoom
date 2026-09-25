@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { GaugeStrip } from './GaugeStrip.ts'
 import type { CarriedModelMaterials, ItemParts, PointDownTheSide } from './ItemParts.ts'
@@ -70,14 +70,14 @@ function pointsDownTheKettle(): PointDownTheSide[] {
   })
 }
 
-function waterInsideTheKettle(materials: RoomMaterials): THREE.Mesh {
+function waterInsideTheKettle(materials: SurfaceMaterials): THREE.Mesh {
   const water = new THREE.Mesh(new THREE.CircleGeometry(1, 24), materials.unsharedMaterialFor('gaugeGlass'))
   water.rotation.x = -Math.PI / 2
   water.visible = false
   return water
 }
 
-function waterGauge(materials: RoomMaterials): { frame: GaugeStrip; water: GaugeStrip } {
+function waterGauge(materials: SurfaceMaterials): { frame: GaugeStrip; water: GaugeStrip } {
   const { gaugeBottomMetres, gaugeHeightMetres } = kettleShape
   const frame = new GaugeStrip(gaugeFrameHalfWidthMetres, gaugeFrameAboveTheBodyMetres, materials.materialFor('gaugeTube'))
   frame.cover(gaugeBottomMetres - gaugeFrameMarginMetres, gaugeBottomMetres + gaugeHeightMetres + gaugeFrameMarginMetres)

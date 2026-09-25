@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import type { ItemParts } from './ItemParts.ts'
 
@@ -14,7 +14,7 @@ export const spoonShapeLook: CarriedShapeLook = {
   soakedLeaves: null,
 }
 
-function spoonParts(materials: RoomMaterials): ItemParts {
+function spoonParts(materials: SurfaceMaterials): ItemParts {
   const handle = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.015, 0.025), materials.materialFor('darkWood'))
   handle.position.set(-0.04, 0.01, 0)
   const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.04, 0.02, 12), materials.materialFor('darkWood'))

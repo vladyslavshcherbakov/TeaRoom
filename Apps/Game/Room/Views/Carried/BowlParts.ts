@@ -3,7 +3,7 @@ import { heronPaintingAspect } from '../HeronPainting.ts'
 import { koiPaintingAspect } from '../KoiPainting.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
-import type { RoomMaterials, Surface } from '../RoomMaterials.ts'
+import type { Surface, SurfaceMaterials } from '../RoomMaterials.ts'
 import { teaCharacterPaintingAspect } from '../TeaCharacterPainting.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { bowlInsideProfile, bowlOutsideWall, bowlProfile, bowlRimTop, bowlUndersideAndFoot } from './BowlProfile.ts'
@@ -81,7 +81,7 @@ export const bowlShapeLook: CarriedShapeLook = {
   },
 }
 
-function bowlParts(materials: RoomMaterials, itemId: string): ItemParts {
+function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
   const look = bowlLookById[itemId] ?? porcelainBowl
   const glazed = materials.unsharedMaterialFor(look.glaze)
   glazed.side = THREE.DoubleSide
@@ -136,7 +136,7 @@ function bowlGeometryWith(relief: BowlRelief): THREE.BufferGeometry {
   }
 }
 
-function gildedRim(materials: RoomMaterials): THREE.Mesh {
+function gildedRim(materials: SurfaceMaterials): THREE.Mesh {
   const rim = new THREE.Mesh(new THREE.TorusGeometry(gildedRimRadiusMetres, gildedRimTubeMetres, 8, 96), materials.materialFor('gildedRim'))
   rim.rotation.x = Math.PI / 2
   rim.position.y = gildedRimHeightMetres
@@ -191,7 +191,7 @@ function fluteShareAt(height: number): number {
   return THREE.MathUtils.smoothstep(height, flutesStartAboveTheFootMetres, flutesFullAboveTheFootMetres)
 }
 
-function paintedOnTheBottom(materials: RoomMaterials, painting: BottomPainting): THREE.Mesh {
+function paintedOnTheBottom(materials: SurfaceMaterials, painting: BottomPainting): THREE.Mesh {
   const segmentsAcross = Math.max(fewestPaintingSegmentsAcross, Math.round(paintingSegmentsAlong / painting.aspect))
   const geometry = new THREE.PlaneGeometry(painting.lengthMetres, painting.lengthMetres / painting.aspect, paintingSegmentsAlong, segmentsAcross)
   const position = geometry.getAttribute('position')

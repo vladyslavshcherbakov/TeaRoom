@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import type { ItemParts } from './ItemParts.ts'
 
@@ -14,7 +14,7 @@ export const caddyShapeLook: CarriedShapeLook = {
   soakedLeaves: null,
 }
 
-function caddyParts(materials: RoomMaterials): ItemParts {
+function caddyParts(materials: SurfaceMaterials): ItemParts {
   const tin = materials.unsharedMaterialFor('caddyGreen')
   tin.side = THREE.DoubleSide
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.16, 28, 1, true), tin)

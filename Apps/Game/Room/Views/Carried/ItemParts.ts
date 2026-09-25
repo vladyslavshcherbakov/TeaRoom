@@ -1,5 +1,5 @@
 import type * as THREE from 'three'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
 
 export type ItemParts = {
@@ -35,7 +35,7 @@ export type HeldInViewLook = {
 }
 
 export type CarriedModelMaterials = {
-  readonly room: RoomMaterials
+  readonly room: SurfaceMaterials
   readonly claySeenFromInside: THREE.Material
   readonly touchPad: THREE.Material
   readonly cloth: THREE.Material

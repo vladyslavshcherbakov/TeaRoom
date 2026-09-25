@@ -7,6 +7,7 @@ import type { AimedPourView } from '../AimedPour.ts'
 import type { ShapedItem } from '../CarriedShapes.ts'
 import type { WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
+import { aimOver } from './Carried/AimedVessel.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
@@ -21,8 +22,6 @@ import type { TapTargetTag } from './RoomModel.ts'
 const handHeightMetres = 0.55
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
-const spoutAboveTargetRimMetres = 0.1
-const aimedVesselAboveTheSurfaceMetres = 0.01
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
@@ -89,7 +88,7 @@ export class CarriedItems {
     moveToLayer(model, heldInView !== null ? roomLayers.heldInView : wipingAt !== null ? roomLayers.untappableRoom : roomLayers.room)
     this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null)
     model.root.scale.setScalar(1)
-    if (aim !== null) return this.aimOver(model, aim)
+    if (aim !== null) return this.aimOverItsTarget(model, aim)
     if (wipingAt !== null) return wipeAt(model, wipingAt)
     model.root.rotation.set(0, 0, 0)
     if (location.kind === 'onSurface') {
@@ -104,18 +103,9 @@ export class CarriedItems {
     model.root.rotation.y = scene.walk.headingRadians
   }
 
-  private aimOver(model: CarriedModel, aim: AimedPourView): void {
+  private aimOverItsTarget(model: CarriedModel, aim: AimedPourView): void {
     const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
-    if (target === undefined) return
-    const tiltRadians = -THREE.MathUtils.degToRad(Math.max(0, aim.tiltDegrees))
-    const turnRadians = Math.atan2(-aim.spoutDirection.z, aim.spoutDirection.x)
-    const tipAfterTilt = model.spoutTip.clone().applyAxisAngle(new THREE.Vector3(0, 0, 1), tiltRadians).applyAxisAngle(new THREE.Vector3(0, 1, 0), turnRadians)
-    const tipGoal = new THREE.Vector3(aim.spout.x, target.root.position.y + target.rimHeight + spoutAboveTargetRimMetres, aim.spout.z)
-    model.root.visible = true
-    model.root.rotation.set(0, turnRadians, tiltRadians)
-    model.root.position.copy(tipGoal.sub(tipAfterTilt))
-    const lowestBase = target.root.position.y + model.footprintRadius * Math.sin(-tiltRadians) + aimedVesselAboveTheSurfaceMetres
-    model.root.position.y = Math.max(model.root.position.y, lowestBase)
+    if (target !== undefined) aimOver(model, aim, target)
   }
 
   private retag(model: CarriedModel, tag: TapTargetTag): void {

@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { liquidBelowTheRimMetres, overflowOverTheLipMetres, type ItemParts, type PointDownTheSide } from './ItemParts.ts'
 
@@ -47,7 +47,7 @@ export const thermosShapeLook: CarriedShapeLook = {
   soakedLeaves: null,
 }
 
-function thermosParts(materials: RoomMaterials): ItemParts {
+function thermosParts(materials: SurfaceMaterials): ItemParts {
   const aluminium = materials.unsharedMaterialFor('aluminium')
   aluminium.side = THREE.DoubleSide
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(thermosFootRadiusMetres, thermosFootRadiusMetres, thermosFootTopMetres, thermosSegmentsAround, 1, true), aluminium)
