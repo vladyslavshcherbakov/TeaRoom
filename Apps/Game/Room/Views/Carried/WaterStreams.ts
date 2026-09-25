@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import type { CarriedShape } from '../../CarriedShapes.ts'
-import { faucetSpout } from '../../RoomLayout.ts'
+import type { WorldPoint } from '../../RoomLayout.ts'
 import type { RoomMaterials } from '../RoomMaterials.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { CarriedModel } from './CarriedModel.ts'
@@ -21,10 +21,12 @@ export class WaterStreams {
   private readonly overflowStream: CreepingStream
   private readonly overflowPathByShape = new Map<CarriedShape, THREE.TubeGeometry>()
   private readonly sinkSpot: Spot | null
+  private readonly faucetSpout: WorldPoint
   readonly meshes: readonly THREE.Object3D[]
 
-  constructor(materials: RoomMaterials, sinkSpot: Spot | null) {
+  constructor(materials: RoomMaterials, sinkSpot: Spot | null, faucetSpout: WorldPoint) {
     this.sinkSpot = sinkSpot
+    this.faucetSpout = faucetSpout
     this.pouredLiquid = materials.unsharedMaterialFor('pouredLiquid')
     this.pourStream = new FallingStream(streamRadiusMetres, this.pouredLiquid)
     this.tapStream = new FallingStream(streamRadiusMetres, materials.unsharedMaterialFor('tapWater'))
@@ -59,7 +61,7 @@ export class WaterStreams {
     this.overflowStream.show(overflowing === undefined || overflowPath === null ? null : { path: overflowPath, position: overflowing.root.position, quaternion: overflowing.root.quaternion }, scene.timeSeconds)
     if (runningWater === null || this.sinkSpot === null) return this.tapStream.show(null, scene.timeSeconds)
     const bottomY = inTheSink === undefined ? this.sinkSpot.y : inTheSink.root.position.y + inTheSink.rimHeight * (isRunningOverTheLid ? 1 : 0.5)
-    this.tapStream.show({ top: new THREE.Vector3(faucetSpout.x, faucetSpout.y, faucetSpout.z), bottomY }, scene.timeSeconds)
+    this.tapStream.show({ top: new THREE.Vector3(this.faucetSpout.x, this.faucetSpout.y, this.faucetSpout.z), bottomY }, scene.timeSeconds)
   }
 
   private overfilledPourTarget(scene: CarriedItemsScene, models: readonly CarriedModel[]): CarriedModel | undefined {

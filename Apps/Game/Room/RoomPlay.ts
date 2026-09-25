@@ -14,7 +14,7 @@ import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
 import { carriedShapeOf, layoutOf, type CarriedShape } from './CarriedShapes.ts'
-import { furniture, puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type WorldPoint } from './RoomLayout.ts'
+import { puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { ScreenPoint } from './RoomGestures.ts'
 import type { Walk } from './Walking/Walk.ts'
@@ -92,6 +92,7 @@ export type RoomPlayListener = {
 export class RoomPlay {
   private readonly ritual: RitualPort
   private readonly catalog: Catalog
+  private readonly layout: RoomLayout
   private readonly log: RoomLog
   private readonly listener: RoomPlayListener
   private readonly heaterItemsBeforeTheTesterJoke: number
@@ -105,13 +106,14 @@ export class RoomPlay {
   private roseBushTapsInARow = 0
   private tapsWithFullHands: { readonly itemId: string; count: number } | null = null
 
-  constructor(ritual: RitualPort, catalog: Catalog, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
+  constructor(ritual: RitualPort, catalog: Catalog, layout: RoomLayout, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
     this.ritual = ritual
     this.catalog = catalog
+    this.layout = layout
     this.log = log
     this.heaterItemsBeforeTheTesterJoke = heaterItemsBeforeTheTesterJoke
     this.listener = listener
-    this.navigator = new RoomNavigator(log, (furnitureId) => this.keeperMovedTo(furnitureId), startsAt)
+    this.navigator = new RoomNavigator(layout, log, (furnitureId) => this.keeperMovedTo(furnitureId), startsAt)
   }
 
   get walk(): Walk {
@@ -485,7 +487,7 @@ export class RoomPlay {
 
   private puddleOn(furnitureId: FurnitureId): { centre: WorldPoint; radiusMetres: number } | null {
     const puddle = this.ritual.state.puddles[furnitureId]
-    const centre = puddle === undefined ? null : puddleCentreOn(furnitureId, puddle.spilledAround)
+    const centre = puddle === undefined ? null : puddleCentreOn(this.layout, furnitureId, puddle.spilledAround)
     if (puddle === undefined || centre === null) return null
     return { centre, radiusMetres: puddleRadiusMetres(puddleShareOf(puddle.wetMl)) }
   }
@@ -513,7 +515,7 @@ export class RoomPlay {
     const itemId = this.chosenItemId()
     if (itemId === null) return this.log(`tap on the ${furnitureId} ignored: no hand is chosen`)
     const spot: Spot = { placeId: furnitureId, x: point.x, y: point.y, z: point.z }
-    const refusal = whyThereIsNoRoomFor(itemId, spot, this.ritual.state, this.heaterSpot())
+    const refusal = whyThereIsNoRoomFor(itemId, spot, this.ritual.state, { layout: this.layout, heaterSpot: this.heaterSpot() })
     if (refusal !== null) return this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}: ${refusal}`)
     const events = this.ritual.dispatch({ type: 'putDown', itemId, spot })
     this.letGoOfTheChoiceUnlessRefused(events)
@@ -617,12 +619,12 @@ export class RoomPlay {
         return target.furnitureId
       case 'heater':
       case 'heaterSwitch':
-        return furnitureWithPlace(this.heaterSpot().placeId)
+        return this.furnitureWithPlace(this.heaterSpot().placeId)
       case 'faucet':
-        return furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.sinkSpot.placeId ?? null)
+        return this.furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.sinkSpot.placeId ?? null)
       case 'item':
       case 'lid':
-        return furnitureWithPlace(placeOf(this.locationOfItem(target.itemId)))
+        return this.furnitureWithPlace(placeOf(this.locationOfItem(target.itemId)))
       case 'figurine':
         return this.ritualFurnitureId()
       default:
@@ -631,7 +633,7 @@ export class RoomPlay {
   }
 
   private ritualFurnitureId(): FurnitureId | null {
-    return furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).ritualPlaceId)
+    return this.furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).ritualPlaceId)
   }
 
   private locationOfItem(itemId: string): DeepReadonly<ItemLocation> | undefined {
@@ -640,6 +642,10 @@ export class RoomPlay {
 
   private heaterSpot(): Spot {
     return definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).heaterSpot
+  }
+
+  private furnitureWithPlace(placeId: string | null): FurnitureId | null {
+    return this.layout.furniture.find((piece) => piece.id === placeId)?.id ?? null
   }
 }
 
@@ -668,8 +674,4 @@ function turnDegreesOf(radians: number): number {
 
 function placeOf(location: DeepReadonly<ItemLocation> | undefined): string | null {
   return location?.kind === 'onSurface' ? location.spot.placeId : null
-}
-
-function furnitureWithPlace(placeId: string | null): FurnitureId | null {
-  return furniture.find((piece) => piece.id === placeId)?.id ?? null
 }

@@ -23,7 +23,7 @@ import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
-import type { CameraPose, FloorPoint } from './RoomLayout.ts'
+import type { CameraPose, FloorPoint, RoomLayout } from './RoomLayout.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
@@ -125,7 +125,7 @@ export class RoomScene {
   private secondsSinceTheVisitWasKept = 0
   private hasTheKeeperDied = false
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, koiPond: KoiPond, arrival: RoomArrival, visitStore: VisitStore) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, layout: RoomLayout, log: RoomLog, voiceSeed: number, shareThroughTheTimeOfDay: number, heaterItemsBeforeTheTesterJoke: number, koiPond: KoiPond, arrival: RoomArrival, visitStore: VisitStore) {
     this.session = session
     this.catalog = catalog
     this.log = log
@@ -148,7 +148,7 @@ export class RoomScene {
       },
       dispatch: (command) => this.reactTo(session.dispatch(command)),
     }
-    this.play = new RoomPlay(ritual, catalog, log, heaterItemsBeforeTheTesterJoke, {
+    this.play = new RoomPlay(ritual, catalog, layout, log, heaterItemsBeforeTheTesterJoke, {
       remarked: (remark) => {
         this.achievements.remarked(remark.kind)
         this.caption.show(this.texts.remarkLines(remark))
@@ -171,9 +171,9 @@ export class RoomScene {
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
     const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer), koiPond)
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
-    this.room = new RoomModel(materials, roomDefinition.heaterSpot)
+    this.room = new RoomModel(materials, layout, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
-    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, roomDefinition.heaterSpot)
+    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot })
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),
@@ -252,7 +252,8 @@ export class RoomScene {
 
   private noticeTheProphecyIfSeenWhole(): void {
     if (this.achievements.isUnlocked('delphicOracle')) return
-    if (!isSeenWhole(this.room.prophecyInscription, this.camera, [this.room.root, this.walker.root])) return
+    const inscription = this.room.prophecyInscription
+    if (inscription === null || !isSeenWhole(inscription, this.camera, [this.room.root, this.walker.root])) return
     this.achievements.prophecySeenWhole()
   }
 

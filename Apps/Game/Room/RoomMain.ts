@@ -3,6 +3,7 @@ import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitio
 import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { text } from '../Texts/Texts.ts'
+import { kitchenBesideTheWindow } from './RoomLayout.ts'
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { faceFeatures } from './RoomSettings.ts'
@@ -88,7 +89,7 @@ function enterTheRoom(session: RitualSession, arrival: RoomArrival): void {
   roomLog(`the keeper teases a tester from the ${heaterItemsBeforeTheTesterJoke}th different item tried on the working heater, chosen at random for this visit`)
   const koiPond = koiPonds[Math.floor(Math.random() * koiPonds.length)] ?? 'oneKoi'
   roomLog(`the white bowl shows the koi pond ${koiPond}, chosen at random for this visit`)
-  new RoomScene(container, session, catalog, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, koiPond, arrival, visitStore)
+  new RoomScene(container, session, catalog, kitchenBesideTheWindow, roomLog, voiceSeed, shareThroughTheTimeOfDay, heaterItemsBeforeTheTesterJoke, koiPond, arrival, visitStore)
 }
 
 function showTheQuietScreen(): void {

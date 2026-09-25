@@ -1,4 +1,4 @@
-import { furniture, furnitureWithId, sideStoodAt, walkerStart, type CloseUp, type FloorPoint, type FurnitureId } from './RoomLayout.ts'
+import { furnitureWithId, sideStoodAt, walkerStart, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout } from './RoomLayout.ts'
 import { FloorGrid } from './Walking/FloorGrid.ts'
 import { isWalking, standingAt, walkFurther, type Walk } from './Walking/Walk.ts'
 
@@ -25,7 +25,8 @@ export type RoomLog = (message: string) => void
 export type KeeperMoved = (furnitureId: FurnitureId | null) => void
 
 export class RoomNavigator {
-  private readonly floor = new FloorGrid(furniture.map((piece) => piece.footprint))
+  private readonly layout: RoomLayout
+  private readonly floor: FloorGrid
   private readonly log: RoomLog
   private readonly keeperMoved: KeeperMoved
   private currentWalk: Walk
@@ -33,7 +34,9 @@ export class RoomNavigator {
   private furnitureStoodAt: FurnitureId | null
   private isWalkingFreely = false
 
-  constructor(log: RoomLog, keeperMoved: KeeperMoved = () => {}, startsAt: RoomPlace = roomEntrance) {
+  constructor(layout: RoomLayout, log: RoomLog, keeperMoved: KeeperMoved = () => {}, startsAt: RoomPlace = roomEntrance) {
+    this.layout = layout
+    this.floor = new FloorGrid(layout.furniture.map((piece) => piece.footprint))
     this.log = log
     this.keeperMoved = keeperMoved
     const place = this.placeToStartAt(startsAt)
@@ -59,7 +62,7 @@ export class RoomNavigator {
   get closeUpInView(): CloseUp | null {
     const view = this.currentView
     if (view.kind !== 'closeUp') return null
-    return sideStoodAt(furnitureWithId(view.furnitureId), this.currentWalk.position).closeUp
+    return sideStoodAt(furnitureWithId(this.layout, view.furnitureId), this.currentWalk.position).closeUp
   }
 
   tapped(target: TapTarget): void {
@@ -106,7 +109,7 @@ export class RoomNavigator {
       this.log(`the walker cannot stand at ${coordinatesOf(place.position)}, so they start at the entrance`)
       return roomEntrance
     }
-    if (place.closeUpOf !== null && !furniture.some((piece) => piece.id === place.closeUpOf)) {
+    if (place.closeUpOf !== null && !this.layout.furniture.some((piece) => piece.id === place.closeUpOf)) {
       this.log(`the room has no ${place.closeUpOf} to show close up, so the walker starts with the whole room in view`)
       return { ...place, closeUpOf: null }
     }
@@ -139,7 +142,7 @@ export class RoomNavigator {
       return this.log(`already at ${furnitureId}, showing it close up`)
     }
     const from = this.currentWalk.position
-    const ways = furnitureWithId(furnitureId).sides.flatMap((side) => {
+    const ways = furnitureWithId(this.layout, furnitureId).sides.flatMap((side) => {
       const waypoints = this.floor.pathBetween(from, side.standingPoint)
       return waypoints === null ? [] : [{ side, waypoints }]
     })

@@ -3,21 +3,18 @@ import { prophecyInscriptionAspect } from './ProphecyInscription.ts'
 import { touchAreaOf } from './RoomLayers.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
 import {
-  faucetSpout,
-  sinkBasin,
-  furniture,
   furnitureWithId,
-  itemSpots,
   puddleCentreOn,
   puddleRadiusMetres,
   roomHalfSize,
-  windowOnBackWall,
-  medalOnLeftWall,
-  settingsGearOnLeftWall,
   type Footprint,
   type Furniture,
   type FurnitureId,
   type ItemSpot,
+  type RoomLayout,
+  type SpotOnAWall,
+  type WallSide,
+  type WallWindow,
   type WorldPoint,
 } from '../RoomLayout.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
@@ -64,23 +61,37 @@ export type TapTargetTag =
   | { readonly isMedal: true }
   | { readonly isSettingsGear: true }
 
+type PointOnAWall = {
+  readonly alongTheWall: number
+  readonly y: number
+  readonly intoTheRoom: number
+}
+
+const wallSides: readonly WallSide[] = ['back', 'left']
+const sillDepthMetres = 0.3
+const sillIntoTheRoomMetres = 0.1
+const skyBehindTheWindowMetres = 0.3
+const skyBeyondTheWindowMetres = 0.4
+
 export class RoomModel {
   private readonly materials: RoomMaterials
+  private readonly layout: RoomLayout
   private readonly heaterPlate: THREE.Mesh
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
-  readonly prophecyInscription: THREE.Mesh
+  readonly prophecyInscription: THREE.Mesh | null
 
-  constructor(materials: RoomMaterials, heaterSpot: WorldPoint) {
+  constructor(materials: RoomMaterials, layout: RoomLayout, heaterSpot: WorldPoint) {
     this.materials = materials
+    this.layout = layout
     this.addFloor()
-    this.prophecyInscription = this.addBackWallWithWindow()
-    this.addLeftWall()
-    this.addMedal()
-    this.addSettingsGear()
-    for (const piece of furniture) this.addFurniture(piece)
-    for (const spot of itemSpots) this.addItem(spot)
+    const inscriptions = wallSides.flatMap((wall) => this.addWall(wall, layout.windows.filter((window) => window.wall === wall)))
+    this.prophecyInscription = inscriptions[0] ?? null
+    this.addMedal(layout.medal)
+    this.addSettingsGear(layout.settingsGear)
+    for (const piece of layout.furniture) this.addFurniture(piece)
+    for (const spot of layout.itemSpots) this.addItem(spot)
     this.heaterPlate = this.addHeater(heaterSpot)
   }
 
@@ -94,7 +105,7 @@ export class RoomModel {
   showPuddles(puddles: readonly TableViewState.Puddle[]): void {
     for (const mesh of this.puddlesByPlace.values()) mesh.visible = false
     for (const puddle of puddles) {
-      const centre = puddleCentreOn(puddle.placeId, puddle.spilledAround)
+      const centre = puddleCentreOn(this.layout, puddle.placeId, puddle.spilledAround)
       if (centre === null || puddle.share === 0) continue
       const mesh = this.puddlesByPlace.get(puddle.placeId) ?? this.addPuddle(puddle.placeId)
       mesh.position.set(centre.x, centre.y, centre.z)
@@ -109,30 +120,48 @@ export class RoomModel {
     this.tag(floor, { isFloor: true })
   }
 
-  private addBackWallWithWindow(): THREE.Mesh {
-    const z = -roomHalfSize - wallThickness / 2
-    const { centreX, sillHeight, width, height } = windowOnBackWall
-    const windowLeft = centreX - width / 2
-    const windowRight = centreX + width / 2
-    const windowTop = sillHeight + height
-    this.box('wall', windowLeft + roomHalfSize, wallHeight, wallThickness, { x: (windowLeft - roomHalfSize) / 2, y: wallHeight / 2, z })
-    this.box('wall', roomHalfSize - windowRight, wallHeight, wallThickness, { x: (windowRight + roomHalfSize) / 2, y: wallHeight / 2, z })
-    this.box('wall', width, sillHeight, wallThickness, { x: centreX, y: sillHeight / 2, z })
-    this.box('wall', width, wallHeight - windowTop, wallThickness, { x: centreX, y: (windowTop + wallHeight) / 2, z })
-    this.box('darkWood', width + 0.1, 0.05, 0.3, { x: centreX, y: sillHeight, z: z + 0.1 })
-    const sky = new THREE.Mesh(new THREE.PlaneGeometry(width + 0.4, height + 0.4), this.materials.materialFor('sky'))
-    sky.position.set(centreX, sillHeight + height / 2, z - 0.3)
-    this.root.add(sky)
-    this.box('darkWood', 0.05, height, 0.06, { x: centreX, y: sillHeight + height / 2, z })
-    const inscriptionHeight = prophecyWidthMetres / prophecyInscriptionAspect
-    const inscription = new THREE.Mesh(new THREE.PlaneGeometry(prophecyWidthMetres, inscriptionHeight), this.materials.materialFor('prophecyInscription'))
-    inscription.position.set(centreX, (windowTop + wallHeight) / 2, z - wallThickness / 2 - 0.002)
-    inscription.rotation.y = Math.PI
-    this.root.add(inscription)
-    return inscription
+  private addWall(wall: WallSide, windows: readonly WallWindow[]): THREE.Mesh[] {
+    const middleOfTheWall = -wallThickness / 2
+    const windowsInOrder = [...windows].sort((first, second) => first.centreAlongTheWall - second.centreAlongTheWall)
+    let solidFrom = -roomHalfSize
+    const inscriptions: THREE.Mesh[] = []
+    for (const window of windowsInOrder) {
+      const windowStart = window.centreAlongTheWall - window.width / 2
+      const windowTop = window.sillHeight + window.height
+      this.wallBox(wall, 'wall', windowStart - solidFrom, wallHeight, wallThickness, { alongTheWall: (solidFrom + windowStart) / 2, y: wallHeight / 2, intoTheRoom: middleOfTheWall })
+      this.wallBox(wall, 'wall', window.width, window.sillHeight, wallThickness, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight / 2, intoTheRoom: middleOfTheWall })
+      this.wallBox(wall, 'wall', window.width, wallHeight - windowTop, wallThickness, { alongTheWall: window.centreAlongTheWall, y: (windowTop + wallHeight) / 2, intoTheRoom: middleOfTheWall })
+      this.wallBox(wall, 'darkWood', window.width + 0.1, 0.05, sillDepthMetres, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight, intoTheRoom: middleOfTheWall + sillIntoTheRoomMetres })
+      this.wallBox(wall, 'darkWood', 0.05, window.height, 0.06, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight + window.height / 2, intoTheRoom: middleOfTheWall })
+      const skySize = { width: window.width + skyBeyondTheWindowMetres, height: window.height + skyBeyondTheWindowMetres }
+      this.wallPlane(wall, 'sky', skySize, { alongTheWall: window.centreAlongTheWall, y: window.sillHeight + window.height / 2, intoTheRoom: middleOfTheWall - skyBehindTheWindowMetres }, false)
+      if (window.hasTheProphecyAbove) inscriptions.push(this.addProphecy(wall, { alongTheWall: window.centreAlongTheWall, y: (windowTop + wallHeight) / 2, intoTheRoom: -wallThickness - 0.002 }))
+      solidFrom = window.centreAlongTheWall + window.width / 2
+    }
+    this.wallBox(wall, 'wall', roomHalfSize - solidFrom, wallHeight, wallThickness, { alongTheWall: (solidFrom + roomHalfSize) / 2, y: wallHeight / 2, intoTheRoom: middleOfTheWall })
+    return inscriptions
   }
 
-  private addMedal(): void {
+  private addProphecy(wall: WallSide, point: PointOnAWall): THREE.Mesh {
+    const size = { width: prophecyWidthMetres, height: prophecyWidthMetres / prophecyInscriptionAspect }
+    return this.wallPlane(wall, 'prophecyInscription', size, point, true)
+  }
+
+  private wallBox(wall: WallSide, surface: Surface, alongTheWall: number, height: number, thickness: number, centre: PointOnAWall): THREE.Mesh {
+    const [width, depth] = wall === 'back' ? [alongTheWall, thickness] : [thickness, alongTheWall]
+    return this.box(surface, width, height, depth, pointInTheRoom(wall, centre))
+  }
+
+  private wallPlane(wall: WallSide, surface: Surface, size: { width: number; height: number }, centre: PointOnAWall, facesOutside: boolean): THREE.Mesh {
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(size.width, size.height), this.materials.materialFor(surface))
+    const { x, y, z } = pointInTheRoom(wall, centre)
+    plane.position.set(x, y, z)
+    plane.rotation.y = turnFacingTheRoom(wall) + (facesOutside ? Math.PI : 0)
+    this.root.add(plane)
+    return plane
+  }
+
+  private addMedal(spot: SpotOnAWall): void {
     const medal = new THREE.Group()
     for (const side of [-1, 1]) {
       const ribbon = this.plainBox('medalRibbon', medalRibbonWidthMetres, medalRibbonLengthMetres, 0.004, { x: side * medalRibbonWidthMetres * 0.45, y: medalRadiusMetres + medalRibbonLengthMetres * 0.42, z: 0.004 })
@@ -146,13 +175,12 @@ export class RoomModel {
     const touchArea = this.touchArea(medalTouchAreaMetres, medalTouchAreaMetres * 1.3, 0.05)
     touchArea.position.set(0, medalRibbonLengthMetres * 0.4, 0.025)
     medal.add(disc, touchArea)
-    medal.position.set(-roomHalfSize, medalOnLeftWall.y, medalOnLeftWall.z)
-    medal.rotation.y = Math.PI / 2
+    placeOnTheWall(medal, spot, 0)
     this.root.add(medal)
     this.tag(medal, { isMedal: true })
   }
 
-  private addSettingsGear(): void {
+  private addSettingsGear(spot: SpotOnAWall): void {
     const gear = new THREE.Group()
     const wheel = new THREE.Mesh(new THREE.CylinderGeometry(gearRadiusMetres, gearRadiusMetres, gearThicknessMetres, 32), this.materials.materialFor('steel'))
     wheel.rotation.x = Math.PI / 2
@@ -170,8 +198,7 @@ export class RoomModel {
     const touchArea = this.touchArea(gearTouchAreaWidthMetres, gearTouchAreaHeightMetres, gearTouchAreaDepthMetres)
     touchArea.position.set(0, -gearTouchAreaBelowTheGearMetres, gearTouchAreaDepthMetres / 2)
     gear.add(touchArea)
-    gear.position.set(-roomHalfSize + gearThicknessMetres / 2 + 0.01, settingsGearOnLeftWall.y, settingsGearOnLeftWall.z)
-    gear.rotation.y = Math.PI / 2
+    placeOnTheWall(gear, spot, gearThicknessMetres / 2 + 0.01)
     this.root.add(gear)
     this.tag(gear, { isSettingsGear: true })
   }
@@ -180,10 +207,6 @@ export class RoomModel {
     const area = touchAreaOf(new THREE.BoxGeometry(width, height, depth))
     area.userData = { isForgivingTouchArea: true }
     return area
-  }
-
-  private addLeftWall(): void {
-    this.box('wall', wallThickness, wallHeight, roomHalfSize * 2, { x: -roomHalfSize - wallThickness / 2, y: wallHeight / 2, z: 0 })
   }
 
   private addFurniture(piece: Furniture): void {
@@ -203,6 +226,7 @@ export class RoomModel {
     const right = footprint.x + footprint.width / 2
     const back = footprint.z - footprint.depth / 2
     const front = footprint.z + footprint.depth / 2
+    const { sinkBasin } = this.layout
     const hole = { left: sinkBasin.x - sinkBasin.width / 2, right: sinkBasin.x + sinkBasin.width / 2, back: sinkBasin.z - sinkBasin.depth / 2, front: sinkBasin.z + sinkBasin.depth / 2 }
     const topHeight = height - sinkBasin.floorHeight
     const topY = sinkBasin.floorHeight + topHeight / 2
@@ -243,7 +267,7 @@ export class RoomModel {
     const mesh = this.itemMesh(spot)
     if (spot.shape === 'figurine') return this.tag(mesh, { figurineId: spot.id })
     if (spot.shape === 'faucet') return this.tag(mesh, { isFaucet: true })
-    const furnitureId = furnitureWithinReachOf(spot)
+    const furnitureId = furnitureWithinReachOf(this.layout, spot)
     if (furnitureId !== null) this.tag(mesh, { furnitureId })
   }
 
@@ -259,7 +283,7 @@ export class RoomModel {
     const plate = this.box('heaterPlate', 0.34, 0.05, 0.3, { x: spot.x, y: spot.y - 0.025, z: spot.z })
     plate.material = this.materials.unsharedMaterialFor('heaterPlate')
     this.tag(plate, { isHeater: true })
-    const counterFront = furnitureWithId('counter').footprint
+    const counterFront = furnitureWithId(this.layout, 'counter').footprint
     const frontZ = counterFront.z + counterFront.depth / 2
     const switchPanel = this.box('heaterPlate', 0.32, 0.2, 0.02, { x: spot.x, y: spot.y - 0.2, z: frontZ + 0.01 })
     const switchKnob = this.cylinder('steel', 0.05, 0.04, { x: spot.x, y: spot.y - 0.2, z: frontZ + 0.04 })
@@ -280,6 +304,7 @@ export class RoomModel {
   }
 
   private faucet(base: WorldPoint): THREE.Object3D {
+    const { faucetSpout } = this.layout
     const faucet = new THREE.Group()
     const postHeight = faucetSpout.y - base.y + faucetPostAboveTheSpoutMetres
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, postHeight, 0.05), this.materials.materialFor('steel'))
@@ -297,13 +322,14 @@ export class RoomModel {
     const bottom = base.y + faucetTouchAreaAboveTheCounterMetres
     const top = base.y + postHeight + faucetTouchAreaBeyondTheFaucetMetres
     const back = base.z - faucetTouchAreaBeyondTheFaucetMetres
-    const front = faucetSpout.z + faucetTouchAreaBeyondTheFaucetMetres
+    const front = this.layout.faucetSpout.z + faucetTouchAreaBeyondTheFaucetMetres
     const area = this.touchArea(faucetTouchAreaWidthMetres, top - bottom, front - back)
     area.position.set(base.x, (bottom + top) / 2, (back + front) / 2)
     return area
   }
 
   private sinkBasinInside(counterHeight: number): THREE.Mesh[] {
+    const { sinkBasin } = this.layout
     const { x, z, width, depth, floorHeight } = sinkBasin
     const wallHeight = counterHeight - floorHeight
     const wallY = floorHeight + wallHeight / 2
@@ -362,11 +388,26 @@ export class RoomModel {
   }
 }
 
-function furnitureWithinReachOf(spot: ItemSpot): FurnitureId | null {
-  const piece = furniture.find((candidate) => isWithin(candidate.footprint, spot.position, reachOfFurnitureMetres))
+function furnitureWithinReachOf(layout: RoomLayout, spot: ItemSpot): FurnitureId | null {
+  const piece = layout.furniture.find((candidate) => isWithin(candidate.footprint, spot.position, reachOfFurnitureMetres))
   return piece?.id ?? null
 }
 
 function isWithin(footprint: Footprint, point: { x: number; z: number }, margin: number): boolean {
   return Math.abs(point.x - footprint.x) <= footprint.width / 2 + margin && Math.abs(point.z - footprint.z) <= footprint.depth / 2 + margin
+}
+
+function pointInTheRoom(wall: WallSide, point: PointOnAWall): WorldPoint {
+  const wallFace = -roomHalfSize + point.intoTheRoom
+  return wall === 'back' ? { x: point.alongTheWall, y: point.y, z: wallFace } : { x: wallFace, y: point.y, z: point.alongTheWall }
+}
+
+function turnFacingTheRoom(wall: WallSide): number {
+  return wall === 'back' ? 0 : Math.PI / 2
+}
+
+function placeOnTheWall(object: THREE.Object3D, spot: SpotOnAWall, intoTheRoom: number): void {
+  const { x, y, z } = pointInTheRoom(spot.wall, { alongTheWall: spot.alongTheWall, y: spot.y, intoTheRoom })
+  object.position.set(x, y, z)
+  object.rotation.y = turnFacingTheRoom(spot.wall)
 }

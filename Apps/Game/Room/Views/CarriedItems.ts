@@ -16,6 +16,7 @@ import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
 import { inspectInView } from './Carried/InspectedInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
+import type { Surroundings } from '../Placement.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
@@ -35,13 +36,13 @@ export class CarriedItems {
   private readonly chosenGlow = new ChosenGlow()
   private readonly fires: readonly ItemFire[]
   private readonly ash: CrumblingAsh
-  private readonly heaterSpot: Spot
+  private readonly surroundings: Surroundings
   private readonly handTouchAreas: readonly { readonly handIndex: HandIndex; readonly area: THREE.Mesh }[]
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
-  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, heaterSpot: Spot) {
-    this.heaterSpot = heaterSpot
+  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, surroundings: Surroundings) {
+    this.surroundings = surroundings
     this.materials = materials
     const claySeenFromInside = materials.unsharedMaterialFor('clay')
     claySeenFromInside.side = THREE.DoubleSide
@@ -50,7 +51,7 @@ export class CarriedItems {
       this.root.add(model.root, ...model.puffs)
       this.tappableMeshes.push(model.root)
     }
-    this.waterStreams = new WaterStreams(materials, sinkSpot)
+    this.waterStreams = new WaterStreams(materials, sinkSpot, surroundings.layout.faucetSpout)
     this.fires = this.models.flatMap((model) => (model.look.fire === null || model.charTo === null ? [] : [new ItemFire(materials, model, model.look.fire, model.charTo)]))
     this.ash = new CrumblingAsh(materials)
     this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), ...this.ash.meshes, this.chosenGlow.mesh)
@@ -59,7 +60,7 @@ export class CarriedItems {
 
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
-    for (const model of this.models) showContentsOf(model, scene, this.heaterSpot)
+    for (const model of this.models) showContentsOf(model, scene, this.surroundings)
     for (const [clothId, material] of this.clothMaterialsByClothId) material.color.copy(this.clothColourFor(scene.table.cloths[clothId]))
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
     this.ash.show(scene.timeSeconds)

@@ -7,6 +7,7 @@ import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { HandIndex } from '../../../Shared/Simulation/State/SessionState.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
+import { kitchenBesideTheWindow } from '../../../Apps/Game/Room/RoomLayout.ts'
 
 const frameSeconds = 1 / 8
 const longestWalkSeconds = 30
@@ -191,7 +192,7 @@ test('inspectedItem_whenTheWheelTurnsFarUp_growsToThreeTimesItsSizeAndTheCameraS
 class InspectingRoom {
   readonly logLines: string[] = []
   readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
-  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, (line) => this.logLines.push(line), 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, settingsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
+  readonly play = new RoomPlay(this.ritual.session, defaultCatalog, kitchenBesideTheWindow, (line) => this.logLines.push(line), 4, { remarked: () => {}, debugMenuAsked: () => {}, achievementsAsked: () => {}, settingsAsked: () => {}, mayGrowAMiddleHand: () => true, keeperDied: () => {} })
   readonly zoom = new CameraZoom()
   readonly gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: () => ({ x: 0, z: 0 }) }, (line) => this.logLines.push(line))
 
