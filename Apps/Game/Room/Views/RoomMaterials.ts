@@ -95,81 +95,14 @@ export type BowlPaintings = {
   readonly bowlIdWithTheToadUnderneath: string
 }
 
-const surfaceColours: Readonly<Record<Surface, string>> = {
-  floor: '#e9cfa4',
-  wall: '#f4e7d2',
-  wood: '#c98e5a',
-  darkWood: '#8f5a3a',
-  bamboo: '#e6c67a',
-  clay: '#b8643c',
-  porcelain: '#f7f2e8',
-  steel: '#7d97a3',
-  thermosInside: '#3f4b50',
-  thermosPainting: '#ffffff',
-  aluminium: '#aab0b5',
-  caddyGreen: '#5f9a7c',
-  cloth: '#ffffff',
-  redCheckCloth: '#ffffff',
-  wetCloth: '#a4a4a6',
-  teaStainedCloth: '#f2dc96',
-  charredCloth: '#2e2520',
-  charredBamboo: '#1c1714',
-  ash: '#77716b',
-  smoke: '#5f5a57',
-  flame: '#ff8a2a',
-  flameCore: '#ffe07a',
-  ember: '#ff4a12',
-  jade: '#6fb59a',
-  toadBrown: '#b39a5c',
-  heaterPlate: '#3d3733',
-  sky: '#f2a36b',
-  walkerCoat: '#3f7f8f',
-  walkerSkin: '#f1c9a5',
-  walkerEye: '#221a16',
-  walkerHair: '#2b1d15',
-  terracottaCushion: '#d4735e',
-  softBlueCushion: '#7f9dc4',
-  puddle: '#9c6a44',
-  gaugeGlass: '#f4f8f9',
-  gaugeTube: '#4d5a60',
-  tapWater: '#a9d3ea',
-  pouredLiquid: '#c9e3f0',
-  liquidSurface: '#ffffff',
-  steam: '#ffffff',
-  sinkHollow: '#56626a',
-  sinkWall: '#b7c2c7',
-  caddyInside: '#2f3d33',
-  caddyLabel: '#efe2c4',
-  caddyRim: '#c9a45c',
-  whiteGlaze: '#fbfaf6',
-  pearlGlaze: '#f2ece6',
-  skyBlueGlaze: '#9fd0ea',
-  blueGlaze: '#2f5ea8',
-  yellowGlaze: '#f1cd55',
-  emeraldGlaze: '#1f8a68',
-  temperGlaze: '#7a6650',
-  glass: '#ffffff',
-  gildedRim: '#e2b451',
-  medalRibbon: '#a8392e',
-  clearGlassHeldInView: '#26302c',
-  koiPainting: '#ffffff',
-  toadPainting: '#ffffff',
-  prophecyInscription: '#ffffff',
-  lotusPainting: '#ffffff',
-  heronPainting: '#ffffff',
-  teaCharacterPainting: '#ffffff',
-  yixingClay: '#ffffff',
-  lawn: '#79a94f',
-  bloom: '#ffffff',
-  foliage: '#3f7a32',
-  stem: '#4d8a36',
-  daisyPetals: '#fbfbf6',
-  flowerHeart: '#f2c21c',
-  poppyHeart: '#1d1a17',
-  sunflowerHeart: '#5a3616',
-}
+type SurfaceLook = { readonly colour: string } & (
+  | { readonly kind: 'matte' | 'unlit' | 'glow' | 'pearly' | 'pouredLiquid' | 'liquidSurface' | 'glass' | 'clearGlass' | 'gold' | 'aluminium' | 'temperGlaze' | 'kintsugi' | 'thermosPainting' | 'yixingClay' | 'koiPainting' | 'prophecy' }
+  | { readonly kind: 'mist'; readonly opacity: number }
+  | { readonly kind: 'glaze'; readonly paint: (() => HTMLCanvasElement) | null }
+  | { readonly kind: 'painting'; readonly paint: () => HTMLCanvasElement }
+  | { readonly kind: 'wovenCloth'; readonly pattern: ClothPattern }
+)
 
-const unlitSurfaces: ReadonlySet<Surface> = new Set(['sky'])
 const steamOpacity = 0.45
 const smokeOpacity = 0.4
 const glassEdgeSharpness = 2
@@ -190,9 +123,80 @@ const clayPoreDepth = 1.5
 const pouredLiquidOpacity = 0.85
 const paintingSharpness = 8
 const clothRoughness = 1
-const glazedSurfaces: ReadonlySet<Surface> = new Set(['whiteGlaze', 'skyBlueGlaze', 'yellowGlaze', 'emeraldGlaze'])
-const pearlySurfaces: ReadonlySet<Surface> = new Set(['pearlGlaze'])
-const glazePaintings: Partial<Record<Surface, () => HTMLCanvasElement>> = { emeraldGlaze: paintGreenMarble, skyBlueGlaze: paintCrackle }
+
+const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
+  floor: { colour: '#e9cfa4', kind: 'matte' },
+  wall: { colour: '#f4e7d2', kind: 'matte' },
+  wood: { colour: '#c98e5a', kind: 'matte' },
+  darkWood: { colour: '#8f5a3a', kind: 'matte' },
+  bamboo: { colour: '#e6c67a', kind: 'matte' },
+  clay: { colour: '#b8643c', kind: 'matte' },
+  porcelain: { colour: '#f7f2e8', kind: 'matte' },
+  steel: { colour: '#7d97a3', kind: 'matte' },
+  thermosInside: { colour: '#3f4b50', kind: 'matte' },
+  thermosPainting: { colour: '#ffffff', kind: 'thermosPainting' },
+  aluminium: { colour: '#aab0b5', kind: 'aluminium' },
+  caddyGreen: { colour: '#5f9a7c', kind: 'matte' },
+  cloth: { colour: '#ffffff', kind: 'wovenCloth', pattern: 'blueStripes' },
+  redCheckCloth: { colour: '#ffffff', kind: 'wovenCloth', pattern: 'redCheck' },
+  wetCloth: { colour: '#a4a4a6', kind: 'matte' },
+  teaStainedCloth: { colour: '#f2dc96', kind: 'matte' },
+  charredCloth: { colour: '#2e2520', kind: 'matte' },
+  charredBamboo: { colour: '#1c1714', kind: 'matte' },
+  ash: { colour: '#77716b', kind: 'matte' },
+  smoke: { colour: '#5f5a57', kind: 'mist', opacity: smokeOpacity },
+  flame: { colour: '#ff8a2a', kind: 'glow' },
+  flameCore: { colour: '#ffe07a', kind: 'glow' },
+  ember: { colour: '#ff4a12', kind: 'glow' },
+  jade: { colour: '#6fb59a', kind: 'matte' },
+  toadBrown: { colour: '#b39a5c', kind: 'matte' },
+  heaterPlate: { colour: '#3d3733', kind: 'matte' },
+  sky: { colour: '#f2a36b', kind: 'unlit' },
+  walkerCoat: { colour: '#3f7f8f', kind: 'matte' },
+  walkerSkin: { colour: '#f1c9a5', kind: 'matte' },
+  walkerEye: { colour: '#221a16', kind: 'matte' },
+  walkerHair: { colour: '#2b1d15', kind: 'matte' },
+  terracottaCushion: { colour: '#d4735e', kind: 'matte' },
+  softBlueCushion: { colour: '#7f9dc4', kind: 'matte' },
+  puddle: { colour: '#9c6a44', kind: 'matte' },
+  gaugeGlass: { colour: '#f4f8f9', kind: 'matte' },
+  gaugeTube: { colour: '#4d5a60', kind: 'matte' },
+  tapWater: { colour: '#a9d3ea', kind: 'matte' },
+  pouredLiquid: { colour: '#c9e3f0', kind: 'pouredLiquid' },
+  liquidSurface: { colour: '#ffffff', kind: 'liquidSurface' },
+  steam: { colour: '#ffffff', kind: 'mist', opacity: steamOpacity },
+  sinkHollow: { colour: '#56626a', kind: 'matte' },
+  sinkWall: { colour: '#b7c2c7', kind: 'matte' },
+  caddyInside: { colour: '#2f3d33', kind: 'matte' },
+  caddyLabel: { colour: '#efe2c4', kind: 'matte' },
+  caddyRim: { colour: '#c9a45c', kind: 'matte' },
+  whiteGlaze: { colour: '#fbfaf6', kind: 'glaze', paint: null },
+  pearlGlaze: { colour: '#f2ece6', kind: 'pearly' },
+  skyBlueGlaze: { colour: '#9fd0ea', kind: 'glaze', paint: paintCrackle },
+  blueGlaze: { colour: '#2f5ea8', kind: 'kintsugi' },
+  yellowGlaze: { colour: '#f1cd55', kind: 'glaze', paint: null },
+  emeraldGlaze: { colour: '#1f8a68', kind: 'glaze', paint: paintGreenMarble },
+  temperGlaze: { colour: '#7a6650', kind: 'temperGlaze' },
+  glass: { colour: '#ffffff', kind: 'glass' },
+  gildedRim: { colour: '#e2b451', kind: 'gold' },
+  medalRibbon: { colour: '#a8392e', kind: 'matte' },
+  clearGlassHeldInView: { colour: '#26302c', kind: 'clearGlass' },
+  koiPainting: { colour: '#ffffff', kind: 'koiPainting' },
+  toadPainting: { colour: '#ffffff', kind: 'painting', paint: paintToad },
+  prophecyInscription: { colour: '#ffffff', kind: 'prophecy' },
+  lotusPainting: { colour: '#ffffff', kind: 'painting', paint: paintLotus },
+  heronPainting: { colour: '#ffffff', kind: 'painting', paint: paintHeron },
+  teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
+  yixingClay: { colour: '#ffffff', kind: 'yixingClay' },
+  lawn: { colour: '#79a94f', kind: 'matte' },
+  bloom: { colour: '#ffffff', kind: 'matte' },
+  foliage: { colour: '#3f7a32', kind: 'matte' },
+  stem: { colour: '#4d8a36', kind: 'matte' },
+  daisyPetals: { colour: '#fbfbf6', kind: 'matte' },
+  flowerHeart: { colour: '#f2c21c', kind: 'matte' },
+  poppyHeart: { colour: '#1d1a17', kind: 'matte' },
+  sunflowerHeart: { colour: '#5a3616', kind: 'matte' },
+}
 
 export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
@@ -221,36 +225,54 @@ export class RoomMaterials {
   }
 
   colourOf(surface: Surface): THREE.Color {
-    return new THREE.Color(surfaceColours[surface])
+    return new THREE.Color(lookBySurface[surface].colour)
   }
 
   unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
-    const color = surfaceColours[surface]
-    if (surface === 'steam') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: steamOpacity, depthWrite: false })
-    if (surface === 'smoke') return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: smokeOpacity, depthWrite: false })
-    if (surface === 'flame' || surface === 'flameCore' || surface === 'ember') return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
-    if (surface === 'temperGlaze') return this.temperGlazeMaterial(color)
-    if (surface === 'blueGlaze') return this.kintsugiMaterial()
-    if (surface === 'glass') return this.glassMaterial(color)
-    if (surface === 'gildedRim') return this.goldMaterial(color)
-    if (surface === 'liquidSurface') return this.liquidSurfaceMaterial(color)
-    if (surface === 'aluminium') return this.aluminiumMaterial(color)
-    if (surface === 'thermosPainting') return this.thermosPaintingMaterial()
-    if (surface === 'clearGlassHeldInView') return this.clearGlassMaterial(color)
-    if (surface === 'koiPainting') return paintingMaterial(paintKoiPond(this.koiPond))
-    if (surface === 'toadPainting') return paintingMaterial(paintToad())
-    if (surface === 'prophecyInscription') return paintingMaterial(this.paintedProphecy())
-    if (surface === 'lotusPainting') return paintingMaterial(paintLotus())
-    if (surface === 'heronPainting') return paintingMaterial(paintHeron())
-    if (surface === 'teaCharacterPainting') return paintingMaterial(paintTeaCharacter())
-    if (surface === 'yixingClay') return yixingClayMaterial()
-    if (surface === 'cloth') return wovenClothMaterial('blueStripes')
-    if (surface === 'redCheckCloth') return wovenClothMaterial('redCheck')
-    if (surface === 'pouredLiquid') return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
-    if (unlitSurfaces.has(surface)) return new THREE.MeshBasicMaterial({ color })
-    if (pearlySurfaces.has(surface)) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
-    if (glazedSurfaces.has(surface)) return glazeMaterial(surface, color)
-    return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+    const look = lookBySurface[surface]
+    const color = look.colour
+    switch (look.kind) {
+      case 'matte':
+        return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+      case 'unlit':
+        return new THREE.MeshBasicMaterial({ color })
+      case 'mist':
+        return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: look.opacity, depthWrite: false })
+      case 'glow':
+        return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
+      case 'pearly':
+        return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
+      case 'glaze':
+        return glazeMaterial(look.paint, color)
+      case 'pouredLiquid':
+        return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
+      case 'liquidSurface':
+        return this.liquidSurfaceMaterial(color)
+      case 'glass':
+        return this.glassMaterial(color)
+      case 'clearGlass':
+        return this.clearGlassMaterial(color)
+      case 'gold':
+        return this.goldMaterial(color)
+      case 'aluminium':
+        return this.aluminiumMaterial(color)
+      case 'temperGlaze':
+        return this.temperGlazeMaterial(color)
+      case 'kintsugi':
+        return this.kintsugiMaterial()
+      case 'thermosPainting':
+        return this.thermosPaintingMaterial()
+      case 'yixingClay':
+        return yixingClayMaterial()
+      case 'koiPainting':
+        return paintingMaterial(paintKoiPond(this.koiPond))
+      case 'prophecy':
+        return paintingMaterial(this.paintedProphecy())
+      case 'painting':
+        return paintingMaterial(look.paint())
+      case 'wovenCloth':
+        return wovenClothMaterial(look.pattern)
+    }
   }
 
   private paintedProphecy(): HTMLCanvasElement {
@@ -370,12 +392,11 @@ function wovenClothMaterial(pattern: ClothPattern): THREE.MeshStandardMaterial {
   const texture = new THREE.CanvasTexture(weaveCloth(pattern))
   texture.colorSpace = THREE.SRGBColorSpace
   texture.anisotropy = paintingSharpness
-  return new THREE.MeshStandardMaterial({ map: texture, color: surfaceColours.cloth, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })
+  return new THREE.MeshStandardMaterial({ map: texture, color: lookBySurface.cloth.colour, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })
 }
 
-function glazeMaterial(surface: Surface, color: string): THREE.MeshPhysicalMaterial {
-  const paintGlaze = glazePaintings[surface]
-  if (paintGlaze === undefined) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
+function glazeMaterial(paintGlaze: (() => HTMLCanvasElement) | null, color: string): THREE.MeshPhysicalMaterial {
+  if (paintGlaze === null) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
   const texture = new THREE.CanvasTexture(paintGlaze())
   texture.colorSpace = THREE.SRGBColorSpace
   texture.wrapS = THREE.RepeatWrapping
