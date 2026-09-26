@@ -4,11 +4,11 @@ import { phraseLineAtTurn } from '../Texts/Texts.ts'
 export type SipFeeling = 'noTea' | 'tooHot' | 'amongLeaves' | 'overbrewed' | 'extremelyStrong' | 'bitter' | 'tooStrong' | 'cold' | 'weak' | 'rich' | 'coolingButGood' | 'justRight'
 
 export function sipText(verdict: TasteVerdict, cupHeldLeaves: boolean, voiceSeed: number): string {
-  const feeling = verdict.reaction !== 'waitsForItToCool' && cupHeldLeaves ? 'amongLeaves' : sipFeeling(verdict)
-  return phraseLineAtTurn(`sip.${feeling}`, voiceSeed, 1)
+  return phraseLineAtTurn(`sip.${sipFeeling(verdict, cupHeldLeaves)}`, voiceSeed, 1)
 }
 
-export function sipFeeling(verdict: TasteVerdict): SipFeeling {
+export function sipFeeling(verdict: TasteVerdict, cupHeldLeaves: boolean): SipFeeling {
+  if (verdict.reaction !== 'waitsForItToCool' && cupHeldLeaves) return 'amongLeaves'
   if (verdict.strength === 'none') return 'noTea'
   switch (verdict.reaction) {
     case 'waitsForItToCool':

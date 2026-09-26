@@ -45,12 +45,28 @@ test('achievement_ofTeaSippedStraightFromTheCaddy_isNotEnlightened', () => {
   assert.deepEqual(room.announced, [])
 })
 
-test('achievement_ofAJustRightSip_isSommelier', () => {
+test('achievement_ofAJustRightSipFromABowlWithoutLeaves_isSommelier', () => {
   const room = new AchievementsInTheRoom()
 
   room.achievements.eventsHappened([{ type: 'teaTasted', cupId: 'bowl1', verdict: justRight, cupHeldLeaves: false }], room.ritual.state)
 
   assert.deepEqual(room.announced, ['perfectTea'])
+})
+
+test('achievement_ofAJustRightSipAmongLeaves_isNotSommelier', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.eventsHappened([{ type: 'teaTasted', cupId: 'caddy', verdict: justRight, cupHeldLeaves: true }], room.ritual.state)
+
+  assert.deepEqual(room.announced, [])
+})
+
+test('achievement_ofAJustRightSipBrewedInTheBowl_isEnlightened', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.eventsHappened([{ type: 'teaTasted', cupId: 'bowl1', verdict: justRight, cupHeldLeaves: true }], room.ritual.state)
+
+  assert.deepEqual(room.announced, ['teaBrewedInTheBowl'])
 })
 
 test('achievement_whenOnePuddleIsWipedTwice_isNotYetOcd', () => {

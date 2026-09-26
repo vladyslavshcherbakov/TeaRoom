@@ -46,6 +46,8 @@ export type AchievementUnlocked = (id: AchievementId) => void
 
 type TapTurnedOff = Extract<RitualEvent, { readonly type: 'tapTurnedOff' }>
 
+type TeaTasted = Extract<RitualEvent, { readonly type: 'teaTasted' }>
+
 type HeaterSwitchedOff = Extract<RitualEvent, { readonly type: 'heaterSwitchedOff' }>
 
 const longRunSeconds = 120
@@ -87,8 +89,7 @@ export class Achievements {
       if (event.type === 'tableWiped') this.puddleWipedOn(event.placeId)
       if (event.type === 'tapTurnedOff') this.tapTurnedOff(event)
       if (event.type === 'heaterSwitchedOff') this.heaterSwitchedOff(event)
-      const id = achievementOf(event, state)
-      if (id !== null) this.unlock(id, `the ritual reported ${event.type}`)
+      for (const id of achievementsOf(event, state)) this.unlock(id, `the ritual reported ${event.type}`)
     }
   }
 
@@ -186,22 +187,28 @@ export function achievementsOutOfReach(state: DeepReadonly<SessionState>, room: 
   return outOfReach
 }
 
-function achievementOf(event: RitualEvent, state: DeepReadonly<SessionState>): AchievementId | null {
+function achievementsOf(event: RitualEvent, state: DeepReadonly<SessionState>): readonly AchievementId[] {
   switch (event.type) {
     case 'burntClothWashedBackToNew':
-      return 'burntClothWashed'
+      return ['burntClothWashed']
     case 'spoonCrumbled':
-      return 'spoonBurnt'
+      return ['spoonBurnt']
     case 'middleHandGrown':
-      return 'shiva'
+      return ['shiva']
     case 'metalGlowsTooHotToHold':
-      return carriedShapeOf(state, event.vesselId) === 'thermos' ? 'thermosGlowing' : null
+      return carriedShapeOf(state, event.vesselId) === 'thermos' ? ['thermosGlowing'] : []
     case 'boiledDry':
-      return event.wasFullAndOnlyBoiledDown && carriedShapeOf(state, event.vesselId) === 'kettle' ? 'kettleBoiledDry' : null
+      return event.wasFullAndOnlyBoiledDown && carriedShapeOf(state, event.vesselId) === 'kettle' ? ['kettleBoiledDry'] : []
     case 'teaTasted':
-      if (sipFeeling(event.verdict) === 'justRight') return 'perfectTea'
-      return event.cupHeldLeaves && event.verdict.strength !== 'none' && carriedShapeOf(state, event.cupId) === 'bowl' ? 'teaBrewedInTheBowl' : null
+      return achievementsOfASip(event, state)
     default:
-      return null
+      return []
   }
+}
+
+function achievementsOfASip(sip: TeaTasted, state: DeepReadonly<SessionState>): readonly AchievementId[] {
+  const earned: AchievementId[] = []
+  if (sipFeeling(sip.verdict, sip.cupHeldLeaves) === 'justRight') earned.push('perfectTea')
+  if (sip.cupHeldLeaves && sip.verdict.strength !== 'none' && carriedShapeOf(state, sip.cupId) === 'bowl') earned.push('teaBrewedInTheBowl')
+  return earned
 }
