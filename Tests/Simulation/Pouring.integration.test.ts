@@ -95,6 +95,17 @@ test('thermos_whenItsLidIsClosed_refusesWater', () => {
   assert.equal(ritual.state.pour, null)
 })
 
+test('thermosLid_whileTheKettlePoursIntoIt_cannotBeClosed', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
+  ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'thermos' })
+
+  const events = ritual.do({ type: 'closeVesselLid', vesselId: 'thermos' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'closeVesselLid', reason: 'vesselIsBeingPoured' }])
+  assert.equal(ritual.vessel('thermos').isLidOpen, true)
+})
+
 test('kettle_whileOnTheHeater_cannotBePoured', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })

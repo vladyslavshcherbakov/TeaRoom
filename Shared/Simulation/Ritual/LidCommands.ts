@@ -1,7 +1,7 @@
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { isCoolEnoughToHold, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
+import { isCoolEnoughToHold, isNotBeingPoured, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 
 export function moveVesselLid(
   draft: Draft,
@@ -9,8 +9,9 @@ export function moveVesselLid(
 ): void {
   const vessel = draft.state.vessels[command.vesselId]
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${command.vesselId}`)
-  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(vessel.id), hasALid(vessel), isCoolEnoughToHold(vessel.id)])) return
   const shouldOpen = command.type === 'openVesselLid'
+  const checksBeforeClosing = shouldOpen ? [] : [isNotBeingPoured(vessel.id)]
+  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(vessel.id), hasALid(vessel), ...checksBeforeClosing, isCoolEnoughToHold(vessel.id)])) return
   if (vessel.isLidOpen === shouldOpen) return refuse(draft, command, shouldOpen ? 'lidAlreadyOpen' : 'lidAlreadyClosed')
   vessel.isLidOpen = shouldOpen
   note(draft, `${vessel.id} lid ${shouldOpen ? 'opened' : 'closed'}`)
