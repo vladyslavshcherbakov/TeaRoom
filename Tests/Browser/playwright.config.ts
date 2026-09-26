@@ -10,7 +10,7 @@ export default defineConfig({
   forbidOnly: process.env['CI'] !== undefined,
   retries: 0,
   reporter: [['list']],
-  use: { baseURL: `http://127.0.0.1:${previewPort}/` },
+  use: { baseURL: `http://127.0.0.1:${previewPort}/`, trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   webServer: {
     command: `npx vite preview Apps/Game/Room --outDir ../../../dist --host 127.0.0.1 --port ${previewPort} --strictPort`,
     cwd: '../..',

@@ -58,6 +58,12 @@ jobs:
         run: npx playwright install-deps ${{ matrix.browser }}
       - name: Build the site and run the UI tests on ${{ matrix.project }}
         run: Scripts/test-ui.sh --project=${{ matrix.project }}
+      - name: Upload the traces and screenshots of the failed UI tests on ${{ matrix.project }}
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: failed-ui-tests-${{ matrix.project }}
+          path: test-results/
 
   build:
     runs-on: ubuntu-latest
