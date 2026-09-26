@@ -18,6 +18,7 @@ import {
   closeUpPose,
   overviewPose,
   poseEasedTowards,
+  poseWatchingBesideASheet,
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
@@ -27,7 +28,7 @@ import { KeyboardAndMouse } from './Views/KeyboardAndMouse.ts'
 import { KeyboardShortcuts } from './KeyboardShortcuts.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
-import { roomLayoutFor, type CameraPose, type FloorPoint, type RoomLayout } from './RoomLayout.ts'
+import { directionIntoTheRoomFrom, pointAwayFromTheWall, roomLayoutFor, type CameraPose, type FloorPoint, type RoomLayout } from './RoomLayout.ts'
 import type { ClothPattern, RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
@@ -69,6 +70,10 @@ import { RoomGlow } from './Views/RoomGlow.ts'
 
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
+const gearsAwayFromTheWallMetres = 0.03
+const gearsCentreRightOfTheBigGearMetres = 0.07
+const gearsCentreAboveTheBigGearMetres = 0.07
+const gearsSpanMetres = 0.5
 const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
 const reflectionsBlurSigma = 0.04
@@ -135,6 +140,7 @@ export class RoomScene {
   private stickLayout: StickLayout = 'walkOnTheLeft'
   private controlScheme: ControlScheme = matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks'
   private wasSeatedInFirstPerson = false
+  private wereTheGearsWatched = false
   private wasFirstPersonView = false
   private firstPersonSettlesAtSeconds = 0
   private look: FirstPersonLook = { headingRadians: Math.PI, pitchRadians: 0 }
@@ -466,6 +472,10 @@ export class RoomScene {
   }
 
   private moveCamera(seconds: number): void {
+    const areTheGearsWatched = this.settingsScreen.isShown
+    if (areTheGearsWatched !== this.wereTheGearsWatched) this.log(areTheGearsWatched ? 'the camera turns to the gears on the wall while the settings are open' : 'the camera goes back as the settings close')
+    this.wereTheGearsWatched = areTheGearsWatched
+    if (areTheGearsWatched) return this.watchTheGears(seconds)
     this.zoom.viewShown(this.play.view)
     const isSeatedInFirstPerson = this.cameraMode === 'firstPerson' && this.play.isSeatedAtTheRitualPlace
     this.lookAtTheTableAsTheKeeperSitsDown(isSeatedInFirstPerson)
@@ -476,6 +486,20 @@ export class RoomScene {
     const goal = isFirstPersonView ? this.cameraGoal() : zoomedPose(this.cameraGoal(), this.zoom.distanceShare)
     const isSettled = isFirstPersonView && this.clock.elapsedTime >= this.firstPersonSettlesAtSeconds
     this.cameraPose = isSettled ? goal : poseEasedTowards(this.cameraPose, goal, seconds)
+    this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
+    this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
+    this.camera.updateMatrixWorld()
+  }
+
+  private watchTheGears(seconds: number): void {
+    this.wasFirstPersonView = false
+    this.showFieldOfView(cameraFieldOfViewDegrees, seconds)
+    const spot = this.layout.settingsGear
+    const towardsTheRoom = directionIntoTheRoomFrom(spot.wall)
+    const onTheWall = pointAwayFromTheWall(spot, gearsAwayFromTheWallMetres)
+    const right = { x: towardsTheRoom.z, z: -towardsTheRoom.x }
+    const centre = { x: onTheWall.x + right.x * gearsCentreRightOfTheBigGearMetres, y: onTheWall.y + gearsCentreAboveTheBigGearMetres, z: onTheWall.z + right.z * gearsCentreRightOfTheBigGearMetres }
+    this.cameraPose = poseEasedTowards(this.cameraPose, poseWatchingBesideASheet({ centre, towardsTheRoom, sizeMetres: gearsSpanMetres }, this.camera.aspect), seconds)
     this.camera.position.set(this.cameraPose.position.x, this.cameraPose.position.y, this.cameraPose.position.z)
     this.camera.lookAt(this.cameraPose.target.x, this.cameraPose.target.y, this.cameraPose.target.z)
     this.camera.updateMatrixWorld()

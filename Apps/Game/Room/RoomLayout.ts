@@ -220,6 +220,15 @@ export function undersideOfTheBoardAbove(layout: RoomLayout, spot: Spot): number
   return undersides.length === 0 ? null : Math.min(...undersides)
 }
 
+export function pointAwayFromTheWall(spot: SpotOnAWall, intoTheRoom: number): WorldPoint {
+  const wallFace = -roomHalfSize + intoTheRoom
+  return spot.wall === 'back' ? { x: spot.alongTheWall, y: spot.y, z: wallFace } : { x: wallFace, y: spot.y, z: spot.alongTheWall }
+}
+
+export function directionIntoTheRoomFrom(wall: WallSide): WorldPoint {
+  return wall === 'back' ? { x: 0, y: 0, z: 1 } : { x: 1, y: 0, z: 0 }
+}
+
 export function turnOfItemAt(layout: RoomLayout, spot: Spot): number {
   return spot.turnRadians ?? turnOfItemsOn(layout, spot.placeId)
 }

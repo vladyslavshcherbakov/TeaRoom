@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { closeUpPose, distanceShareAfterPinch, visibleWidthMetres, zoomedPose } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
+import { closeUpPose, distanceShareAfterPinch, poseWatchingBesideASheet, visibleWidthMetres, zoomedPose } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
 import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { assertNear } from '../../Support/Assertions.ts'
 
 const iPhonePortraitAspect = 390 / 844
 
@@ -52,4 +53,19 @@ test('zoomedPose_atHalfTheDistance_keepsTheTargetAndHalvesTheWayToIt', () => {
   const zoomed = zoomedPose(pose, 0.5)
 
   assert.deepEqual(zoomed, { position: { x: 2, y: 4, z: 4 }, target: { x: 0, y: 2, z: 0 } })
+})
+
+test('gearsWatched_onAPortraitScreen_areFacedStraightAndShownAboveTheSheet', () => {
+  const pose = poseWatchingBesideASheet({ centre: { x: 0, y: 1, z: -3 }, towardsTheRoom: { x: 0, y: 0, z: 1 }, sizeMetres: 0.5 }, 0.5)
+
+  assertNear(pose.position.x, pose.target.x)
+  assertNear(pose.position.y, pose.target.y)
+  assert.ok(pose.target.y < 1, `the camera looks at ${pose.target.y.toFixed(2)} m, not below the gears`)
+})
+
+test('gearsWatched_onALandscapeScreen_areShownLeftOfTheSheet', () => {
+  const pose = poseWatchingBesideASheet({ centre: { x: 0, y: 1, z: -3 }, towardsTheRoom: { x: 0, y: 0, z: 1 }, sizeMetres: 0.5 }, 1.6)
+
+  assertNear(pose.target.y, 1)
+  assert.ok(pose.target.x > 0, `the camera looks at x ${pose.target.x.toFixed(2)}, not right of the gears`)
 })

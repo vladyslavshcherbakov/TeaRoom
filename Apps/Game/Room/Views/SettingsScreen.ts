@@ -78,6 +78,10 @@ export class SettingsScreen {
     this.element.hidden = false
   }
 
+  get isShown(): boolean {
+    return !this.element.hidden
+  }
+
   private hide(): void {
     this.element.hidden = true
   }

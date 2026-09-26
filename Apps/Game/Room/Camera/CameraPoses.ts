@@ -1,5 +1,11 @@
 import type { CameraPose, CloseUp, FloorPoint, WorldPoint } from '../RoomLayout.ts'
 
+export type ThingOnAWall = {
+  readonly centre: WorldPoint
+  readonly towardsTheRoom: WorldPoint
+  readonly sizeMetres: number
+}
+
 export const cameraFieldOfViewDegrees = 30
 
 const overviewDirection = normalised({ x: 1, y: 1.15, z: 1 })
@@ -11,6 +17,11 @@ const settleSeconds = 0.35
 const nearestDistanceShare = 0.5
 const farthestDistanceShare = 1.6
 const wheelZoomPerPixel = 0.001
+
+const shareOfAPortraitScreenAboveTheSheet = 0.35
+const shareOfALandscapeScreenBesideTheSheet = 0.7
+const thingAboveTheMiddleOfAPortraitScreenShare = 0.32
+const thingLeftOfTheMiddleOfALandscapeScreenShare = 0.22
 
 export const unzoomedDistanceShare = 1
 
@@ -26,6 +37,16 @@ export function overviewPose(walker: FloorPoint, aspect: number): CameraPose {
 export function closeUpPose(closeUp: CloseUp, aspect: number): CameraPose {
   const distance = distanceToFit(closeUp.widthMetres, closeUp.heightMetres, aspect)
   return poseLookingAt(closeUp.target, normalised(closeUp.directionToCamera), distance)
+}
+
+export function poseWatchingBesideASheet(thing: ThingOnAWall, aspect: number): CameraPose {
+  const isPortrait = aspect < 1
+  const visibleHeight = thing.sizeMetres / (isPortrait ? shareOfAPortraitScreenAboveTheSheet : shareOfALandscapeScreenBesideTheSheet)
+  const distance = visibleHeight / 2 / halfHeightTangent()
+  const right = { x: thing.towardsTheRoom.z, y: 0, z: -thing.towardsTheRoom.x }
+  const shift = isPortrait ? { right: 0, down: visibleHeight * thingAboveTheMiddleOfAPortraitScreenShare } : { right: visibleHeight * aspect * thingLeftOfTheMiddleOfALandscapeScreenShare, down: 0 }
+  const target = { x: thing.centre.x + right.x * shift.right, y: thing.centre.y - shift.down, z: thing.centre.z + right.z * shift.right }
+  return poseLookingAt(target, thing.towardsTheRoom, distance)
 }
 
 export function screenRightOnTheFloor(closeUp: CloseUp): FloorPoint {

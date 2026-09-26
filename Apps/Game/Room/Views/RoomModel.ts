@@ -6,6 +6,7 @@ import {
   puddleCentreOn,
   puddleRadiusMetres,
   heaterPlate,
+  pointAwayFromTheWall,
   roomHalfSize,
   turnFacing,
   type Footprint,
@@ -435,8 +436,7 @@ function isWithin(footprint: Footprint, point: { x: number; z: number }, margin:
 }
 
 function pointInTheRoom(wall: WallSide, point: PointOnAWall): WorldPoint {
-  const wallFace = -roomHalfSize + point.intoTheRoom
-  return wall === 'back' ? { x: point.alongTheWall, y: point.y, z: wallFace } : { x: wallFace, y: point.y, z: point.alongTheWall }
+  return pointAwayFromTheWall({ wall, alongTheWall: point.alongTheWall, y: point.y }, point.intoTheRoom)
 }
 
 function turnFacingTheRoom(wall: WallSide): number {
