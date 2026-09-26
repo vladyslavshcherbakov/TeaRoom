@@ -12,6 +12,7 @@ import { aimOver } from './Carried/AimedVessel.ts'
 import type { CarriedItemsScene, DistantDetail, HeldInView } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
+import { UnchosenHandVeils } from './Carried/UnchosenHandVeils.ts'
 import { CrumblingAsh } from './Carried/CrumblingAsh.ts'
 import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView, raiseTowardTheEyes } from './Carried/HeldInView.ts'
@@ -37,6 +38,7 @@ export class CarriedItems {
   private readonly models: CarriedModel[]
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()
+  private readonly unchosenHandVeils = new UnchosenHandVeils()
   private readonly fires: readonly ItemFire[]
   private readonly ash: CrumblingAsh
   private readonly surroundings: Surroundings
@@ -59,7 +61,7 @@ export class CarriedItems {
     this.waterStreams = new WaterStreams(materials, sinkSpot, surroundings.layout.faucetSpout)
     this.fires = this.models.flatMap((model) => (model.look.fire === null || model.charTo === null ? [] : [new ItemFire(materials, model, model.look.fire, model.charTo)]))
     this.ash = new CrumblingAsh(materials)
-    this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), ...this.ash.meshes, this.chosenGlow.mesh)
+    this.root.add(...this.waterStreams.meshes, ...this.fires.flatMap((fire) => fire.meshes), ...this.ash.meshes, this.chosenGlow.mesh, ...this.unchosenHandVeils.meshes)
     this.handTouchAreas = everyHandIndex.map((handIndex) => ({ handIndex, area: this.handTouchArea(handIndex) }))
   }
 
@@ -74,6 +76,7 @@ export class CarriedItems {
     this.waterStreams.show(scene, this.models)
     for (const { handIndex, area } of this.handTouchAreas) this.placeHandTouchArea(area, handIndex, scene)
     this.chosenGlow.show(scene, this.models)
+    this.unchosenHandVeils.show(scene, this.models)
   }
 
   isHeldInView(part: THREE.Object3D): boolean {
