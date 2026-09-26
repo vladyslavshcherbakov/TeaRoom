@@ -1,11 +1,10 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { HeaterDefinition } from '../Definitions/HeaterDefinition.ts'
-import { judgeWater, type WaterJudgement } from '../Judgement/WaterJudgement.ts'
 import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import type { DeepReadonly } from '../State/DeepReadonly.ts'
 import type { HeaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { chosenTea, describeLiquid, note, refuse, type Draft } from './Draft.ts'
+import { note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
 import { isKnown, isNotBeingPoured, isNotBurntAway, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 import { liftTheItem } from './LiftTheItem.ts'
@@ -24,16 +23,14 @@ export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeate
   else if (liftTheItem(draft, itemId) === 'crumbled') return
   moveItem(draft, itemId, { kind: 'onSurface', spot: heaterSpot })
   draft.state.heater.itemIdOnTop = itemId
-  note(draft, `placed on heater: ${rulesFor(draft.state, itemId)?.describeOnTheHeater(draft, itemId) ?? itemId}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)
+  note(draft, `placed on heater: ${describeOnTheHeater(draft, itemId)}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)
   draft.events.push({ type: 'placedOnHeater', itemId })
 }
 
 export function liftOffTheHeater(draft: Draft, itemId: string): void {
-  const isInUse = isTheHeaterInUse(draft.state.heater)
-  const waterJudgement = isInUse ? judgementOfWaterOnHeater(draft) : null
-  if (!isInUse) note(draft, `${itemId} lifted off a heater that was off, water not judged`)
+  note(draft, `lifted off the ${isTheHeaterInUse(draft.state.heater) ? 'working' : 'cold'} heater: ${describeOnTheHeater(draft, itemId)}`)
   draft.state.heater.itemIdOnTop = null
-  draft.events.push({ type: 'takenOffHeater', itemId, waterJudgement })
+  draft.events.push({ type: 'takenOffHeater', itemId })
   rulesFor(draft.state, itemId)?.takeOffTheHeater(draft, itemId)
 }
 
@@ -54,7 +51,7 @@ export function switchHeaterOff(draft: Draft, command: CommandOfType<'switchHeat
   if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
   if (!isTheHeaterInUse(heater)) return refuse(draft, command, 'heaterAlreadyOff')
   if (heater.thermostat.isOn) note(draft, `the heater's switch stops the thermostat too, which was ${heater.isOn ? 'heating' : 'waiting'} at ${heater.thermostat.targetC} °C`)
-  switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'byTheKeeper')
+  switchTheHeaterOff(draft, 'byTheKeeper')
 }
 
 export function setTheThermostat(draft: Draft, command: CommandOfType<'setTheThermostat'>): void {
@@ -82,14 +79,14 @@ export function stopTheThermostat(draft: Draft, command: CommandOfType<'stopTheT
   if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
   if (!draft.state.heater.thermostat.isOn) return refuse(draft, command, 'thermostatAlreadyOff')
   note(draft, 'thermostat stopped, so the heater is switched off')
-  switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'byTheKeeper')
+  switchTheHeaterOff(draft, 'byTheKeeper')
 }
 
 export function isTheHeaterInUse(heater: DeepReadonly<HeaterState>): boolean {
   return heater.isOn || heater.thermostat.isOn
 }
 
-export function switchTheHeaterOff(draft: Draft, waterJudgement: WaterJudgement | null, switchedOff: HeaterSwitchedOffBy): void {
+export function switchTheHeaterOff(draft: Draft, switchedOff: HeaterSwitchedOffBy): void {
   const heater = draft.state.heater
   const wasSwitchedOffByTheKeeper = switchedOff === 'byTheKeeper'
   heater.isOn = false
@@ -104,9 +101,9 @@ export function switchTheHeaterOff(draft: Draft, waterJudgement: WaterJudgement 
   note(
     draft,
     `heater switched off ${switchedOffWords[switchedOff]} after ${onSeconds.toFixed(1)} s in use, ${heater.secondsHeating.toFixed(1)} s of it heating, ${kilowattHours.toFixed(3)} kWh used, having heated ${describeSecondsHeated(secondsHeatedByItemId)}, ` +
-      `${wastedSeconds.toFixed(1)} s and ${kilowattHoursWasted.toFixed(3)} kWh of it wasted on the air or on things not made for the heater`,
+      `${wastedSeconds.toFixed(1)} s and ${kilowattHoursWasted.toFixed(3)} kWh of it wasted on the air or on things not made for the heater; on it: ${heater.itemIdOnTop === null ? 'nothing' : describeOnTheHeater(draft, heater.itemIdOnTop)}`,
   )
-  draft.events.push({ type: 'heaterSwitchedOff', waterJudgement, onSeconds, kilowattHoursUsed: kilowattHours, wastedSeconds, kilowattHoursWasted, secondsHeatedByItemId, wasSwitchedOffByTheKeeper })
+  draft.events.push({ type: 'heaterSwitchedOff', onSeconds, kilowattHoursUsed: kilowattHours, wastedSeconds, kilowattHoursWasted, secondsHeatedByItemId, wasSwitchedOffByTheKeeper })
 }
 
 function beginToUseTheHeater(draft: Draft): void {
@@ -115,7 +112,6 @@ function beginToUseTheHeater(draft: Draft): void {
   heater.secondsHeatedByItemId = {}
   heater.secondsWasted = 0
   heater.secondsHeating = 0
-  heater.hasAnnouncedTargetTemperature = false
   heater.hasAnnouncedBoilingAway = false
 }
 
@@ -132,22 +128,8 @@ function describeSecondsHeated(secondsHeatedByItemId: Readonly<Record<string, nu
   return heated.length === 0 ? 'nothing' : heated.join(', ')
 }
 
-function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
-  const itemId = draft.state.heater.itemIdOnTop
-  const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
-  const tea = chosenTea(draft)
-  if (vessel === undefined || tea === null) {
-    note(draft, `heating stopped with ${itemId ?? 'nothing'} on the heater and tea ${tea?.id ?? 'not chosen'}, water not judged`)
-    return null
-  }
-  const judgement = judgeWater(vessel.liquid.temperatureC, tea)
-  const { good, acceptable } = tea.water
-  note(
-    draft,
-    `heating stopped: ${describeLiquid(vessel)} judged ${judgement} for ${tea.id} ` +
-      `(good ${good.lowestC}–${good.highestC} °C, acceptable ${acceptable.lowestC}–${acceptable.highestC} °C)`,
-  )
-  return judgement
+function describeOnTheHeater(draft: Draft, itemId: string): string {
+  return rulesFor(draft.state, itemId)?.describeOnTheHeater(draft, itemId) ?? itemId
 }
 
 function canSitOnTheHeater(itemId: string): Check {

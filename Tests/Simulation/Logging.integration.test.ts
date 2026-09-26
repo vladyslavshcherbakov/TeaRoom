@@ -14,7 +14,7 @@ test('refusedCommand_isLoggedWithItsReasonAndTheValueThatDecidedIt', () => {
   )
 })
 
-test('heaterSwitchOff_isLoggedWithTheTemperatureAndTheJudgement', () => {
+test('heaterSwitchOff_isLoggedWithTheTemperatureOfTheWaterOnIt', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
@@ -23,7 +23,7 @@ test('heaterSwitchOff_isLoggedWithTheTemperatureAndTheJudgement', () => {
   ritual.do({ type: 'switchHeaterOff' })
 
   assert.ok(
-    ritual.log.messagesAt('info').some((message) => message.includes('kettle 500.0 ml at 76.0 °C, strength 0, bitterness 0 judged ideal for testGreen')),
+    ritual.log.messagesAt('info').some((message) => message.includes('on it: kettle 500.0 ml at 76.0 °C, strength 0, bitterness 0')),
     ritual.log.messagesAt('info').join('\n'),
   )
 })

@@ -144,13 +144,13 @@ test('heaterSwitch_turnedOffWhileTheThermostatHeats_switchesTheHeaterAndTheTherm
   assert.equal(ritual.state.heater.thermostat.isOn, false)
 })
 
-test('thermostat_whenStopped_switchesTheHeaterOffAndJudgesTheWater', () => {
+test('thermostat_whenStopped_switchesTheHeaterOff', () => {
   const ritual = kettleOnTheHeaterWithTheThermostatAt(80)
   ritual.wait(30)
 
   const events = ritual.do({ type: 'stopTheThermostat' })
 
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, 'ideal')
+  assert.equal(eventsOfType(events, 'heaterSwitchedOff').length, 1)
   assert.equal(ritual.state.heater.thermostat.isOn, false)
 })
 

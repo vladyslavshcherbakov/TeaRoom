@@ -24,7 +24,6 @@ test('clumsyRitual_overheatedThenWaitedThenOversteeped_isTastedAndOfferedWithout
   events.push(...ritual.do({ type: 'tasteCup', cupId: 'cup1' }))
   events.push(...ritual.do({ type: 'offerCup', cupId: 'cup2', figurineId: 'toad' }))
 
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, 'tooHot')
   assert.ok(['grimace', 'strongGrimace'].includes(eventsOfType(events, 'teaTasted')[0]?.verdict.reaction ?? 'none'))
   assert.equal(eventsOfType(events, 'figurineAcceptedTea').length, 1)
   assert.deepEqual(eventsOfType(events, 'actionRefused'), [])

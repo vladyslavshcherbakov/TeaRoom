@@ -24,7 +24,6 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
       secondsHeatedByItemId: {},
       secondsWasted: 0,
       secondsHeating: 0,
-      hasAnnouncedTargetTemperature: false,
       hasAnnouncedBoilingAway: false,
     },
     spoon: { grams: 0, teaId: null, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },

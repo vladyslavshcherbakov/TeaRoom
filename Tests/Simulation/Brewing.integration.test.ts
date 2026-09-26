@@ -89,14 +89,14 @@ test('tea_onceTheHeaterUnderItsBoilIsSwitchedOff_brewsAtItsUsualPaceAgain', () =
   assertNear(gainAfterTheBoil / gainNeverBoiled, 1, 0.02)
 })
 
-test('brew_whenWaterMeetsTheLeaves_startsAndJudgesTheWater', () => {
+test('brew_whenWaterMeetsTheLeaves_starts', () => {
   const ritual = TestRitual.begun()
   ritual.heatKettleTo(80)
 
   const events = ritual.addLeavesToKettle(5)
 
   assert.deepEqual(eventsOfType(events, 'brewStarted'), [
-    { type: 'brewStarted', vesselId: 'kettle', waterJudgement: 'ideal' },
+    { type: 'brewStarted', vesselId: 'kettle' },
   ])
 })
 
@@ -111,7 +111,7 @@ test('brew_whenWaterIsPouredOntoLeavesInAnEmptyKettle_startsWithThatWater', () =
   const events = ritual.pour('thermos', 'kettle', 25)
 
   assert.deepEqual(eventsOfType(events, 'brewStarted'), [
-    { type: 'brewStarted', vesselId: 'kettle', waterJudgement: 'ideal' },
+    { type: 'brewStarted', vesselId: 'kettle' },
   ])
 })
 
@@ -197,7 +197,7 @@ test('tea_whenHotWaterIsPouredOnLeavesInACup_brewsInTheCup', () => {
 
   const events = ritual.pour('kettle', 'cup1', 5)
 
-  assert.deepEqual(eventsOfType(events, 'brewStarted'), [{ type: 'brewStarted', vesselId: 'cup1', waterJudgement: 'ideal' }])
+  assert.deepEqual(eventsOfType(events, 'brewStarted'), [{ type: 'brewStarted', vesselId: 'cup1' }])
 })
 
 test('sip_fromACupWithLeavesInIt_saysTheCupHeldLeaves', () => {

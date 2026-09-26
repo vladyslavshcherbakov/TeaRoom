@@ -74,24 +74,6 @@ test('kettleWater_whenLeftOnTheHeater_stopsAtBoiling', () => {
   assert.equal(ritual.vessel('kettle').liquid.temperatureC, 100)
 })
 
-test('heater_whenSwitchedOffInsideTheGoodRange_judgesTheWaterIdeal', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-  ritual.wait(14)
-
-  const events = ritual.do({ type: 'switchHeaterOff' })
-
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, 'ideal')
-})
-
-test('heater_whenSwitchedOffPastTheAcceptableRange_judgesTheWaterTooHot', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-  ritual.wait(20)
-
-  const events = ritual.do({ type: 'switchHeaterOff' })
-
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, 'tooHot')
-})
-
 test('heater_whenSwitchedOffAfterTwoMinutes_saysItWasOnThatLongAndUsedATenthOfAKilowattHour', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
   ritual.wait(120)
@@ -152,45 +134,15 @@ test('heater_whenSwitchedOnAgain_countsItsTimeFromTheNewSwitch', () => {
   assertNear(eventsOfType(events, 'heaterSwitchedOff')[0]?.onSeconds ?? 0, 10)
 })
 
-test('heater_whenSwitchedOffEarly_judgesTheWaterTooCool', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-  ritual.wait(5)
-
-  const events = ritual.do({ type: 'switchHeaterOff' })
-
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, 'tooCool')
-})
-
-test('heater_whenSwitchedOffBetweenTheGoodAndAcceptableRanges_judgesTheWaterSlightlyHot', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-  ritual.wait(17)
-
-  const events = ritual.do({ type: 'switchHeaterOff' })
-
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, 'slightlyHot')
-})
-
-test('kettle_whenLiftedOffAWorkingHeater_isJudgedAndStopsWarming', () => {
+test('kettle_whenLiftedOffAWorkingHeater_isTakenOffAndStopsWarming', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
   ritual.wait(14)
 
   const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.wait(10)
 
-  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle', waterJudgement: 'ideal' }])
+  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle' }])
   assertNear(ritual.vessel('kettle').liquid.temperatureC, 76)
-})
-
-test('heating_whenTheWaterEntersTheGoodRange_announcesTheTargetOnce', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-
-  const eventsBeforeTheRange = ritual.wait(13)
-  const eventsAfterwards = ritual.wait(12)
-
-  assert.equal(eventsOfType(eventsBeforeTheRange, 'targetTemperatureReached').length, 0)
-  assert.deepEqual(eventsOfType(eventsAfterwards, 'targetTemperatureReached'), [
-    { type: 'targetTemperatureReached', vesselId: 'kettle' },
-  ])
 })
 
 test('kettleWater_whenOffTheHeater_coolsButStaysAboveTheRoom', () => {

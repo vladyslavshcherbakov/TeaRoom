@@ -110,7 +110,7 @@ test('kettle_whenPutOnTheHeaterFromTheHand_leavesTheHandFree', () => {
   assert.equal(ritual.vessel('kettle').location.kind, 'onSurface')
 })
 
-test('kettle_whenPickedUpFromAWorkingHeater_isLiftedOffAndItsWaterJudged', () => {
+test('kettle_whenPickedUpFromAWorkingHeater_isLiftedOff', () => {
   const ritual = houseRitual()
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
@@ -119,7 +119,7 @@ test('kettle_whenPickedUpFromAWorkingHeater_isLiftedOffAndItsWaterJudged', () =>
 
   const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
-  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle', waterJudgement: 'ideal' }])
+  assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle' }])
   assert.equal(ritual.state.heater.itemIdOnTop, null)
   assert.deepEqual(ritual.state.keeper.hands, ['kettle', null, null])
 })

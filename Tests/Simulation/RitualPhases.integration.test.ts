@@ -35,7 +35,7 @@ test('ritual_whenFinishedWithTheHeaterOn_switchesItOff', () => {
 
   const events = ritual.do({ type: 'finishRitual' })
 
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.waterJudgement, null)
+  assert.equal(eventsOfType(events, 'heaterSwitchedOff').length, 1)
   assert.equal(ritual.state.heater.isOn, false)
 })
 

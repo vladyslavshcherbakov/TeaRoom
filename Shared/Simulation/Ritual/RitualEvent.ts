@@ -3,7 +3,6 @@ import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { HandIndex } from '../State/SessionState.ts'
 import type { OfferingResponse } from '../Judgement/OfferingJudgement.ts'
 import type { TasteVerdict } from '../Judgement/TasteJudgement.ts'
-import type { WaterJudgement } from '../Judgement/WaterJudgement.ts'
 import type { Command } from './Command.ts'
 
 export type RefusalReason =
@@ -75,13 +74,12 @@ export type RitualEvent =
   | { readonly type: 'vesselLidOpened'; readonly vesselId: string }
   | { readonly type: 'vesselLidClosed'; readonly vesselId: string }
   | { readonly type: 'placedOnHeater'; readonly itemId: string }
-  | { readonly type: 'takenOffHeater'; readonly itemId: string; readonly waterJudgement: WaterJudgement | null }
+  | { readonly type: 'takenOffHeater'; readonly itemId: string }
   | { readonly type: 'heaterSwitchedOn' }
   | { readonly type: 'thermostatSet'; readonly targetC: number }
   | { readonly type: 'thermostatStarted'; readonly targetC: number }
   | {
       readonly type: 'heaterSwitchedOff'
-      readonly waterJudgement: WaterJudgement | null
       readonly onSeconds: number
       readonly kilowattHoursUsed: number
       readonly wastedSeconds: number
@@ -89,7 +87,6 @@ export type RitualEvent =
       readonly secondsHeatedByItemId: Readonly<Record<string, number>>
       readonly wasSwitchedOffByTheKeeper: boolean
     }
-  | { readonly type: 'targetTemperatureReached'; readonly vesselId: string }
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'vesselOverflowed'; readonly vesselId: string }
   | { readonly type: 'lastLeavesWashedOut'; readonly vesselId: string; readonly isACaddy: boolean }
@@ -106,7 +103,7 @@ export type RitualEvent =
   | { readonly type: 'tapTurnedOff'; readonly openSeconds: number; readonly drainedMl: number; readonly hasRunOntoAnItem: boolean }
   | { readonly type: 'teaScooped'; readonly grams: number }
   | { readonly type: 'leavesAdded'; readonly vesselId: string; readonly grams: number }
-  | { readonly type: 'brewStarted'; readonly vesselId: string; readonly waterJudgement: WaterJudgement }
+  | { readonly type: 'brewStarted'; readonly vesselId: string }
   | { readonly type: 'teaTasted'; readonly cupId: string; readonly verdict: TasteVerdict; readonly cupHeldLeaves: boolean }
   | { readonly type: 'keeperDied'; readonly cupId: string }
   | { readonly type: 'figurineAcceptedTea'; readonly figurineId: string; readonly response: OfferingResponse }

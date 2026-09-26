@@ -25,7 +25,7 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, temperatureC: 0, spill
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon, withTheTeasOfEveryLiquid]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon, withTheTeasOfEveryLiquid, withoutTheTargetTemperatureAnnounced]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -323,6 +323,19 @@ function withTheTeasOfEveryLiquid(saved: Shape): ReturnType<SaveMigration> {
 function liquidWithTheTea(liquid: Shape, teaId: string | null): Shape {
   const strength = liquid['strength']
   return { ...liquid, strengthByTeaId: teaId !== null && typeof strength === 'number' && strength > 0 ? { [teaId]: strength } : {} }
+}
+
+function withoutTheTargetTemperatureAnnounced(saved: Shape): ReturnType<SaveMigration> {
+  const heater = saved['heater']
+  if (!isShape(heater) || heater['hasAnnouncedTargetTemperature'] === undefined) return null
+  return {
+    migrated: { ...saved, heater: withoutTheField(heater, 'hasAnnouncedTargetTemperature') },
+    change: 'a save from before the water was left unjudged forgets whether the heater announced the tea\'s good range',
+  }
+}
+
+function withoutTheField(shape: Shape, field: string): Shape {
+  return Object.fromEntries(Object.entries(shape).filter(([key]) => key !== field))
 }
 
 function isShape(value: unknown): value is Shape {

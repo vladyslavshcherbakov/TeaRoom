@@ -198,6 +198,15 @@ test('savedState_fromBeforeLiquidsKnewTheirTeas_givesTheStrengthOfEveryLiquidToT
   assert.deepEqual(resumed.vessel('cup2').liquid.strengthByTeaId, {})
 })
 
+test('savedState_fromBeforeTheWaterWentUnjudged_forgetsWhetherTheHeaterAnnouncedTheTeasRange', () => {
+  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  savedState.heater['hasAnnouncedTargetTemperature'] = true
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal('hasAnnouncedTargetTemperature' in resumed.state.heater, false)
+})
+
 test('savedState_whoseHeaterLeftTheCatalog_resumesWithTheRoomsHeaterSwitchedOff', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })

@@ -4,7 +4,7 @@ import { heatLiquid, isTooHotToHold, liquidBoiledAway, shareOfTheHeatKeptBy } fr
 import { water } from '../Physics/Liquid.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
 import type { RunningWaterState, VesselState } from '../State/SessionState.ts'
-import { chosenTea, describeLiquid, isClosedAgainstFilling, note, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { describeLiquid, isClosedAgainstFilling, note, vesselDefinitionOf, type Draft } from './Draft.ts'
 import type { ItemKindRules } from './ItemKinds.ts'
 import { percent } from './Percent.ts'
 import { teaStockOf } from './Reach.ts'
@@ -21,7 +21,9 @@ export const vesselRules: ItemKindRules = {
   },
   describeOnTheHeater: (draft, itemId) => {
     const vessel = draft.state.vessels[itemId]
-    return vessel === undefined ? itemId : describeLiquid(vessel)
+    if (vessel === undefined) return itemId
+    const leaves = vessel.leaves === null ? '' : `, with ${vessel.leaves.grams.toFixed(2)} g of ${vessel.leaves.teaId} leaves`
+    return `${describeLiquid(vessel)}${leaves}`
   },
   heatOnTheWorkingHeater: (draft, itemId, seconds) => withTheVessel(draft, itemId, (vessel) => heatTheVessel(draft, vessel, seconds)),
   takeOffTheHeater: () => undefined,
@@ -52,7 +54,6 @@ function heatTheVessel(draft: Draft, vessel: VesselState, seconds: number): void
   const highestC = heater.holdsTheThermostatsTarget && !heater.thermostat.isOn ? heater.thermostat.targetC : undefined
   const heated = heatLiquid(vessel.liquid, heaterDefinition, shareOfTheHeatKeptBy(vesselDefinitionOf(draft, vessel), vessel.isLidOpen), seconds, highestC)
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
-  announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
   if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel, heaterDefinition.boilingAwayMlPerSecond)
 }
 
@@ -66,15 +67,6 @@ function noteBoilingAway(draft: Draft, vessel: VesselState, mlPerSecond: number)
   vessel.hasOnlyBoiledDownSinceFull = false
   note(draft, `${vessel.id} boiled dry on the heater, ${wasFullAndOnlyBoiledDown ? 'all of it boiled away from the brim' : 'after water was taken from it or it was never full'}`)
   draft.events.push({ type: 'boiledDry', vesselId: vessel.id, wasFullAndOnlyBoiledDown })
-}
-
-function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatureC: number): void {
-  const tea = chosenTea(draft)
-  if (tea === null || draft.state.heater.hasAnnouncedTargetTemperature) return
-  if (temperatureC < tea.water.good.lowestC) return
-  draft.state.heater.hasAnnouncedTargetTemperature = true
-  note(draft, `${vesselId} reached the good range of ${tea.id} at ${temperatureC.toFixed(1)} °C while heating`)
-  draft.events.push({ type: 'targetTemperatureReached', vesselId })
 }
 
 function fillTheVessel(draft: Draft, vessel: VesselState, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {
