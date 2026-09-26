@@ -6,6 +6,7 @@ import {
   puddleCentreOn,
   puddleRadiusMetres,
   roomHalfSize,
+  turnFacing,
   type Footprint,
   type Furniture,
   type FurnitureId,
@@ -451,7 +452,3 @@ function placeOnTheWall(object: THREE.Object3D, spot: SpotOnAWall, intoTheRoom: 
   object.rotation.y = turnFacingTheRoom(spot.wall)
 }
 
-function turnFacing(facing: Facing): number {
-  const ahead = facingDirection(facing)
-  return Math.atan2(ahead.x, ahead.z)
-}

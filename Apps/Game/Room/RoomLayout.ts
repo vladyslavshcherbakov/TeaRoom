@@ -212,6 +212,22 @@ export function furnitureWithId(layout: RoomLayout, id: FurnitureId): Furniture 
   return found
 }
 
+export function turnOfItemsOn(layout: RoomLayout, placeId: string): number {
+  const piece = layout.furniture.find((candidate) => candidate.id === placeId)
+  return piece === undefined ? 0 : turnFacing(piece.facing)
+}
+
+export function turnFacing(facing: Facing): number {
+  const ahead = facingDirection(facing)
+  return Math.atan2(ahead.x, ahead.z)
+}
+
+export function turnedBy(offset: FloorPoint, turnRadians: number): FloorPoint {
+  const cos = Math.cos(turnRadians)
+  const sin = Math.sin(turnRadians)
+  return { x: offset.x * cos + offset.z * sin, z: -offset.x * sin + offset.z * cos }
+}
+
 export function sideStoodAt(piece: Furniture, position: FloorPoint): FurnitureSide {
   const distanceTo = (side: FurnitureSide) => Math.hypot(side.standingPoint.x - position.x, side.standingPoint.z - position.z)
   return piece.sides.reduce((nearest, side) => (distanceTo(side) < distanceTo(nearest) ? side : nearest))

@@ -4,7 +4,7 @@ import type { LampDisplay } from '../LampDisplay.ts'
 import { itemLocationIn } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
 import { isTheLidOpen, layoutOf } from '../../CarriedShapes.ts'
 import { openLidOffsetBeside, type Surroundings } from '../../Placement.ts'
-import type { FloorPoint } from '../../RoomLayout.ts'
+import { turnedBy, type FloorPoint } from '../../RoomLayout.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
@@ -52,7 +52,8 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   const vessel = scene.table.vessels[model.itemId]
   const isOpen = isTheLidOpen(scene.state, model.itemId)
   const isStandingOutsideTheSink = itemLocationIn(scene.state, model.itemId)?.kind === 'onSurface' && scene.state.sink.itemIdInside !== model.itemId
-  const lyingLidOffset = isOpen && isStandingOutsideTheSink ? openLidOffsetBeside(model.itemId, scene.state, surroundings) : null
+  const lyingLidOffsetInTheRoom = isOpen && isStandingOutsideTheSink ? openLidOffsetBeside(model.itemId, scene.state, surroundings) : null
+  const lyingLidOffset = lyingLidOffsetInTheRoom === null ? null : turnedBy(lyingLidOffsetInTheRoom, -model.root.rotation.y)
   if (model.lid !== null) placeLid(model, model.lid, isOpen, lyingLidOffset, layoutOf(scene.state, model.itemId)?.lid?.lyingRadiusMetres ?? 0)
   if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
