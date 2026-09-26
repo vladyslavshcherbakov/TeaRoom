@@ -22,7 +22,7 @@ import type { Surroundings } from '../Placement.ts'
 import type { ClothPattern } from '../RoomArrangement.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
-import { surfaceByClothPattern, type RoomMaterials } from './RoomMaterials.ts'
+import { surfaceByClothPattern, type RoomMaterials, type SurfaceMaterial } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
 const handHeightMetres = 0.55
@@ -34,7 +34,7 @@ const fewestPixelsAcrossDrawnInFull = 60
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
-  private readonly clothMaterialsByClothId = new Map<string, THREE.MeshStandardMaterial | THREE.MeshBasicMaterial>()
+  private readonly clothMaterialsByClothId = new Map<string, SurfaceMaterial>()
   private readonly models: CarriedModel[]
   private readonly waterStreams: WaterStreams
   private readonly chosenGlow = new ChosenGlow()

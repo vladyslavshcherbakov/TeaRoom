@@ -51,6 +51,13 @@ export type Surface =
   | 'toadBrown'
   | 'heaterPlate'
   | 'sky'
+  | 'skyDome'
+  | 'middaySkyTop'
+  | 'middaySkyHorizon'
+  | 'warmSkyTop'
+  | 'warmSkyHorizon'
+  | 'cloud'
+  | 'inspectionDimming'
   | 'walkerCoat'
   | 'walkerSkin'
   | 'walkerEye'
@@ -103,6 +110,8 @@ export type Surface =
 
 export type PlantSurface = 'bloom' | 'foliage' | 'stem' | 'daisyPetals' | 'flowerHeart' | 'poppyHeart' | 'sunflowerHeart'
 
+export type SurfaceMaterial = THREE.MeshStandardMaterial | THREE.MeshBasicMaterial | THREE.MeshLambertMaterial
+
 export type SurfaceMaterials = Pick<RoomMaterials, 'materialFor' | 'unsharedMaterialFor' | 'colourOf' | 'bowlIdWithTheToadUnderneath'>
 
 export type BowlPaintings = {
@@ -113,6 +122,9 @@ export type BowlPaintings = {
 type SurfaceLook = { readonly colour: string } & (
   | { readonly kind: 'matte' | 'unlit' | 'glow' | 'pearly' | 'pouredLiquid' | 'liquidSurface' | 'glass' | 'clearGlass' | 'gold' | 'aluminium' | 'temperGlaze' | 'kintsugi' | 'thermosPainting' | 'yixingClay' | 'koiPainting' | 'prophecy' }
   | { readonly kind: 'mist'; readonly opacity: number }
+  | { readonly kind: 'veil'; readonly opacity: number }
+  | { readonly kind: 'skyDome' }
+  | { readonly kind: 'cloud'; readonly emissive: string }
   | { readonly kind: 'glaze'; readonly paint: (() => HTMLCanvasElement) | null }
   | { readonly kind: 'painting'; readonly paint: () => HTMLCanvasElement }
   | { readonly kind: 'wovenCloth'; readonly pattern: ClothPattern }
@@ -122,6 +134,7 @@ const steamOpacity = 0.25
 const bowlSteamOpacity = 0.15
 const heldSteamOpacity = 0.08
 const smokeOpacity = 0.4
+const inspectionDimmingOpacity = 0.6
 const glassEdgeSharpness = 2
 const glassGlintFrom = 0.7
 const glassGlintFull = 1.4
@@ -174,6 +187,13 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   toadBrown: { colour: '#b39a5c', kind: 'matte' },
   heaterPlate: { colour: '#3d3733', kind: 'matte' },
   sky: { colour: '#f2a36b', kind: 'unlit' },
+  skyDome: { colour: '#ffffff', kind: 'skyDome' },
+  middaySkyTop: { colour: '#4f8fd0', kind: 'unlit' },
+  middaySkyHorizon: { colour: '#cfe6f5', kind: 'unlit' },
+  warmSkyTop: { colour: '#7f8fc4', kind: 'unlit' },
+  warmSkyHorizon: { colour: '#ffc9a0', kind: 'unlit' },
+  cloud: { colour: '#ffffff', kind: 'cloud', emissive: '#c9d6e3' },
+  inspectionDimming: { colour: '#1c140d', kind: 'veil', opacity: inspectionDimmingOpacity },
   walkerCoat: { colour: '#3f7f8f', kind: 'matte' },
   walkerSkin: { colour: '#f1c9a5', kind: 'matte' },
   walkerEye: { colour: '#221a16', kind: 'matte' },
@@ -289,7 +309,7 @@ export class RoomMaterials {
     return new THREE.Color(lookBySurface[surface].colour)
   }
 
-  unsharedMaterialFor(surface: Surface): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
+  unsharedMaterialFor(surface: Surface): SurfaceMaterial {
     const look = lookBySurface[surface]
     const color = look.colour
     switch (look.kind) {
@@ -299,6 +319,12 @@ export class RoomMaterials {
         return new THREE.MeshBasicMaterial({ color })
       case 'mist':
         return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: look.opacity, depthWrite: false })
+      case 'veil':
+        return new THREE.MeshBasicMaterial({ color, transparent: true, opacity: look.opacity, depthTest: false, depthWrite: false })
+      case 'skyDome':
+        return new THREE.MeshBasicMaterial({ color, vertexColors: true, side: THREE.BackSide, depthWrite: false, fog: false })
+      case 'cloud':
+        return new THREE.MeshLambertMaterial({ color, emissive: look.emissive, flatShading: true })
       case 'glow':
         return new THREE.MeshBasicMaterial({ color, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })
       case 'pearly':

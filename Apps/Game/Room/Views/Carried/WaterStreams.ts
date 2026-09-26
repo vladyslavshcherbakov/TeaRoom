@@ -4,7 +4,7 @@ import type { DeepReadonly } from '../../../../../Shared/Simulation/State/DeepRe
 import type { PourState } from '../../../../../Shared/Simulation/State/SessionState.ts'
 import type { CarriedShape } from '../../CarriedShapes.ts'
 import type { WorldPoint } from '../../RoomLayout.ts'
-import type { RoomMaterials } from '../RoomMaterials.ts'
+import type { RoomMaterials, SurfaceMaterial } from '../RoomMaterials.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { CarriedModel } from './CarriedModel.ts'
 import { CreepingStream } from './CreepingStream.ts'
@@ -17,7 +17,7 @@ export const overflowSideFromTheGaugeRadians = 0.7
 export const overflowStreamRadiusMetres = 0.009
 
 export class WaterStreams {
-  private readonly pouredLiquid: THREE.MeshStandardMaterial | THREE.MeshBasicMaterial
+  private readonly pouredLiquid: SurfaceMaterial
   private readonly pourStream: FallingStream
   private readonly tapStream: FallingStream
   private readonly overflowStream: CreepingStream

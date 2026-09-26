@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { TemperatureUnit } from '../Temperatures.ts'
+import type { SurfaceMaterial } from './RoomMaterials.ts'
 
 export type LampReading = {
   readonly degrees: number | null
@@ -32,14 +33,14 @@ const unitSymbols: Readonly<Record<TemperatureUnit, string>> = { celsius: '°C',
 
 export class LampDisplay {
   readonly mesh: THREE.Mesh
-  private readonly material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial
+  private readonly material: SurfaceMaterial
   private readonly pixelWidth: number
   private readonly pixelHeight: number
   private readonly filamentWeight: number
   private painting: { readonly canvas: HTMLCanvasElement; readonly texture: THREE.CanvasTexture } | null = null
   private shownCharacters = ''
 
-  constructor(widthMetres: number, heightMetres: number, material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial, filamentWeight = 1) {
+  constructor(widthMetres: number, heightMetres: number, material: SurfaceMaterial, filamentWeight = 1) {
     this.material = material
     this.filamentWeight = filamentWeight
     this.material.toneMapped = false

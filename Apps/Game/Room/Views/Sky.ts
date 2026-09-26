@@ -1,15 +1,12 @@
 import * as THREE from 'three'
 import { seededRandom } from '../SeededRandom.ts'
 import type { Daylight } from '../Sky/DaylightCycle.ts'
-import { roomLayers } from './RoomLayers.ts'
+import { putOnLayer, roomLayers } from './RoomLayers.ts'
+import type { RoomMaterials } from './RoomMaterials.ts'
 
 const skyRadiusMetres = 70
 const skySegmentsAround = 32
 const skySegmentsUp = 16
-const middaySkyTop = new THREE.Color('#4f8fd0')
-const middayHorizon = new THREE.Color('#cfe6f5')
-const warmSkyTop = new THREE.Color('#7f8fc4')
-const warmHorizon = new THREE.Color('#ffc9a0')
 const horizonBlendsUpToShare = 0.45
 const cloudCount = 7
 const puffsInACloud = 6
@@ -21,19 +18,25 @@ const cloudSeed = 70913
 
 export class Sky {
   private readonly dome: THREE.Mesh
+  private readonly middaySkyTop: THREE.Color
+  private readonly middayHorizon: THREE.Color
+  private readonly warmSkyTop: THREE.Color
+  private readonly warmHorizon: THREE.Color
   private shownWarmth = -1
   readonly root = new THREE.Group()
 
-  constructor() {
+  constructor(materials: RoomMaterials) {
+    this.middaySkyTop = materials.colourOf('middaySkyTop')
+    this.middayHorizon = materials.colourOf('middaySkyHorizon')
+    this.warmSkyTop = materials.colourOf('warmSkyTop')
+    this.warmHorizon = materials.colourOf('warmSkyHorizon')
     const geometry = new THREE.SphereGeometry(skyRadiusMetres, skySegmentsAround, skySegmentsUp)
     geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geometry.getAttribute('position').count * 3), 3))
-    this.dome = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide, depthWrite: false, fog: false }))
+    this.dome = new THREE.Mesh(geometry, materials.materialFor('skyDome'))
     this.dome.renderOrder = -1
-    this.root.add(this.dome, ...clouds())
-    this.root.traverse((part) => {
-      part.layers.set(roomLayers.untappableRoom)
-      part.castShadow = false
-    })
+    this.root.add(this.dome, ...clouds(materials.materialFor('cloud')))
+    putOnLayer(this.root, roomLayers.untappableRoom)
+    this.root.traverse((part) => (part.castShadow = false))
     this.root.visible = false
   }
 
@@ -46,8 +49,8 @@ export class Sky {
 
   private paintTheDome(warmth: number): void {
     this.shownWarmth = warmth
-    const top = middaySkyTop.clone().lerp(warmSkyTop, warmth)
-    const horizon = middayHorizon.clone().lerp(warmHorizon, warmth)
+    const top = this.middaySkyTop.clone().lerp(this.warmSkyTop, warmth)
+    const horizon = this.middayHorizon.clone().lerp(this.warmHorizon, warmth)
     const position = this.dome.geometry.getAttribute('position')
     const colour = this.dome.geometry.getAttribute('color')
     const blended = new THREE.Color()
@@ -60,9 +63,8 @@ export class Sky {
   }
 }
 
-function clouds(): THREE.Group[] {
+function clouds(material: THREE.Material): THREE.Group[] {
   const nextRandom = seededRandom(cloudSeed)
-  const material = new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#c9d6e3', flatShading: true })
   const puff = new THREE.IcosahedronGeometry(cloudPuffRadiusMetres, 1)
   return Array.from({ length: cloudCount }, (_, index) => {
     const cloud = new THREE.Group()

@@ -143,11 +143,11 @@ export class RoomScene {
   private readonly keyboardAndMouse: KeyboardAndMouse
   private readonly shortcuts: KeyboardShortcuts
   private readonly garden: Garden
-  private readonly sky = new Sky()
+  private readonly sky: Sky
   private readonly zoom = new CameraZoom()
   private readonly gestures: RoomGestures
   private readonly roomLights = new RoomLights()
-  private readonly inspectionStage = new InspectionStage()
+  private readonly inspectionStage: InspectionStage
   private cameraPose: CameraPose
   private debugSettings: DebugSettings = debugSettingsByDefault
   private readonly debugSettingsStore: DebugSettingsStore
@@ -229,6 +229,8 @@ export class RoomScene {
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, layout, arrival.arrangement, roomDefinition.heaterSpot)
     this.walker = new WalkerModel(materials)
+    this.sky = new Sky(materials)
+    this.inspectionStage = new InspectionStage(materials)
     this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot }, clothPatternsByIdIn(roomDefinition, arrival.arrangement))
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.pourControls = new PourControls(container, {
