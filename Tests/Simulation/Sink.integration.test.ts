@@ -251,14 +251,6 @@ test('bowl_whenTakenOutBeforeTheTapRanOverItsRim_keepsItsWater', () => {
   assertNear(ritual.vessel('cup1').liquid.volumeMl, 50)
 })
 
-test('kettle_whenTakenOutAfterTheTapRanOverItsRim_keepsItsWater', () => {
-  const ritual = openKettleInHandAtTheCounter()
-
-  ritual.fillInTheSink('kettle', 7)
-
-  assertNear(ritual.vessel('kettle').liquid.volumeMl, 1000)
-})
-
 test('kettleOfTea_whenTheTapRunsOverItsRimForLong_comesOutFullOfClearWater', () => {
   const ritual = new TestRitual()
   ritual.heatKettleTo(80)

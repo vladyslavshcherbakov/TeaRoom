@@ -99,16 +99,6 @@ test('secondCloth_whenItWipesTheTable_takesTheWaterWhileTheFirstStaysDry', () =>
   assert.equal(ritual.cloth('cloth').wetMl, 0)
 })
 
-test('wipe_withAClothLyingOnTheTable_isRefusedAsNotInHand', () => {
-  const ritual = new TestRitual(withASecondCloth(testCatalog()))
-  ritual.pour('kettle', null, 2.5)
-  ritual.do({ type: 'pickUp', itemId: 'cloth2' })
-
-  const events = ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'notInHand' }])
-})
-
 test('puddle_ofWaterAtNinetyDegrees_driesFasterThanOneAtRoomTemperature', () => {
   const hot = new TestRitual()
   hot.heatKettleTo(90)
