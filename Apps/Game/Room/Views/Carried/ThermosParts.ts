@@ -92,6 +92,7 @@ function thermosParts(materials: SurfaceMaterials): ItemParts {
     liquidTint: null,
     charTo: null,
     thermometer: null,
+    levelsOfDetail: [],
   }
 }
 

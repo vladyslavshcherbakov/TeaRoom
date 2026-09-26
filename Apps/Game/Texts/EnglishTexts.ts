@@ -205,6 +205,8 @@ export const englishTexts = {
   'settings.fullResolutionWarning': 'Draws every pixel of the screen, so edges look sharper, but the game may start to lag on some phones.',
   'settings.smoothEdges': 'Smooth edges',
   'settings.smoothEdgesWarning': 'Softens the steps along edges, but blurs the picture a little, and the game may start to lag on some phones.',
+  'settings.simplerDistantItems': 'Simpler distant items',
+  'settings.simplerDistantItemsNote': 'Draws the tea bowls with less detail while they are small on the screen, so the phone stays cooler.',
   'settings.showFrameRate': 'Show frame rate',
   'settings.camera': 'Camera',
   'settings.camera.room': 'Room view',

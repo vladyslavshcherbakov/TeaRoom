@@ -5,6 +5,7 @@ import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedSh
 import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Views/Carried/CarriedModel.ts'
+import { drawInTheDetailItsSizeNeeds } from '../../../Apps/Game/Room/Views/CarriedItems.ts'
 import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
 import { inspectInView } from '../../../Apps/Game/Room/Views/Carried/InspectedInView.ts'
 import type { CarriedModelMaterials } from '../../../Apps/Game/Room/Views/Carried/ItemParts.ts'
@@ -267,6 +268,43 @@ test('underside_ofEveryVessel_isDrawnFacingDownWhereItStands', () => {
     }
   }
 })
+
+test('paintedBowl_smallOnTheScreen_isDrawnWithAFifthOfItsTrianglesAndWithoutItsPainting', () => {
+  const { bowl, camera } = paintedBowlSeenFrom(10)
+  const body = bowl.levelsOfDetail[0]
+  const trianglesDrawnInFull = trianglesOf(body?.near)
+
+  drawInTheDetailItsSizeNeeds(bowl, { camera, screenHeightPixels: 800 })
+
+  assert.ok(trianglesOf(body?.mesh.geometry) * 5 < trianglesDrawnInFull, `${trianglesOf(body?.mesh.geometry)} of ${trianglesDrawnInFull} triangles`)
+  assert.equal(bowl.levelsOfDetail[1]?.mesh.visible, false)
+})
+
+test('paintedBowl_largeOnTheScreenOrHeldOrWithTheSettingOff_isDrawnInFull', () => {
+  const near = paintedBowlSeenFrom(0.5)
+  const held = paintedBowlSeenFrom(10)
+  held.bowl.isHeldInView = true
+  const settingOff = paintedBowlSeenFrom(10)
+
+  drawInTheDetailItsSizeNeeds(near.bowl, { camera: near.camera, screenHeightPixels: 800 })
+  drawInTheDetailItsSizeNeeds(held.bowl, { camera: held.camera, screenHeightPixels: 800 })
+  drawInTheDetailItsSizeNeeds(settingOff.bowl, null)
+
+  assert.deepEqual([near, held, settingOff].map(({ bowl }) => bowl.levelsOfDetail.every((level) => level.mesh.geometry === level.near && level.mesh.visible)), [true, true, true])
+})
+
+function paintedBowlSeenFrom(distanceMetres: number): { readonly bowl: CarriedModel; readonly camera: THREE.PerspectiveCamera } {
+  const bowl = modelsInTheQuietRoom().find((model) => model.itemId === 'bowl1')
+  if (bowl === undefined) throw new Error('the quiet room has no bowl1')
+  const camera = new THREE.PerspectiveCamera(30, 0.5, 0.1, 100)
+  camera.position.set(0, 0, distanceMetres)
+  return { bowl, camera }
+}
+
+function trianglesOf(geometry: THREE.BufferGeometry | undefined): number {
+  const vertices = geometry?.index?.count ?? geometry?.getAttribute('position').count ?? 0
+  return vertices / 3
+}
 
 function modelsInTheQuietRoom(): CarriedModel[] {
   const state = new TestRitual(defaultCatalog, 'quietRoom').state

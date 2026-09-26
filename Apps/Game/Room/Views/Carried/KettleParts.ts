@@ -75,6 +75,7 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
     liquidTint: null,
     charTo: null,
     thermometer,
+    levelsOfDetail: [],
   }
 }
 

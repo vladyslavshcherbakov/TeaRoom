@@ -18,6 +18,12 @@ export type CarriedItemsScene = {
   readonly clothWiping: ClothWiping | null
   readonly timeSeconds: number
   readonly temperatureUnitShown: TemperatureUnit | null
+  readonly distantDetail: DistantDetail | null
+}
+
+export type DistantDetail = {
+  readonly camera: THREE.PerspectiveCamera
+  readonly screenHeightPixels: number
 }
 
 export type HeldInView = {

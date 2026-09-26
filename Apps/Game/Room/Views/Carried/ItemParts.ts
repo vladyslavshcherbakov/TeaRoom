@@ -18,6 +18,13 @@ export type ItemParts = {
   readonly liquidTint: THREE.Color | null
   readonly charTo: CharTo | null
   readonly thermometer: LampDisplay | null
+  readonly levelsOfDetail: readonly LevelOfDetail[]
+}
+
+export type LevelOfDetail = {
+  readonly mesh: THREE.Mesh
+  readonly near: THREE.BufferGeometry
+  readonly far: THREE.BufferGeometry | null
 }
 
 export type PointDownTheSide = { readonly distance: number; readonly height: number }

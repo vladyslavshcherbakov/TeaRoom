@@ -8,7 +8,7 @@ import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
 import { turnOfItemAt, undersideOfTheBoardAbove, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { aimOver } from './Carried/AimedVessel.ts'
-import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
+import type { CarriedItemsScene, DistantDetail } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
 import { CrumblingAsh } from './Carried/CrumblingAsh.ts'
@@ -28,6 +28,7 @@ const handSideMetres = 0.26
 const handForwardMetres = 0.14
 const middleHandForwardMetres = 0.26
 const everyHandIndex: readonly HandIndex[] = [0, 1, middleHandIndex]
+const fewestPixelsAcrossDrawnInFull = 60
 
 export class CarriedItems {
   private readonly materials: RoomMaterials
@@ -64,6 +65,7 @@ export class CarriedItems {
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
     for (const model of this.models) showContentsOf(model, scene, this.surroundings)
+    for (const model of this.models) drawInTheDetailItsSizeNeeds(model, scene.distantDetail)
     for (const [clothId, material] of this.clothMaterialsByClothId) material.color.copy(this.clothColourFor(scene.table.cloths[clothId]))
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
     this.ash.show(scene.timeSeconds)
@@ -179,6 +181,23 @@ export class CarriedItems {
     area.quaternion.copy(scene.heldInView.camera.quaternion)
     area.scale.set(frame.screenWidth * handTouchAreaShareOfScreenWidthFor(handIndex), frame.screenHeight * handTouchAreaShareOfScreenHeight, 1)
   }
+}
+
+export function drawInTheDetailItsSizeNeeds(model: CarriedModel, distantDetail: DistantDetail | null): void {
+  if (model.levelsOfDetail.length === 0) return
+  const isSimple = distantDetail !== null && !model.isHeldInView && pixelsAcross(model, distantDetail) < fewestPixelsAcrossDrawnInFull
+  if (isSimple === model.isDrawnSimply) return
+  model.isDrawnSimply = isSimple
+  for (const level of model.levelsOfDetail) {
+    if (level.far === null) level.mesh.visible = !isSimple
+    else level.mesh.geometry = isSimple ? level.far : level.near
+  }
+}
+
+function pixelsAcross(model: CarriedModel, { camera, screenHeightPixels }: DistantDetail): number {
+  const distance = camera.position.distanceTo(model.root.getWorldPosition(new THREE.Vector3()))
+  const visibleHeightMetres = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
+  return ((2 * model.footprintRadius * model.root.scale.x) / visibleHeightMetres) * screenHeightPixels
 }
 
 function wipeAt(model: CarriedModel, point: WorldPoint): void {

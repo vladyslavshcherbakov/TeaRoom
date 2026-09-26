@@ -9,7 +9,7 @@ import { teaCharacterPaintingAspect } from '../TeaCharacterPainting.ts'
 import { toadPaintingAspect } from '../ToadPainting.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { bowlInsideProfile, bowlOutsideWall, bowlProfile, bowlRimTop, bowlUndersideAndFoot } from './BowlProfile.ts'
-import { liquidBelowTheRimMetres, overflowOverTheLipMetres, type ItemParts, type PointDownTheSide } from './ItemParts.ts'
+import { liquidBelowTheRimMetres, overflowOverTheLipMetres, type ItemParts, type LevelOfDetail, type PointDownTheSide } from './ItemParts.ts'
 
 type BottomPainting = {
   readonly surface: Surface
@@ -35,6 +35,8 @@ const whiteGlazes: ReadonlySet<Surface> = new Set(['whiteGlaze', 'pearlGlaze'])
 const paintingSegmentsAlong = 48
 const fewestPaintingSegmentsAcross = 8
 const bowlSegmentsAround = 64
+const distantBowlSegmentsAround = 32
+const distantBowlProfilePointStep = 3
 const bowlRimHeightMetres = 0.062
 const lowestLiquidInABowlMetres = 0.011
 const liquidInsetShare = 0.97
@@ -97,7 +99,12 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
   glazed.side = THREE.DoubleSide
   const body = new THREE.Mesh(bowlGeometryWith(look.relief), glazed)
   const meshes: THREE.Object3D[] = [body]
-  if (look.painting !== null) meshes.push(paintedOnTheBottom(materials, look.painting))
+  const levelsOfDetail: LevelOfDetail[] = [{ mesh: body, near: body.geometry, far: distantBowlGeometry() }]
+  if (look.painting !== null) {
+    const painting = paintedOnTheBottom(materials, look.painting)
+    meshes.push(painting)
+    levelsOfDetail.push({ mesh: painting, near: painting.geometry, far: null })
+  }
   if (materials.bowlIdWithTheToadUnderneath === itemId) meshes.push(toadPaintedUnderneath(materials))
   if (look.isRimGilded) meshes.push(gildedRim(materials))
   const bowl: ItemParts = {
@@ -115,6 +122,7 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
     liquidTint: new THREE.Color('#ffffff').lerp(new THREE.Color(look.liquidTint), liquidTakesOnTheBowlsColourShare),
     charTo: null,
     thermometer: null,
+    levelsOfDetail,
   }
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
@@ -148,6 +156,14 @@ function bowlGeometryWith(relief: BowlRelief): THREE.BufferGeometry {
     case 'hobnail':
       return hobnailBowlGeometry()
   }
+}
+
+function distantBowlGeometry(): THREE.BufferGeometry {
+  const keptPoints = bowlProfile.map((_, index) => index).filter((index) => index % distantBowlProfilePointStep === 0 || index === bowlProfile.length - 1)
+  const geometry = new THREE.LatheGeometry(keptPoints.map((index) => bowlProfile[index] ?? new THREE.Vector2()), distantBowlSegmentsAround)
+  const uv = geometry.getAttribute('uv')
+  for (let vertex = 0; vertex < uv.count; vertex += 1) uv.setY(vertex, (keptPoints[vertex % keptPoints.length] ?? 0) / (bowlProfile.length - 1))
+  return geometry
 }
 
 function gildedRim(materials: SurfaceMaterials): THREE.Mesh {
