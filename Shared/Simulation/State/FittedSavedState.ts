@@ -1,11 +1,12 @@
 import type { Catalog } from '../Definitions/Catalog.ts'
+import type { Atmosphere } from '../Definitions/Atmosphere.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
-import { dryLeaves, type Leaves } from '../Physics/Brewing.ts'
-import { water } from '../Physics/Liquid.ts'
-import { carriedItemIdsIn, itemLocationIn } from '../Ritual/Reach.ts'
+import type { Leaves } from '../Physics/Brewing.ts'
+import type { Liquid } from '../Physics/Liquid.ts'
+import { carriedItemIdsIn, itemLocationIn, whereIs } from '../Ritual/Reach.ts'
 import type { DeepReadonly } from './DeepReadonly.ts'
 import { initialSessionState } from './InitialState.ts'
-import type { ClothState, FigurineState, ItemLocation, PourState, PuddleState, RunningWaterState, SessionState, VesselState } from './SessionState.ts'
+import type { ClothState, FigurineState, HeaterState, ItemLocation, KeeperState, PourState, PuddleState, RunningWaterState, SessionState, SinkState, SpoonState, ThermostatState, VesselState } from './SessionState.ts'
 
 export const sessionStateVersion = 1
 
@@ -17,16 +18,90 @@ type Shape = { readonly [key: string]: unknown }
 
 type SaveMigration = (saved: Shape, catalog: Catalog) => { readonly migrated: Shape; readonly change: string } | null
 
-const leavesShape: Leaves = dryLeaves('', 0)
-const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
-const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false, hasRunOntoAnItem: false }
-const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, hasOnlyBoiledDownSinceFull: false, location: { kind: 'gone' } }
-const puddleShape: PuddleState = { wetMl: 0, strength: 0, temperatureC: 0, spilledAround: null }
-const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
-const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
 const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon, withTheTeasOfEveryLiquid, withoutTheTargetTemperatureAnnounced, withoutTheRitualsPhase, withoutTheChosenTea]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
+
+const aNumber = aValueOfType('number')
+const aString = aValueOfType('string')
+const aBoolean = aValueOfType('boolean')
+
+const aSpot = anObject<Spot>({ placeId: aString, x: aNumber, y: aNumber, z: aNumber, turnRadians: absentOr(aNumber) })
+
+const aLiquid = anObject<Liquid>({ volumeMl: aNumber, temperatureC: aNumber, strength: aNumber, strengthByTeaId: aRecordOf(aNumber), bitterness: aNumber })
+
+const someLeaves = anObject<Leaves>({ teaId: aString, grams: aNumber, isSteeping: aBoolean, isStirredByTheBoil: aBoolean, steepedSeconds: aNumber })
+
+const aVessel = anObject<VesselState>({
+  id: aString,
+  definitionId: aString,
+  liquid: aLiquid,
+  leaves: nullOr(someLeaves),
+  isLidOpen: aBoolean,
+  shellHeat: aNumber,
+  hasOnlyBoiledDownSinceFull: aBoolean,
+  location: aLocation,
+})
+
+const aHeater = anObject<HeaterState>({
+  definitionId: aString,
+  isOn: aBoolean,
+  thermostat: anObject<ThermostatState>({ targetC: aNumber, isOn: aBoolean }),
+  holdsTheThermostatsTarget: aBoolean,
+  switchedOnAtSeconds: aNumber,
+  itemIdOnTop: nullOr(aString),
+  secondsHeatedByItemId: aRecordOf(aNumber),
+  secondsWasted: aNumber,
+  secondsHeating: aNumber,
+  hasAnnouncedBoilingAway: aBoolean,
+})
+
+const aCloth = anObject<ClothState>({
+  id: aString,
+  wetMl: aNumber,
+  teaStain: aNumber,
+  charring: aNumber,
+  wasBurntBeforeWashing: aBoolean,
+  isSoakingThePuddle: aBoolean,
+  location: aLocation,
+})
+
+const aPour = anObject<PourState>({
+  sourceId: aString,
+  targetId: nullOr(aString),
+  tiltDegrees: aNumber,
+  streamOnTargetFraction: aNumber,
+  missedStreamLandsAt: nullOr(aSpot),
+  pouredMl: aNumber,
+  spilledMl: aNumber,
+  hasOverflowed: aBoolean,
+  hasRunDry: aBoolean,
+})
+
+const someRunningWater = anObject<RunningWaterState>({
+  openedAtSeconds: aNumber,
+  drainedSinceOpenedMl: aNumber,
+  filledMl: aNumber,
+  drainedMl: aNumber,
+  hasOverflowed: aBoolean,
+  isRunningOverTheLid: aBoolean,
+  hasRunOntoAnItem: aBoolean,
+})
+
+const sessionStateSchema = anObject<SessionState>({
+  elapsedSeconds: aNumber,
+  roomId: aString,
+  atmosphere: anObject<Atmosphere>({ timeOfDay: aString, shareThroughTheTimeOfDay: aNumber, weather: aString }),
+  keeper: anObject<KeeperState>({ placeId: nullOr(aString), hands: aListOf([nullOr(aString), nullOr(aString), nullOr(aString)]), hasAMiddleHand: aBoolean }),
+  vessels: aRecordOf(aVessel),
+  heater: aHeater,
+  spoon: anObject<SpoonState>({ grams: aNumber, teaId: nullOr(aString), capacityGrams: aNumber, charring: aNumber, location: aLocation }),
+  cloths: aRecordOf(aCloth),
+  pour: nullOr(aPour),
+  sink: anObject<SinkState>({ itemIdInside: nullOr(aString), runningWater: nullOr(someRunningWater), hasRunOverTheItemInside: aBoolean }),
+  figurines: aRecordOf(anObject<FigurineState>({ id: aString, satisfaction: aNumber, wasOfferedTeaThisRitual: aBoolean })),
+  puddles: aRecordOf(anObject<PuddleState>({ wetMl: aNumber, strength: aNumber, temperatureC: aNumber, spilledAround: nullOr(aSpot) })),
+})
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
   if (savedVersion !== sessionStateVersion) return { kind: 'doesNotFit', problems: [`the saved state is version ${savedVersion}, the game reads version ${sessionStateVersion}`] }
@@ -40,72 +115,56 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
   }, saved)
   const roomId = savedInTodaysShape['roomId']
   if (typeof roomId !== 'string' || catalog.rooms[roomId] === undefined) return { kind: 'doesNotFit', problems: [`the saved room ${String(roomId)} is not in the catalog`] }
-  const fresh = initialSessionState(catalog, roomId)
-  const problems = shapeProblemsOf(fresh, savedInTodaysShape)
+  const problems = sessionStateSchema(savedInTodaysShape, 'state')
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
+  const fresh = initialSessionState(catalog, roomId)
   const state = structuredClone(savedInTodaysShape) as SessionState
   changes.push(...fitTheVessels(state, fresh), ...fitTheCloths(state, fresh), ...fitTheFigurines(state, fresh), ...fitTheHeater(state, fresh))
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
-  problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
+  problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state), ...referenceProblemsOf(state))
   problems.push(...unknownTeaProblemsOf(state, catalog))
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
   changes.push(...dropPuddlesOnLostPlaces(state, places))
   return { kind: 'fits', state, changes }
 }
 
-function shapeProblemsOf(fresh: SessionState, saved: Shape): string[] {
-  const problems = shapeProblems({ ...fresh, vessels: {}, cloths: {}, figurines: {}, puddles: {} }, saved, 'state')
-  if (problems.length > 0) return problems
-  const savedState = saved as SessionState
-  for (const [id, vessel] of Object.entries(savedState.vessels)) {
-    problems.push(...shapeProblems(vesselShape, vessel, `state.vessels.${id}`))
-    if (vessel.leaves !== null) problems.push(...shapeProblems(leavesShape, vessel.leaves, `state.vessels.${id}.leaves`))
-  }
-  for (const [id, cloth] of Object.entries(savedState.cloths)) problems.push(...shapeProblems(clothShape, cloth, `state.cloths.${id}`))
-  for (const [id, figurine] of Object.entries(savedState.figurines)) problems.push(...shapeProblems(figurineShape(id), figurine, `state.figurines.${id}`))
-  for (const [placeId, puddle] of Object.entries(savedState.puddles)) problems.push(...shapeProblems(puddleShape, puddle, `state.puddles.${placeId}`))
-  if (savedState.pour !== null) problems.push(...shapeProblems(pourShape, savedState.pour, 'state.pour'))
-  if (savedState.sink.runningWater !== null) problems.push(...shapeProblems(runningWaterShape, savedState.sink.runningWater, 'state.sink.runningWater'))
-  for (const [owner, location] of locationsIn(savedState)) problems.push(...locationProblems(owner, location))
-  return problems
-}
-
-function shapeProblems(expected: unknown, actual: unknown, path: string): string[] {
-  if (expected === null || expected === undefined) return []
-  if (Array.isArray(expected)) {
-    if (!Array.isArray(actual) || actual.length !== expected.length) return [`${path} is not a list of ${expected.length}`]
-    return expected.flatMap((item, index) => shapeProblems(item, actual[index], `${path}[${index}]`))
-  }
-  if (!isShape(expected)) return typeof actual === typeof expected ? [] : [`${path} is not a ${typeof expected}`]
-  if (!isShape(actual)) return [`${path} is not an object`]
-  if ('kind' in expected && actual['kind'] !== expected['kind']) return []
-  return Object.entries(expected).flatMap(([key, value]) => shapeProblems(value, actual[key], `${path}.${key}`))
-}
-
-function figurineShape(id: string): FigurineState {
-  return { id, satisfaction: 0, wasOfferedTeaThisRitual: false }
-}
-
-function locationProblems(owner: string, location: DeepReadonly<ItemLocation>): string[] {
-  switch (location.kind) {
-    case 'onSurface':
-      return shapeProblems(spotShape, location.spot, `${owner}'s spot`)
-    case 'inHand':
-      return location.handIndex === 0 || location.handIndex === 1 || location.handIndex === 2 ? [] : [`${owner} is held in a hand that does not exist, ${String(location.handIndex)}`]
-    case 'gone':
-      return []
-    default:
-      return [`${owner} lies in an unknown kind of place, ${String((location as { kind: unknown }).kind)}`]
-  }
-}
-
 function handProblemsOf(state: SessionState): string[] {
   const itemIds = new Set(carriedItemIdsIn(state))
-  return state.keeper.hands.flatMap((itemId, handIndex) => (itemId === null || itemIds.has(itemId) ? [] : [`hand ${handIndex} holds ${itemId}, which the room does not have`]))
+  const hands = state.keeper.hands
+  const handsHoldingWhatIsNotThere = hands.flatMap((itemId, handIndex) => {
+    if (itemId === null) return []
+    if (!itemIds.has(itemId)) return [`hand ${handIndex} holds ${itemId}, which the room does not have`]
+    const location = itemLocationIn(state, itemId)
+    return location?.kind === 'inHand' && location.handIndex === handIndex ? [] : [`hand ${handIndex} holds ${itemId}, which is ${whereIs(location)}`]
+  })
+  const itemsInAnotherHand = locationsIn(state).flatMap(([itemId, location]) =>
+    location.kind === 'inHand' && hands[location.handIndex] !== itemId ? [`${itemId} is in hand ${location.handIndex}, which holds ${hands[location.handIndex] ?? 'nothing'}`] : [],
+  )
+  const middleHandThatNeverGrew = !state.keeper.hasAMiddleHand && hands[2] !== null ? [`the middle hand holds ${hands[2]}, though it has not grown`] : []
+  return [...handsHoldingWhatIsNotThere, ...itemsInAnotherHand, ...middleHandThatNeverGrew]
+}
+
+function referenceProblemsOf(state: SessionState): string[] {
+  const pour = state.pour
+  const pouredVesselIds = pour === null ? [] : [pour.sourceId, pour.targetId]
+  return [
+    ...itemOnASurfaceProblems(state, 'the heater', state.heater.itemIdOnTop),
+    ...itemOnASurfaceProblems(state, 'the sink', state.sink.itemIdInside),
+    ...pouredVesselIds.flatMap((vesselId) => (vesselId === null || state.vessels[vesselId] !== undefined ? [] : [`the pour runs through ${vesselId}, which the room does not have`])),
+  ]
+}
+
+function itemOnASurfaceProblems(state: SessionState, holder: string, itemId: string | null): string[] {
+  if (itemId === null) return []
+  const location = itemLocationIn(state, itemId)
+  return location?.kind === 'onSurface' ? [] : [`${holder} holds ${itemId}, which is ${whereIs(location)}`]
 }
 
 function placeProblemsOf(state: SessionState, places: ReadonlySet<string>): string[] {
-  return locationsIn(state).flatMap(([owner, location]) => (location.kind === 'onSurface' && !places.has(location.spot.placeId) ? [`${owner} stands on ${location.spot.placeId}, which the room no longer has`] : []))
+  const keeperPlaceId = state.keeper.placeId
+  const keeperProblems = keeperPlaceId === null || places.has(keeperPlaceId) ? [] : [`the keeper stands at the ${keeperPlaceId}, which the room no longer has`]
+  const itemProblems = locationsIn(state).flatMap(([owner, location]) => (location.kind === 'onSurface' && !places.has(location.spot.placeId) ? [`${owner} stands on ${location.spot.placeId}, which the room no longer has`] : []))
+  return [...keeperProblems, ...itemProblems]
 }
 
 function locationsIn(state: SessionState): [string, DeepReadonly<ItemLocation>][] {
@@ -355,4 +414,52 @@ function withoutTheField(shape: Shape, field: string): Shape {
 
 function isShape(value: unknown): value is Shape {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+type FieldCheck = (value: unknown, path: string) => string[]
+
+type SchemaOf<Value> = { readonly [Key in keyof Value]-?: FieldCheck }
+
+function aValueOfType(type: 'number' | 'string' | 'boolean'): FieldCheck {
+  return (value, path) => (typeof value === type ? [] : [`${path} is not a ${type}`])
+}
+
+function nullOr(check: FieldCheck): FieldCheck {
+  return (value, path) => (value === null ? [] : check(value, path))
+}
+
+function absentOr(check: FieldCheck): FieldCheck {
+  return (value, path) => (value === undefined ? [] : check(value, path))
+}
+
+function anObject<Value>(schema: SchemaOf<Value>): FieldCheck {
+  return (value, path) => {
+    if (!isShape(value)) return [`${path} is not an object`]
+    return Object.entries<FieldCheck>(schema).flatMap(([key, check]) => check(value[key], `${path}.${key}`))
+  }
+}
+
+function aRecordOf(check: FieldCheck): FieldCheck {
+  return (value, path) => (isShape(value) ? Object.entries(value).flatMap(([key, field]) => check(field, `${path}.${key}`)) : [`${path} is not an object`])
+}
+
+function aListOf(checks: readonly FieldCheck[]): FieldCheck {
+  return (value, path) => {
+    if (!Array.isArray(value) || value.length !== checks.length) return [`${path} is not a list of ${checks.length}`]
+    return checks.flatMap((check, index) => check(value[index], `${path}[${index}]`))
+  }
+}
+
+function aLocation(value: unknown, path: string): string[] {
+  if (!isShape(value)) return [`${path} is not an object`]
+  switch (value['kind']) {
+    case 'onSurface':
+      return aSpot(value['spot'], `${path}.spot`)
+    case 'inHand':
+      return value['handIndex'] === 0 || value['handIndex'] === 1 || value['handIndex'] === 2 ? [] : [`${path} is a hand that does not exist, ${String(value['handIndex'])}`]
+    case 'gone':
+      return []
+    default:
+      return [`${path} is an unknown kind of place, ${String(value['kind'])}`]
+  }
 }

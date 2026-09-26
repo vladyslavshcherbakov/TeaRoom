@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
+import { sessionStateVersion } from '../../Shared/Simulation/State/FittedSavedState.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
 import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
 import { TestRitual } from '../Support/TestRitual.ts'
@@ -234,6 +235,70 @@ test('savedState_whoseHeaterLeftTheCatalog_resumesWithTheRoomsHeaterSwitchedOff'
   assert.equal(resumed.state.heater.isOn, false)
   assert.equal(resumed.state.heater.itemIdOnTop, 'kettle')
 })
+
+test('savedState_withTheKeeperWalking_resumesWithTheKeeperWalking', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'standAt', placeId: null })
+
+  const resumed = TestRitual.resumedFrom(ritual.savedState)
+
+  assert.equal(resumed.state.keeper.placeId, null)
+})
+
+test('savedState_whosePourNamesItsTargetWithANumber_doesNotFit', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
+  const savedState = ritual.savedState as { pour: Record<string, unknown> }
+  savedState.pour['targetId'] = 5
+
+  const problems = problemsResuming(savedState)
+
+  assert.deepEqual(problems.filter((problem) => problem.includes('state.pour.targetId')).length, 1, problems.join('\n'))
+})
+
+test('savedState_whoseHandHoldsACupLyingOnTheTable_doesNotFit', () => {
+  const savedState = new TestRitual().savedState as { keeper: { hands: unknown[] } }
+  savedState.keeper.hands[0] = 'cup1'
+
+  const problems = problemsResuming(savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('cup1')).length, 1, problems.join('\n'))
+})
+
+test('savedState_whoseCupSaysItIsInAnEmptyHand_doesNotFit', () => {
+  const savedState = new TestRitual().savedState as { vessels: Record<string, Record<string, unknown>> }
+  const cup = savedState.vessels['cup1']
+  if (cup !== undefined) cup['location'] = { kind: 'inHand', handIndex: 1 }
+
+  const problems = problemsResuming(savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('cup1')).length, 1, problems.join('\n'))
+})
+
+test('savedState_whoseHeaterHoldsTheKettleThatIsInAHand_doesNotFit', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  const savedState = ritual.savedState as { heater: Record<string, unknown> }
+  savedState.heater['itemIdOnTop'] = 'kettle'
+
+  const problems = problemsResuming(savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('kettle')).length, 1, problems.join('\n'))
+})
+
+test('savedState_whoseKeeperStandsAtAPlaceTheRoomDoesNotHave_doesNotFit', () => {
+  const savedState = new TestRitual().savedState as { keeper: Record<string, unknown> }
+  savedState.keeper['placeId'] = 'attic'
+
+  const problems = problemsResuming(savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('attic')).length, 1, problems.join('\n'))
+})
+
+function problemsResuming(savedState: unknown): readonly string[] {
+  const resuming = RitualSession.resume(testCatalog(), savedState, sessionStateVersion, new RecordingLog(), true)
+  return resuming.kind === 'opened' ? [] : resuming.problems
+}
 
 function catalogWithANewHeater(): Catalog {
   const catalog = testCatalog()
