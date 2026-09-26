@@ -107,7 +107,7 @@ export class CarriedItems {
     moveToLayer(model, layerFor(inspected !== null, heldInView !== null, wipingAt !== null))
     this.castShadowUnlessStanding(model, location.kind !== 'onSurface' && wipingAt === null && inspected === null)
     model.root.scale.setScalar(1)
-    if (aim !== null) return this.aimOverItsTarget(model, aim)
+    if (aim !== null) return this.aimOverItsTarget(model, aim, scene)
     if (wipingAt !== null) return wipeAt(model, wipingAt)
     model.root.rotation.set(0, 0, 0)
     if (location.kind === 'onSurface') {
@@ -124,9 +124,11 @@ export class CarriedItems {
     model.root.rotation.y = scene.walk.headingRadians
   }
 
-  private aimOverItsTarget(model: CarriedModel, aim: AimedPourView): void {
+  private aimOverItsTarget(model: CarriedModel, aim: AimedPourView, scene: CarriedItemsScene): void {
     const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
-    if (target !== undefined) aimOver(model, aim, target)
+    if (target === undefined) return
+    const standingBelow = this.models.filter((candidate) => candidate !== model && itemLocationIn(scene.state, candidate.itemId)?.kind === 'onSurface').map((candidate) => candidate.root)
+    aimOver(model, aim, target, standingBelow)
   }
 
   private retag(model: CarriedModel, tag: TapTargetTag): void {

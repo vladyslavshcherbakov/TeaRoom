@@ -29,6 +29,7 @@ const closeUpAndFirstPersonFieldsOfViewDegrees = [30, 70]
 const inspectionTurnsRadians = [[0, 0.55], [Math.PI / 2, Math.PI / 2], [Math.PI / 4, Math.PI], [1, -1]] as const
 const undersideProbesMetres = [0, 0.02]
 const undersideHeightMetres = 0.01
+const besideTheSpoutMetres = 0.12
 const overflowSide =new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
 
 test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () => {
@@ -38,10 +39,46 @@ test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () =
   for (const model of vesselModelsInTheQuietRoom()) {
     for (const tiltDegrees of tiltsDegrees) {
       for (const spoutDirection of spoutDirections) {
-        aimOver(model, { sourceId: model.itemId, targetId: 'target', spout: { x: 0, z: 0 }, spoutDirection, tiltDegrees }, { root: target, rimHeight: 0 })
+        aimOver(model, { sourceId: model.itemId, targetId: 'target', spout: { x: 0, z: 0 }, spoutDirection, tiltDegrees }, { root: target, rimHeight: 0 }, [])
 
         const lowest = drawnBoundsOf(model).min.y
         assert.ok(lowest >= teaTableTopMetres - drawingToleranceMetres, `${model.itemId} at ${tiltDegrees}° reaches ${(teaTableTopMetres - lowest).toFixed(4)} m under the surface`)
+      }
+    }
+  }
+})
+
+test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_staysAboveIt', () => {
+  const standingModels = modelsInTheQuietRoom()
+
+  for (const model of vesselModelsInTheQuietRoom()) {
+    for (const standing of standingModels.filter((candidate) => candidate.itemId !== model.itemId)) {
+      standing.root.position.set(0, teaTableTopMetres, 0)
+      for (const tiltDegrees of tiltsDegrees) {
+        for (const spoutDirection of spoutDirections) {
+          aimOver(model, { sourceId: model.itemId, targetId: standing.itemId, spout: { x: 0, z: 0 }, spoutDirection, tiltDegrees }, standing, [standing.root])
+
+          const sinking = sinkingInto(standing, model)
+          assert.ok(sinking <= drawingToleranceMetres, `${model.itemId} at ${tiltDegrees}° sinks ${sinking.toFixed(4)} m into ${standing.itemId}`)
+        }
+      }
+    }
+  }
+})
+
+test('aimedVessel_ofEveryShapeOverASurface_staysAboveEveryItemStandingBesideTheSpout', () => {
+  const target = new THREE.Group()
+  target.position.y = teaTableTopMetres
+  const standingModels = modelsInTheQuietRoom()
+
+  for (const model of vesselModelsInTheQuietRoom()) {
+    for (const standing of standingModels.filter((candidate) => candidate.itemId !== model.itemId)) {
+      for (const spoutDirection of spoutDirections) {
+        standing.root.position.set(-spoutDirection.x * besideTheSpoutMetres, teaTableTopMetres, -spoutDirection.z * besideTheSpoutMetres)
+        aimOver(model, { sourceId: model.itemId, targetId: 'target', spout: { x: 0, z: 0 }, spoutDirection, tiltDegrees: tiltOfFullFlowDegrees }, { root: target, rimHeight: 0 }, [standing.root])
+
+        const sinking = sinkingInto(standing, model)
+        assert.ok(sinking <= drawingToleranceMetres, `${model.itemId} sinks ${sinking.toFixed(4)} m into ${standing.itemId} standing beside the spout`)
       }
     }
   }
@@ -224,6 +261,23 @@ function drawnBoundsOf(model: CarriedModel): THREE.Box3 {
   const bounds = new THREE.Box3()
   for (const mesh of drawnMeshesUnder(model.root, model)) bounds.expandByObject(mesh, true)
   return bounds
+}
+
+function sinkingInto(standing: CarriedModel, aimed: CarriedModel): number {
+  standing.root.updateMatrixWorld(true)
+  aimed.root.updateMatrixWorld(true)
+  const partsBelow = drawnMeshesUnder(standing.root, standing).map((mesh) => new THREE.Box3().setFromObject(mesh, true))
+  let sinking = 0
+  for (const mesh of drawnMeshesUnder(aimed.root, aimed)) {
+    const positions: THREE.BufferAttribute | THREE.InterleavedBufferAttribute | undefined = mesh.geometry.getAttribute('position')
+    if (positions === undefined) continue
+    const point = new THREE.Vector3()
+    for (let index = 0; index < positions.count; index += 1) {
+      point.fromBufferAttribute(positions, index).applyMatrix4(mesh.matrixWorld)
+      for (const part of partsBelow.filter((bounds) => bounds.containsPoint(point))) sinking = Math.max(sinking, part.max.y - point.y)
+    }
+  }
+  return sinking
 }
 
 function horizontalRadiusOf(lid: THREE.Object3D, model: CarriedModel): number {
