@@ -113,6 +113,15 @@ test('pourAim_whenDone_endsWithTheKettleStillInHand', () => {
   assert.equal(room.state.keeper.hands[0], 'kettle')
 })
 
+test('pourAim_whenDone_leavesNoHandChosen', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+
+  room.play.pourDone()
+
+  assert.equal(room.play.chosenHandIndex, null)
+})
+
 test('kettle_whenASurfaceIsTappedWhileAiming_isPutDownThere', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)

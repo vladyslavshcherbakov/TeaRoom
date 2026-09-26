@@ -225,8 +225,10 @@ export class RoomPlay {
   }
 
   pourDone(): void {
-    this.aimedPour?.finish()
-    this.aimedPour = null
+    if (this.aimedPour === null) return
+    this.log(`the pour from ${this.aimedPour.view.sourceId} is done, and its hand is no longer chosen`)
+    this.endTheAim()
+    this.choice = null
   }
 
   aimingTapped(target: RoomTapTarget): void {
@@ -235,9 +237,12 @@ export class RoomPlay {
       this.log(`tap on the lid of ${sourceId} while aiming opens or closes it and keeps the aim`)
       return this.toggleLidOf(sourceId)
     }
-    this.pourDone()
-    if (target.kind !== 'surface') return this.log(`tap on ${describeTarget(target)} while aiming returns the vessel to its hand`)
+    if (target.kind !== 'surface') {
+      this.log(`tap on ${describeTarget(target)} while aiming returns the vessel to its hand`)
+      return this.pourDone()
+    }
     this.log(`tap on the ${target.furnitureId} while aiming puts the vessel down there`)
+    this.endTheAim()
     this.putDownTheChosenItemAt(target.furnitureId, target.point)
   }
 
@@ -339,6 +344,11 @@ export class RoomPlay {
     if (!this.sipGesture.isOver) return
     this.log(`${this.sipGesture.view.cupId} is lowered after the sip`)
     this.sipGesture = null
+  }
+
+  private endTheAim(): void {
+    this.aimedPour?.finish()
+    this.aimedPour = null
   }
 
   private tapped(target: RoomTapTarget): void {
