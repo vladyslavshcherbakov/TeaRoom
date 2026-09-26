@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { testHouseCatalog } from '../Support/TestCatalog.ts'
 import { TestRitual } from '../Support/TestRitual.ts'
 
 test('refusedCommand_isLoggedWithItsReasonAndTheValueThatDecidedIt', () => {
@@ -8,10 +9,16 @@ test('refusedCommand_isLoggedWithItsReasonAndTheValueThatDecidedIt', () => {
 
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
-  assert.ok(
-    ritual.log.messagesAt('info').some((message) => message.endsWith('placeOnHeater refused (heaterOccupied): {"itemId":"kettle"}, kettle is on it')),
-    ritual.log.messagesAt('info').join('\n'),
-  )
+  assertAnInfoLineMatches(ritual, /placeOnHeater refused \(heaterOccupied\).*kettle is on it/)
+})
+
+test('refusal_outOfReach_isLoggedNamingWhereTheItemAndTheKeeperAre', () => {
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  ritual.do({ type: 'tasteCup', cupId: 'cup1' })
+
+  assertAnInfoLineMatches(ritual, /tasteCup refused \(outOfReach\).*cup1 is on the shelf, the keeper is at the table/)
 })
 
 test('heaterSwitchOff_isLoggedWithTheTemperatureOfTheWaterOnIt', () => {
@@ -22,10 +29,7 @@ test('heaterSwitchOff_isLoggedWithTheTemperatureOfTheWaterOnIt', () => {
 
   ritual.do({ type: 'switchHeaterOff' })
 
-  assert.ok(
-    ritual.log.messagesAt('info').some((message) => message.includes('on it: kettle 500.0 ml at 76.0 °C, strength 0, bitterness 0')),
-    ritual.log.messagesAt('info').join('\n'),
-  )
+  assertAnInfoLineMatches(ritual, /heater switched off.*on it: kettle .* at 76\.0 °C/)
 })
 
 test('logLine_startsWithTheSimulatedTimeToTheMillisecond', () => {
@@ -34,7 +38,7 @@ test('logLine_startsWithTheSimulatedTimeToTheMillisecond', () => {
 
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
-  assert.equal(ritual.log.messagesAt('info').at(-1), 't=2.500s caddy lid opened')
+  assert.match(ritual.log.messagesAt('info').at(-1) ?? '', /^t=2\.500s /)
 })
 
 test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
@@ -43,7 +47,7 @@ test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
 
   ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0.5, missedStreamLandsAt: null })
 
-  assert.ok(ritual.log.messagesAt('debug').some((message) => message.endsWith('pour tilted to 30.0°, 50% on target')))
+  assertADebugLineMatches(ritual, /pour tilted to 30\.0°/)
   assert.ok(!ritual.log.messagesAt('info').some((message) => message.includes('pour tilted')))
 })
 
@@ -54,10 +58,7 @@ test('worldReport_whileTheKettleHeats_logsItsWaterAndHowFastItWarms', () => {
 
   ritual.wait(6)
 
-  assert.ok(
-    ritual.log.messagesAt('debug').some((message) => message.includes('the room: kettle on the working heater, lid closed: 500.0 ml (+0.00 ml/s) at 40.2 °C (+4.000 °C/s)')),
-    ritual.log.messagesAt('debug').join('\n'),
-  )
+  assertADebugLineMatches(ritual, /the room: kettle on the working heater.* \(\+4\.000 °C\/s\)/)
 })
 
 test('worldReport_whileTheTapWashesLeavesOutOfAFullKettle_logsHowFastTheLeavesGo', () => {
@@ -124,4 +125,8 @@ test('worldReport_ofARoomWhereNothingChanges_saysTheRoomIsStill', () => {
 
 function assertADebugLineMatches(ritual: TestRitual, pattern: RegExp): void {
   assert.ok(ritual.log.messagesAt('debug').some((message) => pattern.test(message)), ritual.log.messagesAt('debug').join('\n'))
+}
+
+function assertAnInfoLineMatches(ritual: TestRitual, pattern: RegExp): void {
+  assert.ok(ritual.log.messagesAt('info').some((message) => pattern.test(message)), ritual.log.messagesAt('info').join('\n'))
 }

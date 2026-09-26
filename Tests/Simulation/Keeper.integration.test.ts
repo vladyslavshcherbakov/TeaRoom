@@ -77,18 +77,6 @@ test('kettle_whenTastedFromAnotherPlace_isOutOfReachBeforeItIsJudgedUndrinkable'
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'tasteCup', reason: 'outOfReach' }])
 })
 
-test('cup_whenTastedFromAnotherPlace_isRefusedNamingWhereItAndTheKeeperAre', () => {
-  const ritual = houseRitual()
-  ritual.do({ type: 'standAt', placeId: 'table' })
-
-  ritual.do({ type: 'tasteCup', cupId: 'cup1' })
-
-  assert.ok(
-    ritual.log.messagesAt('info').some((message) => message.endsWith('tasteCup refused (outOfReach): {"cupId":"cup1"}, cup1 is on the shelf, the keeper is at the table')),
-    ritual.log.messagesAt('info').join('\n'),
-  )
-})
-
 test('heater_whenTheKeeperIsNotAtTheCounter_cannotBeSwitchedOn', () => {
   const ritual = houseRitual()
   ritual.do({ type: 'standAt', placeId: 'table' })
