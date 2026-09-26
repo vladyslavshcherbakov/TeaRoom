@@ -30,7 +30,7 @@ npm install
 Scripts/test.sh
 ```
 
-`Scripts/test.sh` type-checks everything and runs every test with Node's built-in test runner.
+`Scripts/test.sh` type-checks everything and runs every test with Node's built-in test runner, side by side, and fails when any of them fails.
 
 ```sh
 Scripts/test-ui.sh
