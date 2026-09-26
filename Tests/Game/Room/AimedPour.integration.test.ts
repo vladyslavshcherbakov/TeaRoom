@@ -147,6 +147,21 @@ test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehi
   assertNear(spout?.z ?? 0, 0.319, 0.001)
 })
 
+test('pour_whenTheSpoutMovesOverBowlsOnTwoShelfBoards_staysOnTheBoardOfItsTarget', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.fillInTheSink('kettle')
+  room.walkTo('shelf')
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'opening', itemId: 'bowl5' })
+  const spout = room.play.aimedPourView?.spout ?? { x: 0, z: 0 }
+
+  room.moveTheSpout({ x: -2.75 - spout.x, z: 0.1 - spout.z })
+
+  assert.equal(room.play.aimedPourView?.targetId, 'bowl4')
+})
+
 test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
@@ -266,6 +281,22 @@ test('kettleLid_whenTheKettleIsAimedAtTheClosedThermos_staysClosedWhileTheThermo
 
   assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
   assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+})
+
+test('emptyThermos_whenTheTiltIsHeldOverABowl_tiltsAndPoursNothing', () => {
+  const room = new TestRoom()
+  room.carryFromTheShelf('bowl1')
+  room.walkTo('counter')
+  room.putDown(0, onTheCounter)
+  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
+
+  room.play.tiltPressed()
+  room.advance(1)
+
+  assert.ok((room.play.aimedPourView?.tiltDegrees ?? 0) > 0)
+  assert.equal(room.state.pour, null)
+  assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, 0)
 })
 
 test('aimingFinger_whenMovedFurtherThanTwelvePixels_movesTheSpoutAndKeepsTheAim', () => {

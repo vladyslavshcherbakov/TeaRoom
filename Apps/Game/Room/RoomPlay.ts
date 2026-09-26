@@ -73,6 +73,7 @@ const holdSecondsBeforeAnArrowRepeats = 0.5
 const secondsBetweenRepeatedSteps = 0.1
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
+const sameBoardWithinMetres = 0.15
 const tapsWithFullHandsThatGrowAMiddleHand = 10
 const fullTurnDegrees = 360
 const roseBushKey = 'roseBush'
@@ -480,7 +481,7 @@ export class RoomPlay {
     this.openTheLidsThePourNeeds(source, target)
     const spoutDirection = screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
-    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot.placeId), spoutDirection)
+    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection)
   }
 
   private openTheLidsThePourNeeds(source: DeepReadonly<VesselState>, target: DeepReadonly<VesselState>): void {
@@ -494,10 +495,10 @@ export class RoomPlay {
     }
   }
 
-  private pourTargetsBeside(source: DeepReadonly<VesselState>, placeId: string): PourTarget[] {
+  private pourTargetsBeside(source: DeepReadonly<VesselState>, targetSpot: Spot): PourTarget[] {
     return Object.values(this.ritual.state.vessels).flatMap((vessel) => {
       const layout = layoutOf(this.ritual.state, vessel.id)
-      const isStandingThere = vessel.location.kind === 'onSurface' && vessel.location.spot.placeId === placeId
+      const isStandingThere = vessel.location.kind === 'onSurface' && vessel.location.spot.placeId === targetSpot.placeId && Math.abs(vessel.location.spot.y - targetSpot.y) < sameBoardWithinMetres
       if (vessel.id === source.id || layout === undefined || !isStandingThere || vessel.location.kind !== 'onSurface') return []
       return [{ id: vessel.id, spot: vessel.location.spot, openingRadiusMetres: layout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, vessel) }]
     })

@@ -41,6 +41,7 @@ export class AimedPour {
   private tiltDegrees = 0
   private isTiltHeld = false
   private isPouring = false
+  private isTiltingWithNothingToPour = false
   private lastFingerPoint: FloorPoint | null = null
   private lastSentPour: SentPour = unsentPour
 
@@ -91,7 +92,8 @@ export class AimedPour {
       this.isPouring = false
       this.log(`the pour from ${this.sourceId} ended while it was tilted`)
     }
-    if (!this.isPouring && this.isTiltHeld && this.tiltDegrees > 0) this.startPouring()
+    if (this.tiltDegrees === 0) this.isTiltingWithNothingToPour = false
+    if (!this.isPouring && !this.isTiltingWithNothingToPour && this.isTiltHeld && this.tiltDegrees > 0) this.startPouring()
     if (!this.isPouring) return
     if (this.tiltDegrees === 0) return this.stopPouring()
     const pour = { tiltDegrees: this.tiltDegrees, streamOnTargetFraction: this.onTargetFraction(), missedStreamLandsAt: this.spotUnderTheSpout() }
@@ -107,6 +109,10 @@ export class AimedPour {
 
   private startPouring(): void {
     const events = this.ritual.dispatch({ type: 'startPouring', sourceId: this.sourceId, targetId: this.target.id })
+    if (events.some((event) => event.type === 'actionRefused' && event.reason === 'sourceIsEmpty')) {
+      this.isTiltingWithNothingToPour = true
+      return this.log(`${this.sourceId} tilts on with nothing to pour: it is empty`)
+    }
     if (events.some((event) => event.type === 'actionRefused')) {
       this.isTiltHeld = false
       return this.log(`${this.sourceId} tilts back: the pour into ${this.target.id} was refused`)
