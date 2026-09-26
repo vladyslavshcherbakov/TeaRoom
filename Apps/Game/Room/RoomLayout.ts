@@ -71,13 +71,19 @@ export type SinkBasin = {
   readonly plateMetres: number
 }
 
-export type ItemShape = 'figurine' | 'faucet'
-
-export type ItemSpot = {
-  readonly id: string
-  readonly shape: ItemShape
+export type FaucetSpot = {
+  readonly id: 'faucet'
+  readonly shape: 'faucet'
   readonly position: WorldPoint
 }
+
+export type FigurineSpot = {
+  readonly id: FigurineId
+  readonly shape: 'figurine'
+  readonly position: WorldPoint
+}
+
+export type ItemSpot = FaucetSpot | FigurineSpot
 
 export type RoomLayout = {
   readonly furniture: readonly Furniture[]

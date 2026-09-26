@@ -1,7 +1,8 @@
 import * as THREE from 'three'
 import { text } from '../../Texts/Texts.ts'
 import { weaveCloth } from './ClothWeave.ts'
-import type { ClothPattern } from '../RoomArrangement.ts'
+import type { ClothPattern, CushionColour } from '../RoomArrangement.ts'
+import type { FigurineId } from '../../../../Shared/Content/Rooms.ts'
 import { paintCrackle } from './CrackleGlaze.ts'
 import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
@@ -222,6 +223,21 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
   yixingClay: { colour: '#ffffff', kind: 'yixingClay' },
   lawn: { colour: '#79a94f', kind: 'matte' },
+}
+
+export const surfaceByClothPattern: Readonly<Record<ClothPattern, Surface>> = {
+  blueStripes: 'cloth',
+  redCheck: 'redCheckCloth',
+}
+
+export const surfaceByCushionColour: Readonly<Record<CushionColour, Surface>> = {
+  terracotta: 'terracottaCushion',
+  softBlue: 'softBlueCushion',
+}
+
+export const surfaceByFigurineId: Readonly<Record<FigurineId, Surface>> = {
+  dragon: 'jade',
+  toad: 'toadBrown',
 }
 
 const colourByPlantSurface: Readonly<Record<PlantSurface, string>> = {

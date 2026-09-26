@@ -22,7 +22,7 @@ import type { Surroundings } from '../Placement.ts'
 import type { ClothPattern } from '../RoomArrangement.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
-import type { RoomMaterials } from './RoomMaterials.ts'
+import { surfaceByClothPattern, type RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
 const handHeightMetres = 0.55
@@ -95,7 +95,7 @@ export class CarriedItems {
 
   private clothMaterialFor(itemId: string, shape: CarriedShape): THREE.Material {
     if (shape !== 'cloth') return this.materials.materialFor('cloth')
-    const material = this.materials.unsharedMaterialFor(this.clothPatternsById.get(itemId) === 'redCheck' ? 'redCheckCloth' : 'cloth')
+    const material = this.materials.unsharedMaterialFor(surfaceByClothPattern[this.clothPatternsById.get(itemId) ?? 'blueStripes'])
     this.clothMaterialsByClothId.set(itemId, material)
     return material
   }

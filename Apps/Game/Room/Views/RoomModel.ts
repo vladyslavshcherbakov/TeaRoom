@@ -11,6 +11,7 @@ import {
   roomHalfSize,
   turnFacing,
   type FloorPoint,
+  type FigurineSpot,
   type Footprint,
   type Furniture,
   type FurnitureId,
@@ -23,7 +24,7 @@ import {
 } from '../RoomLayout.ts'
 import { facingDirection, shelfBoards, type Facing } from '../../../../Shared/Content/Rooms.ts'
 import type { RoomArrangement } from '../RoomArrangement.ts'
-import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import { surfaceByCushionColour, surfaceByFigurineId, type RoomMaterials, type Surface } from './RoomMaterials.ts'
 import { HeaterControls, type HeaterControlsView } from './HeaterControls.ts'
 import { guideBookModel } from './GuideBookModel.ts'
 import { SettingsGear } from './SettingsGear.ts'
@@ -299,7 +300,7 @@ export class RoomModel {
       const position = { x: footprint.x + legX * (footprint.width / 2 - 0.08), y: (height - 0.06) / 2, z: footprint.z + legZ * (footprint.depth / 2 - 0.08) }
       this.tag(this.box('darkWood', 0.07, height - 0.06, 0.07, position), { furnitureId: piece.id })
     }
-    const cushionSurface: Surface = this.arrangement.cushionColour === 'softBlue' ? 'softBlueCushion' : 'terracottaCushion'
+    const cushionSurface = surfaceByCushionColour[this.arrangement.cushionColour]
     for (const spot of this.layout.cushionSpots.slice(0, this.arrangement.cushionCount)) {
       this.cylinder(cushionSurface, 0.28, 0.08, { x: spot.x, y: 0.04, z: spot.z }).castShadow = false
     }
@@ -420,8 +421,8 @@ export class RoomModel {
     return mesh
   }
 
-  private figurine(spot: ItemSpot): THREE.Object3D {
-    const surface: Surface = spot.id === 'dragon' ? 'jade' : 'toadBrown'
+  private figurine(spot: FigurineSpot): THREE.Object3D {
+    const surface = surfaceByFigurineId[spot.id]
     const figurine = new THREE.Group()
     const body = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), this.materials.materialFor(surface))
     body.position.y = 0.08

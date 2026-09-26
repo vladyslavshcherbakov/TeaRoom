@@ -26,14 +26,18 @@ const stripesNearOneEnd: readonly Stripe[] = [
   { fromShare: 0.175, toShare: 0.195 },
 ]
 
+const paintGroundByPattern: Readonly<Record<ClothPattern, (context: CanvasRenderingContext2D) => void>> = {
+  blueStripes: paintBlueStripes,
+  redCheck: paintRedCheck,
+}
+
 export function weaveCloth(pattern: ClothPattern): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
   if (context === null) return canvas
-  if (pattern === 'blueStripes') paintBlueStripes(context)
-  else paintRedCheck(context)
+  paintGroundByPattern[pattern](context)
   paintThreads(context)
   paintHem(context)
   return canvas
