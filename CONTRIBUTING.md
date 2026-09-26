@@ -39,7 +39,6 @@ The files in `Ritual/` that every action goes through:
 | `Ritual/ItemKinds.ts` | The kinds of carried item, `ItemKindRules`, and `rulesFor`, which finds an item's rules. |
 | `Ritual/VesselRules.ts`, `Ritual/SpoonRules.ts`, `Ritual/ClothRules.ts` | How a vessel, the spoon or a cloth answers each question of `ItemKindRules`. |
 | `Ritual/LiftTheItem.ts` | `liftTheItem`, the one way to lift an item from where it lies. |
-| `Ritual/PhaseRules.ts` | Which commands each phase of the ritual accepts. |
 | `Ritual/WorldReport.ts` | The detail lines about everything that is changing, with its rates. |
 | `Ritual/ReturnAfterAbsence.ts` | How the world lives through the time away. |
 
@@ -240,9 +239,8 @@ In the simulation:
 1. Add its fields to the definition types if content varies it, and to `SessionState` if the world must hold it.
 2. Put its arithmetic in `Physics/` and its decisions in `Judgement/` as pure functions.
 3. Add the command to `Command.ts`, the events and refusal reasons to `RitualEvent.ts`, a handler in the matching `*Commands.ts`, and the case in `ApplyCommand.ts`. Add continuous behaviour to `SimulationStep.ts`.
-4. Allow or refuse it per phase in `PhaseRules.ts`.
-5. Write integration tests through `TestRitual` in `Tests/Simulation/`.
-6. Describe the rule in `docs/simulation.md`.
+4. Write integration tests through `TestRitual` in `Tests/Simulation/`.
+5. Describe the rule in `docs/simulation.md`.
 
 The reference mechanic in the simulation is pouring: `Physics/Pouring.ts`, `Ritual/PouringCommands.ts`, `continuePour` in `SimulationStep.ts` and `Tests/Simulation/Pouring.integration.test.ts`.
 
@@ -276,12 +274,13 @@ A new setting is a field in `RoomSettings` with its default and its reading in `
 - Every refusal is an `actionRefused` event with a reason. A handler never throws for a player mistake and never ignores a command silently.
 - Every action on an item lists its checks with `wasRefusedByAnyOf` from `Ritual/ItemRefusals.ts`. The order is: the item is known, it is not burnt away, it is within reach, then whatever else the action needs. The heater, the thermostat and the tap check the keeper's place first.
 - A check is a function of the draft that returns a refusal, with its reason and the values it logs, or `null`. A factory such as `isInAHand(itemId)` builds it for one item.
-- A handler refuses directly only where it needs a value to go on, such as a vessel the room does not have or a tea not chosen yet.
+- A handler refuses directly only where it needs a value to go on, such as a vessel the room does not have or leaves on the spoon whose tea it does not know.
 - Every action with the spoon or a cloth checks that it is in a hand, except soaking up a puddle, where the cloth lies on the surface. Offering checks that the keeper stands at the ritual place, and wiping that the keeper stands at a place with a puddle. A new action gets the same checks.
 - An action that takes an item from where it lies, into a hand or onto the heater, calls `liftTheItem`. What lifting does to one kind is that kind's `takeIntoAHand` answer.
 - `takeIntoTheCloth` in `Ritual/CleanupCommands.ts` is the only code that fills a cloth from a puddle. It caps what the cloth takes.
 - Every id the simulation looks up in the catalog is checked by `problemsOpeningRoom` in `Definitions/CatalogProblems.ts`. A new reference between definitions gets a check there.
 - `Ritual/WorldReport.ts` writes a detail line for each thing that is changing. A new living value gets a place in that report.
+- A liquid carries its teas in `strengthByTeaId`, and every rule that makes or moves a liquid keeps them: `water` has none, `strengthenedBy` credits a tea, and `mixLiquids` and `splitLiquid` keep the blend. A judgement of a liquid takes its blend from `blendOf` in `Judgement/TasteJudgement.ts`, never one tea. A caddy is found through its room's `teaStock`, never by its id.
 
 ### The room
 
@@ -310,7 +309,7 @@ A new setting is a field in `RoomSettings` with its default and its reading in `
 
 - A behaviour gets an integration test. A pure function gets a unit test once its numbers stop moving, such as a decision table, a camera pose or a gesture's arithmetic. A unit test file is named after the file it tests.
 - Integration tests of the simulation run the real `RitualSession` over `Tests/Support/TestCatalog.ts`. Its round numbers make expected values checkable by hand.
-- In `testCatalog`, vessels do not cool unless a test asks for cooling, and an open lid does not change how a vessel cools. Its room keeps everything at one place, so reach cannot fail there. A test of reach, places or lids uses `testHouseCatalog`, and a test with two cloths uses `withASecondCloth`.
+- In `testCatalog`, vessels do not cool unless a test asks for cooling, and an open lid does not change how a vessel cools. Its room keeps everything at one place, so reach cannot fail there. A test of reach, places or lids uses `testHouseCatalog`, and a test with two cloths uses `withASecondCloth`. Its caddy holds `testGreen`, and a test of several teas adds caddies with `withMoreCaddies`, which names the tea of each.
 - Content tests run the real catalog.
 - Room tests in `Tests/Game/Room/` drive `RoomNavigator` and `RoomPlay` with taps and presses. `RoomPlay` runs over a real session in the default catalog's quiet room through `Tests/Support/TestRoom.ts`. There is one file for each feature of the room, and the folder is flat. `onTopOf` names a place on a piece of furniture from the quiet room's layout.
 - `Tests/Game/Room/CarriedItems.integration.test.ts` builds the real Three.js model of every item and checks what every shape promises.
