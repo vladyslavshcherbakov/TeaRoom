@@ -69,8 +69,10 @@ import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
 import { degreesShownIn } from './Temperatures.ts'
 import { RoomGlow } from './Views/RoomGlow.ts'
+import { EdgeSmoothing } from './Views/EdgeSmoothing.ts'
 
 const backgroundColour = '#f6e9d6'
+const largestPixelRatioByDefault = 2
 const longestFrameSeconds = 0.1
 const aimPlaneAboveTargetMetres = 0.3
 const smallestUpwardNormalOfASurface = 0.7
@@ -117,6 +119,7 @@ export class RoomScene {
   private settings: RoomSettings
   private softShadowsInCorners: EffectComposer | null = null
   private glow: RoomGlow | null = null
+  private edgeSmoothing: EdgeSmoothing | null = null
   private readonly carried: CarriedItems
   private readonly sipButton: SipButton
   private readonly pourControls: PourControls
@@ -160,7 +163,7 @@ export class RoomScene {
     this.visitStore = visitStore
     if (arrival.camera !== null) this.restoreTheCamera(arrival.camera)
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, largestPixelRatioByDefault))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFShadowMap
     this.renderer.shadowMap.autoUpdate = false
@@ -250,6 +253,8 @@ export class RoomScene {
       softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.settingChosen({ hasSoftShadowsInCorners }),
       glowChosen: (hasGlow) => this.settingChosen({ hasGlow }),
       frameRateShownChosen: (isFrameRateShown) => this.settingChosen({ isFrameRateShown }),
+      fullResolutionChosen: (hasFullResolution) => this.settingChosen({ hasFullResolution }),
+      smoothEdgesChosen: (hasSmoothEdges) => this.settingChosen({ hasSmoothEdges }),
       faceFeatureChosen: (faceFeature) => this.settingChosen({ faceFeature }),
       nerdModeChosen: (isNerdModeOn) => this.settingChosen({ isNerdModeOn }),
       temperatureUnitChosen: (temperatureUnit) => this.settingChosen({ temperatureUnit }),
@@ -435,8 +440,36 @@ export class RoomScene {
     this.walker.paintTheBody(this.settings.coatColour)
     this.walker.showTheFace(this.settings.faceFeature)
     this.frameRateCounter.show(this.settings.isFrameRateShown)
+    this.showTheResolution(this.settings.hasFullResolution)
+    this.showSmoothEdges(this.settings.hasSmoothEdges)
     this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
     this.showTheGlow(this.settings.hasGlow)
+  }
+
+  private showTheResolution(isFull: boolean): void {
+    const pixelRatio = isFull ? window.devicePixelRatio : Math.min(window.devicePixelRatio, largestPixelRatioByDefault)
+    if (this.renderer.getPixelRatio() === pixelRatio) return
+    this.renderer.setPixelRatio(pixelRatio)
+    this.log(`the room is drawn at ${pixelRatio} pixels for each point of the page`)
+    this.redrawTheEffectsAtTheNewResolution()
+    this.fitToWindow()
+  }
+
+  private redrawTheEffectsAtTheNewResolution(): void {
+    if (this.softShadowsInCorners !== null) {
+      this.showSoftShadowsInCorners(false)
+      this.showSoftShadowsInCorners(true)
+    }
+    if (this.glow !== null) {
+      this.showTheGlow(false)
+      this.showTheGlow(true)
+    }
+  }
+
+  private showSmoothEdges(isOn: boolean): void {
+    if ((this.edgeSmoothing !== null) === isOn) return
+    this.edgeSmoothing?.dispose()
+    this.edgeSmoothing = isOn ? new EdgeSmoothing(this.renderer) : null
   }
 
   private showSoftShadowsInCorners(isOn: boolean): void {
@@ -533,6 +566,7 @@ export class RoomScene {
     heldItemsCamera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, heldItemsCamera)
     if (this.play.inspectionView !== null) this.drawTheInspectedItemOverTheDimmedRoom()
+    this.edgeSmoothing?.drawOver(this.renderer)
     this.camera.layers.set(roomLayers.room)
   }
 
@@ -632,6 +666,7 @@ export class RoomScene {
     this.renderer.setSize(width, height)
     this.softShadowsInCorners?.setSize(width, height)
     this.glow?.setSize(width, height)
+    this.edgeSmoothing?.fitTo(this.renderer)
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
   }
