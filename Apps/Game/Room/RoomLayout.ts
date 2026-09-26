@@ -117,7 +117,7 @@ export const roomHalfSize = 3
 export const floorCellSize = 0.25
 export const walkerRadius = 0.25
 export const walkerStart: FloorPoint = { x: 1.6, z: 1.8 }
-export const heaterFootprintRadiusMetres = 0.18
+export const heaterPlate = { width: 0.34, depth: 0.3, height: 0.05 }
 
 const puddleOffsetFromTheTeaTableCentre: FloorPoint = { x: -0.2, z: 0.1 }
 const puddleAboveTheSurfaceMetres = 0.002

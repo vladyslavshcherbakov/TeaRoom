@@ -89,3 +89,14 @@ test('kettle_whenPutDownAtTheSinksEdge_staysInHand', () => {
 
   assert.equal(room.state.vessels['kettle']?.location.kind, 'inHand')
 })
+
+test('bowl_overACornerOfTheHeaterPlate_hasNoRoom', () => {
+  const room = new TestRoom()
+  room.walkTo('shelf')
+  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
+  room.walkTo('counter')
+
+  const refusal = whyThereIsNoRoomFor('bowl1', spotOn('counter', onTopOf('counter', -0.76, 0.19)), room.state, quietRoomSurroundings)
+
+  assert.equal(refusal, 'theHeaterIsThere')
+})

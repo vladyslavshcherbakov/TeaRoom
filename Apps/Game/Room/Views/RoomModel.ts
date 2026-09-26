@@ -5,6 +5,7 @@ import {
   furnitureWithId,
   puddleCentreOn,
   puddleRadiusMetres,
+  heaterPlate,
   roomHalfSize,
   turnFacing,
   type Footprint,
@@ -306,7 +307,7 @@ export class RoomModel {
   }
 
   private addHeater(spot: WorldPoint): THREE.Mesh {
-    const plate = this.box('heaterPlate', 0.34, 0.05, 0.3, { x: spot.x, y: spot.y - 0.025, z: spot.z })
+    const plate = this.box('heaterPlate', heaterPlate.width, heaterPlate.height, heaterPlate.depth, { x: spot.x, y: spot.y - heaterPlate.height / 2, z: spot.z })
     plate.material = this.materials.unsharedMaterialFor('heaterPlate')
     this.tag(plate, { isHeater: true })
     const counter = furnitureWithId(this.layout, 'counter')

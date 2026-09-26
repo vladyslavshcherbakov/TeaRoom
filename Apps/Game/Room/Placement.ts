@@ -3,7 +3,7 @@ import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Rit
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { footprintCirclesOf, isTheLidOpen, layoutOf } from './CarriedShapes.ts'
-import { heaterFootprintRadiusMetres, turnedBy, turnOfItemAt, type FloorPoint, type RoomLayout, type SinkBasin } from './RoomLayout.ts'
+import { heaterPlate, turnedBy, turnOfItemAt, type FloorPoint, type RoomLayout, type SinkBasin } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
 const openLidGapMetres = 0.01
@@ -46,7 +46,7 @@ function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: st
     const { footprint } = piece
     const isInsideTheTop = Math.abs(spot.x - footprint.x) <= footprint.width / 2 - radius && Math.abs(spot.z - footprint.z) <= footprint.depth / 2 - radius
     if (!isInsideTheTop) return 'offTheEdge'
-    if (isNear(spot, heaterSpot, radius + heaterFootprintRadiusMetres)) return 'theHeaterIsThere'
+    if (overlapsTheHeater(heaterSpot, spot, radius)) return 'theHeaterIsThere'
     if (spot.placeId === layout.sinkBasin.placeId && overlapsTheSink(layout.sinkBasin, spot, radius)) return 'theSinkIsThere'
   }
   const neighbourCircles = itemsOnSurfaces(state).filter((item) => item.itemId !== movingItemId).flatMap((item) => footprintOf(state, item.itemId, item.spot, layout))
@@ -72,6 +72,13 @@ function lidsLyingBesideTheirItems(state: DeepReadonly<SessionState>, surroundin
 
 function offsetSpot(spot: Spot, offset: FloorPoint): Spot {
   return { ...spot, x: spot.x + offset.x, z: spot.z + offset.z }
+}
+
+function overlapsTheHeater(heaterSpot: Spot, spot: Spot, radius: number): boolean {
+  if (!isNear(spot, heaterSpot, Number.POSITIVE_INFINITY)) return false
+  const nearestX = Math.min(Math.max(spot.x, heaterSpot.x - heaterPlate.width / 2), heaterSpot.x + heaterPlate.width / 2)
+  const nearestZ = Math.min(Math.max(spot.z, heaterSpot.z - heaterPlate.depth / 2), heaterSpot.z + heaterPlate.depth / 2)
+  return Math.hypot(spot.x - nearestX, spot.z - nearestZ) < radius
 }
 
 function overlapsTheSink(sinkBasin: SinkBasin, spot: Spot, radius: number): boolean {
