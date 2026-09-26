@@ -1,4 +1,4 @@
-import { text, textWith, type TextKey } from '../../Texts/Texts.ts'
+import { text, textWith } from '../../Texts/Texts.ts'
 import type { FrameBudgetReport } from '../FrameBudget.ts'
 
 export type SceneCounts = {
@@ -34,7 +34,7 @@ export class FrameBudgetPanel {
 export function linesOf(report: FrameBudgetReport, counts: SceneCounts): readonly string[] {
   return [
     textWith('frameBudget.frame', { framesPerSecond: report.framesPerSecond.toFixed(0), average: report.averageFrameMilliseconds.toFixed(1), longest: report.longestFrameMilliseconds.toFixed(0) }),
-    ...report.millisecondsPerFrameByPhase.map(([phase, milliseconds]) => textWith('frameBudget.phase', { phase: text(`frameBudget.phase.${phase}` as TextKey), milliseconds: milliseconds.toFixed(2) })),
+    ...report.millisecondsPerFrameByPhase.map(([phase, milliseconds]) => textWith('frameBudget.phase', { phase: text(`frameBudget.phase.${phase}`), milliseconds: milliseconds.toFixed(2) })),
     textWith('frameBudget.drawing', { drawCalls: String(counts.drawCallsPerFrame), triangles: String(counts.trianglesPerFrame) }),
     textWith('frameBudget.memory', { geometries: String(counts.geometries), textures: String(counts.textures), programs: String(counts.shaderPrograms) }),
     textWith('frameBudget.counts', { objects: String(counts.sceneObjects), elements: String(counts.pageElements) }),
