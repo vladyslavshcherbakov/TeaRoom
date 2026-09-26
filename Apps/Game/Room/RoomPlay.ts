@@ -246,6 +246,9 @@ export class RoomPlay {
     this.log(`tap on the ${target.furnitureId} while aiming puts the vessel down there`)
     this.endTheAim()
     this.putDownTheChosenItemAt(target.furnitureId, target.point)
+    if (this.choice === null) return
+    this.log(`the vessel stays in hand ${this.choice}, which is no longer chosen, as after any end of an aim`)
+    this.choice = null
   }
 
   handHoldingWhatIsPressed(target: RoomTapTarget): HandIndex | null {

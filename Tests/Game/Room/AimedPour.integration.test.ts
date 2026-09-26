@@ -132,6 +132,17 @@ test('kettle_whenASurfaceIsTappedWhileAiming_isPutDownThere', () => {
   assert.deepEqual(withoutTheTurn(room.state.vessels['kettle']?.location), { kind: 'onSurface', spot: { placeId: 'counter', x: -2, y: 0.9, z: -2.5 } })
 })
 
+test('kettle_whenASpotTakenByTheBowlIsTappedWhileAiming_returnsToItsHandThatIsNoLongerChosen', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+
+  room.play.aimingTapped({ kind: 'surface', furnitureId: 'counter', point: onTheCounter })
+
+  assert.equal(room.play.aimedPourView, null)
+  assert.equal(room.state.keeper.hands[0], 'kettle')
+  assert.equal(room.play.chosenHandIndex, null)
+})
+
 test('kettle_whenTheBowlIsTappedWhileAiming_returnsToItsHand', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
