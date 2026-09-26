@@ -6,13 +6,14 @@ export class FrameRateCounter {
   private frameRate: FrameRate | null = null
 
   constructor(container: HTMLElement) {
-    this.element = document.createElement('div')
+    this.element = container.ownerDocument.createElement('div')
     this.element.className = 'frame-rate'
     this.element.hidden = true
     container.append(this.element)
   }
 
   show(isShown: boolean): void {
+    if (isShown === !this.element.hidden) return
     this.frameRate = isShown ? new FrameRate() : null
     this.element.hidden = !isShown
     this.element.textContent = ''
