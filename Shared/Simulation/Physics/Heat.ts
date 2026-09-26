@@ -3,7 +3,7 @@ import type { VesselDefinition } from '../Definitions/VesselDefinition.ts'
 import { isEmpty, smallestMeaningfulVolumeMl, type Liquid } from './Liquid.ts'
 
 const boilingPointC = 100
-const shellHeatsThroughSeconds = 20
+const shellHeatsThroughSeconds = 60
 const shellCoolsDownSeconds = 60
 const shellTooHotToHoldFrom = 0.2
 const joulesInAKilowattHour = 3_600_000

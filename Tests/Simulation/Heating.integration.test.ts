@@ -423,6 +423,17 @@ test('thermos_afterHalfAMinuteOnAWorkingHeater_isTooHotToPickUp', () => {
   assert.equal(ritual.state.heater.itemIdOnTop, 'thermos')
 })
 
+test('thermos_afterTenSecondsOnAWorkingHeater_canStillBePickedUp', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'switchHeaterOn' })
+  ritual.wait(10)
+
+  ritual.do({ type: 'pickUp', itemId: 'thermos' })
+
+  assert.equal(ritual.state.heater.itemIdOnTop, null)
+})
+
 test('thermosLid_whenTheThermosIsRedHot_staysClosed', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
