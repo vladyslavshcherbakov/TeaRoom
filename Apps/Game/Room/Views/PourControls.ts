@@ -9,20 +9,18 @@ export type PourControlsListener = {
 
 const hintSeenStorageKey = 'aimHintSeen'
 const svgNamespace = 'http://www.w3.org/2000/svg'
-const leatherLight = '#5a2418'
-const leatherDark = '#3b140c'
-const gold = '#c9a24a'
-const paleGold = '#f1d98c'
-const parchmentLight = '#f7ecd2'
-const parchmentDark = '#e2c996'
-const clayLight = '#d08a58'
-const clayDark = '#7a3a1e'
-const clayOutline = '#4a2012'
-const streamLight = '#d9eef8'
-const streamDark = '#7fb6d6'
-const glazeLight = '#fbf4e8'
-const glazeDark = '#cdb99a'
-const teaColour = '#b8862e'
+const ruriLight = '#4a7bd8'
+const ruriMiddle = '#1f3f95'
+const ruriDeep = '#132a68'
+const ruriPaleRun = '#5c86d6'
+const kintsugiPale = '#f6e3a0'
+const kintsugiGold = '#d4a640'
+const kintsugiDeep = '#9c7424'
+const porcelainLight = '#fbf7ef'
+const porcelainShade = '#d8cfc0'
+const streamLight = '#f3fbff'
+const streamShade = '#a9d4ee'
+const teaColour = '#c8922e'
 
 export class PourControls {
   private readonly tiltButton: HTMLButtonElement
@@ -77,73 +75,73 @@ function rememberHintSeenIfStorageAllows(): void {
 }
 
 function pouringIcon(): SVGSVGElement {
-  const icon = medallion('pour', 64)
-  const tiltedKettle = shape('g', { transform: 'rotate(32 25 27)' })
+  const icon = glazedDisc('pour')
+  const tiltedKettle = shape('g', { transform: 'rotate(28 25 29)' })
   tiltedKettle.append(
-    shape('path', { d: 'M13 21 Q3 27 12 36', fill: 'none', stroke: clayOutline, 'stroke-width': '3.4', 'stroke-linecap': 'round' }),
-    shape('path', { d: 'M34 30 Q40 27 44 19', fill: 'none', stroke: clayOutline, 'stroke-width': '5', 'stroke-linecap': 'round' }),
-    shape('path', { d: 'M34 30 Q40 27 44 19', fill: 'none', stroke: clayLight, 'stroke-width': '2.6', 'stroke-linecap': 'round' }),
-    shape('ellipse', { cx: '24', cy: '29', rx: '12.5', ry: '10.5', fill: 'url(#pour-clay)', stroke: clayOutline, 'stroke-width': '1.6' }),
-    shape('path', { d: 'M15 23 Q24 18 33 23', fill: 'none', stroke: gold, 'stroke-width': '1.4', 'stroke-linecap': 'round' }),
-    shape('ellipse', { cx: '19.5', cy: '25.5', rx: '4', ry: '2.2', fill: '#ffffff', opacity: '0.35', transform: 'rotate(-25 19.5 25.5)' }),
-    shape('ellipse', { cx: '24', cy: '19.5', rx: '6.5', ry: '2.2', fill: clayDark, stroke: clayOutline, 'stroke-width': '1.2' }),
-    shape('circle', { cx: '24', cy: '16.8', r: '2.2', fill: gold, stroke: clayOutline, 'stroke-width': '1' }),
+    shape('path', { d: 'M15.5 23 Q7.5 29 15 36', fill: 'none', stroke: porcelainShade, 'stroke-width': '3', 'stroke-linecap': 'round' }),
+    shape('path', { d: 'M32.5 27.5 Q37.5 27 40.8 21.2 Q42.6 20.4 44.2 22.4 Q41.5 32 34 35 Z', fill: 'url(#pour-porcelain)' }),
+    shape('ellipse', { cx: '25', cy: '30', rx: '11', ry: '9.5', fill: 'url(#pour-porcelain)' }),
+    shape('path', { d: 'M18 21.8 Q25 16.5 32 21.8 Z', fill: 'url(#pour-porcelain)' }),
+    shape('circle', { cx: '25', cy: '17.6', r: '2', fill: 'url(#pour-kintsugi)' }),
+    shape('path', { d: 'M14.4 28 Q25 33.5 35.6 28', fill: 'none', stroke: 'url(#pour-kintsugi)', 'stroke-width': '1.1', 'stroke-linecap': 'round' }),
+    shape('ellipse', { cx: '20.5', cy: '26', rx: '3.6', ry: '1.9', fill: '#ffffff', opacity: '0.8', transform: 'rotate(-28 20.5 26)' }),
   )
-  const painting = shape('g', { transform: 'translate(3.5 3) scale(0.9)' })
-  painting.append(
-    shape('path', { d: 'M44.5 31 Q45.5 39 45.5 48', fill: 'none', stroke: 'url(#pour-stream)', 'stroke-width': '3.2', 'stroke-linecap': 'round' }),
+  icon.append(
+    shape('path', { d: 'M44.6 30.5 Q45.4 38 45.4 46.5', fill: 'none', stroke: 'url(#pour-stream)', 'stroke-width': '2.4', 'stroke-linecap': 'round' }),
     tiltedKettle,
-    shape('path', { d: 'M31 48 H60 Q57.5 59.5 45.5 59.5 Q33.5 59.5 31 48 Z', fill: 'url(#pour-glaze)', stroke: clayOutline, 'stroke-width': '1.6', 'stroke-linejoin': 'round' }),
-    shape('ellipse', { cx: '45.5', cy: '48', rx: '14.5', ry: '2.6', fill: teaColour, stroke: clayOutline, 'stroke-width': '1.2' }),
-    shape('ellipse', { cx: '45.5', cy: '48', rx: '3.2', ry: '0.9', fill: streamLight, opacity: '0.8' }),
-    shape('path', { d: 'M34.5 52 Q37 56.5 42 57.8', fill: 'none', stroke: '#ffffff', 'stroke-width': '1.3', 'stroke-linecap': 'round', opacity: '0.7' }),
+    shape('path', { d: 'M31.5 47 H59.3 Q57 57.8 45.4 57.8 Q33.8 57.8 31.5 47 Z', fill: 'url(#pour-porcelain)' }),
+    shape('ellipse', { cx: '45.4', cy: '47', rx: '13.9', ry: '2.3', fill: teaColour, stroke: 'url(#pour-kintsugi)', 'stroke-width': '0.9' }),
+    shape('path', { d: 'M35 51 Q37.5 55.3 42.5 56.4', fill: 'none', stroke: '#ffffff', 'stroke-width': '1.2', 'stroke-linecap': 'round', opacity: '0.85' }),
   )
-  icon.append(painting)
+  icon.append(gloss('pour'))
   return icon
 }
 
 function informationIcon(): SVGSVGElement {
-  const icon = medallion('why', 64)
+  const icon = glazedDisc('why')
   icon.append(
-    shape('circle', { cx: '32', cy: '32', r: '19', fill: 'none', stroke: gold, 'stroke-width': '1.2', 'stroke-dasharray': '1.5 3' }),
-    shape('circle', { cx: '33', cy: '19.5', r: '3.6', fill: 'url(#why-gilding)', stroke: leatherDark, 'stroke-width': '0.8' }),
-    shape('path', { d: 'M26 28 Q31 25.5 35.5 26.5 L32 43 Q31.2 46.5 34.5 45 L37.5 43.5 L37.8 45 Q33 49 29.3 48.2 Q26.4 47.5 27.3 43.5 L30 31 Q28 30.5 26.4 30.6 Z', fill: 'url(#why-gilding)', stroke: leatherDark, 'stroke-width': '0.8', 'stroke-linejoin': 'round' }),
+    shape('circle', { cx: '32.6', cy: '19.6', r: '3.6', fill: ruriDeep, opacity: '0.45' }),
+    shape('rect', { x: '29.6', y: '27.1', width: '6', height: '20', rx: '3', fill: ruriDeep, opacity: '0.45' }),
+    shape('circle', { cx: '32', cy: '19', r: '3.6', fill: 'url(#why-porcelain)' }),
+    shape('rect', { x: '29', y: '26.5', width: '6', height: '20', rx: '3', fill: 'url(#why-porcelain)' }),
+    gloss('why'),
   )
   return icon
 }
 
-function medallion(name: 'pour' | 'why', size: number): SVGSVGElement {
+function glazedDisc(name: 'pour' | 'why'): SVGSVGElement {
   const icon = document.createElementNS(svgNamespace, 'svg')
-  icon.setAttribute('viewBox', `0 0 ${size} ${size}`)
+  icon.setAttribute('viewBox', '0 0 64 64')
   icon.setAttribute('aria-hidden', 'true')
   const definitions = shape('defs', {})
   definitions.append(
-    radialGradient(`${name}-leather`, '38%', '30%', [[0, leatherLight], [1, leatherDark]]),
-    radialGradient(`${name}-parchment`, '45%', '40%', [[0.55, parchmentLight], [1, parchmentDark]]),
-    radialGradient('pour-clay', '35%', '30%', [[0, clayLight], [1, clayDark]]),
-    linearGradient('pour-stream', [[0, streamLight], [1, streamDark]]),
-    linearGradient('pour-glaze', [[0, glazeLight], [1, glazeDark]]),
-    linearGradient('why-gilding', [[0, paleGold], [0.55, gold], [1, '#9a7426']]),
+    radialGradient(`${name}-glaze`, '40%', '32%', '72%', [[0, ruriLight], [0.5, ruriMiddle], [0.86, ruriDeep], [1, ruriPaleRun]]),
+    linearGradient(`${name}-gloss`, '0', '0', '0', '1', [[0, 'rgba(255,255,255,0.75)'], [1, 'rgba(255,255,255,0)']]),
+    linearGradient(`${name}-kintsugi`, '0', '0', '1', '1', [[0, kintsugiPale], [0.5, kintsugiGold], [1, kintsugiDeep]]),
+    radialGradient(`${name}-porcelain`, '35%', '30%', '80%', [[0, porcelainLight], [0.7, porcelainLight], [1, porcelainShade]]),
+    linearGradient(`${name}-stream`, '0', '0', '0', '1', [[0, streamLight], [1, streamShade]]),
   )
-  const centre = size / 2
-  const isPour = name === 'pour'
   icon.append(
     definitions,
-    shape('circle', { cx: `${centre}`, cy: `${centre}`, r: `${centre - 0.5}`, fill: `url(#${name}-leather)` }),
-    shape('circle', { cx: `${centre}`, cy: `${centre}`, r: `${centre - 2.5}`, fill: 'none', stroke: gold, 'stroke-width': '1.6' }),
-    shape('circle', { cx: `${centre}`, cy: `${centre}`, r: `${centre - 5}`, fill: isPour ? `url(#${name}-parchment)` : 'none', stroke: gold, 'stroke-width': '0.8' }),
+    shape('circle', { cx: '32', cy: '32', r: '30.6', fill: `url(#${name}-glaze)` }),
+    shape('circle', { cx: '32', cy: '32', r: '30.6', fill: 'none', stroke: `url(#${name}-kintsugi)`, 'stroke-width': '2' }),
+    shape('circle', { cx: '32', cy: '32', r: '28.6', fill: 'none', stroke: '#ffffff', 'stroke-width': '0.6', opacity: '0.25' }),
   )
   return icon
 }
 
-function radialGradient(id: string, centreX: string, centreY: string, stops: readonly (readonly [number, string])[]): SVGElement {
-  const gradient = shape('radialGradient', { id, cx: centreX, cy: centreY, r: '75%' })
+function gloss(name: 'pour' | 'why'): SVGElement {
+  return shape('ellipse', { cx: '25', cy: '15', rx: '17', ry: '8', fill: `url(#${name}-gloss)`, transform: 'rotate(-24 25 15)', opacity: '0.7' })
+}
+
+function radialGradient(id: string, centreX: string, centreY: string, radius: string, stops: readonly (readonly [number, string])[]): SVGElement {
+  const gradient = shape('radialGradient', { id, cx: centreX, cy: centreY, r: radius })
   gradient.append(...stops.map(([offset, colour]) => shape('stop', { offset: `${offset}`, 'stop-color': colour })))
   return gradient
 }
 
-function linearGradient(id: string, stops: readonly (readonly [number, string])[]): SVGElement {
-  const gradient = shape('linearGradient', { id, x1: '0', y1: '0', x2: '0.3', y2: '1' })
+function linearGradient(id: string, fromX: string, fromY: string, toX: string, toY: string, stops: readonly (readonly [number, string])[]): SVGElement {
+  const gradient = shape('linearGradient', { id, x1: fromX, y1: fromY, x2: toX, y2: toY })
   gradient.append(...stops.map(([offset, colour]) => shape('stop', { offset: `${offset}`, 'stop-color': colour })))
   return gradient
 }
