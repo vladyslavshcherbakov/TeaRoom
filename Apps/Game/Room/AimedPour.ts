@@ -45,6 +45,7 @@ export class AimedPour {
   private target: PourTarget
   private readonly spoutDirection: FloorPoint
   private readonly spoutArea: SpoutArea
+  private readonly spillArea: SpoutArea
   private spout: FloorPoint
   private tiltDegrees = 0
   private isTiltHeld = false
@@ -53,7 +54,7 @@ export class AimedPour {
   private lastFingerPoint: FloorPoint | null = null
   private lastSentPour: SentPour = unsentPour
 
-  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, target: PourTarget, candidates: readonly PourTarget[], spoutDirection: FloorPoint, spoutArea: SpoutArea) {
+  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, target: PourTarget, candidates: readonly PourTarget[], spoutDirection: FloorPoint, spoutArea: SpoutArea, spillArea: SpoutArea) {
     this.ritual = ritual
     this.log = log
     this.sourceId = sourceId
@@ -61,6 +62,7 @@ export class AimedPour {
     this.candidates = candidates
     this.spoutDirection = spoutDirection
     this.spoutArea = spoutArea
+    this.spillArea = spillArea
     this.spout = insideTheArea({ x: target.spot.x - spoutDirection.x * firstSpoutOffsetFromTargetMetres, z: target.spot.z - spoutDirection.z * firstSpoutOffsetFromTargetMetres }, spoutArea)
     log(`aiming ${sourceId} at ${target.id}, the spout starts ${firstSpoutOffsetFromTargetMetres} m to its left on the screen, pointing (${spoutDirection.x.toFixed(2)}, ${spoutDirection.z.toFixed(2)}), ${candidates.map((candidate) => candidate.id).join(', ')} can be poured into here`)
   }
@@ -145,7 +147,8 @@ export class AimedPour {
   }
 
   private spotUnderTheSpout(): Spot {
-    return { placeId: this.target.spot.placeId, x: this.spout.x, y: this.target.spot.y, z: this.spout.z }
+    const landing = insideTheArea(this.spout, this.spillArea)
+    return { placeId: this.target.spot.placeId, x: landing.x, y: this.target.spot.y, z: landing.z }
   }
 
   private onTargetFraction(): number {

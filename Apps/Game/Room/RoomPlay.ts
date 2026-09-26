@@ -557,7 +557,7 @@ export class RoomPlay {
     this.openTheLidsThePourNeeds(source, target)
     const spoutDirection = this.listener.screenRightOnTheFloor() ?? screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
-    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection, this.spoutAreaOver(target.location.spot.placeId, spoutDirection))
+    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection, this.spoutAreaInsideTheWalls(spoutDirection), this.topOf(target.location.spot.placeId))
   }
 
   private openTheLidsThePourNeeds(source: DeepReadonly<VesselState>, target: DeepReadonly<VesselState>): void {
@@ -571,16 +571,20 @@ export class RoomPlay {
     }
   }
 
-  private spoutAreaOver(placeId: string, spoutDirection: FloorPoint): SpoutArea {
+  private spoutAreaInsideTheWalls(spoutDirection: FloorPoint): SpoutArea {
     const insideTheWalls = roomHalfSize - aimedVesselAwayFromTheWallsMetres
-    const footprint = this.layout.furniture.find((piece) => piece.id === placeId)?.footprint ?? { x: 0, z: 0, width: roomHalfSize * 2, depth: roomHalfSize * 2 }
     const bodyBehindTheSpout = { x: -spoutDirection.x * aimedVesselReachMetres, z: -spoutDirection.z * aimedVesselReachMetres }
     return {
-      minX: Math.max(-insideTheWalls, -insideTheWalls - bodyBehindTheSpout.x, footprint.x - footprint.width / 2),
-      maxX: Math.min(insideTheWalls, insideTheWalls - bodyBehindTheSpout.x, footprint.x + footprint.width / 2),
-      minZ: Math.max(-insideTheWalls, -insideTheWalls - bodyBehindTheSpout.z, footprint.z - footprint.depth / 2),
-      maxZ: Math.min(insideTheWalls, insideTheWalls - bodyBehindTheSpout.z, footprint.z + footprint.depth / 2),
+      minX: Math.max(-insideTheWalls, -insideTheWalls - bodyBehindTheSpout.x),
+      maxX: Math.min(insideTheWalls, insideTheWalls - bodyBehindTheSpout.x),
+      minZ: Math.max(-insideTheWalls, -insideTheWalls - bodyBehindTheSpout.z),
+      maxZ: Math.min(insideTheWalls, insideTheWalls - bodyBehindTheSpout.z),
     }
+  }
+
+  private topOf(placeId: string): SpoutArea {
+    const footprint = this.layout.furniture.find((piece) => piece.id === placeId)?.footprint ?? { x: 0, z: 0, width: roomHalfSize * 2, depth: roomHalfSize * 2 }
+    return { minX: footprint.x - footprint.width / 2, maxX: footprint.x + footprint.width / 2, minZ: footprint.z - footprint.depth / 2, maxZ: footprint.z + footprint.depth / 2 }
   }
 
   private pourTargetsBeside(source: DeepReadonly<VesselState>, targetSpot: Spot): PourTarget[] {

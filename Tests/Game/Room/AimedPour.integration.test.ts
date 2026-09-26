@@ -168,13 +168,24 @@ test('spout_whenDraggedFarPastTheCornerOfTheRoom_keepsTheKettleFiveCentimetresFr
   assertNear(spout?.z ?? 0, -2.95, 0.001)
 })
 
-test('spout_whenDraggedFarPastTheFrontOfTheCounter_staysOverItsFrontEdge', () => {
+test('spout_whenDraggedPastTheFrontOfTheCounter_leavesTheCounter', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
-  room.moveTheSpout({ x: 0, z: 10 })
+  room.moveTheSpout({ x: 0, z: 1 })
 
-  assertNear(room.play.aimedPourView?.spout.z ?? 0, -2.3, 0.001)
+  assert.ok((room.play.aimedPourView?.spout.z ?? 0) > -2)
+})
+
+test('pour_withTheSpoutPastTheFrontOfTheCounter_puddlesOnItsFrontEdge', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+  room.moveTheSpout({ x: 0, z: 1 })
+
+  room.play.tiltPressed()
+  room.advance(2)
+
+  assertNear(room.state.puddles['counter']?.spilledAround?.z ?? Infinity, -2.3, 0.001)
 })
 
 test('pour_whenTheSpoutMovesOverBowlsOnTwoShelfBoards_staysOnTheBoardOfItsTarget', () => {
