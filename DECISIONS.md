@@ -184,6 +184,10 @@ The plan is in `docs/roadmap.md`. Its version in progress collects what is built
 
 **The game's tests are type-checked with the game, and `Apps/tsconfig.json` sets its own empty `exclude`.** `Tests/Game` builds Three.js views, which need the browser's types, so the root `tsconfig.json` leaves it out and `Apps/tsconfig.json` takes it in. A config that extends another inherits its `exclude`, so without its own the game's tests were type-checked by neither config, while Node still ran them.
 
+**The arrange helpers of `TestRitual` throw on a refusal, and name the command and the reason.** A helper that ignored a refused command let a test of "nothing happened" pass when its own setup had failed, and a refused scoop made one helper loop forever.
+
+**The test kettle's open lid doubles its cooling.** With every lid in `Tests/Support/TestCatalog.ts` cooling at one rate open and closed, no test could show that an open lid loses heat faster, and a rule that ignored the lid passed.
+
 ### Scripts/ and .github/
 
 **The room is built by Vite.** `Scripts/build.sh` builds it to the root of the site with no config file: the command line says everything. `import.meta.env.DEV` tells the game whether it is a development build.
