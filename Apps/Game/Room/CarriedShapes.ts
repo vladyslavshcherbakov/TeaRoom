@@ -9,7 +9,7 @@ export type ShapedItem = {
   readonly shape: CarriedShape
 }
 
-const shapeByVesselDefinitionId: Readonly<Record<string, CarriedShape>> = {
+export const shapeByVesselDefinitionId: Readonly<Record<string, CarriedShape>> = {
   clayKettle: 'kettle',
   thermos: 'thermos',
   teaBowl: 'bowl',
@@ -63,6 +63,5 @@ export function layoutOf(state: DeepReadonly<SessionState>, itemId: string): Car
 }
 
 export function isTheLidOpen(state: DeepReadonly<SessionState>, itemId: string): boolean {
-  const lid = layoutOf(state, itemId)?.lid ?? null
-  return lid !== null && state.vessels[itemId]?.isLidOpen === true
+  return state.vessels[itemId]?.isLidOpen === true
 }
