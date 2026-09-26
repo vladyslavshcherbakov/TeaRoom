@@ -50,18 +50,18 @@ test('thermostat_startedUnderColdWater_heatsItToTheTargetAndStops', () => {
 
 test('thermostat_whileTheWaterIsLessThanTwoDegreesBelowTheTarget_keepsThePlateCold', () => {
   const ritual = kettleOnTheHeaterWithTheThermostatAt(60, testCatalog({ kettle: kettleCoolingPerSecond }))
-  waitUntil(ritual, () => !ritual.state.heater.isOn)
+  ritual.waitUntil(() => !ritual.state.heater.isOn)
 
-  waitUntil(ritual, () => ritual.vessel('kettle').liquid.temperatureC < 58.5)
+  ritual.waitUntil(() => ritual.vessel('kettle').liquid.temperatureC < 58.5)
 
   assert.equal(ritual.state.heater.isOn, false)
 })
 
 test('thermostat_onceTheWaterIsTwoDegreesBelowTheTarget_heatsAgain', () => {
   const ritual = kettleOnTheHeaterWithTheThermostatAt(60, testCatalog({ kettle: kettleCoolingPerSecond }))
-  waitUntil(ritual, () => !ritual.state.heater.isOn)
+  ritual.waitUntil(() => !ritual.state.heater.isOn)
 
-  waitUntil(ritual, () => ritual.vessel('kettle').liquid.temperatureC <= 58)
+  ritual.waitUntil(() => ritual.vessel('kettle').liquid.temperatureC <= 58)
   ritual.wait(0.05)
 
   assert.equal(ritual.state.heater.isOn, true)
@@ -211,11 +211,6 @@ function kettleOnTheHeaterWithTheThermostatAt(targetC: number, catalog = testCat
   ritual.do({ type: 'setTheThermostat', targetC })
   ritual.do({ type: 'startTheThermostat' })
   return ritual
-}
-
-function waitUntil(ritual: TestRitual, isDone: () => boolean): void {
-  for (let step = 0; step < 20_000 && !isDone(); step += 1) ritual.wait(0.05)
-  assert.ok(isDone(), 'the condition was never met')
 }
 
 function everySecondFor(ritual: TestRitual, seconds: number, read: () => number): number[] {

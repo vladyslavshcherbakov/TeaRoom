@@ -137,6 +137,14 @@ export class TestRitual {
     return this.waitUntil(() => this.vessel(cupId).liquid.temperatureC <= temperatureC)
   }
 
+  waitUntil(isDone: () => boolean): readonly RitualEvent[] {
+    return this.waitStepByStep(() => isDone(), 'the condition was not met')
+  }
+
+  waitFor(eventType: RitualEvent['type']): readonly RitualEvent[] {
+    return this.waitStepByStep((eventsSoFar) => eventsSoFar.some((event) => event.type === eventType), `no ${eventType} happened`)
+  }
+
   private brewASpoonfulOf(caddyId: string, cupId: string): void {
     this.pour('kettle', cupId, secondsBetweenTheMixedTeas)
     this.openTheLid(caddyId)
@@ -152,6 +160,17 @@ export class TestRitual {
     return this.vessel(vesselId).isLidOpen ? [] : this.doWithoutARefusal({ type: 'openVesselLid', vesselId })
   }
 
+  private waitStepByStep(isDone: (eventsSoFar: readonly RitualEvent[]) => boolean, whatWasNotMet: string): readonly RitualEvent[] {
+    const events: RitualEvent[] = []
+    let waitedSeconds = 0
+    while (!isDone(events)) {
+      if (waitedSeconds > longestWaitSeconds) throw new Error(`${whatWasNotMet} within ${longestWaitSeconds} s`)
+      events.push(...this.wait(RitualSession.simulationStepSeconds))
+      waitedSeconds += RitualSession.simulationStepSeconds
+    }
+    return events
+  }
+
   private doWithoutARefusal(command: Command): readonly RitualEvent[] {
     const events = this.do(command)
     const [refusal] = eventsOfType(events, 'actionRefused')
@@ -159,16 +178,7 @@ export class TestRitual {
     return events
   }
 
-  private waitUntil(isDone: () => boolean): readonly RitualEvent[] {
-    const events: RitualEvent[] = []
-    let waitedSeconds = 0
-    while (!isDone()) {
-      if (waitedSeconds > longestWaitSeconds) throw new Error(`the condition was not met within ${longestWaitSeconds} s`)
-      events.push(...this.wait(RitualSession.simulationStepSeconds))
-      waitedSeconds += RitualSession.simulationStepSeconds
-    }
-    return events
-  }
+
 }
 
 export function eventsOfType<Type extends RitualEvent['type']>(

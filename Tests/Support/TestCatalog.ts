@@ -1,4 +1,5 @@
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
+import type { HeaterDefinition } from '../../Shared/Simulation/Definitions/HeaterDefinition.ts'
 import type { RoomVessel, Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import type { TeaDefinition } from '../../Shared/Simulation/Definitions/TeaDefinition.ts'
 
@@ -165,4 +166,10 @@ export function withMoreCaddies(catalog: Catalog, teaIdByCaddyId: Readonly<Recor
   if (room === undefined) throw new Error('the test catalog lost its room')
   const caddies = Object.entries(teaIdByCaddyId).map(([id, teaId], index): RoomVessel => ({ id, definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId, grams: gramsInEveryCaddy }, startsAt: onTheTable(12 + index) }))
   return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, vessels: [...room.vessels, ...caddies] } } }
+}
+
+export function catalogWithHeaterChanges(changes: Partial<HeaterDefinition>, catalog: Catalog = testCatalog()): Catalog {
+  const heater = catalog.heaters['testHeater']
+  if (heater === undefined) throw new Error('the test catalog lost its heater')
+  return { ...catalog, heaters: { ...catalog.heaters, testHeater: { ...heater, ...changes } } }
 }
