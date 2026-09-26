@@ -23,6 +23,7 @@ export type CarriedItemsScene = {
 export type HeldInView = {
   readonly camera: THREE.PerspectiveCamera
   readonly chosenHandIndex: HandIndex | null
+  readonly isFirstPerson: boolean
 }
 
 export type InspectedInView = {

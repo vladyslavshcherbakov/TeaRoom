@@ -305,7 +305,7 @@ export class RoomScene {
     this.sky.show(daylight, isFirstPerson, this.camera.position)
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
-    const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
+    const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex, isFirstPerson }
     const inspection = this.play.inspectionView
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null })
