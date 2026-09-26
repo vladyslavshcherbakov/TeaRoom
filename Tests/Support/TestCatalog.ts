@@ -24,11 +24,13 @@ const testGreen: TeaDefinition = {
 
 const testBlack: TeaDefinition = { ...testGreen, id: 'testBlack', balancedStrength: { lowest: 70, highest: 90 } }
 
+const testWhite: TeaDefinition = { ...testGreen, id: 'testWhite', balancedStrength: { lowest: 20, highest: 50 } }
+
 const gramsInEveryCaddy = 50
 
 export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
   return {
-    teas: { testGreen, testBlack },
+    teas: { testGreen, testBlack, testWhite },
     vessels: {
       testKettle: {
         id: 'testKettle',

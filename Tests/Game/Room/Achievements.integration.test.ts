@@ -3,6 +3,7 @@ import test from 'node:test'
 import { Achievements, achievementsOutOfReach, type AchievementId, type AchievementRecord, type AchievementStorage } from '../../../Apps/Game/Room/Achievements.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { TasteVerdict } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
+import { testCatalog, withMoreCaddies } from '../../Support/TestCatalog.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
 
 test('achievement_ofASpoonCrumbledTwice_isAnnouncedOnce', () => {
@@ -192,16 +193,36 @@ test('achievement_whenTheIdleTapIsStillRunning_isNotUnlockedBeforeItIsTurnedOff'
   assert.deepEqual(room.announced, [])
 })
 
-test('dimmedAchievements_whenTheRoomOpensWithTheProphecy_areNone', () => {
+test('dimmedAchievements_whenTheQuietRoomOpensWithTheProphecy_areOnlyGourmetForItsOneCaddy', () => {
   const room = new AchievementsInTheRoom()
 
-  assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: true })], [])
+  assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: true })], ['gourmet'])
+})
+
+test('achievement_ofAVesselHoldingThreeTeas_isGourmet', () => {
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack', whiteCaddy: 'testWhite' }))
+  const room = new AchievementsInTheRoom()
+  ritual.mixInTheThermos(['caddy', 'blackCaddy', 'whiteCaddy'])
+
+  room.achievements.worldAdvanced(ritual.state)
+
+  assert.deepEqual(room.announced, ['gourmet'])
+})
+
+test('achievement_ofAVesselHoldingTwoTeas_isNotGourmet', () => {
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  const room = new AchievementsInTheRoom()
+  ritual.mixInTheThermos(['caddy', 'blackCaddy'])
+
+  room.achievements.worldAdvanced(ritual.state)
+
+  assert.deepEqual(room.announced, [])
 })
 
 test('dimmedAchievements_inARoomWithoutTheProphecy_includeTheDelphicOracle', () => {
   const room = new AchievementsInTheRoom()
 
-  assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: false })], ['delphicOracle'])
+  assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: false })], ['delphicOracle', 'gourmet'])
 })
 
 test('dimmedAchievements_whenTheCaddyIsWashedOut_includeEveryAchievementThatNeedsLeaves', () => {
@@ -210,7 +231,7 @@ test('dimmedAchievements_whenTheCaddyIsWashedOut_includeEveryAchievementThatNeed
 
   const outOfReach = achievementsOutOfReach(room.ritual.state, { hasTheProphecy: true })
 
-  assert.deepEqual([...outOfReach].sort(), ['died', 'perfectTea', 'teaBrewedInTheBowl'])
+  assert.deepEqual([...outOfReach].sort(), ['died', 'gourmet', 'perfectTea', 'teaBrewedInTheBowl'])
 })
 
 test('achievements_unlockedInAnEarlierVisit_areStillUnlocked', () => {

@@ -1,3 +1,4 @@
+import { shareOfTheStrengthByTeaId, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -23,6 +24,7 @@ export const achievementIds = [
   'shiva',
   'died',
   'delphicOracle',
+  'gourmet',
 ] as const
 
 export type AchievementId = (typeof achievementIds)[number]
@@ -52,6 +54,8 @@ type HeaterSwitchedOff = Extract<RitualEvent, { readonly type: 'heaterSwitchedOf
 
 const longRunSeconds = 120
 const puddlesWipedForOcd = 2
+const teasInOneVesselForGourmet = 3
+const shareOfTheStrengthThatCountsATea = 0.1
 
 const achievementsThatNeedLeaves: readonly AchievementId[] = ['perfectTea', 'teaBrewedInTheBowl']
 
@@ -119,6 +123,7 @@ export class Achievements {
 
   worldAdvanced(state: DeepReadonly<SessionState>): void {
     this.forgetPuddlesThatAreGone(state)
+    this.unlockGourmetForAVesselOfEnoughTeas(state)
   }
 
   reset(): void {
@@ -162,6 +167,15 @@ export class Achievements {
     }
   }
 
+  private unlockGourmetForAVesselOfEnoughTeas(state: DeepReadonly<SessionState>): void {
+    if (this.isUnlocked('gourmet')) return
+    for (const vessel of Object.values(state.vessels)) {
+      const teaIds = teasThatCountIn(vessel.liquid)
+      if (teaIds.length < teasInOneVesselForGourmet) continue
+      return this.unlock('gourmet', `${vessel.id} holds a liquid of ${teaIds.join(', ')}, each giving at least ${shareOfTheStrengthThatCountsATea * 100}% of its strength`)
+    }
+  }
+
   private unlock(id: AchievementId, reason: string): void {
     if (this.record.unlocked.includes(id)) return
     this.keep({ ...this.record, unlocked: [...this.record.unlocked, id] })
@@ -183,7 +197,16 @@ export function achievementsOutOfReach(state: DeepReadonly<SessionState>, room: 
   if (leafGramsInTheCaddies + state.spoon.grams === 0) outOfReach.add('died')
   if (leafGramsInTheCaddies + leafGramsElsewhere === 0) for (const id of achievementsThatNeedLeaves) outOfReach.add(id)
   if (state.spoon.location.kind === 'gone') outOfReach.add('spoonBurnt')
+  if (teasInTheCaddiesOf(state).size < teasInOneVesselForGourmet) outOfReach.add('gourmet')
   return outOfReach
+}
+
+function teasInTheCaddiesOf(state: DeepReadonly<SessionState>): ReadonlySet<string> {
+  return new Set(Object.values(state.vessels).flatMap((vessel) => (carriedShapeOf(state, vessel.id) === 'caddy' && vessel.leaves !== null ? [vessel.leaves.teaId] : [])))
+}
+
+function teasThatCountIn(liquid: Liquid): readonly string[] {
+  return Object.entries(shareOfTheStrengthByTeaId(liquid)).filter(([, share]) => share >= shareOfTheStrengthThatCountsATea).map(([teaId]) => teaId)
 }
 
 function achievementsOf(event: RitualEvent, state: DeepReadonly<SessionState>): readonly AchievementId[] {
