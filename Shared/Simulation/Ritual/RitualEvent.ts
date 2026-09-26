@@ -111,7 +111,7 @@ export type RitualEvent =
   | { readonly type: 'clothLaidInThePuddle'; readonly clothId: string }
   | { readonly type: 'burntClothWashedBackToNew'; readonly clothId: string }
   | { readonly type: 'spoonCrumbled'; readonly gramsLost: number }
-  | { readonly type: 'boiledDry'; readonly vesselId: string }
+  | { readonly type: 'boiledDry'; readonly vesselId: string; readonly wasFullAndOnlyBoiledDown: boolean }
   | { readonly type: 'metalGlowsTooHotToHold'; readonly vesselId: string }
   | { readonly type: 'clothTakenOffTheHeater'; readonly clothId: string; readonly charring: number }
   | { readonly type: 'ritualFinished' }

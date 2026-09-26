@@ -22,6 +22,7 @@ export type VesselState = {
   leaves: Leaves | null
   isLidOpen: boolean
   shellHeat: number
+  hasOnlyBoiledDownSinceFull: boolean
   location: ItemLocation
 }
 

@@ -197,7 +197,7 @@ function achievementOf(event: RitualEvent, state: DeepReadonly<SessionState>): A
     case 'metalGlowsTooHotToHold':
       return carriedShapeOf(state, event.vesselId) === 'thermos' ? 'thermosGlowing' : null
     case 'boiledDry':
-      return carriedShapeOf(state, event.vesselId) === 'kettle' ? 'kettleBoiledDry' : null
+      return event.wasFullAndOnlyBoiledDown && carriedShapeOf(state, event.vesselId) === 'kettle' ? 'kettleBoiledDry' : null
     case 'teaTasted':
       if (sipFeeling(event.verdict) === 'justRight') return 'perfectTea'
       return event.cupHeldLeaves && event.verdict.strength !== 'none' && carriedShapeOf(state, event.cupId) === 'bowl' ? 'teaBrewedInTheBowl' : null

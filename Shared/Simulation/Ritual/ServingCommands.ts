@@ -27,6 +27,7 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
   if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(cup))
   const { taken: sip, left } = splitLiquid(cup.liquid, sipMl)
   cup.liquid = left
+  cup.hasOnlyBoiledDownSinceFull = false
   const verdict = judgeTaste(sip, tea)
   const cupHeldLeaves = cup.leaves !== null && cup.leaves.grams > 0
   note(
@@ -57,6 +58,7 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   const satisfactionBefore = figurine.satisfaction
   note(draft, `offered to ${figurine.id}: ${describeLiquid(cup)}, affinity for ${teaId} ${definition.affinityByTeaId[teaId] ?? 0}`)
   cup.liquid = { ...cup.liquid, volumeMl: 0 }
+  cup.hasOnlyBoiledDownSinceFull = false
   figurine.wasOfferedTeaThisRitual = true
   figurine.satisfaction = Math.min(100, Math.max(0, figurine.satisfaction + offering.satisfactionDelta))
   note(draft, `${figurine.id} satisfaction ${satisfactionBefore} → ${figurine.satisfaction}, response ${offering.response}`)

@@ -16,5 +16,5 @@ test('fullKettleOfTapWater_onTheWorkingPlate_boilsDryWithinOneMinuteFortyFive', 
 
   const events = ritual.wait(longestSecondsToBoilDry)
 
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle' }])
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: true }])
 })

@@ -45,6 +45,7 @@ function vesselsInTheRoom(room: RoomDefinition): Record<string, VesselState> {
       leaves: null,
       isLidOpen: false,
       shellHeat: 0,
+      hasOnlyBoiledDownSinceFull: false,
       location: { kind: 'onSurface', spot: vessel.startsAt },
     }
   }

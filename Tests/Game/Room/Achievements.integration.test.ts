@@ -13,12 +13,20 @@ test('achievement_ofASpoonCrumbledTwice_isAnnouncedOnce', () => {
   assert.deepEqual(room.announced, ['spoonBurnt'])
 })
 
-test('achievement_ofTheKettleBoilingDry_isStubbornButTheThermosIsNot', () => {
+test('achievement_ofAFullKettleBoilingDry_isPatienceOfAMonkButAFullThermosIsNot', () => {
   const room = new AchievementsInTheRoom()
 
-  room.achievements.eventsHappened([{ type: 'boiledDry', vesselId: 'thermos' }, { type: 'boiledDry', vesselId: 'kettle' }], room.ritual.state)
+  room.achievements.eventsHappened([{ type: 'boiledDry', vesselId: 'thermos', wasFullAndOnlyBoiledDown: true }, { type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: true }], room.ritual.state)
 
   assert.deepEqual(room.announced, ['kettleBoiledDry'])
+})
+
+test('achievement_ofAKettleBoilingDryAfterItWasPouredFromOrNeverFull_isNotUnlocked', () => {
+  const room = new AchievementsInTheRoom()
+
+  room.achievements.eventsHappened([{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }], room.ritual.state)
+
+  assert.deepEqual(room.announced, [])
 })
 
 test('achievement_ofStrongTeaSippedFromABowlWithLeaves_isEnlightened', () => {

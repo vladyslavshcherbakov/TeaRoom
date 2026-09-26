@@ -489,7 +489,7 @@ test('kettle_leftOnAWorkingHeaterUntilItsWaterIsGone_announcesOnceThatItBoiledDr
 
   const events = ritual.wait(600)
 
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle' }])
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }])
 })
 
 test('kettle_boilingAwayInStepsThatDoNotDivideItsWaterEvenly_stillBoilsDryAndSaysSo', () => {
@@ -503,7 +503,34 @@ test('kettle_boilingAwayInStepsThatDoNotDivideItsWaterEvenly_stillBoilsDryAndSay
   const events = ritual.wait(600)
 
   assert.equal(ritual.vessel('kettle').liquid.volumeMl, 0)
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle' }])
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }])
+})
+
+test('kettle_filledToTheBrimAndLeftToBoilDry_saysAllItsWaterBoiledAway', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+  ritual.fillInTheSink('kettle', 10)
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const events = ritual.wait(1200)
+
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: true }])
+})
+
+test('kettle_filledToTheBrimThenPouredFromAndLeftToBoilDry_saysSomeWaterWasTaken', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+  ritual.fillInTheSink('kettle', 10)
+  ritual.pour('kettle', 'cup1', 1)
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const events = ritual.wait(1200)
+
+  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }])
 })
 
 test('secondCloth_onAWorkingHeater_charsWhileTheFirstStaysWhole', () => {

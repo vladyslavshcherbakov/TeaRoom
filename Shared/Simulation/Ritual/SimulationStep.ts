@@ -17,6 +17,8 @@ import { drain } from './RunningWater.ts'
 import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
 import { percent } from './Percent.ts'
 
+const fullWithinMl = 0.5
+
 export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
   stepTheWorld(draft, seconds)
@@ -33,6 +35,7 @@ export function stepTheWorld(draft: Draft, seconds: number): void {
   heatOrCoolMetalShells(draft, seconds)
   continuePour(draft, seconds)
   runTheTap(draft, seconds)
+  rememberTheVesselsFilledToTheBrim(draft)
   steepAllLeaves(draft, seconds)
   continueSoaking(draft, seconds)
   dryThePuddles(draft, seconds)
@@ -62,6 +65,14 @@ function letTheThermostatDecide(draft: Draft): void {
   heater.isOn = shouldHeat
   const measured = measuredWaterC === null ? `no water on the heater to measure, ${itemId ?? 'nothing'} on it` : `${itemId} at ${measuredWaterC.toFixed(1)} °C`
   note(draft, `thermostat ${shouldHeat ? 'starts heating' : 'stops heating'}: ${measured}, target ${heater.thermostat.targetC} °C`)
+}
+
+function rememberTheVesselsFilledToTheBrim(draft: Draft): void {
+  for (const vessel of Object.values(draft.state.vessels)) {
+    if (vessel.hasOnlyBoiledDownSinceFull || vessel.liquid.volumeMl < vesselDefinitionOf(draft, vessel).capacityMl - fullWithinMl) continue
+    vessel.hasOnlyBoiledDownSinceFull = true
+    note(draft, `${vessel.id} is filled to the brim with ${vessel.liquid.volumeMl.toFixed(1)} ml`)
+  }
 }
 
 function heatWhatSitsOnTheWorkingHeater(draft: Draft, seconds: number): void {
@@ -119,6 +130,7 @@ function continuePour(draft: Draft, seconds: number): void {
     seconds,
   )
   source.liquid = landing.source
+  if (landing.landedMl + landing.spilledMl > 0) source.hasOnlyBoiledDownSinceFull = false
   if (target !== undefined && landing.target !== null) target.liquid = landing.target
   pour.pouredMl += landing.landedMl
   pour.spilledMl += landing.spilledMl

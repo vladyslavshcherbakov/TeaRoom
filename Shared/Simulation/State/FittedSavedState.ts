@@ -20,12 +20,12 @@ type SaveMigration = (saved: Shape, catalog: Catalog) => { readonly migrated: Sh
 const leavesShape: Leaves = dryLeaves('', 0)
 const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
 const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false, hasRunOntoAnItem: false }
-const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, location: { kind: 'gone' } }
+const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, hasOnlyBoiledDownSinceFull: false, location: { kind: 'gone' } }
 const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterStoppingAtTheTarget]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterStoppingAtTheTarget, withVesselsRememberingTheyWereFull]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -257,6 +257,16 @@ function withTheHeaterStoppingAtTheTarget(saved: Shape): ReturnType<SaveMigratio
   return {
     migrated: { ...saved, heater: { ...heater, stopsAtTheThermostatsTarget: false } },
     change: 'a save from before the heater could stop at the thermostat\'s target boils by hand as it did',
+  }
+}
+
+function withVesselsRememberingTheyWereFull(saved: Shape): ReturnType<SaveMigration> {
+  const vessels = saved['vessels']
+  if (!isShape(vessels) || Object.values(vessels).every((vessel) => !isShape(vessel) || vessel['hasOnlyBoiledDownSinceFull'] !== undefined)) return null
+  const remembering = Object.fromEntries(Object.entries(vessels).map(([id, vessel]) => [id, isShape(vessel) && vessel['hasOnlyBoiledDownSinceFull'] === undefined ? { ...vessel, hasOnlyBoiledDownSinceFull: false } : vessel]))
+  return {
+    migrated: { ...saved, vessels: remembering },
+    change: 'a save from before the vessels remembered being full counts none of them as full',
   }
 }
 

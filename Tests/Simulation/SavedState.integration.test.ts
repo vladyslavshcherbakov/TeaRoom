@@ -138,6 +138,15 @@ test('savedState_fromBeforeTheHeaterCouldStopAtItsTarget_boilsByHandAsItDid', ()
   assert.equal(resumed.state.heater.stopsAtTheThermostatsTarget, false)
 })
 
+test('savedState_fromBeforeVesselsRememberedBeingFull_countsNoneAsFull', () => {
+  const savedState = TestRitual.begun().savedState as { vessels: Record<string, Record<string, unknown>> }
+  for (const vessel of Object.values(savedState.vessels)) delete vessel['hasOnlyBoiledDownSinceFull']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal(resumed.state.vessels['kettle']?.hasOnlyBoiledDownSinceFull, false)
+})
+
 function catalogWithAFourthCup(): Catalog {
   const catalog = testCatalog()
   const room = catalog.rooms['testRoom']

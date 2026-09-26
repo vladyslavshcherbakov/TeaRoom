@@ -38,17 +38,19 @@ function heatTheVessel(draft: Draft, vessel: VesselState, seconds: number): void
   const heated = heatLiquid(vessel.liquid, heaterDefinition, shareOfTheHeatKeptBy(vesselDefinitionOf(draft, vessel), vessel.isLidOpen), seconds)
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
-  if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel.id, heaterDefinition.boilingAwayMlPerSecond, vessel.liquid.volumeMl)
+  if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel, heaterDefinition.boilingAwayMlPerSecond)
 }
 
-function noteBoilingAway(draft: Draft, vesselId: string, mlPerSecond: number, volumeMlLeft: number): void {
+function noteBoilingAway(draft: Draft, vessel: VesselState, mlPerSecond: number): void {
   if (!draft.state.heater.hasAnnouncedBoilingAway) {
     draft.state.heater.hasAnnouncedBoilingAway = true
-    note(draft, `${vesselId} boils, its water boils away at ${mlPerSecond} ml/s`)
+    note(draft, `${vessel.id} boils, its water boils away at ${mlPerSecond} ml/s`)
   }
-  if (volumeMlLeft > 0) return
-  note(draft, `${vesselId} boiled dry on the heater`)
-  draft.events.push({ type: 'boiledDry', vesselId })
+  if (vessel.liquid.volumeMl > 0) return
+  const wasFullAndOnlyBoiledDown = vessel.hasOnlyBoiledDownSinceFull
+  vessel.hasOnlyBoiledDownSinceFull = false
+  note(draft, `${vessel.id} boiled dry on the heater, ${wasFullAndOnlyBoiledDown ? 'all of it boiled away from the brim' : 'after water was taken from it or it was never full'}`)
+  draft.events.push({ type: 'boiledDry', vesselId: vessel.id, wasFullAndOnlyBoiledDown })
 }
 
 function announceTargetTemperatureOnce(draft: Draft, vesselId: string, temperatureC: number): void {
@@ -102,4 +104,5 @@ function pourAwayTheRinseWaterIfItRanOver(draft: Draft, vessel: VesselState): vo
   if (!draft.state.sink.hasRunOverTheItemInside || !vesselDefinitionOf(draft, vessel).isDrinkable) return
   note(draft, `${vessel.id} was rinsed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
   vessel.liquid = water(0, vessel.liquid.temperatureC)
+  vessel.hasOnlyBoiledDownSinceFull = false
 }
