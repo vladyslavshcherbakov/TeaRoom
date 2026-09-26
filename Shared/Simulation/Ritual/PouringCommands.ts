@@ -1,22 +1,17 @@
 import { isEmpty } from '../Physics/Liquid.ts'
 import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { describeLiquid, isClosedAgainstFilling, note, noteDetail, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { isWithinReach } from './Reach.ts'
-import type { RefusalReason } from './RitualEvent.ts'
+import { describeLiquid, note, noteDetail, refuse, type Draft } from './Draft.ts'
+import { isOpenForFilling, isOpenForPouring, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
+import { whereTheKeeperStands } from './Reach.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
 import { percent } from './Percent.ts'
 
 export function startPouring(draft: Draft, command: CommandOfType<'startPouring'>): void {
-  const pourInProgress = draft.state.pour
-  if (pourInProgress !== null) {
-    return refuse(draft, command, 'alreadyPouring', `pouring ${pourInProgress.sourceId} into ${pourInProgress.targetId ?? 'the table'}`)
-  }
   const source = draft.state.vessels[command.sourceId]
   const target = command.targetId === null ? null : draft.state.vessels[command.targetId]
-  if (source === undefined || target === undefined) return refuse(draft, command, 'unknownVessel')
-  const refusal = refusalToPour(draft, source, target)
-  if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(source))
+  if (source === undefined || target === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${source === undefined ? command.sourceId : command.targetId}`)
+  if (wasRefusedByAnyOf(draft, command, checksToPour(source, target))) return
   draft.state.pour = {
     sourceId: source.id,
     targetId: target?.id ?? null,
@@ -65,19 +60,45 @@ export function finishPour(draft: Draft): void {
   })
 }
 
-function refusalToPour(draft: Draft, source: VesselState, target: VesselState | null): RefusalReason | null {
-  if (source.id === target?.id) return 'cannotPourIntoItself'
-  const itemIdInTheSink = draft.state.sink.itemIdInside
-  if (itemIdInTheSink !== null && (itemIdInTheSink === source.id || itemIdInTheSink === target?.id)) return 'vesselIsInTheSink'
-  if (!isWithinReach(draft, source.location)) return 'outOfReach'
-  if (target !== null && !isWithinReach(draft, target.location)) return 'outOfReach'
-  if (target === null && draft.state.keeper.placeId === null) return 'outOfReach'
-  if (draft.state.heater.itemIdOnTop === source.id) return 'vesselIsOnTheHeater'
-  if (isEmpty(source.liquid)) return 'sourceIsEmpty'
-  if (vesselDefinitionOf(draft, source).lid?.mustBeOpenToPour === true && !source.isLidOpen) return 'lidClosed'
-  if (target === null) return null
-  if (isClosedAgainstFilling(draft, target)) return 'lidClosed'
-  return null
+function checksToPour(source: VesselState, target: VesselState | null): readonly Check[] {
+  if (target === null) {
+    return [isWithinTheKeepersReach(source.id), isTheKeeperStandingAtAPlace, isNoOtherPourRunning, isNotInTheSink(source.id), isNotOnTheHeater(source.id), hasSomethingToPour(source), isOpenForPouring(source.id)]
+  }
+  return [
+    isWithinTheKeepersReach(source.id),
+    isWithinTheKeepersReach(target.id),
+    isNoOtherPourRunning,
+    isNotTheSource(source, target),
+    isNotInTheSink(source.id),
+    isNotInTheSink(target.id),
+    isNotOnTheHeater(source.id),
+    hasSomethingToPour(source),
+    isOpenForPouring(source.id),
+    isOpenForFilling(target.id),
+  ]
+}
+
+const isTheKeeperStandingAtAPlace: Check = (draft) => (draft.state.keeper.placeId === null ? { reason: 'outOfReach', values: `${whereTheKeeperStands(draft)}, so no surface is below the stream` } : null)
+
+const isNoOtherPourRunning: Check = (draft) => {
+  const pour = draft.state.pour
+  return pour === null ? null : { reason: 'alreadyPouring', values: `pouring ${pour.sourceId} into ${pour.targetId ?? 'the table'}` }
+}
+
+function isNotTheSource(source: VesselState, target: VesselState): Check {
+  return () => (source.id === target.id ? { reason: 'cannotPourIntoItself', values: `${source.id} is both the source and the target` } : null)
+}
+
+function isNotInTheSink(vesselId: string): Check {
+  return (draft) => (draft.state.sink.itemIdInside === vesselId ? { reason: 'vesselIsInTheSink', values: `${vesselId} stands in the sink` } : null)
+}
+
+function isNotOnTheHeater(vesselId: string): Check {
+  return (draft) => (draft.state.heater.itemIdOnTop === vesselId ? { reason: 'vesselIsOnTheHeater', values: `${vesselId} stands on the heater` } : null)
+}
+
+function hasSomethingToPour(source: VesselState): Check {
+  return () => (isEmpty(source.liquid) ? { reason: 'sourceIsEmpty', values: describeLiquid(source) } : null)
 }
 
 function describeVesselById(draft: Draft, vesselId: string): string {

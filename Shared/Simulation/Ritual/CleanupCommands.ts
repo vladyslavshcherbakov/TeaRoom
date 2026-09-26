@@ -2,14 +2,15 @@ import { clothStainAfterTakingIn, mlTheClothTakesIn, wetMlAfterWiping } from '..
 import type { ClothState, PuddleState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, noteDetail, refuse, type Draft } from './Draft.ts'
-import { isKeeperAt, isWithinReach, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { isInAHand, isWithinTheKeepersReach, wasRefusedByAnyOf } from './ItemRefusals.ts'
+import { whereIs, whereTheKeeperStands } from './Reach.ts'
 import { percent } from './Percent.ts'
 
 export function wipeTable(draft: Draft, command: CommandOfType<'wipeTable'>): void {
   const cloth = draft.state.cloths[command.clothId]
   const placeId = draft.state.keeper.placeId
   if (cloth === undefined) return refuse(draft, command, 'unknownItem', `the room has no cloth ${command.clothId}`)
-  if (cloth.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `${cloth.id} is ${whereIs(cloth.location)}`)
+  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(cloth.id), isInAHand(cloth.id)])) return
   if (placeId === null) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   const puddle = draft.state.puddles[placeId]
   if (puddle === undefined) return refuse(draft, command, 'tableIsDry', `nothing is spilled on the ${placeId}`)
@@ -26,10 +27,9 @@ export function wipeTable(draft: Draft, command: CommandOfType<'wipeTable'>): vo
 export function soakUpThePuddle(draft: Draft, command: CommandOfType<'soakUpThePuddle'>): void {
   const cloth = draft.state.cloths[command.clothId]
   if (cloth === undefined) return refuse(draft, command, 'unknownItem', `the room has no cloth ${command.clothId}`)
-  if (!isWithinReach(draft, cloth.location)) return refuse(draft, command, 'outOfReach', `${cloth.id} is ${whereIs(cloth.location)}, ${whereTheKeeperStands(draft)}`)
-  if (cloth.location.kind !== 'onSurface') return refuse(draft, command, 'notAtThatPlace', `${cloth.id} is ${whereIs(cloth.location)}, not lying on a surface`)
+  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(cloth.id)])) return
+  if (cloth.location.kind !== 'onSurface') return refuse(draft, command, 'alreadyInHand', `${cloth.id} is ${whereIs(cloth.location)}`)
   const placeId = cloth.location.spot.placeId
-  if (!isKeeperAt(draft, placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, ${cloth.id} lies on the ${placeId}`)
   if (cloth.isSoakingThePuddle) return refuse(draft, command, 'clothIsAlreadySoaking')
   const puddle = draft.state.puddles[placeId]
   if (puddle === undefined) return refuse(draft, command, 'tableIsDry', `nothing is spilled on the ${placeId}`)

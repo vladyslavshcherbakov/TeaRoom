@@ -130,7 +130,7 @@ test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
 
   const events = ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'notAtThatPlace' }])
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'alreadyInHand' }])
 })
 
 test('puddle_whenTheTableIsDry_isNotSoakedUp', () => {

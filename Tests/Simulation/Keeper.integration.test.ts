@@ -59,6 +59,36 @@ test('cup_whenPutDownAtAPlaceTheKeeperIsNotAt_isRefused', () => {
   assert.deepEqual(ritual.state.keeper.hands, ['cup1', null, null])
 })
 
+test('cup_lyingOnAnotherPlace_cannotBePutDownAsItIsOutOfReach', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  const events = ritual.do({ type: 'putDown', itemId: 'cup1', spot: onTheTable })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'putDown', reason: 'outOfReach' }])
+})
+
+test('kettle_whenTastedFromAnotherPlace_isOutOfReachBeforeItIsJudgedUndrinkable', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'kettle' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tasteCup', reason: 'outOfReach' }])
+})
+
+test('cup_whenTastedFromAnotherPlace_isRefusedNamingWhereItAndTheKeeperAre', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  ritual.do({ type: 'tasteCup', cupId: 'cup1' })
+
+  assert.ok(
+    ritual.log.messagesAt('info').some((message) => message.endsWith('tasteCup refused (outOfReach): {"cupId":"cup1"}, cup1 is on the shelf, the keeper is at the table')),
+    ritual.log.messagesAt('info').join('\n'),
+  )
+})
+
 test('heater_whenTheKeeperIsNotAtTheCounter_cannotBeSwitchedOn', () => {
   const ritual = houseRitual()
   ritual.do({ type: 'standAt', placeId: 'table' })

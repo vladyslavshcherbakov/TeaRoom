@@ -1,14 +1,14 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { HandIndex } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
+import { note, refuse, type Draft } from './Draft.ts'
 import { liftOffTheHeater } from './HeatingCommands.ts'
 import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { emptyTheHand, middleHandIndex, locationOfItem, moveItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { emptyTheHand, middleHandIndex, locationOfItem, moveItem, whereIs } from './Reach.ts'
 import { rulesFor } from './ItemKinds.ts'
-import { isCoolEnoughToHold, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isWithinTheKeepersReach, wasRefusedByAnyOf } from './ItemRefusals.ts'
+import { isCoolEnoughToHold, isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf } from './ItemRefusals.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
@@ -23,7 +23,7 @@ export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
 
 export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   const itemId = command.itemId
-  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotInAHand(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isNotBeingPoured(itemId), isCoolEnoughToHold(itemId)])) return
+  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isNotInAHand(itemId), isNotBeingPoured(itemId), isCoolEnoughToHold(itemId)])) return
   const whereItWas = whereIs(locationOfItem(draft, itemId))
   const handIndex = freeHandOf(draft)
   if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((heldItemId) => heldItemId !== null).join(' and ')}`)
@@ -52,17 +52,13 @@ export function pickUpWithAMiddleHand(draft: Draft, command: CommandOfType<'pick
 }
 
 export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
-  const location = locationOfItem(draft, command.itemId)
-  if (location === undefined) return refuse(draft, command, 'unknownItem')
-  if (location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `${command.itemId} is ${whereIs(location)}`)
-  if (draft.state.keeper.placeId !== command.spot.placeId) {
-    return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, not at the ${command.spot.placeId}`)
-  }
-  if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
-  emptyTheHand(draft, location.handIndex)
-  moveItem(draft, command.itemId, { kind: 'onSurface', spot: command.spot })
-  note(draft, `put ${command.itemId} down on the ${command.spot.placeId} at (${command.spot.x.toFixed(2)}, ${command.spot.y.toFixed(2)}, ${command.spot.z.toFixed(2)})${command.spot.turnRadians === undefined ? '' : `, turned ${command.spot.turnRadians.toFixed(2)} rad`}`)
-  draft.events.push({ type: 'putDown', itemId: command.itemId, spot: command.spot })
+  const itemId = command.itemId
+  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isInAHand(itemId), isTheKeeperAt(command.spot.placeId, 'the spot'), isNotBeingPoured(itemId)])) return
+  const location = locationOfItem(draft, itemId)
+  if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
+  moveItem(draft, itemId, { kind: 'onSurface', spot: command.spot })
+  note(draft, `put ${itemId} down on the ${command.spot.placeId} at (${command.spot.x.toFixed(2)}, ${command.spot.y.toFixed(2)}, ${command.spot.z.toFixed(2)})${command.spot.turnRadians === undefined ? '' : `, turned ${command.spot.turnRadians.toFixed(2)} rad`}`)
+  draft.events.push({ type: 'putDown', itemId, spot: command.spot })
 }
 
 function freeHandOf(draft: Draft): HandIndex | null {

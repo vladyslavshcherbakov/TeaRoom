@@ -342,16 +342,36 @@ test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
   assert.equal(ritual.state.heater.itemIdOnTop, null)
 })
 
-test('spoon_afterItCrumbled_cannotBeTakenOrScoopedWith', () => {
-  const ritual = ritualWithTheSpoonOnAWorkingHeater()
-  ritual.wait(17)
-  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+test('spoon_afterItCrumbled_cannotBeTaken', () => {
+  const ritual = ritualWithACrumbledSpoon()
 
-  const takeEvents = ritual.do({ type: 'pickUp', itemId: 'spoon' })
-  const scoopEvents = ritual.do({ type: 'scoopTea', depth: 1 })
+  const events = ritual.do({ type: 'pickUp', itemId: 'spoon' })
 
-  assert.deepEqual(takeEvents, [{ type: 'actionRefused', command: 'pickUp', reason: 'burntAway' }])
-  assert.deepEqual(scoopEvents, [{ type: 'actionRefused', command: 'scoopTea', reason: 'notInHand' }])
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'burntAway' }])
+})
+
+test('spoon_afterItCrumbled_cannotScoop', () => {
+  const ritual = ritualWithACrumbledSpoon()
+
+  const events = ritual.do({ type: 'scoopTea', depth: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'burntAway' }])
+})
+
+test('spoon_afterItCrumbled_cannotTipLeaves', () => {
+  const ritual = ritualWithACrumbledSpoon()
+
+  const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'burntAway' }])
+})
+
+test('spoon_afterItCrumbled_cannotBePutDown', () => {
+  const ritual = ritualWithACrumbledSpoon()
+
+  const events = ritual.do({ type: 'putDown', itemId: 'spoon', spot: { placeId: 'table', x: 7, y: 0, z: 0 } })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'putDown', reason: 'burntAway' }])
 })
 
 test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
@@ -569,6 +589,13 @@ test('secondCloth_takenOffTheHeaterBurning_isNamedInTheEvent', () => {
 function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitual {
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
+  return ritual
+}
+
+function ritualWithACrumbledSpoon(): TestRitual {
+  const ritual = ritualWithTheSpoonOnAWorkingHeater()
+  ritual.wait(17)
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
   return ritual
 }
 

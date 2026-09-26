@@ -1,6 +1,8 @@
+import type { VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { isClosedAgainstFilling, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { caddyItemId, isWithinReach, whereIs } from './Reach.ts'
+import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { isInAHand, isNotBurntAway, isOpenForFilling, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
+import { caddyItemId, spoonItemId } from './Reach.ts'
 import { clampedToShare } from '../Physics/ClampedToShare.ts'
 import { dryLeaves } from '../Physics/Brewing.ts'
 
@@ -8,8 +10,7 @@ export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void
   const spoon = draft.state.spoon
   const caddy = draft.state.vessels[caddyItemId]
   if (caddy === undefined) return refuse(draft, command, 'unknownVessel', 'the room has no caddy')
-  if (spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(spoon.location)}`)
-  if (!isWithinReach(draft, caddy.location)) return refuse(draft, command, 'outOfReach', `the caddy is ${whereIs(caddy.location)}`)
+  if (wasRefusedByAnyOf(draft, command, [...checksThatTheSpoonIsInAHand, isWithinTheKeepersReach(caddy.id)])) return
   if (!caddy.isLidOpen) return refuse(draft, command, 'lidClosed', 'caddy is closed')
   const gramsInTheCaddy = caddy.leaves?.grams ?? 0
   if (caddy.leaves === null || gramsInTheCaddy <= 0) return refuse(draft, command, 'caddyIsEmpty')
@@ -25,12 +26,9 @@ export function scoopTea(draft: Draft, command: CommandOfType<'scoopTea'>): void
 export function tipSpoonInto(draft: Draft, command: CommandOfType<'tipSpoonInto'>): void {
   const vessel = draft.state.vessels[command.vesselId]
   const teaId = draft.state.teaId
-  if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
-  if (draft.state.spoon.grams <= 0 || teaId === null) return refuse(draft, command, 'spoonIsEmpty')
-  if (draft.state.spoon.location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `the spoon is ${whereIs(draft.state.spoon.location)}`)
-  if (!isWithinReach(draft, vessel.location)) return refuse(draft, command, 'outOfReach', `${vessel.id} is ${whereIs(vessel.location)}`)
-  if (!vesselDefinitionOf(draft, vessel).canHoldLeaves) return refuse(draft, command, 'cannotHoldLeaves')
-  if (isClosedAgainstFilling(draft, vessel)) return refuse(draft, command, 'lidClosed', `spoon keeps ${draft.state.spoon.grams.toFixed(2)} g`)
+  if (teaId === null) return refuse(draft, command, 'ritualNotStarted', 'no tea is chosen')
+  if (vessel === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${command.vesselId}`)
+  if (wasRefusedByAnyOf(draft, command, [...checksThatTheSpoonIsInAHand, isWithinTheKeepersReach(vessel.id), isTheSpoonHoldingLeaves, canHoldLeaves(vessel), isOpenForFilling(vessel.id)])) return
   const grams = draft.state.spoon.grams
   draft.state.spoon.grams = 0
   vessel.leaves =
@@ -39,4 +37,12 @@ export function tipSpoonInto(draft: Draft, command: CommandOfType<'tipSpoonInto'
       : { ...vessel.leaves, grams: vessel.leaves.grams + grams }
   note(draft, `tipped ${grams.toFixed(2)} g of ${teaId} into ${vessel.id}, which now holds ${vessel.leaves.grams.toFixed(2)} g`)
   draft.events.push({ type: 'leavesAdded', vesselId: vessel.id, grams })
+}
+
+const checksThatTheSpoonIsInAHand: readonly Check[] = [isNotBurntAway(spoonItemId), isWithinTheKeepersReach(spoonItemId), isInAHand(spoonItemId)]
+
+const isTheSpoonHoldingLeaves: Check = (draft) => (draft.state.spoon.grams > 0 ? null : { reason: 'spoonIsEmpty', values: 'the spoon holds no leaves' })
+
+function canHoldLeaves(vessel: VesselState): Check {
+  return (draft) => (vesselDefinitionOf(draft, vessel).canHoldLeaves ? null : { reason: 'cannotHoldLeaves', values: `${vessel.id} is not made for leaves` })
 }

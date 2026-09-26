@@ -7,9 +7,9 @@ import type { HeaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
-import { isKnown, isNotBeingPoured, isNotBurntAway, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
+import { isKnown, isNotBeingPoured, isNotBurntAway, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
-import { emptyTheHand, heaterSpotOf, isKeeperAt, locationOfItem, moveItem, whereTheKeeperStands } from './Reach.ts'
+import { emptyTheHand, heaterSpotOf, locationOfItem, moveItem } from './Reach.ts'
 
 export type HeaterSwitchedOffBy = 'byTheKeeper' | 'byTheEndOfTheRitual'
 
@@ -17,7 +17,7 @@ const switchedOffWords: Readonly<Record<HeaterSwitchedOffBy, string>> = { byTheK
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
-  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), canSitOnTheHeater(itemId), isTheHeaterFree, isNotBeingPoured(itemId), isTheKeeperAtTheHeater, isWithinTheKeepersReach(itemId)])) return
+  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isTheKeeperAtTheHeater, canSitOnTheHeater(itemId), isTheHeaterFree, isNotBeingPoured(itemId)])) return
   const heaterSpot = heaterSpotOf(draft)
   const location = locationOfItem(draft, itemId)
   if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
@@ -39,8 +39,8 @@ export function liftOffTheHeater(draft: Draft, itemId: string): void {
 
 export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeaterOn'>): void {
   const heater = draft.state.heater
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
   if (isTheHeaterInUse(heater)) return refuse(draft, command, 'heaterAlreadyOn', describeTheHeatersControl(heater))
-  if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   beginToUseTheHeater(draft)
   heater.isOn = true
   heater.holdsTheThermostatsTarget = command.holdsTheThermostatsTarget === true
@@ -51,8 +51,8 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
 
 export function switchHeaterOff(draft: Draft, command: CommandOfType<'switchHeaterOff'>): void {
   const heater = draft.state.heater
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
   if (!isTheHeaterInUse(heater)) return refuse(draft, command, 'heaterAlreadyOff')
-  if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   if (heater.thermostat.isOn) note(draft, `the heater's switch stops the thermostat too, which was ${heater.isOn ? 'heating' : 'waiting'} at ${heater.thermostat.targetC} °C`)
   switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'byTheKeeper')
 }
@@ -60,7 +60,7 @@ export function switchHeaterOff(draft: Draft, command: CommandOfType<'switchHeat
 export function setTheThermostat(draft: Draft, command: CommandOfType<'setTheThermostat'>): void {
   const thermostat = draft.state.heater.thermostat
   const { lowestC, highestC } = heaterDefinitionOf(draft).thermostat
-  if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
   if (command.targetC < lowestC || command.targetC > highestC) return refuse(draft, command, 'thermostatOutOfRange', `${command.targetC} °C is outside ${lowestC}–${highestC} °C`)
   const previousTargetC = thermostat.targetC
   thermostat.targetC = command.targetC
@@ -70,8 +70,8 @@ export function setTheThermostat(draft: Draft, command: CommandOfType<'setTheThe
 
 export function startTheThermostat(draft: Draft, command: CommandOfType<'startTheThermostat'>): void {
   const heater = draft.state.heater
-  if (heater.thermostat.isOn) return refuse(draft, command, 'thermostatAlreadyOn')
-  if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
+  if (heater.thermostat.isOn) return refuse(draft, command, 'thermostatAlreadyOn', `the thermostat works at ${heater.thermostat.targetC} °C`)
   if (!heater.isOn) beginToUseTheHeater(draft)
   heater.thermostat.isOn = true
   note(draft, `thermostat started at ${heater.thermostat.targetC} °C with ${heater.itemIdOnTop ?? 'nothing'} on top, the heater ${heater.isOn ? 'was heating by hand' : 'was off'}`)
@@ -79,8 +79,8 @@ export function startTheThermostat(draft: Draft, command: CommandOfType<'startTh
 }
 
 export function stopTheThermostat(draft: Draft, command: CommandOfType<'stopTheThermostat'>): void {
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAtTheHeater])) return
   if (!draft.state.heater.thermostat.isOn) return refuse(draft, command, 'thermostatAlreadyOff')
-  if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
   note(draft, 'thermostat stopped, so the heater is switched off')
   switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'byTheKeeper')
 }
@@ -132,10 +132,6 @@ function describeSecondsHeated(secondsHeatedByItemId: Readonly<Record<string, nu
   return heated.length === 0 ? 'nothing' : heated.join(', ')
 }
 
-function isKeeperAtTheHeater(draft: Draft): boolean {
-  return isKeeperAt(draft, heaterSpotOf(draft).placeId)
-}
-
 function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
   const itemId = draft.state.heater.itemIdOnTop
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
@@ -155,7 +151,7 @@ function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
 }
 
 function canSitOnTheHeater(itemId: string): Check {
-  return (draft) => (rulesFor(draft.state, itemId)?.canSitOnTheHeater(draft, itemId) === true ? null : { reason: 'cannotSitOnHeater', values: '' })
+  return (draft) => (rulesFor(draft.state, itemId)?.canSitOnTheHeater(draft, itemId) === true ? null : { reason: 'cannotSitOnHeater', values: `${itemId} may not sit on the heater` })
 }
 
 const isTheHeaterFree: Check = (draft) => {
@@ -163,7 +159,4 @@ const isTheHeaterFree: Check = (draft) => {
   return occupant === null ? null : { reason: 'heaterOccupied', values: `${occupant} is on it` }
 }
 
-const isTheKeeperAtTheHeater: Check = (draft) => {
-  const heaterPlaceId = heaterSpotOf(draft).placeId
-  return isKeeperAt(draft, heaterPlaceId) ? null : { reason: 'notAtThatPlace', values: `${whereTheKeeperStands(draft)}, the heater is at the ${heaterPlaceId}` }
-}
+const isTheKeeperAtTheHeater: Check = (draft) => isTheKeeperAt(heaterSpotOf(draft).placeId, 'the heater')(draft)

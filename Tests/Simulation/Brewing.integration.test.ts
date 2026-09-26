@@ -221,6 +221,16 @@ test('sip_fromACupPouredFromTheKettle_saysTheCupHeldNoLeaves', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.cupHeldLeaves, false)
 })
 
+test('leaves_inASavedRitualWithNoTeaChosen_areRefusedAsTheRitualHasNotStarted', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  const resumed = TestRitual.resumedFrom({ ...(ritual.savedState as object), teaId: null })
+
+  const events = resumed.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'ritualNotStarted' }])
+})
+
 test('spoon_lyingOnTheTable_scoopsNothingUntilItIsTaken', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })

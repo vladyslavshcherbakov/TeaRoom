@@ -1,8 +1,8 @@
 import { isTooHotToHold } from '../Physics/Heat.ts'
 import type { Command } from './Command.ts'
-import { isInvolvedInPour, refuse, type Draft } from './Draft.ts'
+import { isClosedAgainstFilling, isInvolvedInPour, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { percent } from './Percent.ts'
-import { isWithinReach, locationOfItem, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { isKeeperAt, isWithinReach, locationOfItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
 export type Refusal = { readonly reason: RefusalReason; readonly values: string }
@@ -10,15 +10,11 @@ export type Refusal = { readonly reason: RefusalReason; readonly values: string 
 export type Check = (draft: Draft) => Refusal | null
 
 export function isKnown(itemId: string): Check {
-  return (draft) => (locationOfItem(draft, itemId) === undefined ? { reason: 'unknownItem', values: '' } : null)
-}
-
-export function isNotInAHand(itemId: string): Check {
-  return (draft) => (locationOfItem(draft, itemId)?.kind === 'inHand' ? { reason: 'alreadyInHand', values: '' } : null)
+  return (draft) => (locationOfItem(draft, itemId) === undefined ? { reason: 'unknownItem', values: `the room has no ${itemId}` } : null)
 }
 
 export function isNotBurntAway(itemId: string): Check {
-  return (draft) => (locationOfItem(draft, itemId)?.kind === 'gone' ? { reason: 'burntAway', values: '' } : null)
+  return (draft) => (locationOfItem(draft, itemId)?.kind === 'gone' ? { reason: 'burntAway', values: `${itemId} crumbled to ash` } : null)
 }
 
 export function isWithinTheKeepersReach(itemId: string): Check {
@@ -29,8 +25,45 @@ export function isWithinTheKeepersReach(itemId: string): Check {
   }
 }
 
+export function isInAHand(itemId: string): Check {
+  return (draft) => {
+    const location = locationOfItem(draft, itemId)
+    return location?.kind === 'inHand' ? null : { reason: 'notInHand', values: `${itemId} is ${whereIs(location)}` }
+  }
+}
+
+export function isNotInAHand(itemId: string): Check {
+  return (draft) => {
+    const location = locationOfItem(draft, itemId)
+    return location?.kind === 'inHand' ? { reason: 'alreadyInHand', values: `${itemId} is ${whereIs(location)}` } : null
+  }
+}
+
+export function isTheKeeperAt(placeId: string, what: string): Check {
+  return (draft) => (isKeeperAt(draft, placeId) ? null : { reason: 'notAtThatPlace', values: `${whereTheKeeperStands(draft)}, ${what} is at the ${placeId}` })
+}
+
 export function isNotBeingPoured(itemId: string): Check {
-  return (draft) => (isInvolvedInPour(draft, itemId) ? { reason: 'vesselIsBeingPoured', values: '' } : null)
+  return (draft) => {
+    const pour = draft.state.pour
+    if (pour === null || !isInvolvedInPour(draft, itemId)) return null
+    return { reason: 'vesselIsBeingPoured', values: `${pour.sourceId} pours into ${pour.targetId ?? 'the table'}` }
+  }
+}
+
+export function isOpenForFilling(vesselId: string): Check {
+  return (draft) => {
+    const vessel = draft.state.vessels[vesselId]
+    return vessel !== undefined && isClosedAgainstFilling(draft, vessel) ? { reason: 'lidClosed', values: `${vesselId} must be open to be filled` } : null
+  }
+}
+
+export function isOpenForPouring(vesselId: string): Check {
+  return (draft) => {
+    const vessel = draft.state.vessels[vesselId]
+    const isClosedAgainstPouring = vessel !== undefined && vesselDefinitionOf(draft, vessel).lid?.mustBeOpenToPour === true && !vessel.isLidOpen
+    return isClosedAgainstPouring ? { reason: 'lidClosed', values: `${vesselId} must be open to pour` } : null
+  }
 }
 
 export function isCoolEnoughToHold(itemId: string): Check {

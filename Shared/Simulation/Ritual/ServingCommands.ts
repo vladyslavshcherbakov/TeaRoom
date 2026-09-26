@@ -2,29 +2,27 @@ import { definitionIn } from '../Definitions/Catalog.ts'
 import { judgeOffering } from '../Judgement/OfferingJudgement.ts'
 import { isFatalStraightFromTheCaddy, judgeTaste } from '../Judgement/TasteJudgement.ts'
 import { isEmpty, splitLiquid } from '../Physics/Liquid.ts'
-import type { VesselState } from '../State/SessionState.ts'
+import type { FigurineState, VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import {
   chosenTea,
   describeLiquid,
-  isInvolvedInPour,
   note,
   refuse,
   vesselDefinitionOf,
   type Draft,
 } from './Draft.ts'
-import { caddyItemId, isKeeperAt, isWithinReach, ritualPlaceOf, whereTheKeeperStands } from './Reach.ts'
-import type { RefusalReason } from './RitualEvent.ts'
+import { isNotBeingPoured, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
+import { caddyItemId, ritualPlaceOf } from './Reach.ts'
 
 const sipMl = 40
 
 export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void {
   const cup = draft.state.vessels[command.cupId]
   const tea = chosenTea(draft)
-  if (tea === null) return refuse(draft, command, 'ritualNotStarted')
-  if (cup === undefined) return refuse(draft, command, 'unknownVessel')
-  const refusal = refusalToServe(draft, cup)
-  if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(cup))
+  if (tea === null) return refuse(draft, command, 'ritualNotStarted', 'no tea is chosen')
+  if (cup === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${command.cupId}`)
+  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(cup.id), ...checksToServeFrom(cup)])) return
   const { taken: sip, left } = splitLiquid(cup.liquid, sipMl)
   cup.liquid = left
   cup.hasOnlyBoiledDownSinceFull = false
@@ -46,13 +44,10 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   const cup = draft.state.vessels[command.cupId]
   const figurine = draft.state.figurines[command.figurineId]
   const teaId = draft.state.teaId
-  if (teaId === null) return refuse(draft, command, 'ritualNotStarted')
-  if (cup === undefined) return refuse(draft, command, 'unknownVessel')
-  if (figurine === undefined) return refuse(draft, command, 'unknownFigurine')
-  if (figurine.wasOfferedTeaThisRitual) return refuse(draft, command, 'figurineAlreadyOffered')
-  if (!isKeeperAt(draft, ritualPlaceOf(draft))) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the figurines are at the ${ritualPlaceOf(draft)}`)
-  const refusal = refusalToServe(draft, cup)
-  if (refusal !== null) return refuse(draft, command, refusal, describeLiquid(cup))
+  if (teaId === null) return refuse(draft, command, 'ritualNotStarted', 'no tea is chosen')
+  if (cup === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${command.cupId}`)
+  if (figurine === undefined) return refuse(draft, command, 'unknownFigurine', `the room has no figurine ${command.figurineId}`)
+  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(cup.id), isTheKeeperAt(ritualPlaceOf(draft), 'the figurines'), hasNotBeenOffered(figurine), ...checksToServeFrom(cup)])) return
   const definition = definitionIn(draft.catalog, 'figurines', figurine.id)
   const offering = judgeOffering(cup.liquid, teaId, definition)
   const satisfactionBefore = figurine.satisfaction
@@ -65,10 +60,18 @@ export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void
   draft.events.push({ type: 'figurineAcceptedTea', figurineId: figurine.id, response: offering.response })
 }
 
-function refusalToServe(draft: Draft, cup: VesselState): RefusalReason | null {
-  if (!vesselDefinitionOf(draft, cup).isDrinkable) return 'notDrinkable'
-  if (!isWithinReach(draft, cup.location)) return 'outOfReach'
-  if (isInvolvedInPour(draft, cup.id)) return 'vesselIsBeingPoured'
-  if (isEmpty(cup.liquid)) return 'cupIsEmpty'
-  return null
+function checksToServeFrom(cup: VesselState): readonly Check[] {
+  return [isDrinkable(cup), isNotBeingPoured(cup.id), hasSomethingToServe(cup)]
+}
+
+function isDrinkable(cup: VesselState): Check {
+  return (draft) => (vesselDefinitionOf(draft, cup).isDrinkable ? null : { reason: 'notDrinkable', values: `${cup.id} is not for drinking` })
+}
+
+function hasSomethingToServe(cup: VesselState): Check {
+  return () => (isEmpty(cup.liquid) ? { reason: 'cupIsEmpty', values: describeLiquid(cup) } : null)
+}
+
+function hasNotBeenOffered(figurine: FigurineState): Check {
+  return () => (figurine.wasOfferedTeaThisRitual ? { reason: 'figurineAlreadyOffered', values: `${figurine.id} was offered tea this ritual` } : null)
 }

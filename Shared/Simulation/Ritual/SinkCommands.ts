@@ -1,37 +1,34 @@
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { describeLiquid, isClosedAgainstFilling, isInvolvedInPour, note, refuse, type Draft } from './Draft.ts'
+import { describeLiquid, isClosedAgainstFilling, note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
-import { emptyTheHand, isKeeperAt, locationOfItem, moveItem, tapOf, whereIs, whereTheKeeperStands } from './Reach.ts'
+import { isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
+import { emptyTheHand, locationOfItem, moveItem, tapOf, whereIs } from './Reach.ts'
 
 export function putInTheSink(draft: Draft, command: CommandOfType<'putInTheSink'>): void {
+  const itemId = command.itemId
   const tap = tapOf(draft)
   if (tap === null) return refuse(draft, command, 'noTapInThisRoom')
-  const location = locationOfItem(draft, command.itemId)
-  if (location === undefined) return refuse(draft, command, 'unknownItem')
-  if (rulesFor(draft.state, command.itemId)?.runTheTapOnto === null) return refuse(draft, command, 'cannotGoInTheSink')
-  if (location.kind !== 'inHand') return refuse(draft, command, 'notInHand', `${command.itemId} is ${whereIs(location)}`)
-  if (!isKeeperAt(draft, tap.sinkSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the sink is at the ${tap.sinkSpot.placeId}`)
-  const occupant = draft.state.sink.itemIdInside
-  if (occupant !== null) return refuse(draft, command, 'sinkOccupied', `${occupant} is in it`)
-  if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
-  emptyTheHand(draft, location.handIndex)
-  moveItem(draft, command.itemId, { kind: 'onSurface', spot: tap.sinkSpot })
-  draft.state.sink.itemIdInside = command.itemId
+  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isInAHand(itemId), isTheKeeperAt(tap.sinkSpot.placeId, 'the sink'), canGoInTheSink(itemId), isTheSinkFree, isNotBeingPoured(itemId)])) return
+  const location = locationOfItem(draft, itemId)
+  const whereItWas = whereIs(location)
+  if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
+  moveItem(draft, itemId, { kind: 'onSurface', spot: tap.sinkSpot })
+  draft.state.sink.itemIdInside = itemId
   draft.state.sink.hasRunOverTheItemInside = false
-  note(draft, `${command.itemId} put in the sink from hand ${location.handIndex}`)
-  draft.events.push({ type: 'putInTheSink', itemId: command.itemId })
-  if (draft.state.sink.runningWater === null) return note(draft, `the tap stays closed over ${command.itemId} until the keeper turns it on`)
-  draft.state.sink.runningWater = runningWaterOver(draft, command.itemId, draft.state.sink.runningWater)
-  note(draft, `the running tap now runs onto ${command.itemId}`)
+  note(draft, `${itemId}, which was ${whereItWas}, put in the sink`)
+  draft.events.push({ type: 'putInTheSink', itemId })
+  if (draft.state.sink.runningWater === null) return note(draft, `the tap stays closed over ${itemId} until the keeper turns it on`)
+  draft.state.sink.runningWater = runningWaterOver(draft, itemId, draft.state.sink.runningWater)
+  note(draft, `the running tap now runs onto ${itemId}`)
 }
 
 export function turnTheTapOn(draft: Draft, command: CommandOfType<'turnTheTapOn'>): void {
   const tap = tapOf(draft)
   if (tap === null) return refuse(draft, command, 'noTapInThisRoom')
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAt(tap.sinkSpot.placeId, 'the tap')])) return
   if (draft.state.sink.runningWater !== null) return refuse(draft, command, 'tapAlreadyOn')
-  if (!isKeeperAt(draft, tap.sinkSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the tap is at the ${tap.sinkSpot.placeId}`)
   openTheTap(draft, tap)
 }
 
@@ -39,8 +36,8 @@ export function turnTheTapOff(draft: Draft, command: CommandOfType<'turnTheTapOf
   const tap = tapOf(draft)
   const runningWater = draft.state.sink.runningWater
   if (tap === null) return refuse(draft, command, 'noTapInThisRoom')
+  if (wasRefusedByAnyOf(draft, command, [isTheKeeperAt(tap.sinkSpot.placeId, 'the tap')])) return
   if (runningWater === null) return refuse(draft, command, 'tapAlreadyOff')
-  if (!isKeeperAt(draft, tap.sinkSpot.placeId)) return refuse(draft, command, 'notAtThatPlace', `${whereTheKeeperStands(draft)}, the tap is at the ${tap.sinkSpot.placeId}`)
   draft.state.sink.runningWater = null
   const openSeconds = draft.state.elapsedSeconds - runningWater.openedAtSeconds
   note(
@@ -92,4 +89,13 @@ function describeWhatStandsInTheSink(draft: Draft): string {
   const itemId = draft.state.sink.itemIdInside
   const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   return vessel === undefined ? '' : `; ${describeLiquid(vessel)}`
+}
+
+function canGoInTheSink(itemId: string): Check {
+  return (draft) => (rulesFor(draft.state, itemId)?.runTheTapOnto === null ? { reason: 'cannotGoInTheSink', values: `${itemId} is kept out of the sink` } : null)
+}
+
+const isTheSinkFree: Check = (draft) => {
+  const occupant = draft.state.sink.itemIdInside
+  return occupant === null ? null : { reason: 'sinkOccupied', values: `${occupant} is in it` }
 }
