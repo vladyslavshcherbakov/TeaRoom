@@ -16,9 +16,10 @@ const secondsEachMixedTeaSteeps = 60
 const spoonDepthForHalfAGram = 0.1
 
 export class TestRitual {
+  private readonly catalog: Catalog
+
   readonly log = new RecordingLog()
   readonly session: RitualSession
-  private readonly catalog: Catalog
 
   constructor(catalog: Catalog = testCatalog(), roomId = 'testRoom', savedState: unknown = null) {
     this.catalog = catalog
