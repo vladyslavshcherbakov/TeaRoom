@@ -12,26 +12,18 @@ const floorSharesToTry = [
   [0.4, 0.58],
 ] as const
 
-test('room_whenTheFloorInFrontOfTheWalkerIsTapped_answersTheTap', async ({ page }) => {
+test('room_whenOpenedAndTheFloorIsTapped_walksThereWithNothingToSip', async ({ page }) => {
   const record = consoleRecordOf(page)
   await page.goto('./')
   await roomOpening(record, 1)
-  const viewport = page.viewportSize()
-  if (viewport === null) throw new Error('the page has no viewport')
 
-  await page.mouse.click(viewport.width / 2, viewport.height / 2)
+  const walkingLine = await walkSomewhereOnTheFloor(page, record)
 
-  await expect.poll(() => record.roomLines.length).toBeGreaterThan(1)
-  expect(record.errors).toEqual([])
-})
-
-test('room_whenOpened_opensTheSessionWithNothingToSip', async ({ page }) => {
-  const record = consoleRecordOf(page)
-
-  await page.goto('./')
-
-  await expect.poll(() => record.ritualLines.some((line) => line.includes('session opened in quietRoom'))).toBe(true)
+  expect(walkingLine).toContain('walking to the floor at')
+  expect(record.ritualLines.some((line) => line.includes('session opened in quietRoom'))).toBe(true)
+  await expect(page.locator('button.sip')).toBeAttached()
   await expect(page.locator('button.sip')).toBeHidden()
+  expect(record.errors).toEqual([])
 })
 
 test('room_whenReloadedAfterTheWalkerMoved_offersToContinueWhereTheWalkerStood', async ({ page }) => {
