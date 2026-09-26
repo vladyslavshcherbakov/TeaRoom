@@ -78,6 +78,7 @@ export type Surface =
   | 'gearMetal'
   | 'darkGearMetal'
   | 'darkIron'
+  | 'faucetArm'
   | 'clearGlassHeldInView'
   | 'koiPainting'
   | 'toadPainting'
@@ -194,6 +195,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   gearMetal: { colour: '#7f868b', kind: 'aluminium' },
   darkGearMetal: { colour: '#5f666b', kind: 'aluminium' },
   darkIron: { colour: '#34302c', kind: 'matte' },
+  faucetArm: { colour: '#3a4a52', kind: 'matte' },
   clearGlassHeldInView: { colour: '#26302c', kind: 'clearGlass' },
   koiPainting: { colour: '#ffffff', kind: 'koiPainting' },
   toadPainting: { colour: '#ffffff', kind: 'painting', paint: paintToad },

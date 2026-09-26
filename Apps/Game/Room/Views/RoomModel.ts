@@ -42,6 +42,7 @@ const gearTouchAreaHeightMetres = 0.5
 const gearTouchAreaDepthMetres = 0.3
 const gearTouchAreaBelowTheGearMetres = 0.02
 const faucetPostAboveTheSpoutMetres = 0.04
+const faucetArmUnderThePostTopMetres = 0.018
 const faucetTouchAreaWidthMetres = 0.2
 const faucetTouchAreaAboveTheCounterMetres = 0.12
 const faucetTouchAreaBeyondTheFaucetMetres = 0.08
@@ -338,8 +339,8 @@ export class RoomModel {
     const postHeight = faucetSpout.y - base.y + faucetPostAboveTheSpoutMetres
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, postHeight, 0.05), this.materials.materialFor('steel'))
     post.position.set(0, postHeight / 2, 0)
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, reach + 0.02), this.materials.materialFor('steel'))
-    arm.position.set(0, faucetSpout.y - base.y + 0.02, reach / 2)
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, reach + 0.02), this.materials.materialFor('faucetArm'))
+    arm.position.set(0, faucetSpout.y - base.y + faucetArmUnderThePostTopMetres, reach / 2)
     post.castShadow = true
     arm.castShadow = true
     turned.add(post, arm, this.faucetTouchArea(reach, postHeight))
