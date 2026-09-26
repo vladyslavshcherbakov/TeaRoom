@@ -289,6 +289,13 @@ export class RoomPlay {
     this.listener.keeperDied()
   }
 
+  fillTheKettleTapped(): void {
+    const kettleId = Object.keys(this.ritual.state.vessels).find((vesselId) => carriedShapeOf(this.ritual.state, vesselId) === 'kettle')
+    if (kettleId === undefined) return this.log('the kettle is not filled from the debug menu: this room has no kettle')
+    this.log(`the debug menu asks to fill ${kettleId} with boiling water`)
+    this.ritual.dispatch({ type: 'fillWithBoilingWater', vesselId: kettleId })
+  }
+
   walkFreely(step: FloorPoint, headingRadians: number): void {
     if (this.aimedPour !== null) return
     this.navigator.walkFreely(step, headingRadians)

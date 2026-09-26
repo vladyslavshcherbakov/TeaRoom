@@ -15,6 +15,7 @@ export type DebugMenuListener = {
   readonly googlyEyesChosen: (areGoogly: boolean) => void
   readonly giantAfroChosen: (isGiant: boolean) => void
   readonly everyFaceAtOnceChosen: (isEveryFaceShown: boolean) => void
+  readonly kettleFillTapped: () => void
 }
 
 export class DebugMenu {
@@ -42,11 +43,8 @@ export class DebugMenu {
     const heightStepper = document.createElement('div')
     heightStepper.className = 'debug-stepper'
     heightStepper.append(this.heightArrow(-1, '▼', 'debug.height.lower'), this.heightShown, this.heightArrow(1, '▲', 'debug.height.higher'))
-    const closeButton = document.createElement('button')
-    closeButton.type = 'button'
-    closeButton.className = 'debug-close'
-    closeButton.textContent = text('debug.close')
-    closeButton.addEventListener('click', () => (this.panel.hidden = true))
+    const closeButton = actionButton('debug.close', () => (this.panel.hidden = true))
+    const fillTheKettleButton = actionButton('debug.fillTheKettle', listener.kettleFillTapped)
     this.panel.append(
       title,
       heightLabel,
@@ -55,6 +53,7 @@ export class DebugMenu {
       toggleRow('debug.googlyEyes', this.googlyEyesToggle, listener.googlyEyesChosen),
       toggleRow('debug.giantAfro', this.giantAfroToggle, listener.giantAfroChosen),
       toggleRow('debug.everyFaceAtOnce', this.everyFaceToggle, listener.everyFaceAtOnceChosen),
+      fillTheKettleButton,
       closeButton,
     )
     container.append(this.panel)
@@ -122,4 +121,13 @@ function toggleRow(textKey: TextKey, toggle: HTMLInputElement, chosen: (isOn: bo
   row.className = 'debug-toggle'
   row.append(toggle, document.createTextNode(text(textKey)))
   return row
+}
+
+function actionButton(textKey: TextKey, tapped: () => void): HTMLButtonElement {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.className = 'debug-button'
+  button.textContent = text(textKey)
+  button.addEventListener('click', tapped)
+  return button
 }

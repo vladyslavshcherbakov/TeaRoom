@@ -262,6 +262,7 @@ export class RoomScene {
       googlyEyesChosen: (areGoogly) => this.googlyEyesChosen(areGoogly),
       giantAfroChosen: (isGiant) => this.giantAfroChosen(isGiant),
       everyFaceAtOnceChosen: (isEveryFaceShown) => this.everyFaceAtOnceChosen(isEveryFaceShown),
+      kettleFillTapped: () => this.play.fillTheKettleTapped(),
     })
     this.garden = new Garden(materials, log)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
