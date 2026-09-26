@@ -51,7 +51,7 @@ These games and ideas shaped the tea room. Each line says what we take from it.
 
 **One death, as a joke.** There is one exception to the rule above. Tea brewed in the caddy is a heap of leaves in a little water, and a sip of it straight from the tin kills the keeper: YOU DIED, in the manner of Dark Souls, with the keeper's last words and an obituary under it, and a button to start over. It punishes once, and it is a joke about games, never a verdict on the player.
 
-**No achievements, no score, no badges.** The reward for noticing is having noticed. Progress is visible only as the room changing.
+**No score, and achievements stay hidden.** The reward for noticing is having noticed. Progress is visible only as the room changing. The player earns achievements without knowing, and sees them only after turning them on in the settings.
 
 **A bottomless state machine.** The player should always have a reason to come back and learn the world a little deeper. Secrets open one at a time, over days and seasons, never all at once.
 
