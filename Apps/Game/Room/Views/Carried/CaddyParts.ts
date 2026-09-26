@@ -36,8 +36,7 @@ export const caddyShapeLook: CarriedShapeLook = {
 }
 
 function caddyParts(materials: SurfaceMaterials): ItemParts {
-  const tin = materials.unsharedMaterialFor('caddyGreen')
-  tin.side = THREE.DoubleSide
+  const tin = materials.unsharedMaterialFor('caddyGreenSeenFromInside')
   const body = new THREE.Mesh(new THREE.CylinderGeometry(tinRadiusMetres, tinRadiusMetres, tinHeightMetres, 28, 1, true), tin)
   body.position.y = tinHeightMetres / 2
   const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.08, 28), materials.materialFor('caddyInside'))

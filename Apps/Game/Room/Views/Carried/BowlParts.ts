@@ -100,7 +100,6 @@ export const bowlShapeLook: CarriedShapeLook = {
 function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
   const look = isATeaBowlId(itemId) ? bowlLookById[itemId] : porcelainBowl
   const glazed = materials.unsharedMaterialFor(look.glaze)
-  glazed.side = THREE.DoubleSide
   const body = new THREE.Mesh(bowlGeometryWith(look.relief), glazed)
   const meshes: THREE.Object3D[] = [body]
   const levelsOfDetail: LevelOfDetail[] = [{ mesh: body, near: body.geometry, far: distantBowlGeometry() }]
@@ -130,7 +129,6 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
   }
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')
-  clearGlass.side = THREE.DoubleSide
   return { ...bowl, heldInViewLook: { mesh: body, inRoom: glazed, heldInView: clearGlass }, liquidVolumeAt: bowlLiquidGeometry }
 }
 

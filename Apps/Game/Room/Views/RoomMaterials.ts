@@ -30,12 +30,15 @@ export type Surface =
   | 'darkWood'
   | 'bamboo'
   | 'clay'
+  | 'claySeenFromInside'
   | 'porcelain'
+  | 'liquidBody'
   | 'steel'
   | 'thermosInside'
   | 'thermosPainting'
   | 'aluminium'
   | 'caddyGreen'
+  | 'caddyGreenSeenFromInside'
   | 'cloth'
   | 'redCheckCloth'
   | 'wetCloth'
@@ -47,6 +50,10 @@ export type Surface =
   | 'flame'
   | 'flameCore'
   | 'ember'
+  | 'redHotMetal'
+  | 'dullRedHeat'
+  | 'brightRedHeat'
+  | 'leaves'
   | 'jade'
   | 'toadBrown'
   | 'heaterPlate'
@@ -120,8 +127,8 @@ export type BowlPaintings = {
   readonly bowlIdWithTheToadUnderneath: string
 }
 
-type SurfaceLook = { readonly colour: string } & (
-  | { readonly kind: 'matte' | 'unlit' | 'glow' | 'pearly' | 'pouredLiquid' | 'liquidSurface' | 'glass' | 'clearGlass' | 'gold' | 'aluminium' | 'temperGlaze' | 'kintsugi' | 'thermosPainting' | 'yixingClay' | 'koiPainting' | 'prophecy' }
+type SurfaceLook = { readonly colour: string; readonly isSeenFromBothSides?: true } & (
+  | { readonly kind: 'matte' | 'unlit' | 'leaves' | 'glow' | 'pearly' | 'pouredLiquid' | 'liquidSurface' | 'glass' | 'clearGlass' | 'gold' | 'aluminium' | 'temperGlaze' | 'kintsugi' | 'thermosPainting' | 'yixingClay' | 'koiPainting' | 'prophecy' }
   | { readonly kind: 'mist'; readonly opacity: number }
   | { readonly kind: 'veil'; readonly opacity: number }
   | { readonly kind: 'skyDome' }
@@ -140,6 +147,10 @@ const inspectionDimmingOpacity = 0.6
 const heaterPlateColour = '#3d3733'
 const workingHeaterGlowIntensity = 0.8
 const matteRoughness = 0.92
+const leafRoughness = 0.85
+const clayColour = '#b8643c'
+const porcelainColour = '#f7f2e8'
+const caddyGreenColour = '#5f9a7c'
 const glassEdgeSharpness = 2
 const glassGlintFrom = 0.7
 const glassGlintFull = 1.4
@@ -165,18 +176,21 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   wood: { colour: '#c98e5a', kind: 'matte' },
   darkWood: { colour: '#8f5a3a', kind: 'matte' },
   bamboo: { colour: '#e6c67a', kind: 'matte' },
-  clay: { colour: '#b8643c', kind: 'matte' },
-  porcelain: { colour: '#f7f2e8', kind: 'matte' },
+  clay: { colour: clayColour, kind: 'matte' },
+  claySeenFromInside: { colour: clayColour, kind: 'matte', isSeenFromBothSides: true },
+  porcelain: { colour: porcelainColour, kind: 'matte', isSeenFromBothSides: true },
+  liquidBody: { colour: porcelainColour, kind: 'matte' },
   steel: { colour: '#7d97a3', kind: 'matte' },
   lampDisplay: { colour: '#ffffff', kind: 'unlit' },
   heaterLampDisplay: { colour: '#b3b3b3', kind: 'unlit' },
   controlKey: { colour: '#d8cfbd', kind: 'matte' },
   lampLit: { colour: '#7dff9e', kind: 'unlit' },
   lampDark: { colour: '#1d3324', kind: 'matte' },
-  thermosInside: { colour: '#3f4b50', kind: 'matte' },
+  thermosInside: { colour: '#3f4b50', kind: 'matte', isSeenFromBothSides: true },
   thermosPainting: { colour: '#ffffff', kind: 'thermosPainting' },
-  aluminium: { colour: '#aab0b5', kind: 'aluminium' },
-  caddyGreen: { colour: '#5f9a7c', kind: 'matte' },
+  aluminium: { colour: '#aab0b5', kind: 'aluminium', isSeenFromBothSides: true },
+  caddyGreen: { colour: caddyGreenColour, kind: 'matte' },
+  caddyGreenSeenFromInside: { colour: caddyGreenColour, kind: 'matte', isSeenFromBothSides: true },
   cloth: { colour: '#ffffff', kind: 'wovenCloth', pattern: 'blueStripes' },
   redCheckCloth: { colour: '#ffffff', kind: 'wovenCloth', pattern: 'redCheck' },
   wetCloth: { colour: '#a4a4a6', kind: 'matte' },
@@ -188,6 +202,10 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   flame: { colour: '#ff8a2a', kind: 'glow' },
   flameCore: { colour: '#ffe07a', kind: 'glow' },
   ember: { colour: '#ff4a12', kind: 'glow' },
+  redHotMetal: { colour: '#3a0904', kind: 'matte' },
+  dullRedHeat: { colour: '#8a1000', kind: 'unlit' },
+  brightRedHeat: { colour: '#ff2a00', kind: 'unlit' },
+  leaves: { colour: '#ffffff', kind: 'leaves' },
   jade: { colour: '#6fb59a', kind: 'matte' },
   toadBrown: { colour: '#b39a5c', kind: 'matte' },
   heaterPlate: { colour: heaterPlateColour, kind: 'matte' },
@@ -221,22 +239,22 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   caddyInside: { colour: '#2f3d33', kind: 'matte' },
   caddyLabel: { colour: '#efe2c4', kind: 'matte' },
   caddyRim: { colour: '#c9a45c', kind: 'matte' },
-  whiteGlaze: { colour: '#fbfaf6', kind: 'glaze', paint: null },
-  pearlGlaze: { colour: '#f2ece6', kind: 'pearly' },
-  skyBlueGlaze: { colour: '#9fd0ea', kind: 'glaze', paint: paintCrackle },
-  blueGlaze: { colour: '#2f5ea8', kind: 'kintsugi' },
-  yellowGlaze: { colour: '#f1cd55', kind: 'glaze', paint: null },
-  blackGlaze: { colour: '#15120f', kind: 'glaze', paint: null },
-  emeraldGlaze: { colour: '#1f8a68', kind: 'glaze', paint: paintGreenMarble },
-  temperGlaze: { colour: '#7a6650', kind: 'temperGlaze' },
-  glass: { colour: '#ffffff', kind: 'glass' },
+  whiteGlaze: { colour: '#fbfaf6', kind: 'glaze', paint: null, isSeenFromBothSides: true },
+  pearlGlaze: { colour: '#f2ece6', kind: 'pearly', isSeenFromBothSides: true },
+  skyBlueGlaze: { colour: '#9fd0ea', kind: 'glaze', paint: paintCrackle, isSeenFromBothSides: true },
+  blueGlaze: { colour: '#2f5ea8', kind: 'kintsugi', isSeenFromBothSides: true },
+  yellowGlaze: { colour: '#f1cd55', kind: 'glaze', paint: null, isSeenFromBothSides: true },
+  blackGlaze: { colour: '#15120f', kind: 'glaze', paint: null, isSeenFromBothSides: true },
+  emeraldGlaze: { colour: '#1f8a68', kind: 'glaze', paint: paintGreenMarble, isSeenFromBothSides: true },
+  temperGlaze: { colour: '#7a6650', kind: 'temperGlaze', isSeenFromBothSides: true },
+  glass: { colour: '#ffffff', kind: 'glass', isSeenFromBothSides: true },
   gildedRim: { colour: '#e2b451', kind: 'gold' },
   medalRibbon: { colour: '#a8392e', kind: 'matte' },
   gearMetal: { colour: '#7f868b', kind: 'aluminium' },
   darkGearMetal: { colour: '#5f666b', kind: 'aluminium' },
   darkIron: { colour: '#34302c', kind: 'matte' },
   faucetArm: { colour: '#3a4a52', kind: 'matte' },
-  clearGlassHeldInView: { colour: '#26302c', kind: 'clearGlass' },
+  clearGlassHeldInView: { colour: '#26302c', kind: 'clearGlass', isSeenFromBothSides: true },
   koiPainting: { colour: '#ffffff', kind: 'koiPainting' },
   toadPainting: { colour: '#ffffff', kind: 'painting', paint: paintToad },
   prophecyInscription: { colour: '#ffffff', kind: 'prophecy' },
@@ -247,7 +265,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   guideBookPageEdges: { colour: '#e6d4ac', kind: 'matte' },
   heronPainting: { colour: '#ffffff', kind: 'painting', paint: paintHeron },
   teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
-  yixingClay: { colour: '#ffffff', kind: 'yixingClay' },
+  yixingClay: { colour: '#ffffff', kind: 'yixingClay', isSeenFromBothSides: true },
   lawn: { colour: '#79a94f', kind: 'matte' },
 }
 
@@ -315,12 +333,26 @@ export class RoomMaterials {
     return new THREE.Color(lookBySurface[surface].colour)
   }
 
+  colourOfACloth(teaStain: number, wetShare: number): THREE.Color {
+    const dryColour = this.colourOf('cloth').lerp(this.colourOf('teaStainedCloth'), teaStain)
+    const wetDarkening = this.colourOf('cloth').lerp(this.colourOf('wetCloth'), wetShare)
+    return dryColour.multiply(wetDarkening)
+  }
+
   unsharedMaterialFor(surface: Surface): SurfaceMaterial {
     const look = lookBySurface[surface]
+    const material = this.materialOf(look)
+    if (look.isSeenFromBothSides === true) material.side = THREE.DoubleSide
+    return material
+  }
+
+  private materialOf(look: SurfaceLook): SurfaceMaterial {
     const color = look.colour
     switch (look.kind) {
       case 'matte':
         return new THREE.MeshStandardMaterial({ color, roughness: matteRoughness, metalness: 0, flatShading: true })
+      case 'leaves':
+        return new THREE.MeshStandardMaterial({ color, roughness: leafRoughness, flatShading: true })
       case 'heated':
         return new THREE.MeshStandardMaterial({ color, roughness: matteRoughness, metalness: 0, flatShading: true, emissive: look.glowColour, emissiveIntensity: look.glowIntensity })
       case 'unlit':

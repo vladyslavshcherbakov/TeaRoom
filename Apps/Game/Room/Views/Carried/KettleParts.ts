@@ -46,7 +46,7 @@ export const kettleShapeLook: CarriedShapeLook = {
 function kettleParts(materials: CarriedModelMaterials): ItemParts {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash, openingAngle } = kettleShape
   const bodyWithAnOpening = new THREE.SphereGeometry(bodyRadiusMetres, 20, 14, 0, Math.PI * 2, openingAngle, Math.PI - openingAngle)
-  const body = new THREE.Mesh(bodyWithAnOpening, materials.claySeenFromInside)
+  const body = new THREE.Mesh(bodyWithAnOpening, materials.room.materialFor('claySeenFromInside'))
   body.scale.set(1, bodySquash, 1)
   body.position.y = bodyCentreMetres
   const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.14, 8), materials.room.materialFor('clay'))

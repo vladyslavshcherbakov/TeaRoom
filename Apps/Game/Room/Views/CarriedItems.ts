@@ -2,7 +2,6 @@ import * as THREE from 'three'
 import type { Spot } from '../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { itemLocationIn, middleHandIndex } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
-import type { ClothView } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
 import { turnOfItemAt, undersideOfTheBoardAbove, type WorldPoint } from '../RoomLayout.ts'
@@ -51,9 +50,7 @@ export class CarriedItems {
     this.surroundings = surroundings
     this.clothPatternsById = clothPatternsById
     this.materials = materials
-    const claySeenFromInside = materials.unsharedMaterialFor('clay')
-    claySeenFromInside.side = THREE.DoubleSide
-    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, { room: materials, claySeenFromInside, cloth: this.clothMaterialFor(itemId, shape) }))
+    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, { room: materials, cloth: this.clothMaterialFor(itemId, shape) }))
     for (const model of this.models) {
       this.root.add(model.root, ...model.puffs, ...model.sipPuffs)
       this.tappableMeshes.push(model.root)
@@ -70,7 +67,10 @@ export class CarriedItems {
     const sceneOfTheContents = withTheSipStillInTheCup(scene)
     for (const model of this.models) showContentsOf(model, sceneOfTheContents, this.surroundings)
     for (const model of this.models) drawInTheDetailItsSizeNeeds(model, scene.distantDetail)
-    for (const [clothId, material] of this.clothMaterialsByClothId) material.color.copy(this.clothColourFor(scene.table.cloths[clothId]))
+    for (const [clothId, material] of this.clothMaterialsByClothId) {
+      const cloth = scene.table.cloths[clothId]
+      material.color.copy(this.materials.colourOfACloth(cloth?.teaStain ?? 0, cloth?.wetShare ?? 0))
+    }
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
     this.ash.show(scene.timeSeconds)
     this.waterStreams.show(scene, this.models)
@@ -98,12 +98,6 @@ export class CarriedItems {
     const material = this.materials.unsharedMaterialFor(surfaceByClothPattern[this.clothPatternsById.get(itemId) ?? 'blueStripes'])
     this.clothMaterialsByClothId.set(itemId, material)
     return material
-  }
-
-  private clothColourFor(cloth: ClothView | undefined): THREE.Color {
-    const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), cloth?.teaStain ?? 0)
-    const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), cloth?.wetShare ?? 0)
-    return dryColour.multiply(wetDarkening)
   }
 
   private place(model: CarriedModel, scene: CarriedItemsScene): void {

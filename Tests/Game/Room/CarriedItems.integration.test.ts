@@ -323,7 +323,7 @@ function vesselModelsInTheQuietRoom(): CarriedModel[] {
 function plainMaterials(): CarriedModelMaterials {
   const plain = (): THREE.MeshStandardMaterial => new THREE.MeshStandardMaterial({ side: THREE.DoubleSide })
   const room: SurfaceMaterials = { materialFor: plain, unsharedMaterialFor: plain, colourOf: () => new THREE.Color(), bowlIdWithTheToadUnderneath: 'bowl1' }
-  return { room, claySeenFromInside: plain(), cloth: plain() }
+  return { room, cloth: plain() }
 }
 
 function drawnMeshesUnder(object: THREE.Object3D, model: CarriedModel): THREE.Mesh[] {

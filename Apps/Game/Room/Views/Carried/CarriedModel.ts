@@ -52,6 +52,7 @@ export type CarriedModel = {
   liquidVolumeHeight: number
   readonly gaugeWater: GaugeStrip | null
   readonly leafHolder: THREE.Group | null
+  readonly leafMaterial: THREE.Material
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
   readonly soakedLeafHolder: THREE.Group | null
   soakedLeaves: { readonly pile: LeafPile; readonly teaId: string } | null
@@ -105,11 +106,10 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const liquid = liquidMaterial === null ? null : new THREE.Mesh(new THREE.CircleGeometry(1, liquidSurfaceSegments), liquidMaterial)
   if (liquid !== null && liquidMaterial !== null) {
     liquid.rotation.x = -Math.PI / 2
-    liquidMaterial.transparent = true
     liquid.renderOrder = liquidDrawnAfterThePaintingBelowIt
     root.add(liquid)
   }
-  const liquidVolume = parts.liquidVolumeAt !== null ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
+  const liquidVolume = parts.liquidVolumeAt !== null ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('liquidBody')) : null
   if (liquidVolume !== null) root.add(liquidVolume)
   if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight))
   const opening = parts.liquidLevel === null ? null : touchAreaOverTheOpening(shape, parts.rimHeight)
@@ -148,6 +148,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     liquidVolumeHeight: 0,
     gaugeWater: parts.gaugeWater,
     leafHolder,
+    leafMaterial: materials.room.materialFor('leaves'),
     leaves: null,
     soakedLeafHolder,
     soakedLeaves: null,

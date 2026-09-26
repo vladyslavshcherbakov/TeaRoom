@@ -43,9 +43,6 @@ const tiltAlongPaceShareOfTheRise = 1.3
 const puffsBySteam: Readonly<Record<SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
 const leavesAboveTheWaterMetres = 0.0015
 const oilySheenOfTar = 0.9
-const redHotMetal = new THREE.Color('#3a0904')
-const dullRedHeat = new THREE.Color('#8a1000')
-const brightRedHeat = new THREE.Color('#ff2a00')
 const redHeatRisesWithGlow = 1.5
 const brightestRedHeatIntensity = 2.2
 const leavesDriftRadiansPerSecondByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
@@ -167,7 +164,7 @@ function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItem
   const teaId = scene.state.teaId
   if (model.leaves === null || model.leaves.teaId !== teaId) {
     if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
-    const pile = new LeafPile(teaLookFor(teaId), looseLeaves.pile)
+    const pile = new LeafPile(teaLookFor(teaId), looseLeaves.pile, model.leafMaterial)
     pile.mesh.layers.set(model.layer)
     pile.mesh.userData = { ...holder.userData }
     holder.add(pile.mesh)
@@ -233,7 +230,7 @@ function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: Vess
   if (soaked === null || soakedLook === null || !holder.visible) return
   if (model.soakedLeaves === null || model.soakedLeaves.teaId !== soaked.teaId) {
     if (model.soakedLeaves !== null) holder.remove(model.soakedLeaves.pile.mesh)
-    const pile = new LeafPile(teaLookFor(soaked.teaId), soakedLook.pile)
+    const pile = new LeafPile(teaLookFor(soaked.teaId), soakedLook.pile, model.leafMaterial)
     pile.mesh.layers.set(model.layer)
     holder.add(pile.mesh)
     model.soakedLeaves = { pile, teaId: soaked.teaId }
@@ -254,10 +251,10 @@ function soakedLeavesTurnedBy(model: CarriedModel, motion: SurfaceMotion, timeSe
 }
 
 function showRedHeat(shell: GlowingShell, glow: number): void {
-  const { metal, coolColour, coolMetalness } = shell
-  metal.color.copy(coolColour).lerp(redHotMetal, glow)
+  const { metal, coolColour, coolMetalness, hotColour, dullHeatGlow, brightHeatGlow } = shell
+  metal.color.copy(coolColour).lerp(hotColour, glow)
   metal.metalness = coolMetalness * (1 - glow)
-  metal.emissive.copy(dullRedHeat).lerp(brightRedHeat, glow)
+  metal.emissive.copy(dullHeatGlow).lerp(brightHeatGlow, glow)
   metal.emissiveIntensity = glow ** redHeatRisesWithGlow * brightestRedHeatIntensity
 }
 

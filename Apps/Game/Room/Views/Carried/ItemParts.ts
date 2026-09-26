@@ -39,6 +39,9 @@ export type GlowingShell = {
   readonly metal: THREE.MeshStandardMaterial
   readonly coolColour: THREE.Color
   readonly coolMetalness: number
+  readonly hotColour: THREE.Color
+  readonly dullHeatGlow: THREE.Color
+  readonly brightHeatGlow: THREE.Color
 }
 
 export type HeldInViewLook = {
@@ -49,7 +52,6 @@ export type HeldInViewLook = {
 
 export type CarriedModelMaterials = {
   readonly room: SurfaceMaterials
-  readonly claySeenFromInside: THREE.Material
   readonly cloth: THREE.Material
 }
 

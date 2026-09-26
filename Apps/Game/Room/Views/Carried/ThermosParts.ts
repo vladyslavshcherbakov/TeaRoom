@@ -53,7 +53,6 @@ export const thermosShapeLook: CarriedShapeLook = {
 
 function thermosParts(materials: SurfaceMaterials): ItemParts {
   const aluminium = materials.unsharedMaterialFor('aluminium')
-  aluminium.side = THREE.DoubleSide
   const foot = new THREE.Mesh(new THREE.CylinderGeometry(thermosFootRadiusMetres, thermosFootRadiusMetres, thermosFootTopMetres, thermosSegmentsAround, 1, true), aluminium)
   foot.position.y = thermosFootTopMetres / 2
   const base = new THREE.Mesh(new THREE.CircleGeometry(thermosFootRadiusMetres, thermosSegmentsAround), aluminium)
@@ -69,7 +68,6 @@ function thermosParts(materials: SurfaceMaterials): ItemParts {
   const ridges = thermosNeckRidgeHeightsMetres.map((height) => ringAround(thermosNeckRadiusMetres, thermosNeckRidgeTubeMetres, height, aluminium))
   const lip = ringAround(thermosNeckRadiusMetres - thermosLipTubeMetres, thermosLipTubeMetres, thermosMouthMetres, aluminium)
   const insideWall = materials.unsharedMaterialFor('thermosInside')
-  insideWall.side = THREE.DoubleSide
   const insideHeight = thermosMouthMetres - thermosFloorMetres
   const inside = new THREE.Mesh(new THREE.CylinderGeometry(thermosInsideRadiusMetres, thermosInsideRadiusMetres, insideHeight, thermosSegmentsAround, 1, true), insideWall)
   inside.position.y = thermosFloorMetres + insideHeight / 2
@@ -77,7 +75,7 @@ function thermosParts(materials: SurfaceMaterials): ItemParts {
   floor.rotation.x = -Math.PI / 2
   floor.position.y = thermosFloorMetres
   const meshes = [foot, base, body, shoulder, neck, ...ridges, lip, inside, floor]
-  const glowingShell = aluminium instanceof THREE.MeshStandardMaterial ? { metal: aluminium, coolColour: aluminium.color.clone(), coolMetalness: aluminium.metalness } : null
+  const glowingShell = aluminium instanceof THREE.MeshStandardMaterial ? { metal: aluminium, coolColour: aluminium.color.clone(), coolMetalness: aluminium.metalness, hotColour: materials.colourOf('redHotMetal'), dullHeatGlow: materials.colourOf('dullRedHeat'), brightHeatGlow: materials.colourOf('brightRedHeat') } : null
   markAsGlowing(aluminium)
   return {
     meshes,

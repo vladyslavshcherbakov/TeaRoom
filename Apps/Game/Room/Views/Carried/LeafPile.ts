@@ -19,9 +19,8 @@ export class LeafPile {
   private readonly leafCount: number
   readonly mesh: THREE.InstancedMesh
 
-  constructor(look: TeaLook, size: LeafPileSize) {
+  constructor(look: TeaLook, size: LeafPileSize, material: THREE.Material) {
     this.leafCount = size.leafCount
-    const material = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.85, flatShading: true })
     this.mesh = new THREE.InstancedMesh(leafGeometryOf(look.leafShape), material, size.leafCount)
     this.mesh.castShadow = false
     this.mesh.receiveShadow = true
