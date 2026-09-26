@@ -245,6 +245,18 @@ test('middleHand_forAThermosTooHotToTake_doesNotGrow', () => {
   assert.deepEqual(ritual.state.keeper.hands, ['kettle', 'cup1', null])
 })
 
+test('middleHand_forAnItemOutOfReach_isRefusedAsTheMiddleHandTakeAndDoesNotGrow', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  ritual.do({ type: 'pickUp', itemId: 'cup2' })
+
+  const events = ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'kettle' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUpWithAMiddleHand', reason: 'outOfReach' }])
+  assert.equal(ritual.state.keeper.hasAMiddleHand, false)
+})
+
 function houseRitual(): TestRitual {
   return TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
 }
