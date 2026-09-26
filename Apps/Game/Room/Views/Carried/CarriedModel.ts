@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { LampDisplay } from '../LampDisplay.ts'
 import { layoutByShape, type CarriedShape } from '../../CarriedShapes.ts'
 import { isATouchArea, touchAreaOf } from '../RoomLayers.ts'
 import { bowlShapeLook } from './BowlParts.ts'
@@ -41,6 +42,7 @@ export type CarriedModel = {
   readonly heldInViewLook: HeldInViewLook | null
   readonly glowingShell: GlowingShell | null
   readonly charTo: CharTo | null
+  readonly thermometer: LampDisplay | null
   tagKey: string
   layer: number
   isHeldInView: boolean
@@ -117,6 +119,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     heldInViewLook: parts.heldInViewLook,
     glowingShell: parts.glowingShell,
     charTo: parts.charTo,
+    thermometer: parts.thermometer,
     tagKey: '',
     layer: 0,
     isHeldInView: false,

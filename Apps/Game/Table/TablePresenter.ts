@@ -43,6 +43,7 @@ export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catal
   return {
     vessels,
     isHeaterOn: state.heater.isOn,
+    thermostat: { targetC: state.heater.thermostat.targetC, isOn: state.heater.thermostat.isOn },
     caddy: { isOpen: state.vessels[caddyItemId]?.isLidOpen === true, fillShare: share(state.vessels[caddyItemId]?.leaves?.grams ?? 0, definitionIn(catalog, 'rooms', state.roomId).caddyGrams) },
     spoonFillShare: share(state.spoon.grams, state.spoon.capacityGrams),
     cloths: Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { wetShare: share(cloth.wetMl, clothSoakedAtMl), teaStain: cloth.teaStain }])),
@@ -94,6 +95,7 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
     isLidOpen: definition.lid === null ? null : vessel.isLidOpen,
     soakedLeaves: soakedLeavesOf(vessel),
     shellGlow: vessel.shellHeat,
+    waterTemperatureC: isEmpty(vessel.liquid) ? null : vessel.liquid.temperatureC,
   }
 }
 

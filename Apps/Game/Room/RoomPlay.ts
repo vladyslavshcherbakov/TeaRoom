@@ -19,6 +19,7 @@ import { carriedShapeOf, layoutOf } from './CarriedShapes.ts'
 import { puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { ScreenPoint } from './RoomGestures.ts'
+import { degreesShownIn, targetOneDegreeAway, type TemperatureUnit } from './Temperatures.ts'
 import type { Walk } from './Walking/Walk.ts'
 import { wetMlAt } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
@@ -34,6 +35,9 @@ export type RoomTapTarget =
   | { readonly kind: 'item'; readonly itemId: string }
   | { readonly kind: 'heater' }
   | { readonly kind: 'heaterSwitch' }
+  | { readonly kind: 'heaterPanel' }
+  | { readonly kind: 'thermostatArrow'; readonly step: 1 | -1 }
+  | { readonly kind: 'thermostatButton' }
   | { readonly kind: 'faucet' }
   | { readonly kind: 'sink' }
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
@@ -54,6 +58,7 @@ type Press = {
   heldSeconds: number
   hasMovedAway: boolean
   readonly stroke: WipeStroke | null
+  repeatedSteps: number
 }
 
 type CloseUpAction = {
@@ -63,6 +68,8 @@ type CloseUpAction = {
 }
 
 const fullSpoonDepth = 1
+const holdSecondsBeforeAnArrowRepeats = 0.5
+const secondsBetweenRepeatedSteps = 0.1
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const tapsWithFullHandsThatGrowAMiddleHand = 10
@@ -75,6 +82,7 @@ export type RoomPlayListener = {
   readonly achievementsAsked: () => void
   readonly settingsAsked: () => void
   readonly mayGrowAMiddleHand: () => boolean
+  readonly temperatureUnit: () => TemperatureUnit
   readonly keeperDied: () => void
 }
 
@@ -151,7 +159,7 @@ export class RoomPlay {
 
   pressStarted(target: RoomTapTarget): void {
     if (this.aimedPour !== null) return this.log(`press on ${describeTarget(target)} ignored while aiming a pour`)
-    this.press = { target, heldSeconds: 0, hasMovedAway: false, stroke: this.wipeStrokeStartingAt(target) }
+    this.press = { target, heldSeconds: 0, hasMovedAway: false, stroke: this.wipeStrokeStartingAt(target), repeatedSteps: 0 }
   }
 
   pressMovedOver(target: RoomTapTarget): void {
@@ -173,6 +181,7 @@ export class RoomPlay {
     this.press = null
     if (press === null) return
     if (press.stroke !== null && press.hasMovedAway) return this.finishTheStroke(press.stroke, press.heldSeconds)
+    if (press.repeatedSteps > 0) return this.log(`hold on ${describeTarget(press.target)} ended after ${press.repeatedSteps} steps of the thermostat`)
     if (!press.hasMovedAway) this.tapped(press.target)
   }
 
@@ -271,7 +280,9 @@ export class RoomPlay {
   advance(seconds: number): void {
     this.navigator.advance(seconds)
     this.aimedPour?.advance(seconds)
-    if (this.press !== null) this.press.heldSeconds += seconds
+    if (this.press === null) return
+    this.press.heldSeconds += seconds
+    this.repeatTheHeldArrow(this.press)
   }
 
   private tapped(target: RoomTapTarget): void {
@@ -360,6 +371,12 @@ export class RoomPlay {
         return { act: () => this.putTheChosenItemInTheSink(), isDoneWithTheChosenItem: true, isAControl: false }
       case 'heaterSwitch':
         return { act: () => this.switchTheHeater(), isDoneWithTheChosenItem: false, isAControl: true }
+      case 'heaterPanel':
+        return { act: () => this.log('tap on the heater panel between its controls does nothing'), isDoneWithTheChosenItem: false, isAControl: true }
+      case 'thermostatArrow':
+        return { act: () => this.stepTheThermostat(target.step), isDoneWithTheChosenItem: false, isAControl: true }
+      case 'thermostatButton':
+        return { act: () => this.pressTheThermostatButton(), isDoneWithTheChosenItem: false, isAControl: true }
       case 'faucet':
         return { act: () => this.turnTheTap(), isDoneWithTheChosenItem: false, isAControl: true }
       default:
@@ -369,6 +386,30 @@ export class RoomPlay {
 
   private switchTheHeater(): void {
     this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
+  }
+
+  private stepTheThermostat(step: 1 | -1): void {
+    const thermostat = this.ritual.state.heater.thermostat
+    const unit = this.listener.temperatureUnit()
+    const range = definitionIn(this.catalog, 'heaters', this.ritual.state.heater.definitionId).thermostat
+    const targetC = targetOneDegreeAway(thermostat.targetC, step, unit, range)
+    if (targetC === null) return this.log(`the thermostat stays at ${degreesShownIn(unit, thermostat.targetC)} degrees ${unit}, its ${step > 0 ? 'highest' : 'lowest'}`)
+    this.ritual.dispatch({ type: 'setTheThermostat', targetC })
+  }
+
+  private pressTheThermostatButton(): void {
+    this.ritual.dispatch({ type: this.ritual.state.heater.thermostat.isOn ? 'stopTheThermostat' : 'startTheThermostat' })
+  }
+
+  private repeatTheHeldArrow(press: Press): void {
+    const target = press.target
+    if (target.kind !== 'thermostatArrow' || press.hasMovedAway || this.view.kind !== 'closeUp') return
+    if (press.heldSeconds < holdSecondsBeforeAnArrowRepeats) return
+    const stepsDue = 1 + Math.floor((press.heldSeconds - holdSecondsBeforeAnArrowRepeats) / secondsBetweenRepeatedSteps)
+    while (press.repeatedSteps < stepsDue) {
+      press.repeatedSteps += 1
+      this.stepTheThermostat(target.step)
+    }
   }
 
   private keeperMovedTo(furnitureId: FurnitureId | null): void {
@@ -577,6 +618,9 @@ export class RoomPlay {
         return target.furnitureId
       case 'heater':
       case 'heaterSwitch':
+      case 'heaterPanel':
+      case 'thermostatArrow':
+      case 'thermostatButton':
         return this.furnitureWithPlace(this.heaterSpot().placeId)
       case 'faucet':
       case 'sink':

@@ -3,6 +3,7 @@ import { touchAreaOf } from '../RoomLayers.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
+import { LampDisplay } from '../LampDisplay.ts'
 import { GaugeStrip } from './GaugeStrip.ts'
 import type { CarriedModelMaterials, ItemParts, PointDownTheSide } from './ItemParts.ts'
 import { kettleRadiusAt, kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
@@ -19,6 +20,11 @@ const overflowAboveTheBodyMetres = 0.005
 const overflowLeavesTheKettleAtRadians = 2.4
 const overflowPointsOnTheKettle = 12
 const soakedLeavesRadiusMetres = 0.06
+const thermometerWidthMetres = 0.084
+const thermometerHeightMetres = 0.038
+const thermometerTurnFromTheGaugeRadians = 0.55
+const thermometerHeightOnTheBodyMetres = 0.125
+const thermometerAboveTheBodyMetres = 0.007
 const leavesClearOfTheWallMetres = 0.006
 
 export const kettleShapeLook: CarriedShapeLook = {
@@ -51,7 +57,8 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
   lid.position.y = 0.215
   const gauge = waterGauge(materials.room)
   const kettleWater = waterInsideTheKettle(materials.room)
-  const meshes = [body, spout, gauge.frame.mesh, gauge.water.mesh, kettleWater]
+  const thermometer = thermometerOnTheBody(materials.room)
+  const meshes = [body, spout, gauge.frame.mesh, gauge.water.mesh, kettleWater, thermometer.mesh]
   return {
     meshes,
     lid,
@@ -66,6 +73,7 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
     kettleWater,
     liquidTint: null,
     charTo: null,
+    thermometer,
   }
 }
 
@@ -85,6 +93,20 @@ function waterInsideTheKettle(materials: SurfaceMaterials): THREE.Mesh {
   water.rotation.x = -Math.PI / 2
   water.visible = false
   return water
+}
+
+function thermometerOnTheBody(materials: SurfaceMaterials): LampDisplay {
+  const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
+  const thermometer = new LampDisplay(thermometerWidthMetres, thermometerHeightMetres, materials.unsharedMaterialFor('lampDisplay'))
+  const height = thermometerHeightOnTheBodyMetres
+  const radius = kettleRadiusAt(height)
+  const onTheBody = new THREE.Vector3(Math.sin(thermometerTurnFromTheGaugeRadians) * radius, height, Math.cos(thermometerTurnFromTheGaugeRadians) * radius)
+  const bodyHalfHeight = bodyRadiusMetres * bodySquash
+  const outward = new THREE.Vector3(onTheBody.x / bodyRadiusMetres ** 2, (height - bodyCentreMetres) / bodyHalfHeight ** 2, onTheBody.z / bodyRadiusMetres ** 2).normalize()
+  thermometer.mesh.position.copy(onTheBody).addScaledVector(outward, thermometerAboveTheBodyMetres)
+  thermometer.mesh.lookAt(thermometer.mesh.position.clone().add(outward))
+  thermometer.mesh.visible = false
+  return thermometer
 }
 
 function waterGauge(materials: SurfaceMaterials): { frame: GaugeStrip; water: GaugeStrip } {

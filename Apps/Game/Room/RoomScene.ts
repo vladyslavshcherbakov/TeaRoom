@@ -59,6 +59,7 @@ import { RoomModel, type TapTargetTag } from './Views/RoomModel.ts'
 import { PourControls } from './Views/PourControls.ts'
 import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
+import { degreesShownIn } from './Temperatures.ts'
 
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
@@ -167,6 +168,7 @@ export class RoomScene {
       achievementsAsked: () => this.showTheAchievements(),
       settingsAsked: () => this.settingsScreen.show(this.settings),
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
+      temperatureUnit: () => this.settings.temperatureUnit,
       keeperDied: () => {
         this.hasTheKeeperDied = true
         this.achievements.keeperDied()
@@ -205,6 +207,8 @@ export class RoomScene {
       softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.changeTheSettings({ hasSoftShadowsInCorners }, 'from the settings'),
       frameRateShownChosen: (isFrameRateShown) => this.changeTheSettings({ isFrameRateShown }, 'from the settings'),
       faceFeatureChosen: (faceFeature) => this.changeTheSettings({ faceFeature }, 'from the settings'),
+      nerdModeChosen: (isNerdModeOn) => this.changeTheSettings({ isNerdModeOn }, 'from the settings'),
+      temperatureUnitChosen: (temperatureUnit) => this.changeTheSettings({ temperatureUnit }, 'from the settings'),
     })
     this.frameRateCounter = new FrameRateCounter(container)
     new FullScreenButton(container, log)
@@ -247,9 +251,11 @@ export class RoomScene {
     const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex }
     const inspection = this.play.inspectionView
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
-    this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime })
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.room.showHeater(table.isHeaterOn)
+    const unit = this.settings.temperatureUnit
+    this.room.showHeaterControls({ isNerdModeOn: this.settings.isNerdModeOn, target: { degrees: degreesShownIn(unit, table.thermostat.targetC), unit }, isThermostatOn: table.thermostat.isOn })
     this.room.showPuddles(table.puddles)
     const isAiming = this.play.aimedPourView !== null
     const isInspecting = inspection !== null
@@ -500,6 +506,9 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   if ('handIndex' in tag) return { kind: 'hand', handIndex: tag.handIndex }
   if ('isHeater' in tag) return { kind: 'heater' }
   if ('isHeaterSwitch' in tag) return { kind: 'heaterSwitch' }
+  if ('isHeaterPanel' in tag) return { kind: 'heaterPanel' }
+  if ('thermostatArrow' in tag) return { kind: 'thermostatArrow', step: tag.thermostatArrow === 'up' ? 1 : -1 }
+  if ('isThermostatButton' in tag) return { kind: 'thermostatButton' }
   if ('isFaucet' in tag) return { kind: 'faucet' }
   if ('isSink' in tag) return { kind: 'sink' }
   if ('isFloor' in tag) return { kind: 'floor', point: { x: hit.point.x, z: hit.point.z } }

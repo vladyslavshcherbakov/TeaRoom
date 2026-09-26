@@ -1,5 +1,6 @@
 import type * as THREE from 'three'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
+import type { LampDisplay } from '../LampDisplay.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
 
 export type ItemParts = {
@@ -16,6 +17,7 @@ export type ItemParts = {
   readonly kettleWater: THREE.Mesh | null
   readonly liquidTint: THREE.Color | null
   readonly charTo: CharTo | null
+  readonly thermometer: LampDisplay | null
 }
 
 export type PointDownTheSide = { readonly distance: number; readonly height: number }

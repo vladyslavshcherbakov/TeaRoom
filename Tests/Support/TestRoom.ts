@@ -4,6 +4,7 @@ import { RoomGestures, type ScreenReader } from '../../Apps/Game/Room/RoomGestur
 import { quietRoomLayout, type FloorPoint, type FurnitureId, type WorldPoint } from '../../Apps/Game/Room/RoomLayout.ts'
 import { RoomPlay, type RoomTapTarget } from '../../Apps/Game/Room/RoomPlay.ts'
 import type { RoomRemark } from '../../Apps/Game/Room/RoomRemarks.ts'
+import type { TemperatureUnit } from '../../Apps/Game/Room/Temperatures.ts'
 import { defaultCatalog } from '../../Shared/Content/DefaultCatalog.ts'
 import type { Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { TestRitual } from './TestRitual.ts'
@@ -27,6 +28,7 @@ export class TestRoom {
   achievementListsAsked = 0
   settingsAsked = 0
   mayGrowAMiddleHand = true
+  temperatureUnit: TemperatureUnit = 'celsius'
   deathsSeen = 0
 
   constructor(options: TestRoomOptions = {}) {
@@ -39,6 +41,7 @@ export class TestRoom {
       achievementsAsked: () => (this.achievementListsAsked += 1),
       settingsAsked: () => (this.settingsAsked += 1),
       mayGrowAMiddleHand: () => this.mayGrowAMiddleHand,
+      temperatureUnit: () => this.temperatureUnit,
       keeperDied: () => (this.deathsSeen += 1),
     })
     const screen = options.screen?.(this) ?? { tapTargetAt: () => ({ kind: 'nothing' }), aimPointAt: () => ({ x: 0, z: 0 }) }

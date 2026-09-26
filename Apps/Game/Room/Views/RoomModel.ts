@@ -19,9 +19,11 @@ import {
 import { facingDirection, shelfBoards, type Facing } from '../../../../Shared/Content/Rooms.ts'
 import type { RoomArrangement } from '../RoomArrangement.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import { HeaterControls, type HeaterControlsView } from './HeaterControls.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 
 const puddleSegments = 40
+const heaterControlsBelowThePlateMetres = 0.2
 const wallHeight = 2.6
 const wallThickness = 0.12
 const medalRadiusMetres = 0.13
@@ -52,6 +54,9 @@ export type TapTargetTag =
   | { readonly isFloor: true }
   | { readonly isHeater: true }
   | { readonly isHeaterSwitch: true }
+  | { readonly isHeaterPanel: true }
+  | { readonly thermostatArrow: 'up' | 'down' }
+  | { readonly isThermostatButton: true }
   | { readonly isFaucet: true }
   | { readonly isSink: true }
   | { readonly itemId: string }
@@ -80,6 +85,7 @@ export class RoomModel {
   private readonly layout: RoomLayout
   private readonly arrangement: RoomArrangement
   private readonly heaterPlate: THREE.Mesh
+  private readonly heaterControls: HeaterControls
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
@@ -96,6 +102,7 @@ export class RoomModel {
     this.addSettingsGear(layout.settingsGear)
     for (const piece of layout.furniture) this.addFurniture(piece)
     for (const spot of layout.itemSpots) this.addItem(spot)
+    this.heaterControls = new HeaterControls(materials, (object, tag) => this.tag(object, tag))
     this.heaterPlate = this.addHeater(heaterSpot)
   }
 
@@ -104,6 +111,10 @@ export class RoomModel {
     if (!(material instanceof THREE.MeshStandardMaterial)) return
     material.emissive.copy(isOn ? heaterGlowColour : noGlow)
     material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
+  }
+
+  showHeaterControls(view: HeaterControlsView): void {
+    this.heaterControls.show(view)
   }
 
   showPuddles(puddles: readonly TableViewState.Puddle[]): void {
@@ -301,13 +312,10 @@ export class RoomModel {
     const ahead = facingDirection(counter.facing)
     const toTheFront = (counter.facing === 'towardsTheFront' || counter.facing === 'towardsTheBack' ? counter.footprint.depth : counter.footprint.width) / 2
     const heaterForward = (spot.x - counter.footprint.x) * ahead.x + (spot.z - counter.footprint.z) * ahead.z
-    const onTheFront = (outward: number) => ({ x: spot.x + ahead.x * (toTheFront - heaterForward + outward), y: spot.y - 0.2, z: spot.z + ahead.z * (toTheFront - heaterForward + outward) })
-    const switchPanel = this.box('heaterPlate', 0.32, 0.2, 0.02, onTheFront(0.01))
-    switchPanel.rotation.y = turnFacing(counter.facing)
-    const switchKnob = this.cylinder('steel', 0.05, 0.04, onTheFront(0.04))
-    switchKnob.rotation.set(Math.PI / 2, turnFacing(counter.facing), 0, 'YXZ')
-    this.tag(switchPanel, { isHeaterSwitch: true })
-    this.tag(switchKnob, { isHeaterSwitch: true })
+    const controls = this.heaterControls.root
+    controls.position.set(spot.x + ahead.x * (toTheFront - heaterForward), spot.y - heaterControlsBelowThePlateMetres, spot.z + ahead.z * (toTheFront - heaterForward))
+    controls.rotation.y = turnFacing(counter.facing)
+    this.root.add(controls)
     return plate
   }
 

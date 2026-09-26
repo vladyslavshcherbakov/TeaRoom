@@ -54,7 +54,7 @@ function caddyParts(materials: SurfaceMaterials): ItemParts {
   knob.position.y = 0.023
   lid.add(lidTop, knob)
   lid.position.y = 0.174
-  return { meshes: [body, bottom, underside, label, rim], lid, spoutTip: new THREE.Vector3(tinRadiusMetres + rimTubeMetres, tinHeightMetres + rimTubeMetres, 0), rimHeight: tinHeightMetres + rimTubeMetres, liquidLevel: caddyLiquidLevel, liquidVolumeAt: null, pointsDownTheSide: pointsDownTheCaddy, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, liquidTint: null, charTo: null }
+  return { meshes: [body, bottom, underside, label, rim], lid, spoutTip: new THREE.Vector3(tinRadiusMetres + rimTubeMetres, tinHeightMetres + rimTubeMetres, 0), rimHeight: tinHeightMetres + rimTubeMetres, liquidLevel: caddyLiquidLevel, liquidVolumeAt: null, pointsDownTheSide: pointsDownTheCaddy, heldInViewLook: null, glowingShell: null, gaugeWater: null, kettleWater: null, liquidTint: null, charTo: null, thermometer: null }
 }
 
 function caddyLiquidLevel(fillShare: number): { heightMetres: number; radiusMetres: number } {

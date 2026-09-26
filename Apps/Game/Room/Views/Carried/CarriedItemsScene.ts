@@ -1,4 +1,5 @@
 import type * as THREE from 'three'
+import type { TemperatureUnit } from '../../Temperatures.ts'
 import type { DeepReadonly } from '../../../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, SessionState } from '../../../../../Shared/Simulation/State/SessionState.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
@@ -16,6 +17,7 @@ export type CarriedItemsScene = {
   readonly aimedPour: AimedPourView | null
   readonly clothWiping: ClothWiping | null
   readonly timeSeconds: number
+  readonly temperatureUnitShown: TemperatureUnit | null
 }
 
 export type HeldInView = {

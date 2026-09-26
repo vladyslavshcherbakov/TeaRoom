@@ -1,6 +1,7 @@
 export type TableViewState = {
   readonly vessels: Readonly<Record<string, TableViewState.Vessel>>
   readonly isHeaterOn: boolean
+  readonly thermostat: TableViewState.Thermostat
   readonly caddy: TableViewState.Caddy
   readonly spoonFillShare: number
   readonly cloths: Readonly<Record<string, TableViewState.Cloth>>
@@ -13,6 +14,11 @@ export declare namespace TableViewState {
   type SurfaceMotion = 'still' | 'shimmering' | 'simmering' | 'boiling'
   type Heating = 'none' | 'steaming' | 'warming' | 'smoking' | 'scorching' | 'smouldering' | 'burning'
   type BrewStage = 'water' | 'pale' | 'good' | 'rich' | 'heavy' | 'overbrewed' | 'tar'
+
+  type Thermostat = {
+    readonly targetC: number
+    readonly isOn: boolean
+  }
 
   type Charring = {
     readonly charring: number
@@ -41,6 +47,7 @@ export declare namespace TableViewState {
     readonly isLidOpen: boolean | null
     readonly soakedLeaves: SoakedLeaves | null
     readonly shellGlow: number
+    readonly waterTemperatureC: number | null
   }
 
   type SoakedLeaves = {

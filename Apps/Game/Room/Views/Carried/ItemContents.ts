@@ -1,4 +1,6 @@
 import * as THREE from 'three'
+import { degreesShownIn, type TemperatureUnit } from '../../Temperatures.ts'
+import type { LampDisplay } from '../LampDisplay.ts'
 import { itemLocationIn } from '../../../../../Shared/Simulation/Ritual/Reach.ts'
 import { isTheLidOpen, layoutOf } from '../../CarriedShapes.ts'
 import { openLidOffsetBeside, type Surroundings } from '../../Placement.ts'
@@ -55,6 +57,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel)
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
   if (model.gaugeWater !== null && vessel !== undefined) showWaterInGauge(model.gaugeWater, vessel, wave)
+  if (model.thermometer !== null) showTheThermometer(model.thermometer, vessel, scene.temperatureUnitShown)
   if (model.kettleWater !== null && vessel !== undefined) showWaterInsideTheKettle(model.kettleWater, vessel, wave)
   if (model.soakedLeafHolder !== null && vessel !== undefined) showSoakedLeaves(model, model.soakedLeafHolder, vessel, wave, scene.timeSeconds)
   if (model.leafHolder !== null) showLeaves(model, model.leafHolder, scene)
@@ -186,6 +189,13 @@ function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vess
   water.scale.setScalar(Math.max(0.001, bodyRadiusMetres * Math.sqrt(Math.max(0, 1 - heightFromCentre * heightFromCentre)) - 0.003))
   const material = water.material
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
+}
+
+function showTheThermometer(thermometer: LampDisplay, vessel: TableViewState.Vessel | undefined, unit: TemperatureUnit | null): void {
+  thermometer.mesh.visible = unit !== null
+  if (unit === null) return
+  const waterC = vessel?.waterTemperatureC ?? null
+  thermometer.show({ degrees: waterC === null ? null : degreesShownIn(unit, waterC), unit })
 }
 
 function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vector3[] {

@@ -115,6 +115,7 @@ function bowlParts(materials: SurfaceMaterials, itemId: string): ItemParts {
     kettleWater: null,
     liquidTint: new THREE.Color('#ffffff').lerp(new THREE.Color(look.liquidTint), liquidTakesOnTheBowlsColourShare),
     charTo: null,
+    thermometer: null,
   }
   if (look.glaze !== 'glass') return bowl
   const clearGlass = materials.unsharedMaterialFor('clearGlassHeldInView')

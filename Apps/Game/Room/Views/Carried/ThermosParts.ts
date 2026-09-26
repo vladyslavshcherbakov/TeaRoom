@@ -89,6 +89,7 @@ function thermosParts(materials: SurfaceMaterials): ItemParts {
     kettleWater: null,
     liquidTint: null,
     charTo: null,
+    thermometer: null,
   }
 }
 
