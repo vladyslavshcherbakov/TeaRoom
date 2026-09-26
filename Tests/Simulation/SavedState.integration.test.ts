@@ -11,7 +11,7 @@ test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
   const savedState = new TestRitual().savedState as { cloths: Record<string, Record<string, unknown>> }
   delete savedState.cloths['cloth']?.['teaStain']
 
-  const resuming = RitualSession.resume(testCatalog(), savedState, 1, new RecordingLog(), true)
+  const resuming = RitualSession.resume(testCatalog(), savedState, sessionStateVersion, new RecordingLog(), true)
 
   assert.deepEqual(resuming, { kind: 'savedStateDoesNotFit', problems: ['state.cloths.cloth.teaStain is not a number'] })
 })
@@ -21,13 +21,13 @@ test('savedState_withLeavesOfATeaTheCatalogNoLongerHas_doesNotFit', () => {
   const caddy = savedState.vessels['caddy']
   if (caddy !== undefined) caddy.leaves['teaId'] = 'earlGrey'
 
-  const resuming = RitualSession.resume(testCatalog(), savedState, 1, new RecordingLog(), true)
+  const resuming = RitualSession.resume(testCatalog(), savedState, sessionStateVersion, new RecordingLog(), true)
 
   assert.deepEqual(resuming, { kind: 'savedStateDoesNotFit', problems: ['caddy holds leaves of earlGrey, which is not in the catalog'] })
 })
 
 test('savedState_ofAnotherVersion_doesNotFit', () => {
-  const resuming = RitualSession.resume(testCatalog(), new TestRitual().savedState, 0, new RecordingLog(), true)
+  const resuming = RitualSession.resume(testCatalog(), new TestRitual().savedState, sessionStateVersion + 1, new RecordingLog(), true)
 
   assert.equal(resuming.kind, 'savedStateDoesNotFit')
 })
