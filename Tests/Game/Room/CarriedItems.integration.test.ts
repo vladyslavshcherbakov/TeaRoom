@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
-import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
+import { carriedShapeOf, footprintCirclesOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
 import { quietRoomLayout, turnOfItemAt, type FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { standingAt } from '../../../Apps/Game/Room/Walking/Walk.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
@@ -129,6 +129,16 @@ test('aimedVessel_ofEveryShapeOverASurface_staysAboveEveryItemStandingBesideTheS
         assert.ok(sinking <= drawingToleranceMetres, `${model.itemId} sinks ${sinking.toFixed(4)} m into ${standing.itemId} standing beside the spout`)
       }
     }
+  }
+})
+
+test('standingItem_ofEveryShape_isDrawnInsideItsFootprint', () => {
+  for (const model of oneModelOfEachGeometry()) {
+    const footprint = footprintCirclesOf(layoutByShape[model.shape])
+
+    const farthestOutside = Math.max(...drawnPointsOf(model).map((point) => Math.min(...footprint.map((circle) => Math.hypot(point.x - circle.x, point.z - circle.z) - circle.radius))))
+
+    assert.ok(farthestOutside <= drawingToleranceMetres, `${model.itemId} is drawn ${farthestOutside.toFixed(4)} m outside its footprint`)
   }
 })
 
@@ -399,6 +409,14 @@ function drawnBoundsOfTheLid(model: CarriedModel): THREE.Box3 {
   const bounds = new THREE.Box3()
   for (const mesh of model.lid === null ? [] : drawnMeshesUnder(model.lid, model)) bounds.expandByObject(mesh, true)
   return bounds
+}
+
+function drawnPointsOf(model: CarriedModel): THREE.Vector3[] {
+  model.root.updateMatrixWorld(true)
+  return drawnMeshesUnder(model.root, model).flatMap((mesh) => {
+    const positions = mesh.geometry.getAttribute('position')
+    return Array.from({ length: positions.count }, (_, index) => new THREE.Vector3().fromBufferAttribute(positions, index).applyMatrix4(mesh.matrixWorld))
+  })
 }
 
 function drawnBoundsOf(model: CarriedModel): THREE.Box3 {

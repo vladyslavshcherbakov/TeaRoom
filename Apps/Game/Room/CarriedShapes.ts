@@ -43,6 +43,7 @@ export type CarriedShapeLayout = {
 }
 
 const kettleSpoutReach: FootprintCircle = { x: 0.19, z: 0, radius: 0.05, restsOnTheSurface: false }
+const clothCornersReach: readonly FootprintCircle[] = [-1, 1].flatMap((alongSide) => [-1, 1].map((acrossSide) => ({ x: alongSide * 0.119, z: acrossSide * 0.052, radius: 0.058, restsOnTheSurface: true })))
 
 export const layoutByShape: Readonly<Record<CarriedShape, CarriedShapeLayout>> = {
   kettle: { footprintRadiusMetres: 0.16, reachesPastTheFootprint: [kettleSpoutReach], openingRadiusMetres: 0.075, lid: { lyingRadiusMetres: 0.085 } },
@@ -50,7 +51,7 @@ export const layoutByShape: Readonly<Record<CarriedShape, CarriedShapeLayout>> =
   caddy: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.07, lid: { lyingRadiusMetres: 0.085 } },
   bowl: { footprintRadiusMetres: 0.09, reachesPastTheFootprint: [], openingRadiusMetres: 0.075, lid: null },
   spoon: { footprintRadiusMetres: 0.12, reachesPastTheFootprint: [], openingRadiusMetres: 0, lid: null },
-  cloth: { footprintRadiusMetres: 0.14, reachesPastTheFootprint: [], openingRadiusMetres: 0, lid: null },
+  cloth: { footprintRadiusMetres: 0.14, reachesPastTheFootprint: clothCornersReach, openingRadiusMetres: 0, lid: null },
 }
 
 export function footprintCirclesOf(layout: CarriedShapeLayout): readonly FootprintCircle[] {
