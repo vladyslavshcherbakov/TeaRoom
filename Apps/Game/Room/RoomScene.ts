@@ -70,6 +70,8 @@ import { WalkerModel } from './Views/WalkerModel.ts'
 import { degreesShownIn } from './Temperatures.ts'
 import { RoomGlow } from './Views/RoomGlow.ts'
 import { EdgeSmoothing } from './Views/EdgeSmoothing.ts'
+import { FrameBudget } from './FrameBudget.ts'
+import { FrameBudgetPanel, linesOf, type SceneCounts } from './Views/FrameBudgetPanel.ts'
 
 const backgroundColour = '#f6e9d6'
 const largestPixelRatioByDefault = 2
@@ -115,11 +117,14 @@ export class RoomScene {
   private readonly playTime: PlayTime
   private readonly settingsScreen: SettingsScreen
   private readonly frameRateCounter: FrameRateCounter
+  private readonly frameBudget = new FrameBudget()
+  private readonly frameBudgetPanel: FrameBudgetPanel
   private readonly leaveFirstPersonButton: LeaveFirstPersonButton
   private settings: RoomSettings
   private softShadowsInCorners: EffectComposer | null = null
   private glow: RoomGlow | null = null
   private edgeSmoothing: EdgeSmoothing | null = null
+  private isFrameBudgetShown = false
   private readonly carried: CarriedItems
   private readonly sipButton: SipButton
   private readonly pourControls: PourControls
@@ -242,7 +247,10 @@ export class RoomScene {
       keyPressed: (code) => this.shortcuts.keyPressed(code),
       keyReleased: (code) => this.shortcuts.keyReleased(code),
     }, log)
-    this.debugMenu = new DebugMenu(container, (heightCentimetres) => this.keeperHeightChosen(heightCentimetres))
+    this.debugMenu = new DebugMenu(container, {
+      keeperHeightChosen: (heightCentimetres) => this.keeperHeightChosen(heightCentimetres),
+      frameBudgetShownChosen: (isShown) => this.frameBudgetShownChosen(isShown),
+    })
     this.garden = new Garden(materials)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
     this.settingsStore = new SettingsStore(log, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
@@ -263,6 +271,8 @@ export class RoomScene {
       stickLayoutChosen: (stickLayout) => this.settingChosen({ stickLayout }),
     })
     this.frameRateCounter = new FrameRateCounter(container)
+    this.frameBudgetPanel = new FrameBudgetPanel(container)
+    this.renderer.info.autoReset = false
     const cornerButtons = document.createElement('div')
     cornerButtons.className = 'corner-buttons'
     container.append(cornerButtons)
@@ -282,20 +292,27 @@ export class RoomScene {
   }
 
   private frame(): void {
+    this.frameBudget.frameBegan(performance.now())
+    this.renderer.info.reset()
     const secondsSinceTheLastFrame = this.clock.getDelta()
     this.frameRateCounter.frameDrawn(secondsSinceTheLastFrame)
     const seconds = Math.min(secondsSinceTheLastFrame, longestFrameSeconds)
     this.walkAndLookInFirstPerson(seconds)
+    this.frameBudget.phaseEnded('walking', performance.now())
     this.shortcuts.advance(seconds)
     this.debugMenu.advance(seconds)
     this.gestures.advance(secondsSinceTheLastFrame)
+    this.frameBudget.phaseEnded('input', performance.now())
     this.play.advance(seconds)
+    this.frameBudget.phaseEnded('roomPlay', performance.now())
     this.reactTo(this.session.advance(seconds))
+    this.frameBudget.phaseEnded('simulation', performance.now())
     this.caption.advance(seconds)
     this.achievements.worldAdvanced(this.session.state)
     this.achievementNotice.advance(seconds)
     this.keepTheVisitNowAndThen(secondsSinceTheLastFrame)
     this.playTime.frameDrawn(secondsSinceTheLastFrame, { isThePageShown: document.visibilityState === 'visible', hasTheKeeperDied: this.hasTheKeeperDied })
+    this.frameBudget.phaseEnded('bookkeeping', performance.now())
     const daylight = daylightAt(hoursSinceSunriseOf(this.session.state.atmosphere))
     this.roomLights.show(daylight)
     const isFirstPerson = this.settings.cameraMode === 'firstPerson'
@@ -305,6 +322,7 @@ export class RoomScene {
     this.walker.root.visible = isWalkerShown
     this.moveCamera(seconds)
     this.sky.show(daylight, isFirstPerson, this.camera.position)
+    this.frameBudget.phaseEnded('camera', performance.now())
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
     const heldItemsCamera = this.heldItemsCamera()
@@ -313,11 +331,13 @@ export class RoomScene {
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
+    this.frameBudget.phaseEnded('carriedItems', performance.now())
     this.room.showHeater(table.isHeaterOn)
     this.room.advanceTheSettingsGear(seconds)
     const unit = this.settings.temperatureUnit
     this.room.showHeaterControls({ isNerdModeOn: this.settings.isNerdModeOn, target: { degrees: degreesShownIn(unit, table.thermostat.targetC), unit }, isThermostatOn: table.thermostat.isOn })
     this.room.showPuddles(table.puddles)
+    this.frameBudget.phaseEnded('roomParts', performance.now())
     const isAiming = this.play.aimedPourView !== null
     const isInspecting = inspection !== null
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming && !isInspecting)
@@ -327,8 +347,32 @@ export class RoomScene {
     const sticks = sticksShownFor(this.settings.controlScheme, this.settings.stickLayout)
     this.joysticks.show(isLookingFreely && sticks.left !== null, isLookingFreely && sticks.right !== null)
     if (!isLookingFreely || !usesTheMouse(this.settings.controlScheme)) this.keyboardAndMouse.letGoOfTheMouse('the look is not free now')
+    this.frameBudget.phaseEnded('screenControls', performance.now())
     this.render()
     this.noticeTheProphecyIfSeenWhole()
+    this.frameBudget.phaseEnded('bookkeeping', performance.now())
+    this.reportTheFrameBudgetNowAndThen()
+  }
+
+  private reportTheFrameBudgetNowAndThen(): void {
+    const report = this.frameBudget.frameEnded(performance.now())
+    if (report === null || !this.isFrameBudgetShown) return
+    const counts = this.sceneCounts()
+    this.frameBudgetPanel.show(report, counts)
+    this.log(`frame budget: ${linesOf(report, counts).join('; ')}`)
+  }
+
+  private sceneCounts(): SceneCounts {
+    const { render, memory, programs } = this.renderer.info
+    let sceneObjects = 0
+    this.scene.traverse(() => (sceneObjects += 1))
+    return { drawCallsPerFrame: render.calls, trianglesPerFrame: render.triangles, geometries: memory.geometries, textures: memory.textures, shaderPrograms: programs?.length ?? 0, sceneObjects, pageElements: document.getElementsByTagName('*').length }
+  }
+
+  private frameBudgetShownChosen(isShown: boolean): void {
+    this.isFrameBudgetShown = isShown
+    if (!isShown) this.frameBudgetPanel.hide()
+    this.log(isShown ? 'the frame budget is shown from the debug menu, every 2 s' : 'the frame budget is hidden from the debug menu')
   }
 
   private showTheAchievements(): void {
@@ -560,13 +604,18 @@ export class RoomScene {
     this.camera.layers.enable(roomLayers.untappableRoom)
     if (this.softShadowsInCorners !== null) this.softShadowsInCorners.render()
     else this.renderer.render(this.scene, this.camera)
+    this.frameBudget.phaseEnded('roomPass', performance.now())
     this.glow?.drawOver(this.renderer)
+    this.frameBudget.phaseEnded('glowPass', performance.now())
     this.renderer.clearDepth()
     const heldItemsCamera = this.heldItemsCamera()
     heldItemsCamera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, heldItemsCamera)
+    this.frameBudget.phaseEnded('heldItemsPass', performance.now())
     if (this.play.inspectionView !== null) this.drawTheInspectedItemOverTheDimmedRoom()
+    this.frameBudget.phaseEnded('inspectionPass', performance.now())
     this.edgeSmoothing?.drawOver(this.renderer)
+    this.frameBudget.phaseEnded('smoothingPass', performance.now())
     this.camera.layers.set(roomLayers.room)
   }
 

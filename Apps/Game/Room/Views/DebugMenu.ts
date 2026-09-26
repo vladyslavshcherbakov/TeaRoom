@@ -8,15 +8,20 @@ type HeldHeightArrow = {
   repeatedSteps: number
 }
 
+export type DebugMenuListener = {
+  readonly keeperHeightChosen: (heightCentimetres: number) => void
+  readonly frameBudgetShownChosen: (isShown: boolean) => void
+}
+
 export class DebugMenu {
   private readonly panel: HTMLElement
-  private readonly keeperHeightChosen: (heightCentimetres: number) => void
+  private readonly listener: DebugMenuListener
   private readonly heightShown: HTMLElement
   private keeperHeightCentimetres = keeperHeightByDefaultCentimetres
   private heldHeightArrow: HeldHeightArrow | null = null
 
-  constructor(container: HTMLElement, keeperHeightChosen: (heightCentimetres: number) => void) {
-    this.keeperHeightChosen = keeperHeightChosen
+  constructor(container: HTMLElement, listener: DebugMenuListener) {
+    this.listener = listener
     this.panel = document.createElement('div')
     this.panel.className = 'debug-menu'
     this.panel.hidden = true
@@ -34,7 +39,13 @@ export class DebugMenu {
     closeButton.className = 'debug-close'
     closeButton.textContent = text('debug.close')
     closeButton.addEventListener('click', () => (this.panel.hidden = true))
-    this.panel.append(title, heightLabel, heightStepper, closeButton)
+    const frameBudgetToggle = document.createElement('input')
+    frameBudgetToggle.type = 'checkbox'
+    frameBudgetToggle.addEventListener('change', () => listener.frameBudgetShownChosen(frameBudgetToggle.checked))
+    const frameBudgetRow = document.createElement('label')
+    frameBudgetRow.className = 'debug-toggle'
+    frameBudgetRow.append(frameBudgetToggle, document.createTextNode(text('debug.frameBudget')))
+    this.panel.append(title, heightLabel, heightStepper, frameBudgetRow, closeButton)
     container.append(this.panel)
   }
 
@@ -75,7 +86,7 @@ export class DebugMenu {
     const heightCentimetres = keeperHeightSteppedBy(this.keeperHeightCentimetres, stepCentimetres)
     if (heightCentimetres === this.keeperHeightCentimetres) return
     this.showTheHeight(heightCentimetres)
-    this.keeperHeightChosen(heightCentimetres)
+    this.listener.keeperHeightChosen(heightCentimetres)
   }
 
   private showTheHeight(heightCentimetres: number): void {
