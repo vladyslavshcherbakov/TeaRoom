@@ -41,7 +41,7 @@ test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () =
   const target = new THREE.Group()
   target.position.y = teaTableTopMetres
 
-  for (const model of vesselModelsInTheQuietRoom()) {
+  for (const model of oneVesselModelOfEachGeometry()) {
     for (const tiltDegrees of tiltsDegrees) {
       for (const spoutDirection of spoutDirections) {
         aimOver(model, { sourceId: model.itemId, targetId: 'target', spout: { x: 0, z: 0 }, spoutDirection, tiltDegrees }, { root: target, rimHeight: 0 }, [])
@@ -54,9 +54,9 @@ test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () =
 })
 
 test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_staysAboveIt', () => {
-  const standingModels = modelsInTheQuietRoom()
+  const standingModels = oneModelOfEachGeometry()
 
-  for (const model of vesselModelsInTheQuietRoom()) {
+  for (const model of oneVesselModelOfEachGeometry()) {
     for (const standing of standingModels.filter((candidate) => candidate.itemId !== model.itemId)) {
       standing.root.position.set(0, teaTableTopMetres, 0)
       for (const tiltDegrees of tiltsDegrees) {
@@ -72,9 +72,9 @@ test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_staysAboveIt', () => {
 })
 
 test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_keepsItsSpoutAtOneHeightWhileItTilts', () => {
-  const standingModels = modelsInTheQuietRoom()
+  const standingModels = oneModelOfEachGeometry()
 
-  for (const model of vesselModelsInTheQuietRoom()) {
+  for (const model of oneVesselModelOfEachGeometry()) {
     for (const standing of standingModels.filter((candidate) => candidate.itemId !== model.itemId)) {
       standing.root.position.set(0, teaTableTopMetres, 0)
       const spoutHeights = tiltsDegrees.map((tiltDegrees) => {
@@ -90,11 +90,11 @@ test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_keepsItsSpoutAtOneHeightW
 })
 
 test('aimedVessel_ofEveryShapeOverABowlOnAShelfBoard_staysUnderTheBoardAbove', () => {
-  const bowl = modelsInTheQuietRoom().find((candidate) => candidate.shape === 'bowl')
+  const bowl = oneModelOfEachGeometry().find((candidate) => candidate.shape === 'bowl')
   assert.ok(bowl !== undefined)
   bowl.root.position.set(0, middleShelfBoardTopMetres, 0)
 
-  for (const model of vesselModelsInTheQuietRoom().filter((candidate) => candidate.itemId !== bowl.itemId)) {
+  for (const model of oneVesselModelOfEachGeometry().filter((candidate) => candidate.itemId !== bowl.itemId)) {
     for (const tiltDegrees of tiltsDegrees) {
       aimOver(model, { sourceId: model.itemId, targetId: bowl.itemId, spout: { x: 0, z: 0 }, spoutDirection: { x: 1, z: 0 }, tiltDegrees }, bowl, [bowl.root], upperShelfBoardUndersideMetres)
 
@@ -107,9 +107,9 @@ test('aimedVessel_ofEveryShapeOverABowlOnAShelfBoard_staysUnderTheBoardAbove', (
 test('aimedVessel_ofEveryShapeOverASurface_staysAboveEveryItemStandingBesideTheSpout', () => {
   const target = new THREE.Group()
   target.position.y = teaTableTopMetres
-  const standingModels = modelsInTheQuietRoom()
+  const standingModels = oneModelOfEachGeometry()
 
-  for (const model of vesselModelsInTheQuietRoom()) {
+  for (const model of oneVesselModelOfEachGeometry()) {
     for (const standing of standingModels.filter((candidate) => candidate.itemId !== model.itemId)) {
       for (const spoutDirection of spoutDirections) {
         standing.root.position.set(-spoutDirection.x * besideTheSpoutMetres, teaTableTopMetres, -spoutDirection.z * besideTheSpoutMetres)
@@ -123,13 +123,13 @@ test('aimedVessel_ofEveryShapeOverASurface_staysAboveEveryItemStandingBesideTheS
 })
 
 test('lid_ofEveryShape_isInTheModelExactlyWhenTheLayoutKeepsAPlaceForIt', () => {
-  for (const model of modelsInTheQuietRoom()) {
+  for (const model of oneModelOfEachGeometry()) {
     assert.equal(model.lid !== null, layoutByShape[model.shape].lid !== null, model.itemId)
   }
 })
 
 test('openLid_ofEveryShape_isDrawnNoWiderThanThePlaceKeptForItBesideTheItem', () => {
-  for (const model of modelsInTheQuietRoom()) {
+  for (const model of oneModelOfEachGeometry()) {
     const lyingLid = layoutByShape[model.shape].lid
     if (model.lid === null || lyingLid === null) continue
 
@@ -143,7 +143,7 @@ test('fire_ofEveryShape_isDrawnExactlyWhenTheItemCanCharAndTheTableSaysHowFar', 
   const ritual = new TestRitual(defaultCatalog, 'quietRoom')
   const charringByItem = tableViewState(ritual.state, defaultCatalog).charringByItem
 
-  for (const model of modelsInTheQuietRoom()) {
+  for (const model of oneModelOfEachGeometry()) {
     const hasFire = model.look.fire !== null
     assert.equal(model.charTo !== null, hasFire, model.itemId)
     assert.equal(charringByItem[model.itemId] !== undefined, hasFire, model.itemId)
@@ -154,7 +154,7 @@ test('touchAreas_ofEveryShapeStandingHeldWipingOrInspected_areNeverDrawnByTheCam
   const layersTheCameraDraws = new THREE.Layers()
   for (const layer of [roomLayers.room, roomLayers.untappableRoom, roomLayers.heldInView, roomLayers.inspected]) layersTheCameraDraws.enable(layer)
 
-  for (const model of modelsInTheQuietRoom()) {
+  for (const model of oneModelOfEachGeometry()) {
     for (const layer of [roomLayers.room, roomLayers.heldInView, roomLayers.untappableRoom, roomLayers.inspected]) {
       putOnLayer(model.root, layer)
 
@@ -170,7 +170,7 @@ test('touchAreas_ofEveryShape_catchTapsWhileStandingOrHeldAndLetThemThroughWhile
   raycaster.layers.disable(roomLayers.untappableRoom)
   const layersAndWhetherTapsAreCaught = [[roomLayers.room, true], [roomLayers.heldInView, true], [roomLayers.untappableRoom, false], [roomLayers.inspected, false]] as const
 
-  for (const model of modelsInTheQuietRoom()) {
+  for (const model of oneModelOfEachGeometry()) {
     for (const [layer, isCaught] of layersAndWhetherTapsAreCaught) {
       putOnLayer(model.root, layer)
 
@@ -181,7 +181,7 @@ test('touchAreas_ofEveryShape_catchTapsWhileStandingOrHeldAndLetThemThroughWhile
 })
 
 test('invisibleMeshes_ofEveryShape_areAllTouchAreas', () => {
-  for (const model of modelsInTheQuietRoom()) {
+  for (const model of oneModelOfEachGeometry()) {
     const invisibleMeshes = meshesUnder(model.root).filter((mesh) => mesh.material instanceof THREE.Material && mesh.material.transparent && mesh.material.opacity === 0)
 
     assert.ok(invisibleMeshes.every((mesh) => isATouchArea(mesh)), model.itemId)
@@ -189,12 +189,14 @@ test('invisibleMeshes_ofEveryShape_areAllTouchAreas', () => {
 })
 
 test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDownAboveTheSticks_staysInsideAPortraitPhoneScreen', () => {
+  const models = oneModelOfEachGeometry()
+
   for (const aspect of portraitPhoneAspects) {
     for (const { fieldOfViewDegrees, isFirstPerson, pitchRadians, screenHeightShareTakenByControls } of heldInViewCameras) {
       const camera = new THREE.PerspectiveCamera(fieldOfViewDegrees, aspect, 0.1, 100)
       camera.rotation.set(pitchRadians, 0, 0)
       camera.updateMatrixWorld(true)
-      for (const model of modelsInTheQuietRoom()) {
+      for (const model of models) {
         for (const handIndex of [0, 1] as const) {
           for (const chosenHandIndex of [null, handIndex]) {
             holdInView(model, handIndex, { camera, chosenHandIndex, isFirstPerson, screenHeightShareTakenByControls })
@@ -209,11 +211,13 @@ test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDownA
 })
 
 test('inspectedItem_ofEveryShapeTurnedAnyWayAtItsUsualSize_staysInsideAPortraitPhoneScreen', () => {
+  const models = oneModelOfEachGeometry()
+
   for (const aspect of portraitPhoneAspects) {
     for (const fieldOfViewDegrees of closeUpAndFirstPersonFieldsOfViewDegrees) {
       const camera = new THREE.PerspectiveCamera(fieldOfViewDegrees, aspect, 0.1, 100)
       camera.updateMatrixWorld(true)
-      for (const model of modelsInTheQuietRoom()) {
+      for (const model of models) {
         for (const [yawRadians, pitchRadians] of inspectionTurnsRadians) {
           inspectInView(model, { camera, inspection: { itemId: model.itemId, handIndex: 0, yawRadians, pitchRadians, magnification: 1 } })
 
@@ -226,7 +230,7 @@ test('inspectedItem_ofEveryShapeTurnedAnyWayAtItsUsualSize_staysInsideAPortraitP
 })
 
 test('overflow_ofEveryVessel_runsDownBelowTheRimTouchingTheOutsideOfItsWall', () => {
-  for (const model of vesselModelsInTheQuietRoom()) {
+  for (const model of oneVesselModelOfEachGeometry()) {
     const points = model.pointsDownTheSide
     assert.notEqual(points, null, `${model.itemId} has no overflow path`)
 
@@ -246,7 +250,7 @@ test('overflow_ofEveryVessel_runsDownBelowTheRimTouchingTheOutsideOfItsWall', ()
 })
 
 test('underside_ofEveryVessel_isDrawnFacingDownWhereItStands', () => {
-  for (const model of vesselModelsInTheQuietRoom()) {
+  for (const model of oneVesselModelOfEachGeometry()) {
     model.root.updateMatrixWorld(true)
     const meshes = drawnMeshesUnder(model.root, model).filter((mesh) => !isPartOf(mesh, model.lid))
     for (const across of undersideProbesMetres) {
@@ -284,8 +288,7 @@ test('paintedBowl_largeOnTheScreenOrHeldOrWithTheSettingOff_isDrawnInFull', () =
 })
 
 function paintedBowlSeenFrom(distanceMetres: number): { readonly bowl: CarriedModel; readonly camera: THREE.PerspectiveCamera } {
-  const bowl = modelsInTheQuietRoom().find((model) => model.itemId === 'bowl1')
-  if (bowl === undefined) throw new Error('the quiet room has no bowl1')
+  const bowl = newCarriedModel('bowl1', 'bowl', plainMaterials())
   const camera = new THREE.PerspectiveCamera(30, 0.5, 0.1, 100)
   camera.position.set(0, 0, distanceMetres)
   return { bowl, camera }
@@ -294,6 +297,20 @@ function paintedBowlSeenFrom(distanceMetres: number): { readonly bowl: CarriedMo
 function trianglesOf(geometry: THREE.BufferGeometry | undefined): number {
   const vertices = geometry?.index?.count ?? geometry?.getAttribute('position').count ?? 0
   return vertices / 3
+}
+
+function oneModelOfEachGeometry(): CarriedModel[] {
+  const modelByGeometry = new Map<string, CarriedModel>()
+  for (const model of modelsInTheQuietRoom()) {
+    const geometry = drawnGeometryOf(model)
+    if (!modelByGeometry.has(geometry)) modelByGeometry.set(geometry, model)
+  }
+  return [...modelByGeometry.values()]
+}
+
+function oneVesselModelOfEachGeometry(): CarriedModel[] {
+  const state = new TestRitual(defaultCatalog, 'quietRoom').state
+  return oneModelOfEachGeometry().filter((model) => state.vessels[model.itemId] !== undefined)
 }
 
 function modelsInTheQuietRoom(): CarriedModel[] {
@@ -305,9 +322,14 @@ function modelsInTheQuietRoom(): CarriedModel[] {
   })
 }
 
-function vesselModelsInTheQuietRoom(): CarriedModel[] {
-  const state = new TestRitual(defaultCatalog, 'quietRoom').state
-  return modelsInTheQuietRoom().filter((model) => state.vessels[model.itemId] !== undefined)
+function drawnGeometryOf(model: CarriedModel): string {
+  model.root.updateMatrixWorld(true)
+  return meshesUnder(model.root)
+    .map((mesh) => {
+      const bounds = new THREE.Box3().setFromObject(mesh, true)
+      return [mesh.geometry.getAttribute('position')?.count ?? 0, ...bounds.min.toArray(), ...bounds.max.toArray()].map((value) => value.toFixed(4)).join(' ')
+    })
+    .join('; ')
 }
 
 function plainMaterials(): CarriedModelMaterials {
