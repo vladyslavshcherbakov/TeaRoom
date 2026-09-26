@@ -1,6 +1,8 @@
 import { roomHalfSize } from './RoomLayout.ts'
 import { seededRandom } from './SeededRandom.ts'
 
+export const gardenSectorCount = 8
+
 export type PlantKind = 'grassTuft' | 'marigold' | 'daisy' | 'poppy' | 'tulip' | 'sunflower' | 'roseBush' | 'rose'
 
 export type Plant = {
@@ -125,4 +127,9 @@ function rosesOn(bush: Plant, nextRandom: () => number): Plant[] {
     const rose = plantAt('rose', bush.x + Math.cos(around) * reach, bush.z + Math.sin(around) * reach, nextRandom)
     return { ...rose, y: bush.scale * (roseBushCentreHeightMetres + roseBushRadiusMetres * roseBushSquash * Math.sin(upwards)) }
   })
+}
+
+export function gardenSectorOf(plant: Pick<Plant, 'x' | 'z'>): number {
+  const turnShare = (Math.atan2(plant.z, plant.x) + Math.PI) / (2 * Math.PI)
+  return Math.min(gardenSectorCount - 1, Math.floor(turnShare * gardenSectorCount))
 }

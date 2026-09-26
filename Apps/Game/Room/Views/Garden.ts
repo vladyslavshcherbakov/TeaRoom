@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
+import { gardenPlants, gardenSectorOf, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
@@ -37,14 +37,15 @@ export class Garden {
 
   constructor(materials: RoomMaterials) {
     this.root.add(ground(materials))
-    const plantsByKind = new Map<PlantKind, Plant[]>()
+    const plantsByKindAndSector = new Map<string, { readonly kind: PlantKind; readonly plants: Plant[] }>()
     for (const plant of gardenPlants()) {
-      const plantsOfTheKind = plantsByKind.get(plant.kind) ?? []
-      plantsOfTheKind.push(plant)
-      plantsByKind.set(plant.kind, plantsOfTheKind)
+      const key = `${plant.kind} ${gardenSectorOf(plant)}`
+      const group = plantsByKindAndSector.get(key) ?? { kind: plant.kind, plants: [] }
+      group.plants.push(plant)
+      plantsByKindAndSector.set(key, group)
     }
-    for (const [kind, plantsOfTheKind] of plantsByKind) {
-      for (const plantPart of partsByKind[kind]) this.addInstances(kind, instancesOf(plantPart, plantsOfTheKind, materials))
+    for (const { kind, plants } of plantsByKindAndSector.values()) {
+      for (const plantPart of partsByKind[kind]) this.addInstances(kind, instancesOf(plantPart, plants, materials))
     }
   }
 

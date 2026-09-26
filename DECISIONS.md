@@ -182,3 +182,5 @@ The plan is in `docs/roadmap.md`.
 - Whether a separate teapot joins the MVP, or the kettle stays the brewing vessel. The user answers it.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.
+
+**What the camera cannot see is left out of the frame.** The phone heats after some play and halves the frame rate, and the time a phone's GPU spends cannot be measured from Safari, so the triangles drawn per frame stand in for it. Three.js leaves out an object only when all of it is out of view, and each kind of plant was one object around the whole house, so all 62 000 of the garden's triangles were drawn whenever any of the garden showed. The garden now grows in eight sectors around the house, one object per kind of plant in each, so the sectors behind the camera are left out.
