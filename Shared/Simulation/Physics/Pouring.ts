@@ -43,9 +43,14 @@ export function pourStream(
   const overflowedMl = reachingTargetMl - landedMl
   return {
     source: sourceAfter,
-    target: target === null ? null : mixLiquids(target.liquid, { ...stream, volumeMl: landedMl }),
+    target: target === null ? null : mixedUpToTheBrim(target.liquid, { ...stream, volumeMl: reachingTargetMl }, target.definition.capacityMl),
     landedMl,
     spilledMl: stream.volumeMl - landedMl,
     overflowedMl,
   }
+}
+
+function mixedUpToTheBrim(liquid: Liquid, poured: Liquid, capacityMl: number): Liquid {
+  const mixed = mixLiquids(liquid, poured)
+  return mixed.volumeMl > capacityMl ? { ...mixed, volumeMl: capacityMl } : mixed
 }

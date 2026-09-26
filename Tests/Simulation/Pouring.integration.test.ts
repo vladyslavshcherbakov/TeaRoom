@@ -66,6 +66,16 @@ test('cup_whenPouredPastItsBrim_overflowsOntoTheTableOnce', () => {
   assert.deepEqual(eventsOfType(events, 'vesselOverflowed'), [{ type: 'vesselOverflowed', vesselId: 'cup1' }])
 })
 
+test('cup_whenFullOfColdWaterAndACupfulOfBoilingWaterIsPouredIn_isWarmerThan60C', () => {
+  const ritual = TestRitual.begun()
+  ritual.pour('kettle', 'cup1', 10)
+  ritual.heatKettleTo(100)
+
+  ritual.pour('kettle', 'cup1', 10)
+
+  assert.ok(ritual.vessel('cup1').liquid.temperatureC > 60, `the cup is at ${ritual.vessel('cup1').liquid.temperatureC} °C`)
+})
+
 test('pour_whenStoppedAbruptly_leavesNoStreamRunning', () => {
   const ritual = TestRitual.begun()
   ritual.pour('kettle', 'cup1', 3)
