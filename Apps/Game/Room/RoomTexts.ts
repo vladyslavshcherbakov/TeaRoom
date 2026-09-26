@@ -1,8 +1,9 @@
+import { figurineIds, type FigurineId } from '../../../Shared/Content/Rooms.ts'
 import type { OfferingResponse } from '../../../Shared/Simulation/Judgement/OfferingJudgement.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
-import { phraseLineAtTurn, phraseVariantsOf, text, textOrFallback, textWith } from '../Texts/Texts.ts'
+import { phraseLineAtTurn, phraseVariantsOf, text, textWith, type PhraseKey } from '../Texts/Texts.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import type { RoomRemark } from './RoomRemarks.ts'
 
@@ -16,7 +17,7 @@ const onceAVisit = 1
 export class RoomTexts {
   private readonly voiceSeed: number
   private readonly log: RoomLog
-  private readonly timesSaid = new Map<string, number>()
+  private readonly timesSaid = new Map<PhraseKey, number>()
   private spillsRemarkedOn = 0
   private lastSpillRemarkedOnAtSeconds: number | null = null
 
@@ -64,7 +65,7 @@ export class RoomTexts {
       case 'houseRestocked':
         return this.restockLines(event.spoonReturned, event.wasACaddyEmpty)
       case 'figurineAcceptedTea':
-        return [offeringResponseText(event.figurineId, event.response)]
+        return this.offeringLines(event.figurineId, event.response)
       default:
         return []
     }
@@ -77,18 +78,18 @@ export class RoomTexts {
     return []
   }
 
-  private joke(phrase: string, values: Readonly<Record<string, string>> = {}): readonly string[] {
+  private joke(phrase: PhraseKey, values: Readonly<Record<string, string>> = {}): readonly string[] {
     return this.saidUpTo(phrase, phraseVariantsOf(phrase), values)
   }
 
-  private saidUpTo(phrase: string, timesAVisit: number, values: Readonly<Record<string, string>> = {}): readonly string[] {
+  private saidUpTo(phrase: PhraseKey, timesAVisit: number, values: Readonly<Record<string, string>> = {}): readonly string[] {
     const turn = (this.timesSaid.get(phrase) ?? 0) + 1
     const lines = this.linesOnTurn(phrase, turn, timesAVisit, values)
     if (lines.length > 0) this.timesSaid.set(phrase, turn)
     return lines
   }
 
-  private linesOnTurn(phrase: string, turn: number, timesAVisit: number, values: Readonly<Record<string, string>>): readonly string[] {
+  private linesOnTurn(phrase: PhraseKey, turn: number, timesAVisit: number, values: Readonly<Record<string, string>>): readonly string[] {
     if (turn > timesAVisit) {
       this.log(`the keeper keeps quiet about ${phrase}: said ${timesAVisit} times this visit already, and a joke is never told twice`)
       return []
@@ -106,6 +107,14 @@ export class RoomTexts {
     this.spillsRemarkedOn += 1
     return [phraseLineAtTurn('spill', this.voiceSeed, this.spillsRemarkedOn)]
   }
+
+  private offeringLines(figurineId: string, response: OfferingResponse): readonly string[] {
+    if (!isAFigurineOfTheRoom(figurineId)) {
+      this.log(`the offering to ${figurineId} gets no caption: no figurine of the room has that id, so it has no name`)
+      return []
+    }
+    return [textWith(`offering.${response}`, { figurine: text(`figurine.${figurineId}`) })]
+  }
 }
 
 export function startOverNote(areAchievementsShown: boolean): string {
@@ -120,6 +129,6 @@ function kilowattHoursText(kilowattHoursUsed: number): string {
   return String(Number(kilowattHoursUsed.toFixed(2)))
 }
 
-function offeringResponseText(figurineId: string, response: OfferingResponse): string {
-  return textWith(`offering.${response}`, { figurine: textOrFallback(`figurine.${figurineId}`, figurineId) })
+function isAFigurineOfTheRoom(id: string): id is FigurineId {
+  return (figurineIds as readonly string[]).includes(id)
 }

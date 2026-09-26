@@ -200,7 +200,7 @@ Each row names every place a new piece of content needs, and what fails when one
 |---|---|---|---|
 | Tea | Its definition in `Shared/Content/Teas.ts`, registered in `DefaultCatalog.ts` | Its look in `Table/TeaLooks.ts` | `Tests/Content/TeaBalance.integration.test.ts` brews it by the book, and `Tests/Game/Table/TeaLooks.unit.test.ts` finds its look. |
 | Tea bowl | Its id in `teaBowlIds` and its spot in `onTheShelf` in `Shared/Content/Rooms.ts` | Its look in `bowlLookById` in `Views/Carried/BowlParts.ts` | The compiler lists the missing spot and look. |
-| Figurine | Its definition in `Shared/Content/Figurines.ts`, registered in `DefaultCatalog.ts`, and its id in `figurineIds` in `Rooms.ts` | Its place by each window in `RoomLayout.ts`, its surface in `surfaceByFigurineId` in `Views/RoomMaterials.ts`, and its name `figurine.<id>` in `EnglishTexts.ts` | The compiler lists the place and the surface. Nothing catches a missing name, which falls back to the id. |
+| Figurine | Its definition in `Shared/Content/Figurines.ts`, registered in `DefaultCatalog.ts`, and its id in `figurineIds` in `Rooms.ts` | Its place by each window in `RoomLayout.ts`, its surface in `surfaceByFigurineId` in `Views/RoomMaterials.ts`, and its name `figurine.<id>` in `EnglishTexts.ts` | The compiler lists the place, the surface and the name. |
 | Heater | Its definition in `Shared/Content/Heaters.ts`, registered in `DefaultCatalog.ts`, and the room's `heaterId` | Nothing yet | `problemsOpeningRoom` reports an unknown heater. |
 | Room | Its definition in `Shared/Content/Rooms.ts`, registered in `DefaultCatalog.ts` | The game opens only the quiet room. | `Tests/Content/DefaultCatalog.unit.test.ts` runs `problemsOpeningRoom` over every room. |
 
@@ -303,7 +303,7 @@ A new setting is a field in `RoomSettings` with its default and its reading in `
 - The silent build for the artifact removes every call whose name is in `logFunctionNames` or `logMethodNamesOnThis` in `Scripts/silent-build.vite.config.mjs`, together with its text. A new way to log uses one of those names, or adds its name there.
 - The simulation never writes to the console. `RitualSession` passes the lines to the `RitualLog` it was given.
 - Text the player reads is not in the simulation. The simulation emits ids, and the presentation turns them into words. Every such word is a key and a value in `Apps/Game/Texts/EnglishTexts.ts`, read through `Texts.ts`.
-- A text key is built from a typed union, such as `` `achievement.${id}.title` ``, so the type-check finds a missing text. A phrase with numbered lines is named by its prefix, and only a test finds it missing.
+- A text key is built from a typed union, such as `` `achievement.${id}.title` ``, so the type-check finds a missing text. A phrase is a list of at least one line in `englishPhrases`, and its key is typed the same way, such as `` `sip.${feeling}` ``.
 
 ## Tests
 

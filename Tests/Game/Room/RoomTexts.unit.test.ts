@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { RoomTexts, startOverNote } from '../../../Apps/Game/Room/RoomTexts.ts'
-import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
+import { englishPhrases, englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
+import type { PhraseKey } from '../../../Apps/Game/Texts/Texts.ts'
 
 test('startOverNote_whenAchievementsAreShown_promisesToKeepThem', () => {
   assert.equal(startOverNote(true), 'Your achievements will most likely stay, and the rest are still yours to earn. The world you know may change a little.')
@@ -17,6 +18,12 @@ test('caption_ofAnOffering_namesTheFigurine', () => {
   assert.deepEqual(lines, ['The dragon glows softly.'])
 })
 
+test('caption_ofAnOfferingToAFigurineTheRoomDoesNotHave_isNotShownWithItsId', () => {
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'figurineAcceptedTea', figurineId: 'crane', response: 'glow' }], 0)
+
+  assert.deepEqual(lines, [])
+})
+
 test('caption_ofABurntClothWashedBackToNew_marvelsAtTheWorld', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }], 0)
 
@@ -28,14 +35,14 @@ test('caption_ofTakingAThermosTooHotToHold_warnsOfItsGlow', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'actionRefused', command: 'pickUp', reason: 'tooHotToHold' }], 0)
 
   assert.equal(lines.length, 1)
-  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('tooHotToHold.') && line === lines[0]), lines.join(' / '))
+  assert.ok(linesOf('tooHotToHold').includes(lines[0] ?? ''), lines.join(' / '))
 })
 
 test('caption_ofASmoulderingClothTakenOffTheHeater_jokesAboutTheHouse', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'clothTakenOffTheHeater', clothId: 'cloth', charring: 0.5 }], 0)
 
   assert.equal(lines.length, 1)
-  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('smoulderingClothTaken.') && line === lines[0]), lines.join(' / '))
+  assert.ok(linesOf('smoulderingClothTaken').includes(lines[0] ?? ''), lines.join(' / '))
 })
 
 test('caption_ofAClothTakenOffTheHeaterBeforeItSmoulders_staysSilent', () => {
@@ -46,14 +53,14 @@ test('caption_ofASpoonThatCrumbled_answersInOneLine', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'spoonCrumbled', gramsLost: 2 }], 0)
 
   assert.equal(lines.length, 1)
-  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('spoonCrumbled.') && line === lines[0]), lines.join(' / '))
+  assert.ok(linesOf('spoonCrumbled').includes(lines[0] ?? ''), lines.join(' / '))
 })
 
 test('caption_ofTheCaddyWashedClean_mournsTheTea', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'caddy', isACaddy: true }], 0)
 
   assert.equal(lines.length, 1)
-  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('caddyWashedOut.') && line === lines[0]), lines.join(' / '))
+  assert.ok(linesOf('caddyWashedOut').includes(lines[0] ?? ''), lines.join(' / '))
 })
 
 test('caption_ofLeavesWashedOutOfTheKettle_staysSilent', () => {
@@ -61,7 +68,7 @@ test('caption_ofLeavesWashedOutOfTheKettle_staysSilent', () => {
 })
 
 test('heaterTesterLine_acrossTheKeepersVoices_isEveryOneOfItsSixLines', () => {
-  const heaterTesterLines = Object.entries(englishTexts).filter(([key]) => key.startsWith('heaterTester.')).map(([, line]) => line)
+  const heaterTesterLines = linesOf('heaterTester')
 
   const linesHeard = new Set(Array.from({ length: 1000 }, (_, index) => new RoomTexts(index + 1, () => {}).remarkLines({ kind: 'heaterTester', timesTapped: 1 })[0]))
 
@@ -70,7 +77,7 @@ test('heaterTesterLine_acrossTheKeepersVoices_isEveryOneOfItsSixLines', () => {
 })
 
 test('obituary_ofTheKeeper_isOneOfTheFourObituaries', () => {
-  const obituaries: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('obituary.')).map(([, line]) => line)
+  const obituaries = linesOf('obituary')
 
   const line = new RoomTexts(7, () => {}).obituaryLine()
 
@@ -79,7 +86,7 @@ test('obituary_ofTheKeeper_isOneOfTheFourObituaries', () => {
 })
 
 test('lastWords_ofTheKeeperWhoDied_areOneOfTheThreeLinesForDying', () => {
-  const lastWords: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('lastWords.')).map(([, line]) => line)
+  const lastWords = linesOf('lastWords')
 
   const line = new RoomTexts(7, () => {}).lastWordsLine()
 
@@ -88,7 +95,7 @@ test('lastWords_ofTheKeeperWhoDied_areOneOfTheThreeLinesForDying', () => {
 })
 
 test('playerTexts_nameTheKeeperNowhere', () => {
-  const linesNamingTheKeeper = Object.values(englishTexts).filter((line) => /keeper/i.test(line))
+  const linesNamingTheKeeper = [...Object.values(englishTexts), ...Object.values(englishPhrases).flat()].filter((line) => /keeper/i.test(line))
 
   assert.deepEqual(linesNamingTheKeeper, [])
 })
@@ -111,7 +118,7 @@ test('caption_ofATapTurnedOffBeforeTwoMinutes_staysSilent', () => {
 test('caption_ofAHeaterSwitchedOffAfterWastingTwoMinutes_remarksOnTheWastedEnergy', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'heaterSwitchedOff', onSeconds: 300, kilowattHoursUsed: 0.1667, wastedSeconds: 120, kilowattHoursWasted: 0.0667, secondsHeatedByItemId: {} }], 0)
 
-  const energyLines = Object.entries(englishTexts).filter(([key]) => key.startsWith('heaterRanLong.')).map(([, line]) => line.replace('{kilowattHours}', '0.07'))
+  const energyLines = linesOf('heaterRanLong').map((line) => line.replace('{kilowattHours}', '0.07'))
   assert.equal(lines.length, 1)
   assert.ok(energyLines.includes(lines[0] ?? ''), lines.join(' / '))
 })
@@ -217,7 +224,7 @@ test('caption_ofAReturnWithTheSpoonBackAndTheCaddyRefilledFromEmpty_isOneLineAbo
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: true, wasACaddyRefilled: true, wasACaddyEmpty: true }], 0)
 
   assert.equal(lines.length, 1)
-  assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('spoonAndCaddyReturned.') && line === lines[0]), lines.join(' / '))
+  assert.ok(linesOf('spoonAndCaddyReturned').includes(lines[0] ?? ''), lines.join(' / '))
 })
 
 test('caption_ofAReturnWithOnlyTheCaddyToppedUp_staysSilent', () => {
@@ -234,3 +241,7 @@ const burntClothLines = [
   "Magic sink! The burn is gone. I'm never leaving.",
   'Burnt, rinsed, reborn. What a kind little world.',
 ]
+
+function linesOf(phrase: PhraseKey): readonly string[] {
+  return englishPhrases[phrase]
+}

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { sipText } from '../../../Apps/Game/Table/TableTexts.ts'
-import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
+import { englishPhrases } from '../../../Apps/Game/Texts/EnglishTexts.ts'
 
 test('sipLine_answersTheVerdictWithOneOfItsFeelingsPhrases', () => {
   const rows = [
@@ -19,13 +19,13 @@ test('sipLine_answersTheVerdictWithOneOfItsFeelingsPhrases', () => {
   ] as const
 
   for (const [verdict, feeling] of rows) {
-    const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith(`sip.${feeling}.`)).map(([, phrase]) => phrase)
+    const phrases: readonly string[] = englishPhrases[`sip.${feeling}`]
     assert.ok(phrases.includes(sipText(verdict, false, 7)), `${feeling}: ${sipText(verdict, false, 7)}`)
   }
 })
 
 test('sipLine_fromABowlWithLeavesInIt_isAboutTheLeaves', () => {
-  const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('sip.amongLeaves.')).map(([, phrase]) => phrase)
+  const phrases: readonly string[] = englishPhrases['sip.amongLeaves']
 
   const line = sipText({ temperature: 'pleasant', strength: 'balanced', bitterness: 'soft', reaction: 'contentSigh' }, true, 7)
 
@@ -33,7 +33,7 @@ test('sipLine_fromABowlWithLeavesInIt_isAboutTheLeaves', () => {
 })
 
 test('sipLine_fromABowlWithLeavesThatIsTooHot_saysItIsTooHot', () => {
-  const phrases: string[] = Object.entries(englishTexts).filter(([key]) => key.startsWith('sip.tooHot.')).map(([, phrase]) => phrase)
+  const phrases: readonly string[] = englishPhrases['sip.tooHot']
 
   const line = sipText({ temperature: 'tooHot', strength: 'balanced', bitterness: 'soft', reaction: 'waitsForItToCool' }, true, 7)
 

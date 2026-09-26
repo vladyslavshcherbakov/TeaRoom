@@ -1,37 +1,33 @@
-import { englishTexts } from './EnglishTexts.ts'
+import { englishPhrases, englishTexts } from './EnglishTexts.ts'
 
 export type TextKey = keyof typeof englishTexts
+
+export type PhraseKey = keyof typeof englishPhrases
 
 export function text(key: TextKey): string {
   return englishTexts[key]
 }
 
 export function textWith(key: TextKey, values: Readonly<Record<string, string>>): string {
-  return text(key).replace(/\{(\w+)\}/g, (placeholder, name: string) => values[name] ?? placeholder)
+  return lineFilledWith(text(key), values)
 }
 
-export function textOrFallback(key: string, fallback: string): string {
-  return isTextKey(key) ? text(key) : fallback
+export function phraseVariantsOf(phrase: PhraseKey): number {
+  return englishPhrases[phrase].length
 }
 
-export function phraseVariantsOf(phrase: string): number {
-  let variants = 0
-  while (isTextKey(`${phrase}.${variants + 1}`)) variants += 1
-  return variants
+export function phraseLineAtTurn(phrase: PhraseKey, voiceSeed: number, turn: number, values: Readonly<Record<string, string>> = {}): string {
+  const lines: readonly [string, ...string[]] = englishPhrases[phrase]
+  const lineIndex = (phraseVariantAmong(phrase, voiceSeed, lines.length) - 1 + turn - 1) % lines.length
+  return lineFilledWith(lines[lineIndex] ?? lines[0], values)
 }
 
-export function phraseLineAtTurn(phrase: string, voiceSeed: number, turn: number, values: Readonly<Record<string, string>> = {}): string {
-  const variants = phraseVariantsOf(phrase)
-  const variant = ((phraseVariantAmong(phrase, voiceSeed, variants) - 1 + turn - 1) % variants) + 1
-  return textWith(`${phrase}.${variant}` as TextKey, values)
+function lineFilledWith(line: string, values: Readonly<Record<string, string>>): string {
+  return line.replace(/\{(\w+)\}/g, (placeholder, name: string) => values[name] ?? placeholder)
 }
 
 function phraseVariantAmong(phrase: string, voiceSeed: number, variantCount: number): number {
   let hash = 2166136261 ^ voiceSeed
   for (const character of phrase) hash = Math.imul(hash ^ character.charCodeAt(0), 16777619)
   return ((hash >>> 0) % variantCount) + 1
-}
-
-function isTextKey(key: string): key is TextKey {
-  return key in englishTexts
 }
