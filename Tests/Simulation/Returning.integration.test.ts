@@ -33,6 +33,19 @@ test('leavesInTheKettle_whenTheKeeperIsAwayTenMinutes_steepTenMinutesLonger', ()
   assert.equal(((returned.vessel('kettle').leaves?.steepedSeconds ?? 0) - steepedSecondsBefore).toFixed(0), '600')
 })
 
+test('tap_leftRunningOverTheOpenKettle_fillsItToTheBrimWhileTheKeeperIsAwayAndRunsOn', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
+
+  const { ritual: returned } = ritual.leaveAndReturnAfter(60)
+
+  assert.equal(returned.vessel('kettle').liquid.volumeMl, 1000)
+  assert.notEqual(returned.state.sink.runningWater, null)
+})
+
 test('absence_longerThanTwelveHours_livesOnlyTheFirstTwelveHours', () => {
   const ritual = new TestRitual()
   const elapsedSecondsBefore = ritual.state.elapsedSeconds
