@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
+import { firstPersonPose, lookAt, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, stepFor } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 
 test('step_whenTheStickIsPushedUp_goesForwardAlongTheHeading', () => {
@@ -46,4 +46,29 @@ test('look_whenTurnedTowardsAWalkBehindItsLeft_turnsTheShortWay', () => {
   const look = lookTurnedTowards({ headingRadians: 3, pitchRadians: 0 }, -3, 0.1)
 
   assert.ok(look.headingRadians > 3, `heading ${look.headingRadians}`)
+})
+
+test('step_whenHurrying_goesFurtherInTheSameTime', () => {
+  const step = stepFor({ right: 0, up: 1 }, 0, 1, 1.8)
+
+  assertNear(step.z, 2.88)
+})
+
+test('look_whenTheMouseMovesRight_turnsRight', () => {
+  const look = lookTurnedByTheMouse({ headingRadians: 0, pitchRadians: 0 }, { x: 400, y: 0 })
+
+  assertNear(look.headingRadians, -1)
+})
+
+test('look_whenTheMouseMovesFarUp_stopsAtItsSteepest', () => {
+  const look = lookTurnedByTheMouse({ headingRadians: 0, pitchRadians: 0 }, { x: 0, y: -4000 })
+
+  assertNear(look.pitchRadians, 1)
+})
+
+test('look_atAPointAheadAndBelow_facesItAndLooksDown', () => {
+  const look = lookAt({ x: 0, y: 0, z: 1 }, { x: 0, y: 1, z: 0 })
+
+  assertNear(look.headingRadians, 0)
+  assertNear(look.pitchRadians, -Math.PI / 4)
 })

@@ -26,13 +26,16 @@ export class Joysticks {
     return this.rightStick.deflection
   }
 
-  show(areShown: boolean): void {
-    for (const stick of [this.leftStick, this.rightStick]) {
-      if (stick.pad.hidden === !areShown) continue
-      stick.pad.hidden = !areShown
-      if (!areShown) letGoOf(stick)
-    }
+  show(isTheLeftShown: boolean, isTheRightShown: boolean): void {
+    showOrHide(this.leftStick, isTheLeftShown)
+    showOrHide(this.rightStick, isTheRightShown)
   }
+}
+
+function showOrHide(stick: Stick, isShown: boolean): void {
+  if (stick.pad.hidden === !isShown) return
+  stick.pad.hidden = !isShown
+  if (!isShown) letGoOf(stick)
 }
 
 function newStick(container: HTMLElement, className: string): Stick {

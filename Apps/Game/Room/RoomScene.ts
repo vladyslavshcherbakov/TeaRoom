@@ -21,7 +21,9 @@ import {
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
-import { firstPersonFieldOfViewDegrees, firstPersonPose, lookTurnedBy, lookTurnedTowards, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
+import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, seatedEyeHeightMetres, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
+import { hurryingSpeedShare, sticksShownFor, usesTheKeyboard, usesTheMouse, walkFromTheKeys, type ControlScheme, type WalkFromTheKeys } from './Camera/FirstPersonControls.ts'
+import { KeyboardAndMouse } from './Views/KeyboardAndMouse.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
 import { roomLayoutFor, type CameraPose, type FloorPoint, type RoomLayout } from './RoomLayout.ts'
@@ -119,6 +121,7 @@ export class RoomScene {
   private readonly debugMenu: DebugMenu
   private readonly youDied: YouDiedScreen
   private readonly joysticks: Joysticks
+  private readonly keyboardAndMouse: KeyboardAndMouse
   private readonly garden: Garden
   private readonly sky = new Sky()
   private readonly zoom = new CameraZoom()
@@ -128,6 +131,8 @@ export class RoomScene {
   private cameraPose: CameraPose
   private cameraMode: CameraMode = 'room'
   private stickLayout: StickLayout = 'walkOnTheLeft'
+  private controlScheme: ControlScheme = matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks'
+  private wasSeatedInFirstPerson = false
   private wasFirstPersonView = false
   private firstPersonSettlesAtSeconds = 0
   private look: FirstPersonLook = { headingRadians: Math.PI, pitchRadians: 0 }
@@ -168,15 +173,23 @@ export class RoomScene {
       },
       debugMenuAsked: () => {
         this.achievements.roseBushTappedTenTimes()
-        this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout })
+        this.keyboardAndMouse.letGoOfTheMouse('the debug menu opened')
+        this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout, controlScheme: this.controlScheme })
       },
-      achievementsAsked: () => this.showTheAchievements(),
-      settingsAsked: () => this.settingsScreen.show(this.settings, this.playTime.seconds),
+      achievementsAsked: () => {
+        this.keyboardAndMouse.letGoOfTheMouse('the achievements opened')
+        this.showTheAchievements()
+      },
+      settingsAsked: () => {
+        this.keyboardAndMouse.letGoOfTheMouse('the settings opened')
+        this.settingsScreen.show(this.settings, this.playTime.seconds)
+      },
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       temperatureUnit: () => this.settings.temperatureUnit,
       isNerdModeOn: () => this.settings.isNerdModeOn,
       keeperDied: () => {
         this.hasTheKeeperDied = true
+        this.keyboardAndMouse.letGoOfTheMouse('the keeper died')
         this.playTime.keep('the keeper died, and the time on the last screen is not counted')
         this.achievements.keeperDied()
         this.visitStore.forget('the keeper died, so the next visit starts anew')
@@ -204,7 +217,8 @@ export class RoomScene {
       location.reload()
     })
     this.joysticks = new Joysticks(container)
-    this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout) })
+    this.keyboardAndMouse = new KeyboardAndMouse(container, this.renderer.domElement, log)
+    this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout), controlSchemeChosen: (scheme) => this.controlSchemeChosen(scheme) })
     this.garden = new Garden(materials)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
     this.settingsStore = new SettingsStore(log)
@@ -271,7 +285,10 @@ export class RoomScene {
     const isInspecting = inspection !== null
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming && !isInspecting)
     this.pourControls.show(isAiming)
-    this.joysticks.show(isFirstPerson && !isCloseUp && !isAiming && !isInspecting)
+    const isLookingFreely = isFirstPerson && (!isCloseUp || this.play.isSeatedAtTheRitualPlace) && !isAiming && !isInspecting
+    const sticks = sticksShownFor(this.controlScheme, this.stickLayout)
+    this.joysticks.show(isLookingFreely && sticks.left !== null, isLookingFreely && sticks.right !== null)
+    if (!isLookingFreely || !usesTheMouse(this.controlScheme)) this.keyboardAndMouse.letGoOfTheMouse('the look is not free now')
     this.render()
     this.noticeTheProphecyIfSeenWhole()
   }
@@ -290,26 +307,42 @@ export class RoomScene {
   }
 
   private walkAndLookInFirstPerson(seconds: number): void {
-    if (this.cameraMode !== 'firstPerson' || this.play.view.kind === 'closeUp') return
+    if (this.cameraMode !== 'firstPerson' || this.play.aimedPourView !== null || this.play.inspectionView !== null) return
+    const isSeated = this.play.isSeatedAtTheRitualPlace
+    if (this.play.view.kind === 'closeUp' && !isSeated) return
     const walk = this.play.walk
     if (isWalking(walk)) this.look = lookTurnedTowards(this.look, walk.headingRadians, seconds)
-    this.look = lookTurnedBy(this.look, this.lookStick(), seconds)
-    const stick = this.walkStick()
-    if (stick.right === 0 && stick.up === 0) return this.play.stopWalkingFreely()
-    this.play.walkFreely(stepFor(stick, this.look.headingRadians, seconds), this.look.headingRadians)
+    this.look = this.lookTurnedByTheControls(seconds)
+    const walking = this.walkingAsked()
+    if (walking.stick.right === 0 && walking.stick.up === 0) return this.play.stopWalkingFreely()
+    if (isSeated) this.play.standUpToWalk()
+    this.play.walkFreely(stepFor(walking.stick, this.look.headingRadians, seconds, walking.isHurrying ? hurryingSpeedShare : 1), this.look.headingRadians)
   }
 
-  private walkStick(): StickDeflection {
-    return this.stickLayout === 'walkOnTheLeft' ? this.joysticks.left : this.joysticks.right
+  private lookTurnedByTheControls(seconds: number): FirstPersonLook {
+    const turnedByTheMouse = usesTheMouse(this.controlScheme) ? lookTurnedByTheMouse(this.look, this.keyboardAndMouse.takeTheMouseMovement()) : this.look
+    const lookStick = this.stickWithRole('look')
+    return lookStick === null ? turnedByTheMouse : lookTurnedBy(turnedByTheMouse, lookStick, seconds)
   }
 
-  private lookStick(): StickDeflection {
-    return this.stickLayout === 'walkOnTheLeft' ? this.joysticks.right : this.joysticks.left
+  private walkingAsked(): WalkFromTheKeys {
+    const walkStick = this.stickWithRole('walk')
+    const fromTheKeys = usesTheKeyboard(this.controlScheme) ? walkFromTheKeys(this.keyboardAndMouse.keysHeld) : null
+    const areTheKeysUsed = fromTheKeys !== null && (fromTheKeys.stick.right !== 0 || fromTheKeys.stick.up !== 0)
+    if (areTheKeysUsed || walkStick === null) return fromTheKeys ?? { stick: { right: 0, up: 0 }, isHurrying: false }
+    return { stick: walkStick, isHurrying: false }
+  }
+
+  private stickWithRole(role: 'walk' | 'look'): StickDeflection | null {
+    const sticks = sticksShownFor(this.controlScheme, this.stickLayout)
+    if (sticks.left === role) return this.joysticks.left
+    return sticks.right === role ? this.joysticks.right : null
   }
 
   private restoreTheCamera(camera: SavedCamera): void {
     this.cameraMode = camera.mode
     this.stickLayout = camera.stickLayout
+    this.controlScheme = camera.controlScheme
     this.look = camera.look
     this.log(`the camera is back in ${camera.mode} mode with the sticks laid out as ${camera.stickLayout}, as the visit left it`)
   }
@@ -341,7 +374,7 @@ export class RoomScene {
       savedAtMilliseconds: Date.now(),
       ritual: this.session.state,
       place: this.play.place,
-      camera: { mode: this.cameraMode, stickLayout: this.stickLayout, look: this.look },
+      camera: { mode: this.cameraMode, stickLayout: this.stickLayout, controlScheme: this.controlScheme, look: this.look },
       arrangement: this.arrangement,
     })
     if (reason !== null) this.log(`the visit is saved because ${reason}`)
@@ -387,6 +420,11 @@ export class RoomScene {
     this.log(`the sticks are laid out as ${layout} from the debug menu`)
   }
 
+  private controlSchemeChosen(scheme: ControlScheme): void {
+    this.controlScheme = scheme
+    this.log(`the first-person look is controlled by ${scheme} from the debug menu`)
+  }
+
   private cameraModeChosen(mode: CameraMode): void {
     this.cameraMode = mode
     this.log(`the camera switched to ${mode} from the debug menu`)
@@ -394,9 +432,21 @@ export class RoomScene {
     else this.play.stopWalkingFreely()
   }
 
+  private lookAtTheTableAsTheKeeperSitsDown(isSeated: boolean): void {
+    const closeUp = this.play.closeUpInView
+    if (isSeated && !this.wasSeatedInFirstPerson && closeUp !== null) {
+      const walker = this.play.walk.position
+      this.look = lookAt(closeUp.target, { x: walker.x, y: seatedEyeHeightMetres, z: walker.z })
+      this.log('the keeper sits down at the tea table and looks at it, free to look around')
+    }
+    this.wasSeatedInFirstPerson = isSeated
+  }
+
   private moveCamera(seconds: number): void {
     this.zoom.viewShown(this.play.view)
-    const isFirstPersonView = this.cameraMode === 'firstPerson' && this.play.view.kind !== 'closeUp'
+    const isSeatedInFirstPerson = this.cameraMode === 'firstPerson' && this.play.isSeatedAtTheRitualPlace
+    this.lookAtTheTableAsTheKeeperSitsDown(isSeatedInFirstPerson)
+    const isFirstPersonView = this.cameraMode === 'firstPerson' && (this.play.view.kind !== 'closeUp' || isSeatedInFirstPerson)
     if (isFirstPersonView && !this.wasFirstPersonView) this.firstPersonSettlesAtSeconds = this.clock.elapsedTime + firstPersonSettleSeconds
     this.wasFirstPersonView = isFirstPersonView
     this.showFieldOfView(isFirstPersonView ? firstPersonFieldOfViewDegrees : cameraFieldOfViewDegrees, seconds)
@@ -447,6 +497,7 @@ export class RoomScene {
 
   private cameraGoal(): CameraPose {
     const closeUp = this.play.closeUpInView
+    if (this.cameraMode === 'firstPerson' && this.play.isSeatedAtTheRitualPlace) return firstPersonPose(this.play.walk.position, this.look, seatedEyeHeightMetres)
     if (closeUp !== null) return closeUpPose(closeUp, this.camera.aspect)
     if (this.cameraMode === 'firstPerson') return firstPersonPose(this.play.walk.position, this.look)
     return overviewPose(this.play.walk.position, this.camera.aspect)
@@ -454,8 +505,11 @@ export class RoomScene {
 
   private listenToPresses(): void {
     const canvas = this.renderer.domElement
-    canvas.addEventListener('pointerdown', (event) => this.gestures.fingerDown(event.pointerId, { x: event.clientX, y: event.clientY }))
-    canvas.addEventListener('pointermove', (event) => this.gestures.fingerMoved(event.pointerId, { x: event.clientX, y: event.clientY }))
+    canvas.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && this.mayCatchTheMouse() && !this.keyboardAndMouse.isLocked) return this.keyboardAndMouse.catchTheMouse()
+      this.gestures.fingerDown(event.pointerId, this.pointOfThe(event))
+    })
+    canvas.addEventListener('pointermove', (event) => this.gestures.fingerMoved(event.pointerId, this.pointOfThe(event)))
     canvas.addEventListener('pointerup', (event) => this.gestures.fingerUp(event.pointerId))
     canvas.addEventListener('pointercancel', (event) => this.gestures.fingerUp(event.pointerId))
     canvas.addEventListener('wheel', (event) => {
@@ -463,6 +517,17 @@ export class RoomScene {
       this.gestures.wheelTurned(event.deltaY)
     }, { passive: false })
     for (const safariGesture of ['gesturestart', 'gesturechange']) document.addEventListener(safariGesture, (event) => event.preventDefault())
+  }
+
+  private mayCatchTheMouse(): boolean {
+    const isLookingFreely = this.play.view.kind !== 'closeUp' || this.play.isSeatedAtTheRitualPlace
+    return this.cameraMode === 'firstPerson' && usesTheMouse(this.controlScheme) && this.keyboardAndMouse.mayBeCaught && isLookingFreely && this.play.aimedPourView === null && this.play.inspectionView === null
+  }
+
+  private pointOfThe(event: PointerEvent): ScreenPoint {
+    if (!this.keyboardAndMouse.isLocked) return { x: event.clientX, y: event.clientY }
+    const bounds = this.renderer.domElement.getBoundingClientRect()
+    return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 }
   }
 
   private aimPlanePointAt(point: ScreenPoint): FloorPoint {

@@ -87,6 +87,10 @@ export class RoomNavigator {
     this.keeperMoved(furnitureId)
   }
 
+  standUpToWalk(): void {
+    this.leaveCloseUp('the walking controls were used')
+  }
+
   walkFreely(step: FloorPoint, headingRadians: number): void {
     const from = this.currentWalk.position
     const reachable = [

@@ -136,6 +136,11 @@ export class RoomPlay {
     return this.choice
   }
 
+  get isSeatedAtTheRitualPlace(): boolean {
+    const view = this.view
+    return view.kind === 'closeUp' && view.furnitureId === this.ritualFurnitureId()
+  }
+
   get sippableCupId(): string | null {
     const itemId = this.chosenItemId()
     const vessel = itemId === null ? undefined : this.ritual.state.vessels[itemId]
@@ -276,6 +281,10 @@ export class RoomPlay {
   walkFreely(step: FloorPoint, headingRadians: number): void {
     if (this.aimedPour !== null) return
     this.navigator.walkFreely(step, headingRadians)
+  }
+
+  standUpToWalk(): void {
+    this.navigator.standUpToWalk()
   }
 
   stopWalkingFreely(): void {

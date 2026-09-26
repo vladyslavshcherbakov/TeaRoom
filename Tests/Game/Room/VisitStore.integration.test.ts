@@ -30,6 +30,14 @@ test('savedVisit_namingItsRoomByTheKitchenFacingTheWindow_keepsTheWindowAlongThe
   assert.deepEqual(found.kind === 'found' ? found.visit.arrangement : null, { ...rest, window: 'alongTheLeftWall', besideTheWindow: 'kitchen', table: 'byTheWindow' })
 })
 
+test('savedVisit_fromBeforeTheMouseAndKeyboardCouldControlTheLook_keepsItsTwoSticks', () => {
+  const store = storeHolding(aVisit)
+
+  const found = store.find()
+
+  assert.equal(found.kind === 'found' ? found.visit.camera.controlScheme : null, 'twoSticks')
+})
+
 test('savedVisit_ofAnotherVersion_isBrokenByAnUpdate', () => {
   const store = storeHolding({ ...aVisit, savedVisitVersion: 0 })
 

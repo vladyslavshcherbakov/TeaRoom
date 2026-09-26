@@ -1,4 +1,5 @@
 import { text, type TextKey } from '../../Texts/Texts.ts'
+import type { ControlScheme } from '../Camera/FirstPersonControls.ts'
 
 export type CameraMode = 'room' | 'firstPerson'
 
@@ -7,11 +8,13 @@ export type StickLayout = 'walkOnTheLeft' | 'lookOnTheLeft'
 export type DebugMenuSettings = {
   readonly cameraMode: CameraMode
   readonly stickLayout: StickLayout
+  readonly controlScheme: ControlScheme
 }
 
 export type DebugMenuListener = {
   readonly cameraModeChosen: (mode: CameraMode) => void
   readonly stickLayoutChosen: (layout: StickLayout) => void
+  readonly controlSchemeChosen: (scheme: ControlScheme) => void
 }
 
 type Choice<Value extends string> = {
@@ -34,6 +37,13 @@ const stickLayouts: readonly Choice<StickLayout>[] = [
   { value: 'lookOnTheLeft', labelKey: 'debug.sticks.lookOnTheLeft' },
 ]
 
+const controlSchemes: readonly Choice<ControlScheme>[] = [
+  { value: 'twoSticks', labelKey: 'debug.controls.twoSticks' },
+  { value: 'mouseAndKeyboard', labelKey: 'debug.controls.mouseAndKeyboard' },
+  { value: 'mouseAndWalkStick', labelKey: 'debug.controls.mouseAndWalkStick' },
+  { value: 'keyboardAndLookStick', labelKey: 'debug.controls.keyboardAndLookStick' },
+]
+
 export class DebugMenu {
   private readonly panel: HTMLElement
   private readonly groups: readonly ChoiceGroup[]
@@ -46,6 +56,7 @@ export class DebugMenu {
     title.textContent = text('debug.title')
     this.groups = [
       choiceGroup('debug.camera', cameraModes, (settings) => settings.cameraMode, listener.cameraModeChosen),
+      choiceGroup('debug.controls', controlSchemes, (settings) => settings.controlScheme, listener.controlSchemeChosen),
       choiceGroup('debug.sticks', stickLayouts, (settings) => settings.stickLayout, listener.stickLayoutChosen),
     ]
     const closeButton = document.createElement('button')
