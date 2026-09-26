@@ -13,10 +13,13 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - The kettle stands in the sink under the tap. The tap runs until it is turned off, also while the keeper is away, and what runs over goes down the drain.
 - The tap rinses a tea bowl, washes the leaves out of a vessel, and washes a cloth clean.
 - Water heats, simmers and boils on the heater, and boils away until the kettle is dry. The heater's switch is its own target on the counter's front.
+- Steam follows the water's temperature. The water shimmers and boils as it heats, and its level rises in the kettle's gauge and in the open kettle.
 - The thermos, the spoon and the cloth can go on the heater. The thermos glows red and is too hot to take, and the spoon and the cloth char and burn. A burning spoon crumbles to ash when it is taken.
 - Spilled water makes a puddle on the furniture where it fell, and each place keeps its own. A puddle dries by itself.
+- The cloth wipes a puddle as it moves, and soaks one up while it lies in it. It gets wet and stained, dries by itself, and is wrung out as it leaves the sink.
 - The spoon scoops leaves from the open caddy and tips them into the kettle or a tea bowl, so tea can be brewed right in a bowl.
 - Each caddy holds its own tea. A liquid carries the teas it was made of, and a sip is judged, and the tea coloured, by that blend.
+- The Sip button raises the bowl to the lips and sends its steam into the eyes. The keeper says in one line how it feels, in a voice chosen for the visit.
 - A sip of strong tea straight from the caddy kills the keeper, and YOU DIED starts the game over.
 - The keeper remarks on what the player does, and tells each joke once a visit.
 - A middle hand grows after ten taps in a row on one item with both hands full.
@@ -25,11 +28,16 @@ Each version ends with something that can be opened on an iPhone from GitHub Pag
 - The tea table is used from the nearer of its long sides.
 - In first person the keeper walks with a stick or the keyboard, looks around with a stick or a caught mouse, and sits down at the tea table.
 - On a computer, keys choose a hand, sip and tilt a pour.
+- Ten tea bowls in ten looks, with glazes, glass, clay and paintings on their bottoms, stand on the shelf in a random order for each new game.
+- Each tea has its own leaves and its own liquor colour.
 - The thermos is a Chinese vacuum flask painted with sakura over Mount Fuji, and the caddy is a tin with its leaves heaped inside.
 - A new game arranges the room at random: the window, the kitchen and the shelf, the tea table, the tools, the cushions and the cloths.
+- The room opens at dawn, by day or at sunset, lit by the sun of that time.
+- The visit is kept in the browser. On return the world lives through the time away, the house is restocked, and the light moves on to the next time of day.
 - A garden of grass, flowers and rose bushes lies around the house, and first person shows a sky with clouds.
 - Achievements are hidden until a setting shows them. Then a medal on the wall opens their sheet.
 - A gear on the wall opens the settings: the keeper's body colour and face, the camera and its controls, the degrees, the picture's quality and the time played.
+- Nerd mode puts a thermostat on the heater and a thermometer on the kettle, with nixie tubes.
 - Lamps and red-hot metal glow into the room.
 - A book of instructions hangs on the wall.
 - A prophecy is written on the beam above the back window.
@@ -272,10 +280,8 @@ Each step keeps every test green and is pushed on its own.
 ## 0.5 — Feel
 
 - The five phases of every grab: lift, lag by weight class, resistance, contact bounce, settle.
-- Sockets and allowed areas, spring-back from forbidden places.
 - Lids as physical objects.
 - The stream: particles, bending with the finger, splash, final drops after release.
-- Steam particles driven by temperature. The liquid level rising and rippling.
 - The hot vessel: "oh, hot", the hand pulls back.
 - Camera micro-zoom towards the object being held.
 
@@ -288,15 +294,14 @@ Each step keeps every test green and is pushed on its own.
 
 ## 0.7 — The whole ritual on screen
 
-- The first sip scene: raise, pause, sip, reaction, a small result card.
 - Offering scene: the figurine's glow, pose and resonant sound.
 - The gods' plaque in the corner and the deadpan remarks.
-- Cleanup with the cloth, then "The tea is ready": Stay, Leave. Stay fades the UI completely.
+- "The tea is ready": Stay, Leave. Stay fades the UI completely.
 - Text in the languages agreed for the game (open question).
 
 ## 0.8 — Atmosphere
 
-- The window as its own layer. Dawn, day and sunset with light that changes over two to five seconds.
+- The window as its own layer. The time of day changes during play, with light that changes over two to five seconds.
 - Rain on the glass and its ambient loop.
 - Rare window events with a cooldown, from a seeded random source so tests stay deterministic.
 
@@ -309,13 +314,12 @@ Each step keeps every test green and is pushed on its own.
 
 ## 0.10 — Memory
 
-- The room persists between sessions on the device: object positions, the gods, figurine satisfaction, the cat's habits.
 - A ritual history and the first world rules from world-memory.md.
 - Installable to the home screen, playable offline.
 
 ## 0.11 — Polish
 
-- The art pass: the illustrated diorama, three teas' liquor colours, the six bowls, the optional thermometer as an object.
+- The art pass: the illustrated diorama.
 - Performance on older iPhones, safe areas, reduced motion, a landscape hint.
 - A balance pass from playtests.
 
