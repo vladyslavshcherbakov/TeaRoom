@@ -521,7 +521,14 @@
         color: rgba(251, 244, 232, 0.8);
         opacity: 0.35;
         cursor: pointer;
+        touch-action: manipulation;
         transition: opacity 0.2s;
+      }
+      @media (pointer: coarse) {
+        .corner-button {
+          width: 44px;
+          height: 44px;
+        }
       }
       .corner-button svg {
         width: 20px;

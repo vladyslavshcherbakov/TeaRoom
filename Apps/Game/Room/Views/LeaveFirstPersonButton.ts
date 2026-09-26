@@ -4,6 +4,7 @@ const svgNamespace = 'http://www.w3.org/2000/svg'
 
 export class LeaveFirstPersonButton {
   private readonly element: HTMLButtonElement
+  private pressingPointerId: number | null = null
 
   constructor(container: HTMLElement, leaveAsked: () => void) {
     this.element = document.createElement('button')
@@ -13,7 +14,16 @@ export class LeaveFirstPersonButton {
     const label = text('firstPerson.leave')
     this.element.setAttribute('aria-label', label)
     this.element.title = label
-    this.element.addEventListener('click', leaveAsked)
+    this.element.addEventListener('pointerdown', (event) => (this.pressingPointerId = event.pointerId))
+    this.element.addEventListener('pointerup', (event) => {
+      if (event.pointerId !== this.pressingPointerId) return
+      this.pressingPointerId = null
+      leaveAsked()
+    })
+    for (const letGo of ['pointercancel', 'pointerleave'] as const) this.element.addEventListener(letGo, () => (this.pressingPointerId = null))
+    this.element.addEventListener('click', (event) => {
+      if (event.detail === 0) leaveAsked()
+    })
     container.append(this.element)
   }
 
