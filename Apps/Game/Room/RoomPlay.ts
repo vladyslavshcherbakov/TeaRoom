@@ -14,6 +14,7 @@ import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { puddleShareOf } from '../Table/TablePresenter.ts'
 import { RoomRemarks, type RoomRemark } from './RoomRemarks.ts'
+import { SipGesture, type SipGestureView } from './SipGesture.ts'
 import { TapsInARow } from './TapsInARow.ts'
 import { WipeStroke } from './WipeStroke.ts'
 import { carriedShapeOf, layoutOf } from './CarriedShapes.ts'
@@ -105,6 +106,7 @@ export class RoomPlay {
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
   private inspection: ItemInspection | null = null
+  private sipGesture: SipGesture | null = null
   private isSeated: boolean
 
   constructor(ritual: RitualPort, catalog: Catalog, layout: RoomLayout, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
@@ -155,6 +157,10 @@ export class RoomPlay {
 
   get inspectionView(): ItemInspectionView | null {
     return this.inspection?.view ?? null
+  }
+
+  get sipGestureView(): SipGestureView | null {
+    return this.sipGesture?.view ?? null
   }
 
   get clothWiping(): ClothWiping | null {
@@ -273,7 +279,9 @@ export class RoomPlay {
   sipTapped(): void {
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
+    const volumeBeforeMl = this.ritual.state.vessels[cupId]?.liquid.volumeMl ?? 0
     const events = this.ritual.dispatch({ type: 'tasteCup', cupId })
+    if (events.some((event) => event.type === 'teaTasted')) this.raiseToTheLips(cupId, volumeBeforeMl)
     if (!events.some((event) => event.type === 'keeperDied')) return
     this.log(`the sip from ${cupId} killed the keeper, so the room shows it`)
     this.listener.keeperDied()
@@ -301,9 +309,27 @@ export class RoomPlay {
   advance(seconds: number): void {
     this.navigator.advance(seconds)
     this.aimedPour?.advance(seconds)
+    this.advanceTheSipGesture(seconds)
     if (this.press === null) return
     this.press.heldSeconds += seconds
     this.repeatTheHeldArrow(this.press)
+  }
+
+  private raiseToTheLips(cupId: string, volumeBeforeMl: number): void {
+    const cup = this.ritual.state.vessels[cupId]
+    if (cup === undefined) return
+    const sippedMl = volumeBeforeMl - cup.liquid.volumeMl
+    const sippedFillShare = sippedMl / definitionIn(this.catalog, 'vessels', cup.definitionId).capacityMl
+    this.sipGesture = new SipGesture(cupId, sippedFillShare)
+    this.log(`${cupId} is raised to the lips, and ${sippedMl.toFixed(1)} ml leave it in sight`)
+  }
+
+  private advanceTheSipGesture(seconds: number): void {
+    if (this.sipGesture === null) return
+    this.sipGesture.advance(seconds)
+    if (!this.sipGesture.isOver) return
+    this.log(`${this.sipGesture.view.cupId} is lowered after the sip`)
+    this.sipGesture = null
   }
 
   private tapped(target: RoomTapTarget): void {

@@ -37,6 +37,38 @@ test('sip_fromTheChosenBowlOfTea_takesTwentyMillilitres', () => {
   assertNear(room.state.vessels['bowl1']?.liquid.volumeMl ?? 0, volumeBeforeTheSip - 20)
 })
 
+test('sipGesture_rightAfterASip_stillShowsTheSipInTheBowlAtTheHand', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+
+  room.play.sipTapped()
+
+  assert.equal(room.play.sipGestureView?.cupId, 'bowl1')
+  assert.equal(room.play.sipGestureView?.liftShare, 0)
+  assertNear(room.play.sipGestureView?.fillShareNotYetSipped ?? 0, 20 / 120)
+})
+
+test('sipGesture_halfwayThroughTheDrink_holdsTheBowlAtTheLipsWithHalfTheSipLeft', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+  room.play.sipTapped()
+
+  room.advance(0.75)
+
+  assertNear(room.play.sipGestureView?.liftShare ?? 0, 1)
+  assertNear(room.play.sipGestureView?.fillShareNotYetSipped ?? 0, 10 / 120)
+})
+
+test('sipGesture_afterOneAndAHalfSeconds_isOver', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+  room.play.sipTapped()
+
+  room.advance(1.6)
+
+  assert.equal(room.play.sipGestureView, null)
+})
+
 test('figurine_whenTappedWithABowlOfTeaChosen_isOfferedIt', () => {
   const room = new TestRoom()
   setTheTeaTable(room)
@@ -78,6 +110,13 @@ test('keeper_whenSippingColdTapWaterStraightFromTheCaddy_lives', () => {
   assert.equal(room.deathsSeen, 0)
   assertNear(mlBeforeTheSip - (room.state.vessels['caddy']?.liquid.volumeMl ?? 0), 20)
 })
+
+function holdABowlOfTea(room: TestRoom): void {
+  setTheTeaTable(room)
+  room.ritual.pour('kettle', 'bowl1', 4)
+  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+}
 
 function setTheTeaTable(room: TestRoom): void {
   room.carryFromTheShelf('bowl1', 'caddy')

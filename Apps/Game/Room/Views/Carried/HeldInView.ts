@@ -29,6 +29,10 @@ const heldFacingTheEyesRollInwardRadians = 0.2
 const heldInViewInsetShareOfItemWidth = 0.8
 const touchAreaCentreShareOfItsHeight = 0.4
 const heldInViewMostShareOfScreenHeight = 0.2
+const sipRiseShareOfScreenHeight = 0.1
+const sipTowardTheMiddleShare = 0.35
+const sipNearerShare = 0.12
+const sipTiltTowardTheEyesRadians = 0.55
 
 export function holdInView(model: Pick<CarriedModel, 'root' | 'footprintRadius' | 'rimHeight'>, handIndex: HandIndex, heldInView: HeldInView): void {
   const { camera } = heldInView
@@ -38,6 +42,15 @@ export function holdInView(model: Pick<CarriedModel, 'root' | 'footprintRadius' 
   const widthScale = frame.itemWidth / (2 * model.footprintRadius)
   const heightScale = (frame.screenHeight * heldInViewMostShareOfScreenHeight) / model.rimHeight
   model.root.scale.setScalar(Math.min(widthScale, heightScale))
+}
+
+export function raiseTowardTheEyes(model: Pick<CarriedModel, 'root'>, handIndex: HandIndex, heldInView: HeldInView, liftShare: number): void {
+  const { camera } = heldInView
+  const frame = heldInViewFrame(heldInView, handIndex)
+  const atTheLips = new THREE.Vector3(frame.baseInCamera.x * (1 - sipTowardTheMiddleShare), frame.baseInCamera.y + frame.screenHeight * sipRiseShareOfScreenHeight, frame.baseInCamera.z * (1 - sipNearerShare))
+  model.root.position.copy(camera.localToWorld(frame.baseInCamera.clone().lerp(atTheLips, liftShare)))
+  const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
+  model.root.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(cameraRight, sipTiltTowardTheEyesRadians * liftShare))
 }
 
 function turnFacingTheEyes(frame: HeldInViewFrame, camera: THREE.Camera, handIndex: HandIndex): THREE.Quaternion {

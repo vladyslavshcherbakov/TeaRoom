@@ -6,6 +6,7 @@ import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { AimedPourView } from '../../AimedPour.ts'
 import type { ItemInspectionView } from '../../ItemInspection.ts'
 import type { ClothWiping } from '../../RoomPlay.ts'
+import type { SipGestureView } from '../../SipGesture.ts'
 import type { Walk } from '../../Walking/Walk.ts'
 
 export type CarriedItemsScene = {
@@ -16,6 +17,7 @@ export type CarriedItemsScene = {
   readonly inspected: InspectedInView | null
   readonly aimedPour: AimedPourView | null
   readonly clothWiping: ClothWiping | null
+  readonly sipGesture: SipGestureView | null
   readonly timeSeconds: number
   readonly temperatureUnitShown: TemperatureUnit | null
   readonly distantDetail: DistantDetail | null

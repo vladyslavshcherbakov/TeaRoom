@@ -6,14 +6,15 @@ import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
 import { turnOfItemAt, undersideOfTheBoardAbove, type WorldPoint } from '../RoomLayout.ts'
+import type { SipGestureView } from '../SipGesture.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { aimOver } from './Carried/AimedVessel.ts'
-import type { CarriedItemsScene, DistantDetail } from './Carried/CarriedItemsScene.ts'
+import type { CarriedItemsScene, DistantDetail, HeldInView } from './Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from './Carried/CarriedModel.ts'
 import { ChosenGlow } from './Carried/ChosenGlow.ts'
 import { CrumblingAsh } from './Carried/CrumblingAsh.ts'
 import { ItemFire } from './Carried/ItemFire.ts'
-import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView } from './Carried/HeldInView.ts'
+import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView, raiseTowardTheEyes } from './Carried/HeldInView.ts'
 import { inspectInView } from './Carried/InspectedInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import type { Surroundings } from '../Placement.ts'
@@ -64,7 +65,8 @@ export class CarriedItems {
 
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
-    for (const model of this.models) showContentsOf(model, scene, this.surroundings)
+    const sceneOfTheContents = withTheSipStillInTheCup(scene)
+    for (const model of this.models) showContentsOf(model, sceneOfTheContents, this.surroundings)
     for (const model of this.models) drawInTheDetailItsSizeNeeds(model, scene.distantDetail)
     for (const [clothId, material] of this.clothMaterialsByClothId) material.color.copy(this.clothColourFor(scene.table.cloths[clothId]))
     for (const fire of this.fires) fire.show(scene.table, scene.timeSeconds)
@@ -128,9 +130,14 @@ export class CarriedItems {
     model.root.visible = true
     this.retag(model, { handIndex: location.handIndex })
     if (inspected !== null) return inspectInView(model, inspected)
-    if (heldInView !== null) return holdInView(model, location.handIndex, heldInView)
+    if (heldInView !== null) return this.holdInViewOrRaiseToTheLips(model, location.handIndex, heldInView, scene.sipGesture)
     model.root.position.copy(handPosition(scene.walk, location.handIndex))
     model.root.rotation.y = scene.walk.headingRadians
+  }
+
+  private holdInViewOrRaiseToTheLips(model: CarriedModel, handIndex: HandIndex, heldInView: HeldInView, sipGesture: SipGestureView | null): void {
+    holdInView(model, handIndex, heldInView)
+    if (sipGesture?.cupId === model.itemId) raiseTowardTheEyes(model, handIndex, heldInView, sipGesture.liftShare)
   }
 
   private aimOverItsTarget(model: CarriedModel, aim: AimedPourView, scene: CarriedItemsScene): void {
@@ -228,6 +235,13 @@ function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {
   const x = walk.position.x + Math.cos(heading) * side + Math.sin(heading) * forward
   const z = walk.position.z - Math.sin(heading) * side + Math.cos(heading) * forward
   return new THREE.Vector3(x, handHeightMetres, z)
+}
+
+function withTheSipStillInTheCup(scene: CarriedItemsScene): CarriedItemsScene {
+  const sip: SipGestureView | null = scene.sipGesture
+  const cup = sip === null ? undefined : scene.table.vessels[sip.cupId]
+  if (sip === null || cup === undefined || sip.fillShareNotYetSipped <= 0) return scene
+  return { ...scene, table: { ...scene.table, vessels: { ...scene.table.vessels, [sip.cupId]: { ...cup, fillShare: cup.fillShare + sip.fillShareNotYetSipped } } } }
 }
 
 function poseOf(object: THREE.Object3D): string {
