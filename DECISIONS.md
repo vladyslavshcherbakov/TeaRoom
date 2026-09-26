@@ -16,6 +16,8 @@ The plan is in `docs/roadmap.md`.
 
 **No debug page next to the game.** The ritual bench drove the simulation with plain buttons and showed the log on a page. Nobody used it: the rules are checked by integration tests, the room by playing it, and the history by the log with its world report. It only had to be fixed after each change to the simulation. The log is read in the browser's console.
 
+**The code becomes a reusable engine and a tea game on top of it.** The user wants to build other games on the same engine, such as a shooter, chess, a platformer or a tower defense, so nothing in the engine may know about tea. A second reason is that rules which live in the engine's structure cannot be forgotten: a command without its checks does not compile, while a convention in CONTRIBUTING.md is forgotten one handler at a time. The engine is made only of what the tea game already uses, and it is generalised further when a second game needs it. The steps are in `docs/roadmap.md`, after the review's fixes. Rejected: a general engine designed up front for every genre, because code that no game calls cannot be checked by playing. Rejected: a separate npm package now, because a folder with an import rule and a test of it keeps the line until a second game exists.
+
 **No haptics on iPhone.** iOS Safari does not implement the Vibration API, and the checkbox-switch workaround is reported to stop working from iOS 26.5. Haptics stay a progressive enhancement for browsers that have the API.
 
 ### Shared/Simulation/
