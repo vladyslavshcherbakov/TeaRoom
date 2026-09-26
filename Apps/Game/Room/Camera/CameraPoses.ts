@@ -18,9 +18,9 @@ const nearestDistanceShare = 0.5
 const farthestDistanceShare = 1.6
 const wheelZoomPerPixel = 0.001
 
-const shareOfAPortraitScreenAboveTheSheet = 0.35
-const shareOfALandscapeScreenBesideTheSheet = 0.7
-const thingAboveTheMiddleOfAPortraitScreenShare = 0.32
+const thingShareOfAPortraitScreenHeight = 0.2
+const thingShareOfALandscapeScreenHeight = 0.4
+const thingAboveTheMiddleOfAPortraitScreenShare = 0.31
 const thingLeftOfTheMiddleOfALandscapeScreenShare = 0.22
 
 export const unzoomedDistanceShare = 1
@@ -41,7 +41,7 @@ export function closeUpPose(closeUp: CloseUp, aspect: number): CameraPose {
 
 export function poseWatchingBesideASheet(thing: ThingOnAWall, aspect: number): CameraPose {
   const isPortrait = aspect < 1
-  const visibleHeight = thing.sizeMetres / (isPortrait ? shareOfAPortraitScreenAboveTheSheet : shareOfALandscapeScreenBesideTheSheet)
+  const visibleHeight = thing.sizeMetres / (isPortrait ? thingShareOfAPortraitScreenHeight : thingShareOfALandscapeScreenHeight)
   const distance = visibleHeight / 2 / halfHeightTangent()
   const right = { x: thing.towardsTheRoom.z, y: 0, z: -thing.towardsTheRoom.x }
   const shift = isPortrait ? { right: 0, down: visibleHeight * thingAboveTheMiddleOfAPortraitScreenShare } : { right: visibleHeight * aspect * thingLeftOfTheMiddleOfALandscapeScreenShare, down: 0 }
