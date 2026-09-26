@@ -47,6 +47,7 @@ import { FullScreenButton } from './Views/FullScreenButton.ts'
 import { LeaveFirstPersonButton } from './Views/LeaveFirstPersonButton.ts'
 import { Achievements, achievementsOutOfReach } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
+import { AimHintStore } from './AimHintStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
 import { AchievementsList } from './Views/AchievementsList.ts'
 import { GuideBook } from './Views/GuideBook.ts'
@@ -234,7 +235,7 @@ export class RoomScene {
       tiltPressed: () => this.play.tiltPressed(),
       tiltReleased: () => this.play.tiltReleased(),
       whyPouringAsked: () => this.explainThePour(),
-    })
+    }, new AimHintStore(log))
     this.caption = new RoomCaption(container)
     this.achievementNotice = new AchievementNotice(container)
     this.achievements = new Achievements(new AchievementStore(log), log, (id) => this.achievementNotice.announce(id))

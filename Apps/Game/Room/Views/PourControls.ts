@@ -1,5 +1,5 @@
-import { browserStorage } from '../BrowserStorage.ts'
 import { text } from '../../Texts/Texts.ts'
+import type { AimHintStore } from '../AimHintStore.ts'
 
 export type PourControlsListener = {
   readonly tiltPressed: () => void
@@ -7,7 +7,6 @@ export type PourControlsListener = {
   readonly whyPouringAsked: () => void
 }
 
-const hintSeenStorageKey = 'aimHintSeen'
 const svgNamespace = 'http://www.w3.org/2000/svg'
 const skyGlazeLight = '#cbe8f6'
 const skyGlaze = '#9fd0ea'
@@ -28,9 +27,11 @@ export class PourControls {
   private readonly tiltButton: HTMLButtonElement
   private readonly whyButton: HTMLButtonElement
   private readonly hint: HTMLElement
+  private readonly hintStore: AimHintStore
   private isAiming = false
 
-  constructor(container: HTMLElement, listener: PourControlsListener) {
+  constructor(container: HTMLElement, listener: PourControlsListener, hintStore: AimHintStore) {
+    this.hintStore = hintStore
     this.tiltButton = document.createElement('button')
     this.tiltButton.type = 'button'
     this.tiltButton.className = 'tilt'
@@ -61,19 +62,10 @@ export class PourControls {
     this.isAiming = isAiming
     this.tiltButton.hidden = !isAiming
     this.whyButton.hidden = !isAiming
-    if (isAiming) this.hint.hidden = wasHintSeen()
-    if (!isAiming && !this.hint.hidden) rememberHintSeenIfStorageAllows()
+    if (isAiming) this.hint.hidden = this.hintStore.wasSeen()
+    if (!isAiming && !this.hint.hidden) this.hintStore.rememberSeen()
     if (!isAiming) this.hint.hidden = true
   }
-}
-
-function wasHintSeen(): boolean {
-  const stored = browserStorage.read(hintSeenStorageKey)
-  return stored.kind === 'found' && stored.text === 'yes'
-}
-
-function rememberHintSeenIfStorageAllows(): void {
-  browserStorage.keep(hintSeenStorageKey, 'yes')
 }
 
 function pouringIcon(): SVGSVGElement {
