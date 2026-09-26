@@ -17,6 +17,7 @@ export type PuffTrail = {
   readonly origin: THREE.Vector3
   readonly direction: THREE.Vector3
   size: number
+  reachMetres: number
   lastRise: number
   isOut: boolean
 }
@@ -57,6 +58,7 @@ export type CarriedModel = {
   readonly heldInViewLook: HeldInViewLook | null
   readonly steamLook: SteamLook
   readonly puffTrails: readonly PuffTrail[]
+  steamRise: { share: number; atSeconds: number } | null
   readonly glowingShell: GlowingShell | null
   readonly charTo: CharTo | null
   readonly thermometer: LampDisplay | null
@@ -142,7 +144,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     puffs,
     heldInViewLook: parts.heldInViewLook,
     steamLook,
-    puffTrails: puffs.map(() => ({ origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, lastRise: 0, isOut: false })),
+    puffTrails: puffs.map(() => ({ origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, reachMetres: 0, lastRise: 0, isOut: false })),
+    steamRise: null,
     glowingShell: parts.glowingShell,
     charTo: parts.charTo,
     thermometer: parts.thermometer,

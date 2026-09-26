@@ -18,7 +18,7 @@ import { LeafPile } from './LeafPile.ts'
 import { roomLayers } from '../RoomLayers.ts'
 
 type SteamDrawnToTheEyes = {
-  readonly position: THREE.Vector3
+  readonly aimedAt: THREE.Vector3
   readonly share: number
 }
 
@@ -34,6 +34,8 @@ const steamRiseMetresPerSecond = 0.12
 const steamColumnMetres = 0.18
 const steamStartsAboveTheOpeningMetres = 0.04
 const steamStartsAboveTheSpoutMetres = 0.02
+const steamAimedAboveTheEyesMetres = 0.15
+const steamRisesFasterToTheEyes = 6
 const smallestPuffScale = 0.6
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
@@ -71,12 +73,13 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   if (model.glowingShell !== null && vessel !== undefined) showRedHeat(model.glowingShell, vessel.shellGlow)
   const puffsPerSource = vessel === undefined || !model.root.visible || model.layer === roomLayers.inspected ? 0 : puffsBySteam[vessel.steam]
   const sip = scene.sipGesture?.cupId === model.itemId ? scene.sipGesture : null
-  const eyes = sip === null || scene.heldInView === null ? null : { position: scene.heldInView.camera.position, share: sip.liftShare }
+  const eyes = sip === null || scene.heldInView === null ? null : { aimedAt: scene.heldInView.camera.localToWorld(new THREE.Vector3(0, steamAimedAboveTheEyesMetres, 0)), share: sip.liftShare }
   model.root.updateMatrixWorld()
   showSteam(model, steamSourcesOf(model, model.lid === null || isOpen), puffsPerSource, scene.timeSeconds, eyes)
 }
 
 function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], puffsPerSource: number, timeSeconds: number, eyes: SteamDrawnToTheEyes | null): void {
+  const steamRisenShare = steamRisenBy(model, eyes, timeSeconds)
   model.puffs.forEach((puff, index) => {
     const trail = model.puffTrails[index]
     const source = steamSources[index % steamSources.length]
@@ -86,13 +89,22 @@ function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], 
       if (trail !== undefined) trail.isOut = false
       return
     }
-    const rise = (timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
-    if (!trail.isOut || rise < trail.lastRise) releaseThePuff(model, puff, trail, source, eyes)
+    const rise = (steamRisenShare + puffAtItsSource / mostPuffsFromOneSource) % 1
+    const followsTheSip = eyes !== null
+    if (!trail.isOut || rise < trail.lastRise || followsTheSip) releaseThePuff(model, puff, trail, source, eyes)
     trail.lastRise = rise
     puff.visible = true
-    puff.position.copy(trail.origin).addScaledVector(trail.direction, rise * steamColumnMetres * trail.size)
+    puff.position.copy(trail.origin).addScaledVector(trail.direction, rise * trail.reachMetres)
     puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare * trail.size)
   })
+}
+
+function steamRisenBy(model: CarriedModel, eyes: SteamDrawnToTheEyes | null, timeSeconds: number): number {
+  const steamRise = model.steamRise ?? { share: 0, atSeconds: timeSeconds }
+  const pace = steamRiseMetresPerSecond * (1 + (eyes === null ? 0 : eyes.share * steamRisesFasterToTheEyes))
+  const share = (steamRise.share + Math.max(0, timeSeconds - steamRise.atSeconds) * pace) % 1
+  model.steamRise = { share, atSeconds: timeSeconds }
+  return share
 }
 
 function releaseThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail, source: THREE.Vector3, eyes: SteamDrawnToTheEyes | null): void {
@@ -100,14 +112,21 @@ function releaseThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail,
   trail.origin.copy(source)
   trail.direction.copy(steamRisingFrom(source, eyes))
   trail.size = model.root.scale.x
+  trail.reachMetres = steamReachFrom(source, trail.size, eyes)
   puff.material = eyes !== null ? model.steamLook.drawnToTheEyes : model.isHeldInView ? model.steamLook.heldInView : model.steamLook.inRoom
   puff.layers.set(model.layer)
+}
+
+function steamReachFrom(source: THREE.Vector3, size: number, eyes: SteamDrawnToTheEyes | null): number {
+  const column = steamColumnMetres * size
+  if (eyes === null) return column
+  return THREE.MathUtils.lerp(column, source.distanceTo(eyes.aimedAt), eyes.share)
 }
 
 function steamRisingFrom(source: THREE.Vector3, eyes: SteamDrawnToTheEyes | null): THREE.Vector3 {
   const up = new THREE.Vector3(0, 1, 0)
   if (eyes === null) return up
-  const towardTheEyes = eyes.position.clone().sub(source).normalize()
+  const towardTheEyes = eyes.aimedAt.clone().sub(source).normalize()
   return up.lerp(towardTheEyes, eyes.share).normalize()
 }
 
