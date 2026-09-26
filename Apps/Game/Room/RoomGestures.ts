@@ -46,7 +46,7 @@ type InspectionPinch = {
 
 type Touch =
   | { readonly kind: 'none' }
-  | { readonly kind: 'pressing'; readonly start: ScreenPoint; hold: Hold | null }
+  | { readonly kind: 'pressing'; readonly start: ScreenPoint; hold: Hold | null; pixelsSweptByTheCrosshair: number }
   | { readonly kind: 'pinching'; readonly pinch: Pinch }
   | { readonly kind: 'aiming'; readonly finger: AimingFinger }
   | { readonly kind: 'pinchingTheInspectedItem'; readonly pinch: InspectionPinch }
@@ -78,7 +78,7 @@ export class RoomGestures {
     this.fingersOnTheRoom.set(pointerId, point)
     if (this.fingersOnTheRoom.size === 2) return this.startPinching()
     if (this.fingersOnTheRoom.size > 2) return
-    const press = { kind: 'pressing', start: point, hold: null } satisfies Touch
+    const press = { kind: 'pressing', start: point, hold: null, pixelsSweptByTheCrosshair: 0 } satisfies Touch
     this.touch = press
     const target = this.screen.tapTargetAt(point)
     this.play.pressStarted(target)
@@ -110,6 +110,16 @@ export class RoomGestures {
     if (touch.kind === 'pressing') this.cancelTheHold(touch, `the finger lifted before ${holdSecondsThatInspectAnItem} s, so the press is a tap`)
     if (touch.kind === 'pressing' || touch.kind === 'pinching') this.touch = noTouch
     this.play.pressEnded()
+  }
+
+  crosshairSwept(pixels: number): void {
+    const touch = this.touch
+    if (touch.kind !== 'pressing' || pixels === 0) return
+    touch.pixelsSweptByTheCrosshair += pixels
+    if (touch.pixelsSweptByTheCrosshair <= tapSlopPixels) return
+    this.cancelTheHold(touch, `the look turned the crosshair ${Math.round(touch.pixelsSweptByTheCrosshair)} px`)
+    this.play.pressMovedAway()
+    this.play.pressMovedOver(this.screen.tapTargetAt(touch.start))
   }
 
   wheelTurned(deltaY: number): void {

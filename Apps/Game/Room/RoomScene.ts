@@ -22,7 +22,7 @@ import {
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
-import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookBetween, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, rightOnTheFloorOf, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
+import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookBetween, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, rightOnTheFloorOf, stepFor, type FirstPersonLook, type MouseMovement, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { easedSeatedShare, eyeHeightMetres, seatedShareAfter } from './Camera/KeeperHeight.ts'
 import { debugSettingsByDefault, type DebugSettings } from './DebugSettings.ts'
 import { DebugSettingsStore } from './DebugSettingsStore.ts'
@@ -433,15 +433,17 @@ export class RoomScene {
     if (this.settings.cameraMode !== 'firstPerson' || this.play.aimedPourView !== null || this.play.inspectionView !== null) return
     const walk = this.play.walk
     if (isWalking(walk)) this.look = lookTurnedTowards(this.look, walk.headingRadians, seconds)
-    this.look = this.lookTurnedByTheControls(seconds)
+    const mouseMovement = usesTheMouse(this.settings.controlScheme) ? this.keyboardAndMouse.takeTheMouseMovement() : null
+    this.look = this.lookTurnedByTheControls(seconds, mouseMovement)
+    if (mouseMovement !== null && this.keyboardAndMouse.isLocked) this.gestures.crosshairSwept(Math.hypot(mouseMovement.x, mouseMovement.y))
     const walking = this.walkingAsked()
     if (walking.right === 0 && walking.up === 0) return this.play.stopWalkingFreely()
     this.play.standUpToWalk()
     this.play.walkFreely(stepFor(walking, this.look.headingRadians, seconds), this.look.headingRadians)
   }
 
-  private lookTurnedByTheControls(seconds: number): FirstPersonLook {
-    const turnedByTheMouse = usesTheMouse(this.settings.controlScheme) ? lookTurnedByTheMouse(this.look, this.keyboardAndMouse.takeTheMouseMovement()) : this.look
+  private lookTurnedByTheControls(seconds: number, mouseMovement: MouseMovement | null): FirstPersonLook {
+    const turnedByTheMouse = mouseMovement === null ? this.look : lookTurnedByTheMouse(this.look, mouseMovement)
     const lookStick = this.stickWithRole('look')
     return lookStick === null ? turnedByTheMouse : lookTurnedBy(turnedByTheMouse, lookStick, seconds)
   }

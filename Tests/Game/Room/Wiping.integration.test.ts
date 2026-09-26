@@ -6,6 +6,7 @@ import { onTopOf, TestRoom } from '../../Support/TestRoom.ts'
 import { wetMlOnEveryPlace } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
 const frameSeconds = 1 / 60
+const framesInFiveSeconds = 300
 const onTheTeaTable = onTopOf('teaTable', 0, 0.05)
 
 test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAllOver', () => {
@@ -90,6 +91,25 @@ test('cloth_whenPutDownInThePuddle_soaksItUpWhileItLies', () => {
 
   assert.equal(room.state.cloths['cloth']?.location.kind, 'onSurface')
   assert.equal(room.state.cloths['cloth']?.isSoakingThePuddle, true)
+})
+
+test('table_whenTheCrosshairSweepsOverThePuddleWhileTheMouseButtonIsHeld_isWiped', () => {
+  let crosshairOn: FloorPoint = { x: 0.5, z: -1.6 }
+  const room = new TestRoom({ screen: () => ({ tapTargetAt: () => surfaceOfTheTeaTableAt(crosshairOn), aimPointAt: () => ({ x: 0, z: 0 }) }) })
+  setTheTeaTable(room)
+  room.ritual.pour('kettle', null, 2)
+  room.takeAndChoose('cloth')
+  const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
+
+  room.gestures.fingerDown(1, { x: 0, y: 0 })
+  for (let frame = 1; frame <= framesInFiveSeconds; frame += 1) {
+    room.advance(frameSeconds)
+    crosshairOn = { x: 0.5 + (0.75 * frame) / framesInFiveSeconds, z: -1.6 }
+    room.gestures.crosshairSwept(2)
+  }
+  room.gestures.fingerUp(1)
+
+  assert.ok(wetMlOnEveryPlace(room.state) < wetMlBeforeTheStroke * 0.5, `${wetMlOnEveryPlace(room.state)} ml of ${wetMlBeforeTheStroke} ml left`)
 })
 
 function setTheTeaTable(room: TestRoom): void {

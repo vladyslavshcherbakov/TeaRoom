@@ -24,6 +24,16 @@ test('press_whenTheFingerMovesFurtherThanTwelvePixels_isNotATap', () => {
   assert.deepEqual(room.play.view, { kind: 'overview' })
 })
 
+test('press_whenTheLookTurnsTheCrosshairMoreThanTwelvePixels_isNotATap', () => {
+  const room = roomWhereEveryTapHitsTheCounter()
+
+  room.gestures.fingerDown(1, { x: 0, y: 0 })
+  room.gestures.crosshairSwept(13)
+  room.gestures.fingerUp(1)
+
+  assert.deepEqual(room.play.view, { kind: 'overview' })
+})
+
 test('pinch_whenTheFingersSpreadToTwiceTheirGap_bringsTheCameraToHalfItsDistanceWithoutATap', () => {
   const room = roomWhereEveryTapHitsTheCounter()
   room.gestures.fingerDown(1, { x: 0, y: 0 })
