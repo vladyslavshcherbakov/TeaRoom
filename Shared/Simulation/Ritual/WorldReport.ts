@@ -1,8 +1,8 @@
-import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
+import { definitionIn } from '../Definitions/Catalog.ts'
 import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import type { ClothState, ItemLocation, SessionState, VesselState } from '../State/SessionState.ts'
-import { describeTheTeasOf, noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { describeTheTeasOf, noteDetail, startDraft, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { isTheHeaterInUse } from './HeatingCommands.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { percent } from './Percent.ts'
@@ -15,12 +15,6 @@ const smallestReportedChange = 1e-4
 
 export function isTimeToReportTheWorld(secondsBefore: number, secondsAfter: number): boolean {
   return Math.floor(secondsBefore / worldReportSeconds) !== Math.floor(secondsAfter / worldReportSeconds)
-}
-
-export function worldReportOf(state: SessionState, catalog: Catalog): Outcome {
-  const draft = startDraft(state, catalog)
-  reportTheWorld(draft, 'the room')
-  return outcomeOf(draft)
 }
 
 export function reportTheWorld(draft: Draft, heading: string): void {

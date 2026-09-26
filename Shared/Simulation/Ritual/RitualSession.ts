@@ -6,12 +6,12 @@ import { initialSessionState } from '../State/InitialState.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { applyCommand } from './ApplyCommand.ts'
 import type { Command } from './Command.ts'
-import type { Outcome } from './Draft.ts'
+import { startDraft, type Draft, type Outcome } from './Draft.ts'
 import type { RitualEvent } from './RitualEvent.ts'
 import type { LogLevel, RitualLog } from './RitualLog.ts'
 import { returnAfterAbsence } from './ReturnAfterAbsence.ts'
-import { simulateStep } from './SimulationStep.ts'
-import { isTimeToReportTheWorld, worldReportOf } from './WorldReport.ts'
+import { stepTheWorld } from './SimulationStep.ts'
+import { isTimeToReportTheWorld, reportTheWorld } from './WorldReport.ts'
 
 export type RoomOpening =
   | { readonly kind: 'opened'; readonly session: RitualSession }
@@ -83,15 +83,27 @@ export class RitualSession {
   }
 
   advance(seconds: number): readonly RitualEvent[] {
-    const events: RitualEvent[] = []
     this.secondsNotYetSimulated += seconds
-    while (this.secondsNotYetSimulated >= RitualSession.simulationStepSeconds - RitualSession.roundingToleranceSeconds) {
-      const secondsBefore = this.currentState.elapsedSeconds
-      events.push(...this.accept(simulateStep(this.currentState, RitualSession.simulationStepSeconds, this.catalog)))
-      if (isTimeToReportTheWorld(secondsBefore, this.currentState.elapsedSeconds)) this.accept(worldReportOf(this.currentState, this.catalog))
+    if (!this.hasAStepToSimulate()) return []
+    const draft = startDraft(this.currentState, this.catalog)
+    while (this.hasAStepToSimulate()) {
+      const secondsBefore = draft.state.elapsedSeconds
+      stepTheWorld(draft, RitualSession.simulationStepSeconds)
+      this.writeTheLinesOf(draft)
+      if (isTimeToReportTheWorld(secondsBefore, draft.state.elapsedSeconds)) reportTheWorld(draft, 'the room')
+      this.writeTheLinesOf(draft)
       this.secondsNotYetSimulated -= RitualSession.simulationStepSeconds
     }
-    return events
+    this.currentState = draft.state
+    return draft.events
+  }
+
+  private hasAStepToSimulate(): boolean {
+    return this.secondsNotYetSimulated >= RitualSession.simulationStepSeconds - RitualSession.roundingToleranceSeconds
+  }
+
+  private writeTheLinesOf(draft: Draft): void {
+    for (const line of draft.logLines.splice(0)) this.writeAt(draft.state.elapsedSeconds, line.level, line.message)
   }
 
   private accept(outcome: Outcome): readonly RitualEvent[] {
@@ -101,6 +113,10 @@ export class RitualSession {
   }
 
   private write(level: LogLevel, message: string): void {
-    this.log.write({ level, message: `t=${this.currentState.elapsedSeconds.toFixed(3)}s ${message}` })
+    this.writeAt(this.currentState.elapsedSeconds, level, message)
+  }
+
+  private writeAt(elapsedSeconds: number, level: LogLevel, message: string): void {
+    this.log.write({ level, message: `t=${elapsedSeconds.toFixed(3)}s ${message}` })
   }
 }

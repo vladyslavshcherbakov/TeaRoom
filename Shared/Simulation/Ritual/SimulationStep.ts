@@ -1,4 +1,4 @@
-import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
+import { definitionIn } from '../Definitions/Catalog.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
 import { isTheThermostatCallingForHeat } from '../Judgement/ThermostatJudgement.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
@@ -7,9 +7,9 @@ import { isEmpty, type Liquid } from '../Physics/Liquid.ts'
 import { pourStream, type StreamLanding } from '../Physics/Pouring.ts'
 import { clothWetMlAfterDrying, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
-import type { ClothState, SessionState, VesselState } from '../State/SessionState.ts'
+import type { ClothState, VesselState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
-import { note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { note, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
 import { tapOf } from './Reach.ts'
 import { drain } from './RunningWater.ts'
@@ -17,12 +17,6 @@ import { dryThePuddles, placeWhereAPourSpills, spill } from './Puddles.ts'
 import { percent } from './Percent.ts'
 
 const fullWithinMl = 0.5
-
-export function simulateStep(state: SessionState, seconds: number, catalog: Catalog): Outcome {
-  const draft = startDraft(state, catalog)
-  stepTheWorld(draft, seconds)
-  return outcomeOf(draft)
-}
 
 export function stepTheWorld(draft: Draft, seconds: number): void {
   coolVessels(draft, seconds)
