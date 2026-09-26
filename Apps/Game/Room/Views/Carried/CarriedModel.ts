@@ -124,7 +124,10 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const sipPuffTrails = Array.from({ length: mostSipPuffs }, () => newPuffTrail(steamLook.drawnToTheEyes))
   const puffs = puffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
   const sipPuffs = sipPuffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
-  for (const puff of [...puffs, ...sipPuffs]) puff.castShadow = false
+  for (const puff of [...puffs, ...sipPuffs]) {
+    puff.castShadow = false
+    puff.visible = false
+  }
   return {
     itemId,
     shape,
