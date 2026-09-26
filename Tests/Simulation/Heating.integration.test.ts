@@ -147,6 +147,19 @@ test('kettleWater_whenOffTheHeater_coolsButStaysAboveTheRoom', () => {
   assert.ok(temperatureAfterAMinuteC > 20, `kettle fell to ${temperatureAfterAMinuteC} °C, below the room`)
 })
 
+test('kettleWater_withItsLidOpen_losesTwiceTheHeatItLosesWithItClosed', () => {
+  const closed = new TestRitual(testCatalog({ kettle: 0.01 }))
+  const open = new TestRitual(testCatalog({ kettle: 0.01 }))
+  closed.do({ type: 'fillWithBoilingWater', vesselId: 'kettle' })
+  open.do({ type: 'fillWithBoilingWater', vesselId: 'kettle' })
+  open.do({ type: 'openVesselLid', vesselId: 'kettle' })
+
+  closed.wait(1)
+  open.wait(1)
+
+  assertNear((100 - open.vessel('kettle').liquid.temperatureC) / (100 - closed.vessel('kettle').liquid.temperatureC), 2, 0.02)
+})
+
 test('cup_whenPlacedOnTheHeater_isRefused', () => {
   const ritual = new TestRitual()
 

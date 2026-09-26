@@ -38,7 +38,7 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         maxPourMlPerSecond: 20,
         takesAStreamOfUpToMlPerSecond: 16,
         coolingPerSecond: cooling.kettle ?? 0,
-        lid: { mustBeOpenToPour: false, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 1, heatingMultiplierWhenOpen: 0.5 },
+        lid: { mustBeOpenToPour: false, mustBeOpenToFill: true, coolingMultiplierWhenOpen: 2, heatingMultiplierWhenOpen: 0.5 },
         canSitOnHeater: true,
         isMadeForTheHeater: true,
         hasAMetalShell: false,

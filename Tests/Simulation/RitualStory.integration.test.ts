@@ -17,6 +17,7 @@ test('clumsyRitual_overheatedThenWaitedThenOversteeped_isTastedAndOfferedWithout
   events.push(...ritual.do({ type: 'openVesselLid', vesselId: 'thermos' }))
   events.push(...ritual.do({ type: 'openVesselLid', vesselId: 'kettle' }))
   events.push(...ritual.pour('thermos', 'kettle', 30))
+  events.push(...ritual.do({ type: 'closeVesselLid', vesselId: 'kettle' }))
   events.push(...ritual.wait(300))
   events.push(...ritual.pour('kettle', 'cup1', 9))
   events.push(...ritual.pour('kettle', 'cup2', 9))
