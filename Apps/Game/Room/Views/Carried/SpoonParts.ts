@@ -7,6 +7,7 @@ import type { ItemParts } from './ItemParts.ts'
 export const spoonShapeLook: CarriedShapeLook = {
   partsFor: (materials) => spoonParts(materials.room),
   steamRisesAboveTheSpout: false,
+  steamPuffSizeShare: 1,
   looseLeaves: {
     heapStartsAt: { x: 0.07, y: 0.02, z: 0 },
     pile: { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false },

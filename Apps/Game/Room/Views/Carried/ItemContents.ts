@@ -75,7 +75,7 @@ function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], 
     if (!puff.visible || source === undefined) return
     const rise = (timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
     puff.position.set(source.x, source.y + rise * steamColumnMetres, source.z)
-    puff.scale.setScalar(smallestPuffScale + rise)
+    puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare)
   })
 }
 

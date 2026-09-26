@@ -44,6 +44,7 @@ const pointsDownTheThermos: readonly PointDownTheSide[] = [
 export const thermosShapeLook: CarriedShapeLook = {
   partsFor: (materials) => thermosParts(materials.room),
   steamRisesAboveTheSpout: false,
+  steamPuffSizeShare: 1,
   looseLeaves: null,
   soakedLeaves: null,
   fire: null,

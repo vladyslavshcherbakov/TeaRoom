@@ -24,6 +24,7 @@ const pointsDownTheCaddy: readonly PointDownTheSide[] = [
 export const caddyShapeLook: CarriedShapeLook = {
   partsFor: (materials) => caddyParts(materials.room),
   steamRisesAboveTheSpout: false,
+  steamPuffSizeShare: 1,
   looseLeaves: {
     heapStartsAt: { x: 0, y: 0.018, z: 0 },
     pile: { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.126, isLyingFlat: false },

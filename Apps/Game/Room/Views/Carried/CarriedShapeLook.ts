@@ -5,6 +5,7 @@ import type { LeafPileSize } from './LeafPile.ts'
 export type CarriedShapeLook = {
   readonly partsFor: (materials: CarriedModelMaterials, itemId: string) => ItemParts
   readonly steamRisesAboveTheSpout: boolean
+  readonly steamPuffSizeShare: number
   readonly looseLeaves: LooseLeavesLook | null
   readonly soakedLeaves: SoakedLeavesLook | null
   readonly fire: FireLook | null

@@ -111,7 +111,7 @@ type SurfaceLook = { readonly colour: string } & (
   | { readonly kind: 'wovenCloth'; readonly pattern: ClothPattern }
 )
 
-const steamOpacity = 0.45
+const steamOpacity = 0.25
 const smokeOpacity = 0.4
 const glassEdgeSharpness = 2
 const glassGlintFrom = 0.7
