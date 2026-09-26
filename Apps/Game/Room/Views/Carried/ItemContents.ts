@@ -28,7 +28,6 @@ type Wave = {
   readonly tiltZRadians: number
 }
 
-const lidLyingOnTheSurfaceMetres = 0.015
 const openLidSwungPastUprightRadians = (105 * Math.PI) / 180
 const steamRiseMetresPerSecond = 0.2
 const steamColumnMetres = 0.12
@@ -289,7 +288,7 @@ function placeLid(model: CarriedModel, lid: THREE.Object3D, isOpen: boolean, lyi
   lid.rotation.set(0, 0, 0)
   if (!isOpen) return
   if (lyingOffset !== null) {
-    lid.position.set(lyingOffset.x, lidLyingOnTheSurfaceMetres, lyingOffset.z)
+    lid.position.set(lyingOffset.x, model.lidOriginAboveItsLowestPointMetres, lyingOffset.z)
     return
   }
   lid.position.x -= lidRadiusMetres * (1 - Math.cos(openLidSwungPastUprightRadians))

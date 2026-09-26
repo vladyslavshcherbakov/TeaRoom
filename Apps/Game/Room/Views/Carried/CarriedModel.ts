@@ -42,6 +42,7 @@ export type CarriedModel = {
   readonly footprintRadius: number
   readonly lid: THREE.Object3D | null
   readonly lidClosedPosition: THREE.Vector3
+  readonly lidOriginAboveItsLowestPointMetres: number
   readonly opening: THREE.Mesh | null
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
@@ -138,6 +139,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     footprintRadius: layoutByShape[shape].footprintRadiusMetres,
     lid: parts.lid,
     lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
+    lidOriginAboveItsLowestPointMetres: parts.lid === null ? 0 : originAboveTheLowestDrawnPointOf(parts.lid),
     opening,
     liquid,
     liquidMaterial,
@@ -176,6 +178,15 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
 
 function newPuffTrail(look: THREE.Material): PuffTrail {
   return { material: look.clone(), origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, reachMetres: 0, opacity: look.opacity, whereTheVesselWas: '', leftBehindAtSeconds: null, lastRise: 0, isOut: false }
+}
+
+function originAboveTheLowestDrawnPointOf(lid: THREE.Object3D): number {
+  lid.updateMatrixWorld(true)
+  const drawnBounds = new THREE.Box3()
+  lid.traverse((part) => {
+    if (part instanceof THREE.Mesh && !isATouchArea(part)) drawnBounds.expandByObject(part, true)
+  })
+  return lid.position.y - drawnBounds.min.y
 }
 
 function forgivingTouchPad(shape: CarriedShape, rimHeight: number): THREE.Mesh {

@@ -2,21 +2,29 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
 import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
+import { quietRoomLayout, turnOfItemAt, type FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { standingAt } from '../../../Apps/Game/Room/Walking/Walk.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
+import type { CarriedItemsScene } from '../../../Apps/Game/Room/Views/Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Views/Carried/CarriedModel.ts'
 import { drawInTheDetailItsSizeNeeds } from '../../../Apps/Game/Room/Views/CarriedItems.ts'
 import { holdInView } from '../../../Apps/Game/Room/Views/Carried/HeldInView.ts'
 import { inspectInView } from '../../../Apps/Game/Room/Views/Carried/InspectedInView.ts'
+import { showContentsOf } from '../../../Apps/Game/Room/Views/Carried/ItemContents.ts'
 import type { CarriedModelMaterials } from '../../../Apps/Game/Room/Views/Carried/ItemParts.ts'
 import { overflowSideFromTheGaugeRadians, overflowStreamRadiusMetres } from '../../../Apps/Game/Room/Views/Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers } from '../../../Apps/Game/Room/Views/RoomLayers.ts'
 import type { SurfaceMaterials } from '../../../Apps/Game/Room/Views/RoomMaterials.ts'
 import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
+import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { tiltOfFullFlowDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
-import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
+import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { cameraFieldOfViewDegrees } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
+import { TestRoom } from '../../Support/TestRoom.ts'
 
 const teaTableTopMetres = 0.42
 const drawingToleranceMetres = 0.001
@@ -35,6 +43,8 @@ const undersideHeightMetres = 0.01
 const besideTheSpoutMetres = 0.12
 const middleShelfBoardTopMetres = 0.72
 const upperShelfBoardUndersideMetres = 1.18
+const everyFurnitureId: readonly FurnitureId[] = ['counter', 'shelf', 'teaTable']
+const quietRoomSurroundings = { layout: quietRoomLayout, heaterSpot: definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot }
 const overflowSide =new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
 
 test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () => {
@@ -136,6 +146,22 @@ test('openLid_ofEveryShape_isDrawnNoWiderThanThePlaceKeptForItBesideTheItem', ()
     const drawnRadius = horizontalRadiusOf(model.lid, model)
 
     assert.ok(drawnRadius <= lyingLid.lyingRadiusMetres + drawingToleranceMetres, `${model.itemId}'s lid is ${drawnRadius.toFixed(4)} m wide, ${lyingLid.lyingRadiusMetres} m is kept for it`)
+  }
+})
+
+test('openLid_ofEveryShapeLyingBesideItsItem_restsOnTheSurface', () => {
+  const state = stateWithEveryLidOpen()
+  const modelsWithALid = oneModelOfEachGeometry().filter((model) => model.lid !== null)
+
+  for (const model of modelsWithALid) showStandingWhereItIs(model, state)
+
+  for (const model of modelsWithALid) {
+    const location = itemLocationIn(state, model.itemId)
+    assert.ok(location?.kind === 'onSurface', model.itemId)
+    const lidBounds = drawnBoundsOfTheLid(model)
+    const lidMiddle = lidBounds.getCenter(new THREE.Vector3())
+    assert.ok(Math.hypot(lidMiddle.x - location.spot.x, lidMiddle.z - location.spot.z) > layoutByShape[model.shape].footprintRadiusMetres, `${model.itemId}'s lid does not lie beside it`)
+    assert.ok(Math.abs(lidBounds.min.y - location.spot.y) <= drawingToleranceMetres, `${model.itemId}'s lid lies ${(lidBounds.min.y - location.spot.y).toFixed(4)} m above the surface`)
   }
 })
 
@@ -345,6 +371,34 @@ function drawnMeshesUnder(object: THREE.Object3D, model: CarriedModel): THREE.Me
     if (part instanceof THREE.Mesh && !isATouchArea(part) && !isLiquid) meshes.push(part)
   })
   return meshes
+}
+
+function stateWithEveryLidOpen(): DeepReadonly<SessionState> {
+  const room = new TestRoom()
+  for (const furnitureId of everyFurnitureId) {
+    room.walkTo(furnitureId)
+    for (const vesselId of Object.keys(room.state.vessels)) room.session.dispatch({ type: 'openVesselLid', vesselId })
+  }
+  return room.state
+}
+
+function showStandingWhereItIs(model: CarriedModel, state: DeepReadonly<SessionState>): void {
+  const location = itemLocationIn(state, model.itemId)
+  if (location?.kind !== 'onSurface') throw new Error(`${model.itemId} does not stand on a surface`)
+  model.root.position.set(location.spot.x, location.spot.y, location.spot.z)
+  model.root.rotation.y = turnOfItemAt(quietRoomLayout, location.spot)
+  showContentsOf(model, sceneOf(state), quietRoomSurroundings)
+}
+
+function sceneOf(state: DeepReadonly<SessionState>): CarriedItemsScene {
+  return { state, table: tableViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inspected: null, aimedPour: null, clothWiping: null, sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
+}
+
+function drawnBoundsOfTheLid(model: CarriedModel): THREE.Box3 {
+  model.root.updateMatrixWorld(true)
+  const bounds = new THREE.Box3()
+  for (const mesh of model.lid === null ? [] : drawnMeshesUnder(model.lid, model)) bounds.expandByObject(mesh, true)
+  return bounds
 }
 
 function drawnBoundsOf(model: CarriedModel): THREE.Box3 {
