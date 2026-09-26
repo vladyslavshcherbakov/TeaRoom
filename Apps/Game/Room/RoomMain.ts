@@ -1,22 +1,19 @@
-import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
-import { quietRoomArrangedAs } from '../../../Shared/Content/Rooms.ts'
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import type { LogLine } from '../../../Shared/Simulation/Ritual/RitualLog.ts'
 import { RitualSession } from '../../../Shared/Simulation/Ritual/RitualSession.ts'
 import { text } from '../Texts/Texts.ts'
-import { arrangementOfANewGame, describeArrangement, quietRoomArrangementOf, type RoomArrangement } from './RoomArrangement.ts'
+import { arrangementOfANewGame, describeArrangement } from './RoomArrangement.ts'
+import { catalogOfAContinuedVisit, catalogOfANewGame } from './GameCatalog.ts'
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { faceFeaturesOfANewGame } from './RoomSettings.ts'
 import { SettingsStore } from './SettingsStore.ts'
-import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
 import { whiteBowlIds } from './Views/Carried/BowlParts.ts'
 import { koiPonds } from './Views/KoiPond.ts'
 import { VisitStore, type SavedVisit } from './VisitStore.ts'
 
 const roomId = 'quietRoom'
-const shuffledVesselDefinitionId = 'teaBowl'
 const largestVoiceSeed = 1_000_000
 const fewestHeaterItemsBeforeTheTesterJoke = 4
 const millisecondsInASecond = 1000
@@ -43,7 +40,7 @@ else if (foundVisit.kind === 'brokenByAnUpdate') {
 } else enterAnew(null)
 
 function offerToContinue(visit: SavedVisit): void {
-  const catalog = catalogArrangedAs(visit.arrangement)
+  const catalog = catalogOfAContinuedVisit(visit.arrangement, roomLog)
   const resuming = RitualSession.resume(catalog, visit.ritual, visit.sessionStateVersion, ritualLog, import.meta.env.DEV)
   if (resuming.kind === 'unavailable') return showTheQuietScreen()
   if (resuming.kind === 'savedStateDoesNotFit') {
@@ -68,7 +65,7 @@ function offerToContinue(visit: SavedVisit): void {
 function enterAnew(notice: string | null): void {
   const arrangement = arrangementOfANewGame(Math.random)
   roomLog(`the room of this new game has ${describeArrangement(arrangement)}, chosen at random`)
-  const catalog = catalogArrangedAs(arrangement)
+  const catalog = catalogOfANewGame(arrangement, Math.random, roomLog)
   const opening = RitualSession.open(catalog, roomId, ritualLog, import.meta.env.DEV)
   if (opening.kind === 'unavailable') return showTheQuietScreen()
   chooseTheLightOfANewGame(opening.session, catalog)
@@ -102,14 +99,6 @@ function showTheQuietScreen(): void {
   quiet.className = 'quiet'
   quiet.textContent = text('room.unavailable')
   container.append(quiet)
-}
-
-function catalogArrangedAs(arrangement: RoomArrangement): Catalog {
-  const room = quietRoomArrangedAs(quietRoomArrangementOf(arrangement))
-  const shuffledRoom = roomWithVesselsShuffled(room, shuffledVesselDefinitionId, Math.random)
-  const shelfOrder = shuffledRoom.vessels.filter((vessel) => vessel.definitionId === shuffledVesselDefinitionId).map((vessel) => `${vessel.id} at ${vessel.startsAt.placeId} (${vessel.startsAt.y}, ${vessel.startsAt.z})`)
-  roomLog(`the bowls stand in a random order: ${shelfOrder.join(', ')}`)
-  return { ...defaultCatalog, rooms: { ...defaultCatalog.rooms, [shuffledRoom.id]: shuffledRoom } }
 }
 
 function writeToTheConsole(line: LogLine): void {

@@ -104,6 +104,7 @@ The room, the walk and the camera:
 | `RoomLayout.ts` | Every position in metres. `roomLayoutFor` builds the layout of an arrangement, and `turnOfItemAt` gives the turn of an item standing on furniture. |
 | `RoomArrangement.ts` | The arrangement a new game chooses at random. |
 | `RoomWithVesselsShuffled.ts` | The random order of the bowls on the shelf. |
+| `GameCatalog.ts` | The catalog of a new game, with the bowls in a random order, and of a continued visit, with them where the room puts them. |
 | `GardenLayout.ts` | Where each plant of the garden grows, and its colour. |
 | `SeededRandom.ts` | Repeatable random numbers from a seed. |
 | `Walking/FloorGrid.ts` | Paths on the floor grid. |
