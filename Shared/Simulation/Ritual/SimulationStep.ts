@@ -182,8 +182,7 @@ function continueSoakingWith(draft: Draft, cloth: ClothState, seconds: number): 
   if (!cloth.isSoakingThePuddle) return
   const placeId = cloth.location.kind === 'onSurface' ? cloth.location.spot.placeId : null
   const puddle = placeId === null ? undefined : draft.state.puddles[placeId]
-  const soakedMl = puddle === undefined ? 0 : mlSoakedUp(puddle.wetMl, cloth.wetMl, seconds)
-  if (puddle !== undefined) takeIntoTheCloth(cloth, puddle, soakedMl)
+  const soakedMl = puddle === undefined ? 0 : takeIntoTheCloth(cloth, puddle, mlSoakedUp(puddle.wetMl, seconds))
   const wetMlLeft = puddle?.wetMl ?? 0
   if (wetMlLeft > 0 && soakedMl > 0) return
   cloth.isSoakingThePuddle = false

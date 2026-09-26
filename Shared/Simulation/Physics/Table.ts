@@ -64,8 +64,12 @@ export function clothCharringAfterWashing(charring: number, seconds: number): nu
   return Math.max(0, charring - seconds / washingAFullCharringOffSeconds)
 }
 
-export function mlSoakedUp(tableWetMl: number, clothWetMl: number, seconds: number): number {
-  return Math.max(0, Math.min(tableWetMl, soakingMlPerSecond * seconds, clothHoldsMl - clothWetMl))
+export function mlSoakedUp(tableWetMl: number, seconds: number): number {
+  return Math.max(0, Math.min(tableWetMl, soakingMlPerSecond * seconds))
+}
+
+export function mlTheClothTakesIn(clothWetMl: number, offeredMl: number): number {
+  return Math.max(0, Math.min(offeredMl, clothHoldsMl - clothWetMl))
 }
 
 export function wetMlAfterWiping(wetMl: number, strokeSpeedCmPerSecond: number, coveredFraction: number): number {

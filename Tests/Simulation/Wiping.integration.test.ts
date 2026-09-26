@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
-import { TestRitual } from '../Support/TestRitual.ts'
+import { fullFlowTiltDegrees, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlAt, wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
@@ -39,6 +39,18 @@ test('cloth_whenItWipesTheTable_takesInTheWaterItWipedUp', () => {
   ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
 
   assertNear(ritual.cloth().wetMl, wetMlBeforeWiping * 0.8)
+})
+
+test('cloth_whenItWipesMoreThanItHolds_stopsAtItsCapacityAndLeavesTheRestOnTheTable', () => {
+  const ritual = TestRitual.begun()
+  ritual.pour('kettle', null, 5, fullFlowTiltDegrees)
+  ritual.do({ type: 'pickUp', itemId: 'cloth' })
+  const wetMlBeforeWiping = wetMlOnEveryPlace(ritual.state)
+
+  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assert.equal(ritual.cloth().wetMl, 40)
+  assertNear(wetMlOnEveryPlace(ritual.state), wetMlBeforeWiping - 40)
 })
 
 test('table_withTheClothLyingOnIt_isNotWiped', () => {

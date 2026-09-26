@@ -1,4 +1,4 @@
-import { clothStainAfterTakingIn, wetMlAfterWiping } from '../Physics/Table.ts'
+import { clothStainAfterTakingIn, mlTheClothTakesIn, wetMlAfterWiping } from '../Physics/Table.ts'
 import type { ClothState, PuddleState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, noteDetail, refuse, type Draft } from './Draft.ts'
@@ -44,8 +44,10 @@ export function liftTheClothOutOfThePuddle(draft: Draft, cloth: ClothState): voi
   note(draft, `${cloth.id} is lifted out of the puddle holding ${cloth.wetMl.toFixed(2)} ml`)
 }
 
-export function takeIntoTheCloth(cloth: ClothState, puddle: PuddleState, takenMl: number): void {
+export function takeIntoTheCloth(cloth: ClothState, puddle: PuddleState, offeredMl: number): number {
+  const takenMl = mlTheClothTakesIn(cloth.wetMl, offeredMl)
   puddle.wetMl -= takenMl
   cloth.wetMl += takenMl
   cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, takenMl, puddle.strength)
+  return takenMl
 }
