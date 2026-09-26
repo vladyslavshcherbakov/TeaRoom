@@ -32,7 +32,7 @@ export const teaBowl: VesselDefinition = {
   id: 'teaBowl',
   capacityMl: 120,
   maxPourMlPerSecond: 45,
-  takesAStreamOfUpToMlPerSecond: 20,
+  takesAStreamOfUpToMlPerSecond: 28,
   coolingPerSecond: 0.01,
   lid: null,
   canSitOnHeater: false,
