@@ -5,7 +5,7 @@ import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
-import { turnOfItemsOn, type WorldPoint } from '../RoomLayout.ts'
+import { turnOfItemAt, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { aimOver } from './Carried/AimedVessel.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
@@ -113,7 +113,7 @@ export class CarriedItems {
     if (location.kind === 'onSurface') {
       model.root.visible = true
       model.root.position.set(location.spot.x, location.spot.y, location.spot.z)
-      model.root.rotation.y = turnOfItemsOn(this.surroundings.layout, location.spot.placeId)
+      model.root.rotation.y = turnOfItemAt(this.surroundings.layout, location.spot)
       return this.retag(model, { itemId: model.itemId })
     }
     model.root.visible = true

@@ -7,6 +7,8 @@ import type { RoomRemark } from '../../Apps/Game/Room/RoomRemarks.ts'
 import type { TemperatureUnit } from '../../Apps/Game/Room/Temperatures.ts'
 import { defaultCatalog } from '../../Shared/Content/DefaultCatalog.ts'
 import type { Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import type { DeepReadonly } from '../../Shared/Simulation/State/DeepReadonly.ts'
+import type { ItemLocation } from '../../Shared/Simulation/State/SessionState.ts'
 import { TestRitual } from './TestRitual.ts'
 
 export type TestRoomOptions = {
@@ -85,6 +87,12 @@ export class TestRoom {
     assert.deepEqual(this.play.view, { kind: 'closeUp', furnitureId }, this.logLines.join('\n'))
   }
 
+  walkAcrossTheFloorTo(point: FloorPoint): void {
+    if (this.play.view.kind === 'closeUp') this.tap({ kind: 'floor', point })
+    this.tap({ kind: 'floor', point })
+    this.advance(longestWalkSeconds)
+  }
+
   carryFromTheShelf(...itemIds: string[]): void {
     this.walkTo('shelf')
     for (const itemId of itemIds) this.session.dispatch({ type: 'pickUp', itemId })
@@ -122,6 +130,12 @@ export function onTopOf(furnitureId: FurnitureId, across: number, forward: numbe
   const piece = quietRoomLayout.furniture.find((furniture) => furniture.id === furnitureId)
   if (piece === undefined) throw new Error(`the quiet room has no ${furnitureId}`)
   return { x: piece.footprint.x + across, y: piece.height, z: piece.footprint.z + forward }
+}
+
+export function withoutTheTurn(location: DeepReadonly<ItemLocation> | undefined): DeepReadonly<ItemLocation> | undefined {
+  if (location?.kind !== 'onSurface') return location
+  const { placeId, x, y, z } = location.spot
+  return { kind: 'onSurface', spot: { placeId, x, y, z } }
 }
 
 export function spotOn(placeId: string, point: WorldPoint): Spot {

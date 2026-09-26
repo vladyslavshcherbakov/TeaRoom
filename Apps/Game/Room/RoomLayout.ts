@@ -1,4 +1,5 @@
 import { facingDirection, figurineIds, furniturePlacementsFor, pointOn, sinkOnTheCounter, type Facing, type FigurineId, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
+import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 
 export type FloorPoint = {
   readonly x: number
@@ -210,6 +211,14 @@ export function furnitureWithId(layout: RoomLayout, id: FurnitureId): Furniture 
   const found = layout.furniture.find((piece) => piece.id === id)
   if (found === undefined) throw new Error(`the room layout has no furniture "${id}"`)
   return found
+}
+
+export function turnOfItemAt(layout: RoomLayout, spot: Spot): number {
+  return spot.turnRadians ?? turnOfItemsOn(layout, spot.placeId)
+}
+
+export function turnFacingTheCameraOf(closeUp: CloseUp): number {
+  return Math.atan2(closeUp.directionToCamera.x, closeUp.directionToCamera.z)
 }
 
 export function turnOfItemsOn(layout: RoomLayout, placeId: string): number {

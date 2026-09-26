@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { ScreenPoint } from '../../../Apps/Game/Room/RoomGestures.ts'
 import type { RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { assertNear } from '../../Support/Assertions.ts'
-import { onTopOf, TestRoom } from '../../Support/TestRoom.ts'
+import { onTopOf, TestRoom, withoutTheTurn } from '../../Support/TestRoom.ts'
 import { wetMlOnEveryPlace } from '../../../Shared/Simulation/Ritual/Puddles.ts'
 
 const onTheCounter = onTopOf('counter', 0.4, 0.05)
@@ -119,7 +119,7 @@ test('kettle_whenASurfaceIsTappedWhileAiming_isPutDownThere', () => {
   room.play.aimingTapped({ kind: 'surface', furnitureId: 'counter', point: { x: -2, y: 0.9, z: -2.5 } })
 
   assert.equal(room.play.aimedPourView, null)
-  assert.deepEqual(room.state.vessels['kettle']?.location, { kind: 'onSurface', spot: { placeId: 'counter', x: -2, y: 0.9, z: -2.5 } })
+  assert.deepEqual(withoutTheTurn(room.state.vessels['kettle']?.location), { kind: 'onSurface', spot: { placeId: 'counter', x: -2, y: 0.9, z: -2.5 } })
 })
 
 test('kettle_whenTheBowlIsTappedWhileAiming_returnsToItsHand', () => {
@@ -190,7 +190,7 @@ test('aimingFinger_whenLiftedWithoutMoving_putsTheKettleDownWhereItTouched', () 
   room.gestures.fingerUp(1)
 
   assert.equal(room.play.aimedPourView, null)
-  assert.deepEqual(room.state.vessels['kettle']?.location, { kind: 'onSurface', spot: { placeId: 'counter', ...counterLeftOfTheHeater } })
+  assert.deepEqual(withoutTheTurn(room.state.vessels['kettle']?.location), { kind: 'onSurface', spot: { placeId: 'counter', ...counterLeftOfTheHeater } })
 })
 
 test('secondFinger_whileAFingerAims_isIgnored', () => {

@@ -60,7 +60,7 @@ export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
   if (isInvolvedInPour(draft, command.itemId)) return refuse(draft, command, 'vesselIsBeingPoured')
   emptyTheHand(draft, location.handIndex)
   moveItem(draft, command.itemId, { kind: 'onSurface', spot: command.spot })
-  note(draft, `put ${command.itemId} down on the ${command.spot.placeId} at (${command.spot.x.toFixed(2)}, ${command.spot.y.toFixed(2)}, ${command.spot.z.toFixed(2)})`)
+  note(draft, `put ${command.itemId} down on the ${command.spot.placeId} at (${command.spot.x.toFixed(2)}, ${command.spot.y.toFixed(2)}, ${command.spot.z.toFixed(2)})${command.spot.turnRadians === undefined ? '' : `, turned ${command.spot.turnRadians.toFixed(2)} rad`}`)
   draft.events.push({ type: 'putDown', itemId: command.itemId, spot: command.spot })
 }
 

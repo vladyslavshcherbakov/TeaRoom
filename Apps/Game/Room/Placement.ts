@@ -3,7 +3,7 @@ import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/Simulation/Rit
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
 import { footprintCirclesOf, isTheLidOpen, layoutOf } from './CarriedShapes.ts'
-import { heaterFootprintRadiusMetres, turnedBy, turnOfItemsOn, type FloorPoint, type RoomLayout, type SinkBasin } from './RoomLayout.ts'
+import { heaterFootprintRadiusMetres, turnedBy, turnOfItemAt, type FloorPoint, type RoomLayout, type SinkBasin } from './RoomLayout.ts'
 
 const sameShelfBoardWithinMetres = 0.15
 const openLidGapMetres = 0.01
@@ -32,7 +32,7 @@ export function openLidOffsetBeside(itemId: string, state: DeepReadonly<SessionS
   if (location?.kind !== 'onSurface' || layout === undefined || layout.lid === null) return null
   const lidRadius = layout.lid.lyingRadiusMetres
   const distance = layout.footprintRadiusMetres + lidRadius + openLidGapMetres
-  const turn = turnOfItemsOn(surroundings.layout, location.spot.placeId)
+  const turn = turnOfItemAt(surroundings.layout, location.spot)
   const offsets = openLidDirectionsRadians.map((direction) => turnedBy({ x: Math.cos(direction) * distance, z: Math.sin(direction) * distance }, turn))
   return offsets.find((offset) => whyThereIsNoRoomForCircles([{ spot: offsetSpot(location.spot, offset), radius: lidRadius, restsOnTheSurface: true }], null, state, surroundings) === null) ?? null
 }
@@ -57,7 +57,7 @@ function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: st
 function footprintOf(state: DeepReadonly<SessionState>, itemId: string, spot: Spot, roomLayout: RoomLayout): Circle[] {
   const shapeLayout = layoutOf(state, itemId)
   if (shapeLayout === undefined) return []
-  const turn = turnOfItemsOn(roomLayout, spot.placeId)
+  const turn = turnOfItemAt(roomLayout, spot)
   return footprintCirclesOf(shapeLayout).map((circle) => ({ spot: offsetSpot(spot, turnedBy(circle, turn)), radius: circle.radius, restsOnTheSurface: circle.restsOnTheSurface }))
 }
 

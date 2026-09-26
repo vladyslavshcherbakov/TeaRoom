@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { onTopOf, spotOn, TestRoom } from '../../Support/TestRoom.ts'
+import { furnitureWithId, quietRoomLayout, type FloorPoint } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { onTopOf, spotOn, TestRoom, withoutTheTurn } from '../../Support/TestRoom.ts'
 
 const onTheTeaTable = onTopOf('teaTable', 0, 0.05)
 const onTheCounter = onTopOf('counter', 0.4, 0.05)
@@ -33,8 +34,31 @@ test('bowl_whenItsHandIsChosenAndTheTeaTableIsTapped_standsWhereTheTableWasTappe
 
   room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
 
-  assert.deepEqual(room.state.vessels['bowl1']?.location, { kind: 'onSurface', spot: spotOn('teaTable', onTheTeaTable) })
+  assert.deepEqual(withoutTheTurn(room.state.vessels['bowl1']?.location), { kind: 'onSurface', spot: spotOn('teaTable', onTheTeaTable) })
   assert.equal(room.play.chosenHandIndex, null)
+})
+
+test('bowl_putDownOnTheTeaTableFromItsFrontSide_facesTheFront', () => {
+  const room = new TestRoom()
+  room.carryFromTheShelf('bowl1')
+  room.walkTo('teaTable')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+
+  assert.ok(Math.abs(turnOfTheBowl(room)) < 0.5, `the bowl is turned ${turnOfTheBowl(room)} rad`)
+})
+
+test('bowl_putDownOnTheTeaTableFromItsFarSide_facesTheFarSide', () => {
+  const room = new TestRoom()
+  room.carryFromTheShelf('bowl1')
+  room.walkAcrossTheFloorTo(farSideOfTheTeaTable())
+  room.walkTo('teaTable')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+
+  assert.ok(Math.abs(turnOfTheBowl(room)) > Math.PI - 0.5, `the bowl is turned ${turnOfTheBowl(room)} rad`)
 })
 
 test('surfaceTap_withNoHandChosen_leavesTheItemInHand', () => {
@@ -150,4 +174,15 @@ function setTheTeaTable(room: TestRoom): void {
   room.fillInTheSink('kettle')
   room.walkTo('teaTable')
   room.putDown(0, { x: 1, y: 0.42, z: -1.8 })
+}
+
+function turnOfTheBowl(room: TestRoom): number {
+  const location = room.state.vessels['bowl1']?.location
+  return location?.kind === 'onSurface' ? location.spot.turnRadians ?? Number.NaN : Number.NaN
+}
+
+function farSideOfTheTeaTable(): FloorPoint {
+  const [, farSide] = furnitureWithId(quietRoomLayout, 'teaTable').sides
+  if (farSide === undefined) throw new Error('the quiet room has a tea table with one side')
+  return farSide.standingPoint
 }

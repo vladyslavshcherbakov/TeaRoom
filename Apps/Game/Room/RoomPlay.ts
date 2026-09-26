@@ -16,7 +16,7 @@ import { RoomRemarks, type RoomRemark } from './RoomRemarks.ts'
 import { TapsInARow } from './TapsInARow.ts'
 import { WipeStroke } from './WipeStroke.ts'
 import { carriedShapeOf, layoutOf } from './CarriedShapes.ts'
-import { puddleCentreOn, puddleRadiusMetres, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
+import { puddleCentreOn, puddleRadiusMetres, turnFacingTheCameraOf, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { ScreenPoint } from './RoomGestures.ts'
 import { degreesShownIn, targetOneDegreeAway, type TemperatureUnit } from './Temperatures.ts'
@@ -539,7 +539,8 @@ export class RoomPlay {
   private putDownTheChosenItemAt(furnitureId: FurnitureId, point: WorldPoint): void {
     const itemId = this.chosenItemId()
     if (itemId === null) return this.log(`tap on the ${furnitureId} ignored: no hand is chosen`)
-    const spot: Spot = { placeId: furnitureId, x: point.x, y: point.y, z: point.z }
+    const closeUp = this.closeUpInView
+    const spot: Spot = closeUp === null ? { placeId: furnitureId, x: point.x, y: point.y, z: point.z } : { placeId: furnitureId, x: point.x, y: point.y, z: point.z, turnRadians: turnFacingTheCameraOf(closeUp) }
     const refusal = whyThereIsNoRoomFor(itemId, spot, this.ritual.state, { layout: this.layout, heaterSpot: this.heaterSpot() })
     if (refusal !== null) return this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}: ${refusal}`)
     const events = this.ritual.dispatch({ type: 'putDown', itemId, spot })
