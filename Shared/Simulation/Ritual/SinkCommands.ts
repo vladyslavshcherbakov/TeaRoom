@@ -1,7 +1,7 @@
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import type { RunningWaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import { describeLiquid, isClosedAgainstFilling, note, refuse, type Draft } from './Draft.ts'
+import { describeLiquid, note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
 import { isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 import { emptyTheHand, locationOfItem, moveItem, tapOf, whereIs } from './Reach.ts'
@@ -73,14 +73,13 @@ function openTheTap(draft: Draft, tap: TapDefinition): void {
 }
 
 function runningWaterOver(draft: Draft, itemId: string | null, runningBefore: RunningWaterState | null): RunningWaterState {
-  const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
   return {
     openedAtSeconds: runningBefore?.openedAtSeconds ?? draft.state.elapsedSeconds,
     drainedSinceOpenedMl: runningBefore?.drainedSinceOpenedMl ?? 0,
     filledMl: 0,
     drainedMl: 0,
     hasOverflowed: false,
-    isRunningOverTheLid: vessel !== undefined && isClosedAgainstFilling(draft, vessel),
+    isRunningOverTheLid: itemId !== null && rulesFor(draft.state, itemId)?.isClosedAgainstTheTap(draft, itemId) === true,
     hasRunOntoAnItem: (runningBefore?.hasRunOntoAnItem ?? false) || itemId !== null,
   }
 }

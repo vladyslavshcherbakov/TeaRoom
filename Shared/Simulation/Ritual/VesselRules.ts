@@ -1,11 +1,12 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
-import { heatLiquid, liquidBoiledAway, shareOfTheHeatKeptBy } from '../Physics/Heat.ts'
+import { heatLiquid, isTooHotToHold, liquidBoiledAway, shareOfTheHeatKeptBy } from '../Physics/Heat.ts'
 import { water } from '../Physics/Liquid.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Physics/TapWater.ts'
 import type { RunningWaterState, VesselState } from '../State/SessionState.ts'
 import { chosenTea, describeLiquid, isClosedAgainstFilling, note, vesselDefinitionOf, type Draft } from './Draft.ts'
 import type { ItemKindRules } from './ItemKinds.ts'
+import { percent } from './Percent.ts'
 import { drain } from './RunningWater.ts'
 
 export const vesselRules: ItemKindRules = {
@@ -28,6 +29,14 @@ export const vesselRules: ItemKindRules = {
   takeIntoAHand: (draft, itemId) => {
     withTheVessel(draft, itemId, (vessel) => closeTheLidAsItIsTaken(draft, vessel))
     return 'whole'
+  },
+  refusalToHold: (draft, itemId) => {
+    const shellHeat = draft.state.vessels[itemId]?.shellHeat ?? 0
+    return isTooHotToHold(shellHeat) ? { reason: 'tooHotToHold', values: `${itemId}'s metal is at ${percent(shellHeat)} of red heat` } : null
+  },
+  isClosedAgainstTheTap: (draft, itemId) => {
+    const vessel = draft.state.vessels[itemId]
+    return vessel !== undefined && isClosedAgainstFilling(draft, vessel)
   },
 }
 

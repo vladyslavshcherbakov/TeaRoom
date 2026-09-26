@@ -23,6 +23,8 @@ export const clothRules: ItemKindRules = {
     withTheCloth(draft, itemId, (cloth) => liftTheClothOutOfThePuddle(draft, cloth))
     return 'whole'
   },
+  refusalToHold: () => null,
+  isClosedAgainstTheTap: () => false,
 }
 
 function withTheCloth(draft: Draft, itemId: string, act: (cloth: ClothState) => void): void {

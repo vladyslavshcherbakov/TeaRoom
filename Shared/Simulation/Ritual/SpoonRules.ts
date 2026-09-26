@@ -12,6 +12,8 @@ export const spoonRules: ItemKindRules = {
   runTheTapOnto: null,
   liftOutOfTheSink: () => undefined,
   takeIntoAHand: (draft) => (isBurning(draft.state.spoon.charring, howTheSpoonChars) ? crumbleTheSpoon(draft) : 'whole'),
+  refusalToHold: () => null,
+  isClosedAgainstTheTap: () => false,
 }
 
 function charTheSpoon(draft: Draft, seconds: number): void {

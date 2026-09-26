@@ -3,6 +3,7 @@ import type { DeepReadonly } from '../State/DeepReadonly.ts'
 import type { RunningWaterState, SessionState } from '../State/SessionState.ts'
 import { clothRules } from './ClothRules.ts'
 import type { Draft } from './Draft.ts'
+import type { Refusal } from './ItemRefusals.ts'
 import { spoonItemId } from './Reach.ts'
 import { spoonRules } from './SpoonRules.ts'
 import { vesselRules } from './VesselRules.ts'
@@ -18,6 +19,8 @@ export type ItemKindRules = {
   readonly runTheTapOnto: ((draft: Draft, itemId: string, runningWater: RunningWaterState, tap: TapDefinition, seconds: number) => void) | null
   readonly liftOutOfTheSink: (draft: Draft, itemId: string) => void
   readonly takeIntoAHand: (draft: Draft, itemId: string) => 'whole' | 'crumbled'
+  readonly refusalToHold: (draft: Draft, itemId: string) => Refusal | null
+  readonly isClosedAgainstTheTap: (draft: Draft, itemId: string) => boolean
 }
 
 const rulesByKind: Readonly<Record<ItemKind, ItemKindRules>> = { vessel: vesselRules, spoon: spoonRules, cloth: clothRules }

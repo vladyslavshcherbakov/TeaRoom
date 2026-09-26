@@ -1,7 +1,6 @@
-import { isTooHotToHold } from '../Physics/Heat.ts'
 import type { Command } from './Command.ts'
 import { isClosedAgainstFilling, isInvolvedInPour, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
-import { percent } from './Percent.ts'
+import { rulesFor } from './ItemKinds.ts'
 import { isKeeperAt, isWithinReach, locationOfItem, whereIs, whereTheKeeperStands } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
@@ -67,10 +66,7 @@ export function isOpenForPouring(vesselId: string): Check {
 }
 
 export function isCoolEnoughToHold(itemId: string): Check {
-  return (draft) => {
-    const shellHeat = draft.state.vessels[itemId]?.shellHeat ?? 0
-    return isTooHotToHold(shellHeat) ? { reason: 'tooHotToHold', values: `${itemId}'s metal is at ${percent(shellHeat)} of red heat` } : null
-  }
+  return (draft) => rulesFor(draft.state, itemId)?.refusalToHold(draft, itemId) ?? null
 }
 
 export function wasRefusedByAnyOf(draft: Draft, command: Command, checks: readonly Check[]): boolean {
