@@ -45,7 +45,6 @@ for (const tea of Object.values(defaultCatalog.teas)) {
 
     const events = ritual.do({ type: 'tasteCup', cupId: 'bowl1' })
 
-    assert.deepEqual(ritual.log.messagesAt('info').filter((message) => message.includes(' refused ')), [])
     const verdict = eventsOfType(events, 'teaTasted')[0]?.verdict
     assert.equal(verdict?.strength, 'balanced')
     assert.equal(verdict?.bitterness, 'soft')

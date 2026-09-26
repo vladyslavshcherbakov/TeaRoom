@@ -64,59 +64,55 @@ export class TestRitual {
 
   heatKettleTo(temperatureC: number): readonly RitualEvent[] {
     const events = [
-      ...this.do({ type: 'placeOnHeater', itemId: 'kettle' }),
-      ...this.do({ type: 'switchHeaterOn' }),
+      ...this.doWithoutARefusal({ type: 'placeOnHeater', itemId: 'kettle' }),
+      ...this.doWithoutARefusal({ type: 'switchHeaterOn' }),
     ]
     events.push(...this.waitUntil(() => this.vessel('kettle').liquid.temperatureC >= temperatureC))
-    events.push(...this.do({ type: 'switchHeaterOff' }), ...this.do({ type: 'pickUp', itemId: 'kettle' }))
+    events.push(...this.doWithoutARefusal({ type: 'switchHeaterOff' }), ...this.doWithoutARefusal({ type: 'pickUp', itemId: 'kettle' }))
     return events
   }
 
   fillInTheSink(vesselId: string, seconds: number): readonly RitualEvent[] {
     return [
-      ...this.do({ type: 'putInTheSink', itemId: vesselId }),
-      ...this.do({ type: 'turnTheTapOn' }),
+      ...this.doWithoutARefusal({ type: 'putInTheSink', itemId: vesselId }),
+      ...this.doWithoutARefusal({ type: 'turnTheTapOn' }),
       ...this.wait(seconds),
-      ...this.do({ type: 'turnTheTapOff' }),
-      ...this.do({ type: 'pickUp', itemId: vesselId }),
+      ...this.doWithoutARefusal({ type: 'turnTheTapOff' }),
+      ...this.doWithoutARefusal({ type: 'pickUp', itemId: vesselId }),
     ]
   }
 
   addLeavesToKettle(grams: number): readonly RitualEvent[] {
     const spoonLocation = this.state.spoon.location
-    const events = [
-      ...this.do({ type: 'pickUp', itemId: 'spoon' }),
-      ...this.do({ type: 'openVesselLid', vesselId: 'kettle' }),
-      ...this.do({ type: 'openVesselLid', vesselId: 'caddy' }),
-    ]
+    const events = [...this.takeTheSpoon(), ...this.openTheLid('kettle'), ...this.openTheLid('caddy')]
     let gramsLeftToAdd = grams
     while (gramsLeftToAdd > 0) {
       const depth = Math.min(1, gramsLeftToAdd / this.state.spoon.capacityGrams)
-      events.push(...this.do({ type: 'scoopTea', caddyId: 'caddy', depth }))
+      events.push(...this.doWithoutARefusal({ type: 'scoopTea', caddyId: 'caddy', depth }))
       gramsLeftToAdd -= this.state.spoon.grams
-      events.push(...this.do({ type: 'tipSpoonInto', vesselId: 'kettle' }))
+      events.push(...this.doWithoutARefusal({ type: 'tipSpoonInto', vesselId: 'kettle' }))
     }
-    events.push(...this.do({ type: 'closeVesselLid', vesselId: 'caddy' }), ...this.do({ type: 'closeVesselLid', vesselId: 'kettle' }))
-    if (spoonLocation.kind === 'onSurface') events.push(...this.do({ type: 'putDown', itemId: 'spoon', spot: spoonLocation.spot }))
+    events.push(...this.doWithoutARefusal({ type: 'closeVesselLid', vesselId: 'caddy' }), ...this.doWithoutARefusal({ type: 'closeVesselLid', vesselId: 'kettle' }))
+    if (spoonLocation.kind === 'onSurface') events.push(...this.doWithoutARefusal({ type: 'putDown', itemId: 'spoon', spot: spoonLocation.spot }))
     return events
   }
 
   tipASpoonOfLeavesInto(vesselId: string, caddyId = 'caddy'): readonly RitualEvent[] {
     return [
-      ...this.do({ type: 'pickUp', itemId: 'spoon' }),
-      ...this.do({ type: 'openVesselLid', vesselId: caddyId }),
-      ...this.do({ type: 'scoopTea', caddyId, depth: 1 }),
-      ...this.do({ type: 'tipSpoonInto', vesselId }),
+      ...this.takeTheSpoon(),
+      ...this.openTheLid(caddyId),
+      ...this.doWithoutARefusal({ type: 'scoopTea', caddyId, depth: 1 }),
+      ...this.doWithoutARefusal({ type: 'tipSpoonInto', vesselId }),
     ]
   }
 
   mixInTheThermos(caddyIds: readonly string[]): void {
     const cups = caddyIds.map((caddyId, index) => ({ caddyId, cupId: `cup${index + 1}` }))
     this.heatKettleTo(waterForTheMixedTeasC)
-    this.do({ type: 'pickUp', itemId: 'spoon' })
+    this.takeTheSpoon()
     for (const { caddyId, cupId } of cups) this.brewASpoonfulOf(caddyId, cupId)
     this.wait(secondsEachMixedTeaSteeps - secondsBetweenTheMixedTeas * (cups.length - 1))
-    this.do({ type: 'openVesselLid', vesselId: 'thermos' })
+    this.openTheLid('thermos')
     for (const { cupId } of cups) this.pour(cupId, 'thermos', secondsBetweenTheMixedTeas, fullFlowTiltDegrees)
   }
 
@@ -128,10 +124,10 @@ export class TestRitual {
     streamOnTargetFraction = 1,
   ): readonly RitualEvent[] {
     return [
-      ...this.do({ type: 'startPouring', sourceId, targetId }),
-      ...this.do({ type: 'adjustPour', tiltDegrees, streamOnTargetFraction, missedStreamLandsAt: null }),
+      ...this.doWithoutARefusal({ type: 'startPouring', sourceId, targetId }),
+      ...this.doWithoutARefusal({ type: 'adjustPour', tiltDegrees, streamOnTargetFraction, missedStreamLandsAt: null }),
       ...this.wait(seconds),
-      ...this.do({ type: 'stopPouring' }),
+      ...this.doWithoutARefusal({ type: 'stopPouring' }),
     ]
   }
 
@@ -141,9 +137,24 @@ export class TestRitual {
 
   private brewASpoonfulOf(caddyId: string, cupId: string): void {
     this.pour('kettle', cupId, secondsBetweenTheMixedTeas)
-    this.do({ type: 'openVesselLid', vesselId: caddyId })
-    this.do({ type: 'scoopTea', caddyId, depth: spoonDepthForHalfAGram })
-    this.do({ type: 'tipSpoonInto', vesselId: cupId })
+    this.openTheLid(caddyId)
+    this.doWithoutARefusal({ type: 'scoopTea', caddyId, depth: spoonDepthForHalfAGram })
+    this.doWithoutARefusal({ type: 'tipSpoonInto', vesselId: cupId })
+  }
+
+  private takeTheSpoon(): readonly RitualEvent[] {
+    return this.state.spoon.location.kind === 'inHand' ? [] : this.doWithoutARefusal({ type: 'pickUp', itemId: 'spoon' })
+  }
+
+  private openTheLid(vesselId: string): readonly RitualEvent[] {
+    return this.vessel(vesselId).isLidOpen ? [] : this.doWithoutARefusal({ type: 'openVesselLid', vesselId })
+  }
+
+  private doWithoutARefusal(command: Command): readonly RitualEvent[] {
+    const events = this.do(command)
+    const [refusal] = eventsOfType(events, 'actionRefused')
+    if (refusal !== undefined) throw new Error(`the arrange could not ${command.type}: it was refused with ${refusal.reason}`)
+    return events
   }
 
   private waitUntil(isDone: () => boolean): readonly RitualEvent[] {
