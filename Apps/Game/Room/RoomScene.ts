@@ -41,6 +41,7 @@ import { PlayTimeStore } from './PlayTimeStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
 import { FullScreenButton } from './Views/FullScreenButton.ts'
+import { LeaveFirstPersonButton } from './Views/LeaveFirstPersonButton.ts'
 import { Achievements, achievementsOutOfReach } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
@@ -115,6 +116,7 @@ export class RoomScene {
   private readonly playTime: PlayTime
   private readonly settingsScreen: SettingsScreen
   private readonly frameRateCounter: FrameRateCounter
+  private readonly leaveFirstPersonButton: LeaveFirstPersonButton
   private settings: RoomSettings
   private softShadowsInCorners: EffectComposer | null = null
   private glow: RoomGlow | null = null
@@ -242,7 +244,7 @@ export class RoomScene {
       keyReleased: (code) => this.shortcuts.keyReleased(code),
     }, log)
     this.debugMenu = new DebugMenu(container, {
-      cameraModeChosen: (mode) => this.cameraModeChosen(mode),
+      cameraModeChosen: (mode) => this.cameraModeChosen(mode, 'from the debug menu'),
       stickLayoutChosen: (layout) => this.stickLayoutChosen(layout),
       controlSchemeChosen: (scheme) => this.controlSchemeChosen(scheme),
       keeperHeightChosen: (heightCentimetres) => this.keeperHeightChosen(heightCentimetres),
@@ -262,7 +264,11 @@ export class RoomScene {
       temperatureUnitChosen: (temperatureUnit) => this.settingChosen({ temperatureUnit }),
     })
     this.frameRateCounter = new FrameRateCounter(container)
-    new FullScreenButton(container, log)
+    const cornerButtons = document.createElement('div')
+    cornerButtons.className = 'corner-buttons'
+    container.append(cornerButtons)
+    new FullScreenButton(cornerButtons, log)
+    this.leaveFirstPersonButton = new LeaveFirstPersonButton(cornerButtons, () => this.cameraModeChosen('room', 'from the button in the corner'))
     this.fitToWindow()
     if (arrival.faceOfANewGame === null) this.showTheSettings()
     else this.changeTheSettings({ faceFeature: arrival.faceOfANewGame }, 'as a new game begins')
@@ -317,6 +323,7 @@ export class RoomScene {
     this.sipButton.show(this.play.sippableCupId !== null && !isAiming && !isInspecting)
     this.pourControls.show(isAiming)
     const isLookingFreely = isFirstPerson && !isAiming && !isInspecting
+    this.leaveFirstPersonButton.show(isFirstPerson)
     const sticks = sticksShownFor(this.controlScheme, this.stickLayout)
     this.joysticks.show(isLookingFreely && sticks.left !== null, isLookingFreely && sticks.right !== null)
     if (!isLookingFreely || !usesTheMouse(this.controlScheme)) this.keyboardAndMouse.letGoOfTheMouse('the look is not free now')
@@ -465,9 +472,10 @@ export class RoomScene {
     this.log(`the keeper is ${heightCentimetres} cm tall from the debug menu`)
   }
 
-  private cameraModeChosen(mode: CameraMode): void {
+  private cameraModeChosen(mode: CameraMode, how: string): void {
+    if (mode === this.cameraMode) return this.log(`the camera stays in ${mode} ${how}`)
     this.cameraMode = mode
-    this.log(`the camera switched to ${mode} from the debug menu`)
+    this.log(`the camera switched to ${mode} ${how}`)
     if (mode === 'firstPerson') this.look = { headingRadians: this.play.walk.headingRadians, pitchRadians: 0 }
     else this.play.stopWalkingFreely()
   }

@@ -484,7 +484,7 @@
         background: #5f9a7c;
         color: #fbf4e8;
       }
-      .full-screen {
+      .corner-buttons {
         position: fixed;
         top: calc(12px + env(safe-area-inset-top));
         right: calc(12px + env(safe-area-inset-right));
@@ -501,16 +501,21 @@
         cursor: pointer;
         transition: opacity 0.2s;
       }
-      .full-screen svg {
+      .corner-button svg {
         width: 20px;
         height: 20px;
         fill: none;
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 8px;
+      }
+      .corner-button {
         stroke: currentColor;
         stroke-width: 2;
         stroke-linecap: round;
         stroke-linejoin: round;
       }
-      .full-screen:hover {
+      .corner-button:hover {
         opacity: 0.9;
       }
       .frame-rate {

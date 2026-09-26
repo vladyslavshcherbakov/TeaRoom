@@ -10,7 +10,7 @@ export class FullScreenButton {
   constructor(container: HTMLElement, log: RoomLog) {
     this.log = log
     this.element = document.createElement('button')
-    this.element.className = 'full-screen'
+    this.element.className = 'corner-button'
     this.element.append(cornersIcon())
     this.element.hidden = !canGoFullScreen()
     this.element.addEventListener('click', () => this.toggle())

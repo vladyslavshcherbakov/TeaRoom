@@ -204,6 +204,7 @@ export const englishTexts = {
   'achievement.bowlTriedOnTheHeater.done': 'Tried to put a tea bowl on the heater and heard why not.',
   'achievement.everythingOnTheShelf.title': 'DVD',
   'achievement.everythingOnTheShelf.done': 'Everything fit on the shelf. Perfectly. Not one thing left over.',
+  'firstPerson.leave': 'Leave first person',
   'achievement.tableWiped.title': 'OCD',
   'achievement.tableWiped.done': 'Wiped two different puddles with the cloth.',
   'achievement.thermosGlowing.title': 'Hanami',
