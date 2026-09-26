@@ -229,7 +229,7 @@ A shape is how the room draws an item, such as a kettle or a teapot. A new shape
 
 1. `CarriedShape` in `CarriedShapes.ts`, and its layout in `layoutByShape`. The compiler lists the missing layout.
 2. Its vessel definition in `shapeByVesselDefinitionId` there. The compiler does not check this map. `Tests/Game/Room/CarriedShapes.unit.test.ts` does.
-3. A lid in its layout exactly when its vessel definition has one. Nothing checks that the two agree.
+3. A lid in its layout exactly when its vessel definition has one. `Tests/Game/Room/CarriedShapes.unit.test.ts` checks that the two agree.
 4. Its parts file in `Views/Carried/` with its `CarriedShapeLook`, registered in `lookByShape` in `CarriedModel.ts`. The compiler lists the missing look.
 5. Its new surfaces in `Surface` and `lookBySurface` in `Views/RoomMaterials.ts`. The compiler lists a surface that `lookBySurface` lacks.
 6. Every place that treats a shape as a role in the game: `RoomPlay.ts`, `RoomRemarks.ts` and `Achievements.ts` compare with a shape by name. Search for `carriedShapeOf`. Nothing lists these.
