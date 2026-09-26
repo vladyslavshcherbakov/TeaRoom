@@ -159,14 +159,65 @@ test('pour_whenTheTiltIsHeldOverTheMiddleOfAnEmptyBowl_spillsNothingOnTheTable',
   assert.ok((room.state.vessels['bowl1']?.liquid.volumeMl ?? 0) > 0, 'the bowl stayed empty')
 })
 
-test('thermosLid_whenTappedWhileAimingTheClosedThermos_opensAndKeepsTheAim', () => {
+test('thermosLid_whenTheClosedThermosIsAimedAtABowl_opens', () => {
+  const room = new TestRoom()
+
+  aimTheClosedThermosAtTheBowl(room)
+
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+  assert.equal(room.play.aimedPourView?.targetId, 'bowl1')
+})
+
+test('thermosLid_whenTappedWhileAiming_closesAndKeepsTheAim', () => {
   const room = new TestRoom()
   aimTheClosedThermosAtTheBowl(room)
 
   room.play.aimingTapped({ kind: 'lid', itemId: 'thermos' })
 
-  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, false)
   assert.equal(room.play.aimedPourView?.sourceId, 'thermos')
+})
+
+test('lids_whenTheClosedThermosIsAimedAtTheClosedKettle_bothOpen', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
+  room.fillInTheSink('thermos')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, true)
+  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
+})
+
+test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
+  room.fillInTheSink('thermos')
+  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  room.play.tiltPressed()
+  room.advance(2)
+
+  assert.equal(room.state.pour?.sourceId, 'thermos')
+})
+
+test('kettleLid_whenTheKettleIsAimedAtTheClosedThermos_staysClosedWhileTheThermosOpens', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.fillInTheSink('kettle')
+  room.session.dispatch({ type: 'closeVesselLid', vesselId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'item', itemId: 'thermos' })
+
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
 })
 
 test('aimingFinger_whenMovedFurtherThanTwelvePixels_movesTheSpoutAndKeepsTheAim', () => {

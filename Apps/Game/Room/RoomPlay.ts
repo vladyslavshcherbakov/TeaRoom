@@ -449,9 +449,21 @@ export class RoomPlay {
     const targetLayout = layoutOf(this.ritual.state, targetId)
     const closeUp = this.closeUpInView
     if (source === undefined || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUp === null) return this.log(`no pour to aim at ${targetId}`)
+    this.openTheLidsThePourNeeds(source, target)
     const spoutDirection = screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
     this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot.placeId), spoutDirection)
+  }
+
+  private openTheLidsThePourNeeds(source: DeepReadonly<VesselState>, target: DeepReadonly<VesselState>): void {
+    const lidsToOpen = [
+      { vessel: source, isNeeded: definitionIn(this.catalog, 'vessels', source.definitionId).lid?.mustBeOpenToPour === true },
+      { vessel: target, isNeeded: definitionIn(this.catalog, 'vessels', target.definitionId).lid?.mustBeOpenToFill === true },
+    ].filter(({ vessel, isNeeded }) => isNeeded && !vessel.isLidOpen)
+    for (const { vessel } of lidsToOpen) {
+      this.log(`opening the lid of ${vessel.id} for the pour from ${source.id} into ${target.id}`)
+      this.ritual.dispatch({ type: 'openVesselLid', vesselId: vessel.id })
+    }
   }
 
   private pourTargetsBeside(source: DeepReadonly<VesselState>, placeId: string): PourTarget[] {
