@@ -30,6 +30,8 @@ const inspectionTurnsRadians = [[0, 0.55], [Math.PI / 2, Math.PI / 2], [Math.PI 
 const undersideProbesMetres = [0, 0.02]
 const undersideHeightMetres = 0.01
 const besideTheSpoutMetres = 0.12
+const middleShelfBoardTopMetres = 0.72
+const upperShelfBoardUndersideMetres = 1.18
 const overflowSide =new THREE.Vector3(Math.sin(overflowSideFromTheGaugeRadians), 0, Math.cos(overflowSideFromTheGaugeRadians))
 
 test('aimedVessel_ofEveryShapeAtEveryTilt_staysAboveTheSurfaceItPoursOver', () => {
@@ -62,6 +64,39 @@ test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_staysAboveIt', () => {
           assert.ok(sinking <= drawingToleranceMetres, `${model.itemId} at ${tiltDegrees}° sinks ${sinking.toFixed(4)} m into ${standing.itemId}`)
         }
       }
+    }
+  }
+})
+
+test('aimedVessel_ofEveryShapeOverEveryItemItPoursInto_keepsItsSpoutAtOneHeightWhileItTilts', () => {
+  const standingModels = modelsInTheQuietRoom()
+
+  for (const model of vesselModelsInTheQuietRoom()) {
+    for (const standing of standingModels.filter((candidate) => candidate.itemId !== model.itemId)) {
+      standing.root.position.set(0, teaTableTopMetres, 0)
+      const spoutHeights = tiltsDegrees.map((tiltDegrees) => {
+        aimOver(model, { sourceId: model.itemId, targetId: standing.itemId, spout: { x: 0, z: 0 }, spoutDirection: { x: 1, z: 0 }, tiltDegrees }, standing, [standing.root])
+        model.root.updateMatrixWorld(true)
+        return model.spoutTip.clone().applyMatrix4(model.root.matrixWorld).y
+      })
+
+      const drop = Math.max(...spoutHeights) - Math.min(...spoutHeights)
+      assert.ok(drop <= drawingToleranceMetres, `${model.itemId}'s spout over ${standing.itemId} moves ${drop.toFixed(4)} m up or down as it tilts`)
+    }
+  }
+})
+
+test('aimedVessel_ofEveryShapeOverABowlOnAShelfBoard_staysUnderTheBoardAbove', () => {
+  const bowl = modelsInTheQuietRoom().find((candidate) => candidate.shape === 'bowl')
+  assert.ok(bowl !== undefined)
+  bowl.root.position.set(0, middleShelfBoardTopMetres, 0)
+
+  for (const model of vesselModelsInTheQuietRoom().filter((candidate) => candidate.itemId !== bowl.itemId)) {
+    for (const tiltDegrees of tiltsDegrees) {
+      aimOver(model, { sourceId: model.itemId, targetId: bowl.itemId, spout: { x: 0, z: 0 }, spoutDirection: { x: 1, z: 0 }, tiltDegrees }, bowl, [bowl.root], upperShelfBoardUndersideMetres)
+
+      const highest = drawnBoundsOf(model).max.y
+      assert.ok(highest <= upperShelfBoardUndersideMetres + drawingToleranceMetres, `${model.itemId} at ${tiltDegrees}° reaches ${(highest - upperShelfBoardUndersideMetres).toFixed(4)} m into the board above`)
     }
   }
 })

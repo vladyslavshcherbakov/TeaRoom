@@ -5,7 +5,7 @@ import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState
 import type { TableViewState } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
-import { turnOfItemAt, type WorldPoint } from '../RoomLayout.ts'
+import { turnOfItemAt, undersideOfTheBoardAbove, type WorldPoint } from '../RoomLayout.ts'
 import type { Walk } from '../Walking/Walk.ts'
 import { aimOver } from './Carried/AimedVessel.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
@@ -128,7 +128,9 @@ export class CarriedItems {
     const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
     if (target === undefined) return
     const standingBelow = this.models.filter((candidate) => candidate !== model && itemLocationIn(scene.state, candidate.itemId)?.kind === 'onSurface').map((candidate) => candidate.root)
-    aimOver(model, aim, target, standingBelow)
+    const targetLocation = itemLocationIn(scene.state, target.itemId)
+    const ceiling = targetLocation?.kind === 'onSurface' ? undersideOfTheBoardAbove(this.surroundings.layout, targetLocation.spot) : null
+    aimOver(model, aim, target, standingBelow, ceiling)
   }
 
   private retag(model: CarriedModel, tag: TapTargetTag): void {

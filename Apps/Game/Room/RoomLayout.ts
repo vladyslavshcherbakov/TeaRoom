@@ -1,4 +1,4 @@
-import { facingDirection, figurineIds, furniturePlacementsFor, pointOn, sinkOnTheCounter, type Facing, type FigurineId, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
+import { facingDirection, figurineIds, furniturePlacementsFor, pointOn, shelfBoards, sinkOnTheCounter, type Facing, type FigurineId, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
 import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 
 export type FloorPoint = {
@@ -211,6 +211,13 @@ export function furnitureWithId(layout: RoomLayout, id: FurnitureId): Furniture 
   const found = layout.furniture.find((piece) => piece.id === id)
   if (found === undefined) throw new Error(`the room layout has no furniture "${id}"`)
   return found
+}
+
+export function undersideOfTheBoardAbove(layout: RoomLayout, spot: Spot): number | null {
+  const piece = layout.furniture.find((candidate) => candidate.id === spot.placeId)
+  if (piece === undefined || piece.id !== 'shelf') return null
+  const undersides = [...shelfBoards.centreHeightsMetres, piece.height].map((centre) => centre - shelfBoards.thicknessMetres / 2).filter((underside) => underside > spot.y)
+  return undersides.length === 0 ? null : Math.min(...undersides)
 }
 
 export function turnOfItemAt(layout: RoomLayout, spot: Spot): number {
