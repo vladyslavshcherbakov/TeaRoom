@@ -1,4 +1,5 @@
-import { text, type TextKey } from '../../Texts/Texts.ts'
+import { text, textWith, type TextKey } from '../../Texts/Texts.ts'
+import { playTimeShownFor } from '../PlayTime.ts'
 import { coatColours, faceFeatures, type CoatColour, type FaceFeature, type RoomSettings } from '../RoomSettings.ts'
 import { temperatureUnits, type TemperatureUnit } from '../Temperatures.ts'
 
@@ -21,6 +22,7 @@ export class SettingsScreen {
   private readonly softShadowsToggle: HTMLInputElement
   private readonly glowToggle: HTMLInputElement
   private readonly frameRateToggle: HTMLInputElement
+  private readonly timePlayed: HTMLElement
 
   constructor(container: HTMLElement, choices: SettingsChoices) {
     this.element = document.createElement('div')
@@ -50,16 +52,22 @@ export class SettingsScreen {
     this.frameRateToggle = toggle(choices.frameRateShownChosen)
     const warning = paragraphOf('settings-warning', 'settings.softShadowsInCornersWarning')
     const glowWarning = paragraphOf('settings-warning', 'settings.glowWarning')
+    this.timePlayed = document.createElement('span')
+    this.timePlayed.className = 'settings-statistic-value'
+    const timePlayedRow = document.createElement('p')
+    timePlayedRow.className = 'settings-statistic'
+    timePlayedRow.append(text('settings.timePlayed'), this.timePlayed)
     const closeButton = document.createElement('button')
     closeButton.className = 'settings-close'
     closeButton.textContent = text('settings.close')
     closeButton.addEventListener('click', () => this.hide())
-    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.frameRateToggle, 'settings.showFrameRate'), closeButton)
+    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
     this.element.append(sheet)
     container.append(this.element)
   }
 
-  show(settings: RoomSettings): void {
+  show(settings: RoomSettings, secondsPlayed: number): void {
+    this.timePlayed.textContent = timePlayedText(secondsPlayed)
     this.showTheChosenColour(settings.coatColour)
     this.showTheChosenFace(settings.faceFeature)
     this.softShadowsToggle.checked = settings.hasSoftShadowsInCorners
@@ -120,7 +128,19 @@ export class SettingsScreen {
   }
 }
 
-function heading(tag: 'h2' | 'h3', key: 'settings.title' | 'settings.coatColour' | 'settings.face' | 'settings.temperature' | 'settings.advanced'): HTMLElement {
+function timePlayedText(secondsPlayed: number): string {
+  const shown = playTimeShownFor(secondsPlayed)
+  switch (shown.kind) {
+    case 'underAMinute':
+      return text('settings.timePlayed.underAMinute')
+    case 'minutes':
+      return textWith('settings.timePlayed.minutes', { minutes: String(shown.minutes) })
+    case 'hoursAndMinutes':
+      return textWith('settings.timePlayed.hoursAndMinutes', { hours: String(shown.hours), minutes: String(shown.minutes) })
+  }
+}
+
+function heading(tag: 'h2' | 'h3', key: 'settings.title' | 'settings.coatColour' | 'settings.face' | 'settings.temperature' | 'settings.advanced' | 'settings.statistics'): HTMLElement {
   const element = document.createElement(tag)
   element.textContent = text(key)
   return element

@@ -31,6 +31,8 @@ import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
 import type { FaceFeature, RoomSettings } from './RoomSettings.ts'
 import { SettingsStore } from './SettingsStore.ts'
+import { PlayTime } from './PlayTime.ts'
+import { PlayTimeStore } from './PlayTimeStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
 import { FullScreenButton } from './Views/FullScreenButton.ts'
@@ -101,6 +103,7 @@ export class RoomScene {
   private readonly room: RoomModel
   private readonly walker: WalkerModel
   private readonly settingsStore: SettingsStore
+  private readonly playTime: PlayTime
   private readonly settingsScreen: SettingsScreen
   private readonly frameRateCounter: FrameRateCounter
   private settings: RoomSettings
@@ -168,12 +171,13 @@ export class RoomScene {
         this.debugMenu.open({ cameraMode: this.cameraMode, stickLayout: this.stickLayout })
       },
       achievementsAsked: () => this.showTheAchievements(),
-      settingsAsked: () => this.settingsScreen.show(this.settings),
+      settingsAsked: () => this.settingsScreen.show(this.settings, this.playTime.seconds),
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       temperatureUnit: () => this.settings.temperatureUnit,
       isNerdModeOn: () => this.settings.isNerdModeOn,
       keeperDied: () => {
         this.hasTheKeeperDied = true
+        this.playTime.keep('the keeper died, and the time on the last screen is not counted')
         this.achievements.keeperDied()
         this.visitStore.forget('the keeper died, so the next visit starts anew')
         this.caption.hide()
@@ -204,6 +208,7 @@ export class RoomScene {
     this.garden = new Garden(materials)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
     this.settingsStore = new SettingsStore(log)
+    this.playTime = new PlayTime(new PlayTimeStore(log), log)
     this.settings = this.settingsStore.load()
     this.settingsScreen = new SettingsScreen(container, {
       coatColourChosen: (coatColour) => this.changeTheSettings({ coatColour }, 'from the settings'),
@@ -241,6 +246,7 @@ export class RoomScene {
     this.achievements.worldAdvanced(this.session.state)
     this.achievementNotice.advance(seconds)
     this.keepTheVisitNowAndThen(secondsSinceTheLastFrame)
+    this.playTime.frameDrawn(secondsSinceTheLastFrame, { isThePageShown: document.visibilityState === 'visible', hasTheKeeperDied: this.hasTheKeeperDied })
     const daylight = daylightAt(hoursSinceSunriseOf(this.session.state.atmosphere))
     this.roomLights.show(daylight)
     const isFirstPerson = this.cameraMode === 'firstPerson'
@@ -310,9 +316,14 @@ export class RoomScene {
 
   private keepTheVisitWhenThePageIsLeft(): void {
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') this.keepTheVisit('the page was hidden')
+      if (document.visibilityState !== 'hidden') return
+      this.keepTheVisit('the page was hidden')
+      this.playTime.keep('the page was hidden')
     })
-    window.addEventListener('pagehide', () => this.keepTheVisit('the page was left'))
+    window.addEventListener('pagehide', () => {
+      this.keepTheVisit('the page was left')
+      this.playTime.keep('the page was left')
+    })
   }
 
   private keepTheVisitNowAndThen(seconds: number): void {
