@@ -18,6 +18,7 @@ import { paintYixingClay } from './YixingClay.ts'
 export type Surface =
   | 'floor'
   | 'lampDisplay'
+  | 'heaterLampDisplay'
   | 'controlKey'
   | 'lampLit'
   | 'lampDark'
@@ -137,6 +138,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   porcelain: { colour: '#f7f2e8', kind: 'matte' },
   steel: { colour: '#7d97a3', kind: 'matte' },
   lampDisplay: { colour: '#ffffff', kind: 'unlit' },
+  heaterLampDisplay: { colour: '#b3b3b3', kind: 'unlit' },
   controlKey: { colour: '#d8cfbd', kind: 'matte' },
   lampLit: { colour: '#7dff9e', kind: 'unlit' },
   lampDark: { colour: '#1d3324', kind: 'matte' },
