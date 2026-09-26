@@ -295,12 +295,21 @@ export class RoomPlay {
     if (target.kind === 'medal') return this.showTheAchievements()
     if (target.kind === 'settingsGear') return this.showTheSettings()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
-    if (target.kind === 'lid' && itemLocationIn(this.ritual.state, target.itemId)?.kind === 'inHand') return this.toggleLidOf(target.itemId)
+    if (target.kind === 'lid') {
+      const location = itemLocationIn(this.ritual.state, target.itemId)
+      if (location?.kind === 'inHand') return this.tapTheLidOfAHeldItem(target.itemId, location.handIndex)
+    }
     const closeUpFurnitureId = this.view.kind === 'closeUp' ? this.view.furnitureId : null
     if (target.kind === 'figurine' && closeUpFurnitureId !== this.ritualFurnitureId()) return this.keepTheSillForTheRoom(target.figurineId)
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return this.navigate(target, targetFurnitureId)
     this.actAtCloseUp(target)
+  }
+
+  private tapTheLidOfAHeldItem(itemId: string, handIndex: HandIndex): void {
+    if (this.choice === handIndex) return this.toggleLidOf(itemId)
+    this.log(`tap on the lid of ${itemId} in the hand that is not chosen chooses hand ${handIndex}, as a tap on the item does`)
+    this.toggleHand(handIndex)
   }
 
   private describeTheChoice(): string {
