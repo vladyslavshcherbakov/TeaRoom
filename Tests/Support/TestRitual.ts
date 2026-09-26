@@ -18,8 +18,10 @@ const spoonDepthForHalfAGram = 0.1
 export class TestRitual {
   readonly log = new RecordingLog()
   readonly session: RitualSession
+  private readonly catalog: Catalog
 
   constructor(catalog: Catalog = testCatalog(), roomId = 'testRoom', savedState: unknown = null) {
+    this.catalog = catalog
     const opening = savedState === null ? RitualSession.open(catalog, roomId, this.log, true) : RitualSession.resume(catalog, savedState, sessionStateVersion, this.log, true)
     if (opening.kind !== 'opened') throw new Error(`test room "${roomId}" is unavailable: ${opening.problems.join('; ')}`)
     this.session = opening.session
@@ -57,8 +59,8 @@ export class TestRitual {
     return this.session.advance(seconds)
   }
 
-  leaveAndReturnAfter(awaySeconds: number, catalog: Catalog = testCatalog(), shareThroughTheNextTimeOfDay = 0.5): { readonly ritual: TestRitual; readonly events: readonly RitualEvent[] } {
-    const ritual = TestRitual.resumedFrom(this.savedState, catalog)
+  leaveAndReturnAfter(awaySeconds: number, shareThroughTheNextTimeOfDay = 0.5): { readonly ritual: TestRitual; readonly events: readonly RitualEvent[] } {
+    const ritual = TestRitual.resumedFrom(this.savedState, this.catalog)
     return { ritual, events: ritual.session.returnAfter(awaySeconds, shareThroughTheNextTimeOfDay) }
   }
 

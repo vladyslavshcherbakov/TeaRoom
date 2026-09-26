@@ -4,11 +4,10 @@ import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('kettle_whenTheKeeperIsAwayAnHour_coolsToTheRoom', () => {
-  const coolingCatalog = testCatalog({ kettle: 0.01 })
-  const ritual = new TestRitual(coolingCatalog)
+  const ritual = new TestRitual(testCatalog({ kettle: 0.01 }))
   ritual.heatKettleTo(90)
 
-  const { ritual: returned } = ritual.leaveAndReturnAfter(3600, coolingCatalog)
+  const { ritual: returned } = ritual.leaveAndReturnAfter(3600)
 
   assert.equal(returned.vessel('kettle').liquid.temperatureC.toFixed(1), '20.0')
 })
@@ -104,14 +103,13 @@ test('caddy_holdingTeaBrewedInIt_isPouredOutAndRefilledWhereItStands', () => {
 })
 
 test('caddies_whenBothWereScoopedFrom_areEachRefilledWithTheirOwnTea', () => {
-  const catalog = withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' })
-  const ritual = new TestRitual(catalog)
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 1 })
   ritual.do({ type: 'tipSpoonInto', vesselId: 'cup2' })
 
-  const { ritual: returned } = ritual.leaveAndReturnAfter(0, catalog)
+  const { ritual: returned } = ritual.leaveAndReturnAfter(0)
 
   assert.deepEqual(returned.vessel('caddy').leaves, { teaId: 'testGreen', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
   assert.deepEqual(returned.vessel('blackCaddy').leaves, { teaId: 'testBlack', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
@@ -128,7 +126,7 @@ test('return_withTheSpoonHereAndTheCaddyFullAndDry_restocksNothing', () => {
 test('timeOfDay_onReturn_movesOnToTheNextTimeOfDayTheRoomOffers', () => {
   const ritual = new TestRitual()
 
-  const { ritual: returned } = ritual.leaveAndReturnAfter(60, testCatalog(), 0.25)
+  const { ritual: returned } = ritual.leaveAndReturnAfter(60, 0.25)
 
   assert.deepEqual(returned.state.atmosphere, { timeOfDay: 'night', shareThroughTheTimeOfDay: 0.25, weather: 'rain' })
 })

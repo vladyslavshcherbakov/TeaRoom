@@ -196,11 +196,10 @@ test('heater_switchedOffAfterTheThermostatHeatedTenSecondsInAMinute_countsTheEne
 })
 
 test('thermostat_whileTheKeeperIsAwayAnHour_keepsTheWaterNearTheTarget', () => {
-  const catalog = testCatalog({ kettle: kettleCoolingPerSecond })
-  const ritual = kettleOnTheHeaterWithTheThermostatAt(60, catalog)
+  const ritual = kettleOnTheHeaterWithTheThermostatAt(60, testCatalog({ kettle: kettleCoolingPerSecond }))
   ritual.wait(20)
 
-  const returned = ritual.leaveAndReturnAfter(3600, catalog).ritual
+  const returned = ritual.leaveAndReturnAfter(3600).ritual
 
   assertNear(returned.vessel('kettle').liquid.temperatureC, 59, 1.2)
   assert.equal(returned.state.heater.thermostat.isOn, true)
