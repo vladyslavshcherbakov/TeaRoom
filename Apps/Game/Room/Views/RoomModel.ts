@@ -53,9 +53,6 @@ const faucetTouchAreaWidthMetres = 0.2
 const faucetTouchAreaAboveTheCounterMetres = 0.12
 const faucetTouchAreaBeyondTheFaucetMetres = 0.08
 const reachOfFurnitureMetres = 0.35
-const heaterGlowColour = new THREE.Color('#e0603a')
-const heaterGlowIntensity = 0.8
-const noGlow = new THREE.Color(0x000000)
 
 export type TapTargetTag =
   | { readonly furnitureId: FurnitureId }
@@ -127,10 +124,7 @@ export class RoomModel {
   }
 
   showHeater(isOn: boolean): void {
-    const material = this.heaterPlate.material
-    if (!(material instanceof THREE.MeshStandardMaterial)) return
-    material.emissive.copy(isOn ? heaterGlowColour : noGlow)
-    material.emissiveIntensity = isOn ? heaterGlowIntensity : 0
+    this.heaterPlate.material = this.materials.materialFor(isOn ? 'workingHeaterPlate' : 'heaterPlate')
   }
 
   showHeaterControls(view: HeaterControlsView): void {
@@ -338,7 +332,6 @@ export class RoomModel {
 
   private addHeater(spot: WorldPoint): THREE.Mesh {
     const plate = this.box('heaterPlate', heaterPlate.width, heaterPlate.height, heaterPlate.depth, { x: spot.x, y: spot.y - heaterPlate.height / 2, z: spot.z })
-    plate.material = this.materials.unsharedMaterialFor('heaterPlate')
     this.tag(plate, { isHeater: true })
     const counter = furnitureWithId(this.layout, 'counter')
     const ahead = facingDirection(counter.facing)

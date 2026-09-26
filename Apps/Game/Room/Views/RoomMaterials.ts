@@ -50,6 +50,7 @@ export type Surface =
   | 'jade'
   | 'toadBrown'
   | 'heaterPlate'
+  | 'workingHeaterPlate'
   | 'sky'
   | 'skyDome'
   | 'middaySkyTop'
@@ -125,6 +126,7 @@ type SurfaceLook = { readonly colour: string } & (
   | { readonly kind: 'veil'; readonly opacity: number }
   | { readonly kind: 'skyDome' }
   | { readonly kind: 'cloud'; readonly emissive: string }
+  | { readonly kind: 'heated'; readonly glowColour: string; readonly glowIntensity: number }
   | { readonly kind: 'glaze'; readonly paint: (() => HTMLCanvasElement) | null }
   | { readonly kind: 'painting'; readonly paint: () => HTMLCanvasElement }
   | { readonly kind: 'wovenCloth'; readonly pattern: ClothPattern }
@@ -135,6 +137,9 @@ const bowlSteamOpacity = 0.15
 const heldSteamOpacity = 0.08
 const smokeOpacity = 0.4
 const inspectionDimmingOpacity = 0.6
+const heaterPlateColour = '#3d3733'
+const workingHeaterGlowIntensity = 0.8
+const matteRoughness = 0.92
 const glassEdgeSharpness = 2
 const glassGlintFrom = 0.7
 const glassGlintFull = 1.4
@@ -185,7 +190,8 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   ember: { colour: '#ff4a12', kind: 'glow' },
   jade: { colour: '#6fb59a', kind: 'matte' },
   toadBrown: { colour: '#b39a5c', kind: 'matte' },
-  heaterPlate: { colour: '#3d3733', kind: 'matte' },
+  heaterPlate: { colour: heaterPlateColour, kind: 'matte' },
+  workingHeaterPlate: { colour: heaterPlateColour, kind: 'heated', glowColour: '#e0603a', glowIntensity: workingHeaterGlowIntensity },
   sky: { colour: '#f2a36b', kind: 'unlit' },
   skyDome: { colour: '#ffffff', kind: 'skyDome' },
   middaySkyTop: { colour: '#4f8fd0', kind: 'unlit' },
@@ -314,7 +320,9 @@ export class RoomMaterials {
     const color = look.colour
     switch (look.kind) {
       case 'matte':
-        return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+        return new THREE.MeshStandardMaterial({ color, roughness: matteRoughness, metalness: 0, flatShading: true })
+      case 'heated':
+        return new THREE.MeshStandardMaterial({ color, roughness: matteRoughness, metalness: 0, flatShading: true, emissive: look.glowColour, emissiveIntensity: look.glowIntensity })
       case 'unlit':
         return new THREE.MeshBasicMaterial({ color })
       case 'mist':
