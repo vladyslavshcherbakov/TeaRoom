@@ -7,7 +7,7 @@ import { openLidOffsetBeside, type Surroundings } from '../../Placement.ts'
 import { turnedBy, type FloorPoint } from '../../RoomLayout.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
-import type { TableViewState } from '../../../Table/TableViewState.ts'
+import type { SteamLevel, SurfaceMotion, VesselView } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
 import { mostPuffsFromOneSource, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
@@ -40,7 +40,7 @@ const steamAppearsOverShareOfItsRise = 0.12
 const leftBehindPuffFadesInSeconds = 0.8
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
-const puffsBySteam: Readonly<Record<TableViewState.SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
+const puffsBySteam: Readonly<Record<SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
 const leavesAboveTheWaterMetres = 0.0015
 const oilySheenOfTar = 0.9
 const redHotMetal = new THREE.Color('#3a0904')
@@ -48,9 +48,9 @@ const dullRedHeat = new THREE.Color('#8a1000')
 const brightRedHeat = new THREE.Color('#ff2a00')
 const redHeatRisesWithGlow = 1.5
 const brightestRedHeatIntensity = 2.2
-const leavesDriftRadiansPerSecondByMotion: Readonly<Record<TableViewState.SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
+const leavesDriftRadiansPerSecondByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
 const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
-const wavesByMotion: Readonly<Record<TableViewState.SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
+const wavesByMotion: Readonly<Record<SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
   still: { heightMetres: 0, tiltRadians: 0, wavesPerSecond: 0 },
   shimmering: { heightMetres: 0.0008, tiltRadians: 0.02, wavesPerSecond: 1.5 },
   simmering: { heightMetres: 0.002, tiltRadians: 0.05, wavesPerSecond: 2.5 },
@@ -178,13 +178,13 @@ function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItem
   holder.position.y = looseLeaves.heapStartsAt.y + heapLiftedByTheLiquid(model, looseLeaves, fillShare, scene.table.vessels[model.itemId])
 }
 
-function heapLiftedByTheLiquid(model: CarriedModel, looseLeaves: LooseLeavesLook, fillShare: number, vessel: TableViewState.Vessel | undefined): number {
+function heapLiftedByTheLiquid(model: CarriedModel, looseLeaves: LooseLeavesLook, fillShare: number, vessel: VesselView | undefined): number {
   if (vessel === undefined || vessel.fillShare <= 0 || model.liquidLevel === null) return 0
   const heapTop = looseLeaves.heapStartsAt.y + fillShare * looseLeaves.pile.heightMetres
   return Math.max(0, model.liquidLevel(vessel.fillShare).heightMetres - heapTop)
 }
 
-function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
+function showLiquid(model: CarriedModel, vessel: VesselView): void {
   if (model.liquid === null || model.liquidMaterial === null || model.liquidLevel === null) return
   model.liquid.visible = vessel.fillShare > 0 && vessel.isLidOpen !== false
   const { heightMetres: surfaceHeight, radiusMetres } = model.liquidLevel(vessel.fillShare)
@@ -197,7 +197,7 @@ function showLiquid(model: CarriedModel, vessel: TableViewState.Vessel): void {
   if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel)
 }
 
-function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight: number, vessel: TableViewState.Vessel): void {
+function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight: number, vessel: VesselView): void {
   volume.visible = vessel.fillShare > 0
   if (volume.material instanceof THREE.MeshStandardMaterial && model.liquidMaterial !== null) volume.material.color.copy(model.liquidMaterial.color)
   if (!volume.visible || model.liquidVolumeAt === null || model.liquidVolumeHeight === surfaceHeight) return
@@ -206,7 +206,7 @@ function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight
   volume.geometry = model.liquidVolumeAt(surfaceHeight)
 }
 
-function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave {
+function waveAt(motion: SurfaceMotion, timeSeconds: number): Wave {
   const { heightMetres, tiltRadians, wavesPerSecond } = wavesByMotion[motion]
   const phase = timeSeconds * wavesPerSecond * Math.PI * 2
   return {
@@ -216,7 +216,7 @@ function waveAt(motion: TableViewState.SurfaceMotion, timeSeconds: number): Wave
   }
 }
 
-function showWaterInGauge(gaugeWater: GaugeStrip, vessel: TableViewState.Vessel, wave: Wave): void {
+function showWaterInGauge(gaugeWater: GaugeStrip, vessel: VesselView, wave: Wave): void {
   const { gaugeBottomMetres, gaugeHeightMetres } = kettleShape
   const height = Math.max(0.001, vessel.fillShare * gaugeHeightMetres + (vessel.fillShare > 0 ? wave.riseMetres : 0))
   gaugeWater.mesh.visible = vessel.fillShare > 0
@@ -225,7 +225,7 @@ function showWaterInGauge(gaugeWater: GaugeStrip, vessel: TableViewState.Vessel,
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
-function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: TableViewState.Vessel, wave: Wave, timeSeconds: number): void {
+function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: VesselView, wave: Wave, timeSeconds: number): void {
   const soaked = vessel.soakedLeaves
   const soakedLook = model.look.soakedLeaves
   const isInsideShown = soakedLook?.areSeenOnlyUnderAnOpenLid === true ? vessel.isLidOpen === true : true
@@ -246,7 +246,7 @@ function showSoakedLeaves(model: CarriedModel, holder: THREE.Group, vessel: Tabl
   holder.scale.set(spreadShare, 1, spreadShare)
 }
 
-function soakedLeavesTurnedBy(model: CarriedModel, motion: TableViewState.SurfaceMotion, timeSeconds: number): number {
+function soakedLeavesTurnedBy(model: CarriedModel, motion: SurfaceMotion, timeSeconds: number): number {
   const turn = model.soakedLeavesTurn ?? { radians: 0, atSeconds: timeSeconds }
   const radians = turn.radians + Math.max(0, timeSeconds - turn.atSeconds) * leavesDriftRadiansPerSecondByMotion[motion]
   model.soakedLeavesTurn = { radians, atSeconds: timeSeconds }
@@ -261,7 +261,7 @@ function showRedHeat(shell: GlowingShell, glow: number): void {
   metal.emissiveIntensity = glow ** redHeatRisesWithGlow * brightestRedHeatIntensity
 }
 
-function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vessel, wave: Wave): void {
+function showWaterInsideTheKettle(water: THREE.Mesh, vessel: VesselView, wave: Wave): void {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
   water.visible = vessel.fillShare > 0 && vessel.isLidOpen === true
   const bodyHalfHeight = bodyRadiusMetres * bodySquash
@@ -274,7 +274,7 @@ function showWaterInsideTheKettle(water: THREE.Mesh, vessel: TableViewState.Vess
   if (material instanceof THREE.MeshStandardMaterial) material.color.set(vessel.liquorColour)
 }
 
-function showTheThermometer(thermometer: LampDisplay, vessel: TableViewState.Vessel | undefined, unit: TemperatureUnit | null): void {
+function showTheThermometer(thermometer: LampDisplay, vessel: VesselView | undefined, unit: TemperatureUnit | null): void {
   thermometer.mesh.visible = unit !== null
   if (unit === null) return
   const waterC = vessel?.waterTemperatureC ?? null

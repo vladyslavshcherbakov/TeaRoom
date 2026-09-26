@@ -27,7 +27,7 @@ import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import { HeaterControls, type HeaterControlsView } from './HeaterControls.ts'
 import { guideBookModel } from './GuideBookModel.ts'
 import { SettingsGear } from './SettingsGear.ts'
-import type { TableViewState } from '../../Table/TableViewState.ts'
+import type { PuddleView } from '../../Table/TableViewState.ts'
 
 const puddleSegments = 40
 const heaterControlsBelowThePlateMetres = 0.2
@@ -136,7 +136,7 @@ export class RoomModel {
     this.heaterControls.show(view)
   }
 
-  showPuddles(puddles: readonly TableViewState.Puddle[]): void {
+  showPuddles(puddles: readonly PuddleView[]): void {
     for (const mesh of this.puddlesByPlace.values()) mesh.visible = false
     for (const puddle of puddles) {
       const centre = puddleCentreOn(this.layout, puddle.placeId, puddle.spilledAround)

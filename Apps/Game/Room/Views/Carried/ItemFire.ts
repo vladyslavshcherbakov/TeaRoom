@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { TableViewState } from '../../../Table/TableViewState.ts'
+import type { TableViewState, Heating } from '../../../Table/TableViewState.ts'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedModel } from './CarriedModel.ts'
 import type { FireLook } from './CarriedShapeLook.ts'
@@ -18,14 +18,14 @@ const flameRadiusMetres = 0.012
 const flameHeightMetres = 0.04
 const flameCoreShare = 0.55
 const flickerPerSecond = 9
-const puffsByHeating: Readonly<Record<TableViewState.Heating, number>> = { none: 0, steaming: puffCount, warming: 0, smoking: 2, scorching: 3, smouldering: puffCount, burning: puffCount }
+const puffsByHeating: Readonly<Record<Heating, number>> = { none: 0, steaming: puffCount, warming: 0, smoking: 2, scorching: 3, smouldering: puffCount, burning: puffCount }
 const flickerDepth = 0.2
 const emberCount = 14
 const emberRadiusMetres = 0.0035
 const goldenAngleRadians = 2.4
 const emberPulsesPerSecond = 3
 const dimmestEmberScale = 0.6
-const embersFromHeating: ReadonlySet<TableViewState.Heating> = new Set(['smouldering', 'burning'])
+const embersFromHeating: ReadonlySet<Heating> = new Set(['smouldering', 'burning'])
 const smokeGrowsFasterThanSteam = 1.6
 
 export class ItemFire {
@@ -100,7 +100,7 @@ export class ItemFire {
     this.flame.scale.set(1, flicker, 1)
   }
 
-  private risePuffs(rootOfTheFlame: THREE.Vector3, heating: TableViewState.Heating, timeSeconds: number): void {
+  private risePuffs(rootOfTheFlame: THREE.Vector3, heating: Heating, timeSeconds: number): void {
     const isSmoke = heating !== 'steaming'
     const risePerSecond = isSmoke ? smokeRiseMetresPerSecond : steamRiseMetresPerSecond
     const columnMetres = isSmoke ? smokeColumnMetres : steamColumnMetres

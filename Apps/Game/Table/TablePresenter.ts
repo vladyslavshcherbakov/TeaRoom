@@ -7,7 +7,7 @@ import { howAClothChars, howTheSpoonChars } from '../../../Shared/Simulation/Phy
 import { caddyItemId, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { ClothState, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
-import type { TableViewState } from './TableViewState.ts'
+import type { TableViewState, BrewStage, Heating, SoakedLeavesView, SteamLevel, SurfaceMotion, VesselView } from './TableViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
 import { clampedToShare } from '../../../Shared/Simulation/Physics/ClampedToShare.ts'
 
@@ -27,7 +27,7 @@ const boilingFromC = 95
 const puddleFullAtMl = 30
 const soakedLeavesShownPerGram = 2
 export const mostSoakedLeavesShown = 12
-const liquorOpacityByBrewStage: Readonly<Record<TableViewState.BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95, tar: 1 }
+const liquorOpacityByBrewStage: Readonly<Record<BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95, tar: 1 }
 const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
@@ -35,7 +35,7 @@ export const smoulderingFromCharring = 0.5
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
   const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
-  const vessels: Record<string, TableViewState.Vessel> = {}
+  const vessels: Record<string, VesselView> = {}
   const heatedVesselId = state.heater.isOn ? state.heater.itemIdOnTop : null
   for (const vessel of Object.values(state.vessels)) {
     vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), tea, vessel.id === heatedVesselId)
@@ -59,13 +59,13 @@ export function puddleShareOf(wetMl: number): number {
   return share(wetMl, puddleFullAtMl)
 }
 
-function clothHeatingOf(state: DeepReadonly<SessionState>, cloth: DeepReadonly<ClothState>): TableViewState.Heating {
+function clothHeatingOf(state: DeepReadonly<SessionState>, cloth: DeepReadonly<ClothState>): Heating {
   if (!isOnAWorkingHeater(state, cloth.id)) return 'none'
   if (cloth.wetMl > 0) return 'steaming'
   return heatingAsItChars(cloth.charring, howAClothChars.burnsFromCharring)
 }
 
-function spoonHeatingOf(state: DeepReadonly<SessionState>): TableViewState.Heating {
+function spoonHeatingOf(state: DeepReadonly<SessionState>): Heating {
   if (!isOnAWorkingHeater(state, spoonItemId)) return 'none'
   return heatingAsItChars(state.spoon.charring, howTheSpoonChars.burnsFromCharring)
 }
@@ -74,7 +74,7 @@ function isOnAWorkingHeater(state: DeepReadonly<SessionState>, itemId: string): 
   return state.heater.isOn && state.heater.itemIdOnTop === itemId
 }
 
-function heatingAsItChars(charring: number, burnsFromCharring: number): TableViewState.Heating {
+function heatingAsItChars(charring: number, burnsFromCharring: number): Heating {
   if (charring < smokingFromCharring) return 'warming'
   if (charring < scorchingFromCharring) return 'smoking'
   if (charring < smoulderingFromCharring) return 'scorching'
@@ -82,7 +82,7 @@ function heatingAsItChars(charring: number, burnsFromCharring: number): TableVie
   return 'burning'
 }
 
-function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null, isHeated: boolean): TableViewState.Vessel {
+function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null, isHeated: boolean): VesselView {
   const brewStage = brewStageOf(vessel.liquid, tea)
   return {
     id: vessel.id,
@@ -99,13 +99,13 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
   }
 }
 
-function soakedLeavesOf(vessel: DeepReadonly<VesselState>): TableViewState.SoakedLeaves | null {
+function soakedLeavesOf(vessel: DeepReadonly<VesselState>): SoakedLeavesView | null {
   if (vessel.leaves === null || vessel.leaves.grams <= 0) return null
   const count = Math.min(mostSoakedLeavesShown, Math.max(1, Math.round(vessel.leaves.grams * soakedLeavesShownPerGram)))
   return { teaId: vessel.leaves.teaId, count }
 }
 
-function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): TableViewState.BrewStage {
+function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): BrewStage {
   if (tea === null || isEmpty(liquid)) return 'water'
   const verdict = judgeTaste(liquid, tea)
   if (verdict.strength === 'extreme') return 'tar'
@@ -130,7 +130,7 @@ function liquorColour(liquid: Liquid, tea: TeaDefinition): string {
   return mixColours(darkened, tarColour, share(liquid.strength - strengthWhereTarStarts, strengthOfPureTar - strengthWhereTarStarts))
 }
 
-function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): TableViewState.SteamLevel {
+function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): SteamLevel {
   const isSealed = definition.lid?.mustBeOpenToPour === true && !vessel.isLidOpen
   if (isSealed || isEmpty(vessel.liquid)) return 'none'
   const temperatureC = vessel.liquid.temperatureC
@@ -140,7 +140,7 @@ function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition
   return 'none'
 }
 
-function surfaceMotionAt(temperatureC: number): TableViewState.SurfaceMotion {
+function surfaceMotionAt(temperatureC: number): SurfaceMotion {
   if (temperatureC >= boilingFromC) return 'boiling'
   if (temperatureC >= simmeringFromC) return 'simmering'
   if (temperatureC >= shimmeringFromC) return 'shimmering'

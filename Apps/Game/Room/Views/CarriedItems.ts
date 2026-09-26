@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { Spot } from '../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { itemLocationIn, middleHandIndex } from '../../../../Shared/Simulation/Ritual/Reach.ts'
 import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState.ts'
-import type { TableViewState } from '../../Table/TableViewState.ts'
+import type { ClothView } from '../../Table/TableViewState.ts'
 import type { AimedPourView } from '../AimedPour.ts'
 import type { CarriedShape, ShapedItem } from '../CarriedShapes.ts'
 import { turnOfItemAt, undersideOfTheBoardAbove, type WorldPoint } from '../RoomLayout.ts'
@@ -100,7 +100,7 @@ export class CarriedItems {
     return material
   }
 
-  private clothColourFor(cloth: TableViewState.Cloth | undefined): THREE.Color {
+  private clothColourFor(cloth: ClothView | undefined): THREE.Color {
     const dryColour = this.materials.colourOf('cloth').lerp(this.materials.colourOf('teaStainedCloth'), cloth?.teaStain ?? 0)
     const wetDarkening = this.materials.colourOf('cloth').lerp(this.materials.colourOf('wetCloth'), cloth?.wetShare ?? 0)
     return dryColour.multiply(wetDarkening)
