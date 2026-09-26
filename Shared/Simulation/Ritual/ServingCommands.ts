@@ -1,17 +1,10 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
-import { judgeOffering } from '../Judgement/OfferingJudgement.ts'
-import { isFatalStraightFromTheCaddy, judgeTaste } from '../Judgement/TasteJudgement.ts'
+import { affinityForTheBlend, judgeOffering } from '../Judgement/OfferingJudgement.ts'
+import { balancedStrengthOf, blendOf, isFatalStraightFromTheCaddy, judgeTaste, type TeaInABlend } from '../Judgement/TasteJudgement.ts'
 import { isEmpty, splitLiquid } from '../Physics/Liquid.ts'
 import type { FigurineState, VesselState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
-import {
-  chosenTea,
-  describeLiquid,
-  note,
-  refuse,
-  vesselDefinitionOf,
-  type Draft,
-} from './Draft.ts'
+import { describeLiquid, describeTheTeasOf, note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { isNotBeingPoured, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 import { ritualPlaceOf, teaStockOf } from './Reach.ts'
 
@@ -19,19 +12,18 @@ const sipMl = 40
 
 export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void {
   const cup = draft.state.vessels[command.cupId]
-  const tea = chosenTea(draft)
-  if (tea === null) return refuse(draft, command, 'ritualNotStarted', 'no tea is chosen')
   if (cup === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${command.cupId}`)
   if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(cup.id), ...checksToServeFrom(cup)])) return
   const { taken: sip, left } = splitLiquid(cup.liquid, sipMl)
   cup.liquid = left
   cup.hasOnlyBoiledDownSinceFull = false
-  const verdict = judgeTaste(sip, tea)
+  const blend = blendOf(sip, draft.catalog)
+  const verdict = judgeTaste(sip, blend)
   const cupHeldLeaves = cup.leaves !== null && cup.leaves.grams > 0
   note(
     draft,
-    `sipped ${sip.volumeMl.toFixed(1)} ml of ${tea.id} from ${cup.id}${cupHeldLeaves ? ', with leaves in it,' : ''} at ${sip.temperatureC.toFixed(1)} °C, ` +
-      `strength ${sip.strength.toFixed(0)}, bitterness ${sip.bitterness.toFixed(0)}: ` +
+    `sipped ${sip.volumeMl.toFixed(1)} ml from ${cup.id}${cupHeldLeaves ? ', with leaves in it,' : ''} at ${sip.temperatureC.toFixed(1)} °C, ` +
+      `strength ${sip.strength.toFixed(0)}${describeTheTeasOf(sip)}${describeTheBalancedStrengthOf(blend)}, bitterness ${sip.bitterness.toFixed(0)}: ` +
       `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}; ${describeLiquid(cup)} left`,
   )
   draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict, cupHeldLeaves })
@@ -43,21 +35,26 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
 export function offerCup(draft: Draft, command: CommandOfType<'offerCup'>): void {
   const cup = draft.state.vessels[command.cupId]
   const figurine = draft.state.figurines[command.figurineId]
-  const teaId = draft.state.teaId
-  if (teaId === null) return refuse(draft, command, 'ritualNotStarted', 'no tea is chosen')
   if (cup === undefined) return refuse(draft, command, 'unknownVessel', `the room has no vessel ${command.cupId}`)
   if (figurine === undefined) return refuse(draft, command, 'unknownFigurine', `the room has no figurine ${command.figurineId}`)
   if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(cup.id), isTheKeeperAt(ritualPlaceOf(draft), 'the figurines'), hasNotBeenOffered(figurine), ...checksToServeFrom(cup)])) return
   const definition = definitionIn(draft.catalog, 'figurines', figurine.id)
-  const offering = judgeOffering(cup.liquid, teaId, definition)
+  const blend = blendOf(cup.liquid, draft.catalog)
+  const offering = judgeOffering(cup.liquid, blend, definition)
   const satisfactionBefore = figurine.satisfaction
-  note(draft, `offered to ${figurine.id}: ${describeLiquid(cup)}, affinity for ${teaId} ${definition.affinityByTeaId[teaId] ?? 0}`)
+  note(draft, `offered to ${figurine.id}: ${describeLiquid(cup)}, affinity for the blend ${affinityForTheBlend(blend, definition).toFixed(2)}`)
   cup.liquid = { ...cup.liquid, volumeMl: 0 }
   cup.hasOnlyBoiledDownSinceFull = false
   figurine.wasOfferedTeaThisRitual = true
   figurine.satisfaction = Math.min(100, Math.max(0, figurine.satisfaction + offering.satisfactionDelta))
   note(draft, `${figurine.id} satisfaction ${satisfactionBefore} → ${figurine.satisfaction}, response ${offering.response}`)
   draft.events.push({ type: 'figurineAcceptedTea', figurineId: figurine.id, response: offering.response })
+}
+
+function describeTheBalancedStrengthOf(blend: readonly TeaInABlend[]): string {
+  if (blend.length === 0) return ''
+  const { lowest, highest } = balancedStrengthOf(blend)
+  return `, balanced from ${lowest.toFixed(0)} to ${highest.toFixed(0)} for that blend`
 }
 
 function checksToServeFrom(cup: VesselState): readonly Check[] {

@@ -3,7 +3,7 @@ import test from 'node:test'
 import { shareOfTheStrengthByTeaId } from '../../Shared/Simulation/Physics/Liquid.ts'
 import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
-import { TestRitual } from '../Support/TestRitual.ts'
+import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 const catalogOfTwoTeas = withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' })
 
@@ -70,4 +70,34 @@ test('mixture_whenPartOfItIsPouredOut_keepsItsBlend', () => {
   assertNear(ritual.vessel('cup3').liquid.volumeMl, 40)
   assertNear(shares['testGreen'] ?? 0, 0.5)
   assertNear(shares['testBlack'] ?? 0, 0.5)
+})
+
+test('sip_ofTwoTeasMixedHalfAndHalf_isJudgedAgainstTheAverageOfTheirBalancedStrengths', () => {
+  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  ritual.mixInTheThermos(['caddy', 'blackCaddy'])
+  ritual.pour('thermos', 'cup3', 4)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'cup3' })
+
+  assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'balanced')
+})
+
+test('sip_ofTheSecondTeaAloneBrewedTheSameWay_tastesWeak', () => {
+  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  ritual.mixInTheThermos(['blackCaddy'])
+  ritual.pour('thermos', 'cup3', 4)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'cup3' })
+
+  assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'weak')
+})
+
+test('figurine_offeredHalfATeaItLikesAndHalfATeaItIsIndifferentTo_respondsSubtly', () => {
+  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  ritual.mixInTheThermos(['caddy', 'blackCaddy'])
+  ritual.pour('thermos', 'cup3', 4)
+
+  const events = ritual.do({ type: 'offerCup', cupId: 'cup3', figurineId: 'toad' })
+
+  assert.deepEqual(eventsOfType(events, 'figurineAcceptedTea'), [{ type: 'figurineAcceptedTea', figurineId: 'toad', response: 'subtle' }])
 })

@@ -1,7 +1,6 @@
 import { definitionIn, type Catalog } from '../../../Shared/Simulation/Definitions/Catalog.ts'
-import type { TeaDefinition } from '../../../Shared/Simulation/Definitions/TeaDefinition.ts'
 import type { VesselDefinition } from '../../../Shared/Simulation/Definitions/VesselDefinition.ts'
-import { judgeTaste } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
+import { blendOf, judgeTaste, type TeaInABlend } from '../../../Shared/Simulation/Judgement/TasteJudgement.ts'
 import { isEmpty, type Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { howAClothChars, howTheSpoonChars } from '../../../Shared/Simulation/Physics/Charring.ts'
 import { spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
@@ -34,11 +33,10 @@ const scorchingFromCharring = 0.2
 export const smoulderingFromCharring = 0.5
 
 export function tableViewState(state: DeepReadonly<SessionState>, catalog: Catalog): TableViewState {
-  const tea = state.teaId === null ? null : definitionIn(catalog, 'teas', state.teaId)
   const vessels: Record<string, VesselView> = {}
   const heatedVesselId = state.heater.isOn ? state.heater.itemIdOnTop : null
   for (const vessel of Object.values(state.vessels)) {
-    vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), tea, vessel.id === heatedVesselId)
+    vessels[vessel.id] = vesselView(vessel, definitionIn(catalog, 'vessels', vessel.definitionId), blendOf(vessel.liquid, catalog), vessel.id === heatedVesselId)
   }
   return {
     vessels,
@@ -90,12 +88,12 @@ function heatingAsItChars(charring: number, burnsFromCharring: number): Heating 
   return 'burning'
 }
 
-function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, tea: TeaDefinition | null, isHeated: boolean): VesselView {
-  const brewStage = brewStageOf(vessel.liquid, tea)
+function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinition, blend: readonly TeaInABlend[], isHeated: boolean): VesselView {
+  const brewStage = brewStageOf(vessel.liquid, blend)
   return {
     id: vessel.id,
     fillShare: share(vessel.liquid.volumeMl, definition.capacityMl),
-    liquorColour: tea === null || brewStage === 'water' ? waterColour : liquorColour(vessel.liquid, tea),
+    liquorColour: brewStage === 'water' ? waterColour : liquorColour(vessel.liquid, blend),
     liquorOpacity: liquorOpacityByBrewStage[brewStage],
     steam: steamOf(vessel, definition),
     surfaceMotion: isHeated && !isEmpty(vessel.liquid) ? surfaceMotionAt(vessel.liquid.temperatureC) : 'still',
@@ -113,9 +111,9 @@ function soakedLeavesOf(vessel: DeepReadonly<VesselState>): SoakedLeavesView | n
   return { teaId: vessel.leaves.teaId, count }
 }
 
-function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): BrewStage {
-  if (tea === null || isEmpty(liquid)) return 'water'
-  const verdict = judgeTaste(liquid, tea)
+function brewStageOf(liquid: Liquid, blend: readonly TeaInABlend[]): BrewStage {
+  if (isEmpty(liquid)) return 'water'
+  const verdict = judgeTaste(liquid, blend)
   if (verdict.strength === 'extreme') return 'tar'
   if (verdict.bitterness === 'overbrewed') return 'overbrewed'
   switch (verdict.strength) {
@@ -131,11 +129,16 @@ function brewStageOf(liquid: Liquid, tea: TeaDefinition | null): BrewStage {
   }
 }
 
-function liquorColour(liquid: Liquid, tea: TeaDefinition): string {
-  const brewed = mixColours(waterColour, teaLookFor(tea.id).liquorColour, liquid.strength / 100)
+function liquorColour(liquid: Liquid, blend: readonly TeaInABlend[]): string {
+  const brewed = mixColours(waterColour, liquorColourOfTheBlend(blend), liquid.strength / 100)
   const darkening = share(liquid.bitterness - bitternessWhereDarkeningStarts, 100 - bitternessWhereDarkeningStarts)
   const darkened = mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
   return mixColours(darkened, tarColour, share(liquid.strength - strengthWhereTarStarts, strengthOfPureTar - strengthWhereTarStarts))
+}
+
+function liquorColourOfTheBlend(blend: readonly TeaInABlend[]): string {
+  const channelsByTea = blend.map(({ tea, share }) => ({ channels: channelsOf(teaLookFor(tea.id).liquorColour), share }))
+  return hexColourOf([0, 1, 2].map((channelIndex) => Math.round(channelsByTea.reduce((channel, { channels, share }) => channel + (channels[channelIndex] ?? 0) * share, 0))))
 }
 
 function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): SteamLevel {
@@ -162,7 +165,11 @@ function share(amount: number, whole: number): number {
 function mixColours(from: string, to: string, shareOfTo: number): string {
   const [fromChannels, toChannels] = [channelsOf(from), channelsOf(to)]
   const mixed = fromChannels.map((channel, index) => Math.round(channel + ((toChannels[index] ?? channel) - channel) * share(shareOfTo, 1)))
-  return `#${mixed.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+  return hexColourOf(mixed)
+}
+
+function hexColourOf(channels: readonly number[]): string {
+  return `#${channels.map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
 }
 
 function channelsOf(hexColour: string): number[] {

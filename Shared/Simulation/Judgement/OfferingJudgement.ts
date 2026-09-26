@@ -1,5 +1,6 @@
 import type { FigurineDefinition } from '../Definitions/FigurineDefinition.ts'
 import { isPlainWater, type Liquid } from '../Physics/Liquid.ts'
+import type { TeaInABlend } from './TasteJudgement.ts'
 
 export type OfferingResponse = 'glow' | 'subtle' | 'barely'
 
@@ -16,14 +17,18 @@ const bitterFrom = 45
 const glowFrom = 12
 const subtleFrom = 6
 
-export function judgeOffering(offered: Liquid, teaId: string, figurine: FigurineDefinition): OfferingJudgement {
-  const satisfactionDelta = satisfactionFrom(offered, teaId, figurine)
+export function judgeOffering(offered: Liquid, blend: readonly TeaInABlend[], figurine: FigurineDefinition): OfferingJudgement {
+  const satisfactionDelta = satisfactionFrom(offered, blend, figurine)
   return { satisfactionDelta, response: responseTo(satisfactionDelta) }
 }
 
-function satisfactionFrom(offered: Liquid, teaId: string, figurine: FigurineDefinition): number {
+export function affinityForTheBlend(blend: readonly TeaInABlend[], figurine: FigurineDefinition): number {
+  return blend.reduce((affinity, { tea, share }) => affinity + (figurine.affinityByTeaId[tea.id] ?? 0) * share, 0)
+}
+
+function satisfactionFrom(offered: Liquid, blend: readonly TeaInABlend[], figurine: FigurineDefinition): number {
   if (isPlainWater(offered)) return 1
-  const affinity = figurine.affinityByTeaId[teaId] ?? 0
+  const affinity = affinityForTheBlend(blend, figurine)
   const isPreferredStrength =
     offered.strength >= figurine.preferredStrength.lowest && offered.strength <= figurine.preferredStrength.highest
   return (

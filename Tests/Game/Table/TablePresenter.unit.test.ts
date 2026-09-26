@@ -66,7 +66,7 @@ test('brewStage_followsStrengthAndBitternessOfTheTea', () => {
   ] as const
 
   for (const [liquid, brewStage] of rows) {
-    assert.equal(vesselView(stateWithLiquid('cup1', liquid), 'cup1')?.brewStage, brewStage, JSON.stringify(liquid))
+    assert.equal(vesselView(stateWithLiquid('cup1', ofTea('testGreen', liquid)), 'cup1')?.brewStage, brewStage, JSON.stringify(liquid))
   }
 })
 
@@ -83,9 +83,20 @@ test('senchaColour_blendsFromClearWaterToTheTeaDarkensWhenBitterAndTurnsToTarAtF
     const state = structuredClone(TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom').state) as SessionState
     const bowl = state.vessels['bowl1']
     if (bowl === undefined) throw new Error('the quiet room has no bowl1')
-    bowl.liquid = { ...bowl.liquid, volumeMl: 100, ...liquid }
+    bowl.liquid = { ...bowl.liquid, volumeMl: 100, ...ofTea('sencha', liquid) }
     assert.equal(tableViewState(state, defaultCatalog).vessels['bowl1']?.liquorColour, colour, JSON.stringify(liquid))
   }
+})
+
+test('liquorColour_ofTwoTeasMixedHalfAndHalf_isTheirColoursMixedHalfAndHalf', () => {
+  const state = structuredClone(TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom').state) as SessionState
+  const bowl = state.vessels['bowl1']
+  if (bowl === undefined) throw new Error('the quiet room has no bowl1')
+  bowl.liquid = { ...bowl.liquid, volumeMl: 100, strength: 90, strengthByTeaId: { sencha: 45, shouPuerh: 45 }, bitterness: 0 }
+
+  const liquorColour = tableViewState(state, defaultCatalog).vessels['bowl1']?.liquorColour
+
+  assert.equal(liquorColour, '#8f8251')
 })
 
 test('fillShare_isTheVolumeOverTheCapacity', () => {
@@ -151,7 +162,7 @@ test('spoon_offTheHeater_showsNoHeatingButKeepsItsCharring', () => {
 
 test('liquor_whenBrewed_isLessSeeThroughThanWater', () => {
   const water = vesselView(stateWithLiquid('cup1', { strength: 0 }), 'cup1')?.liquorOpacity ?? 1
-  const tea = vesselView(stateWithLiquid('cup1', { strength: 60 }), 'cup1')?.liquorOpacity ?? 0
+  const tea = vesselView(stateWithLiquid('cup1', ofTea('testGreen', { strength: 60 })), 'cup1')?.liquorOpacity ?? 0
 
   assert.ok(water < tea, `water ${water}, tea ${tea}`)
 })
@@ -207,6 +218,10 @@ function stateWithLiquid(vesselId: string, liquid: Partial<Liquid>, isLidOpen = 
   vessel.liquid = { ...vessel.liquid, volumeMl: 100, ...liquid }
   vessel.isLidOpen = isLidOpen
   return state
+}
+
+function ofTea(teaId: string, liquid: { readonly strength: number; readonly bitterness?: number }): Partial<Liquid> {
+  return { ...liquid, strengthByTeaId: liquid.strength === 0 ? {} : { [teaId]: liquid.strength } }
 }
 
 function vesselView(state: SessionState, vesselId: string) {
