@@ -71,9 +71,6 @@ function enterAnew(notice: string | null): void {
   const catalog = catalogArrangedAs(arrangement)
   const opening = RitualSession.open(catalog, roomId, ritualLog, import.meta.env.DEV)
   if (opening.kind === 'unavailable') return showTheQuietScreen()
-  const teaId = Object.keys(catalog.teas)[0] ?? ''
-  roomLog(`beginning the ritual with ${teaId}, the first tea in the catalog, until the tea can be chosen in the room`)
-  opening.session.dispatch({ type: 'beginRitual', teaId })
   chooseTheLightOfANewGame(opening.session, catalog)
   const faceOfANewGame = faceFeaturesOfANewGame[Math.floor(Math.random() * faceFeaturesOfANewGame.length)] ?? faceFeaturesOfANewGame[0]
   roomLog(`the keeper of this new game has ${faceOfANewGame}, chosen at random from ${faceFeaturesOfANewGame.join(', ')}, and hair is left for the player to find in the settings`)

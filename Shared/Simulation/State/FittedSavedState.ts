@@ -25,7 +25,7 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, temperatureC: 0, spill
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon, withTheTeasOfEveryLiquid, withoutTheTargetTemperatureAnnounced]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon, withTheTeasOfEveryLiquid, withoutTheTargetTemperatureAnnounced, withoutTheRitualsPhase, withoutTheChosenTea]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -47,7 +47,6 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
   changes.push(...fitTheVessels(state, fresh), ...fitTheCloths(state, fresh), ...fitTheFigurines(state, fresh), ...fitTheHeater(state, fresh))
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
   problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
-  if (state.teaId !== null && catalog.teas[state.teaId] === undefined) problems.push(`the saved tea ${state.teaId} is not in the catalog`)
   problems.push(...unknownTeaProblemsOf(state, catalog))
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
   changes.push(...dropPuddlesOnLostPlaces(state, places))
@@ -331,6 +330,22 @@ function withoutTheTargetTemperatureAnnounced(saved: Shape): ReturnType<SaveMigr
   return {
     migrated: { ...saved, heater: withoutTheField(heater, 'hasAnnouncedTargetTemperature') },
     change: 'a save from before the water was left unjudged forgets whether the heater announced the tea\'s good range',
+  }
+}
+
+function withoutTheRitualsPhase(saved: Shape): ReturnType<SaveMigration> {
+  if (saved['phase'] === undefined) return null
+  return {
+    migrated: withoutTheField(saved, 'phase'),
+    change: `a save from before the ritual lost its phases forgets that it was ${String(saved['phase'])}`,
+  }
+}
+
+function withoutTheChosenTea(saved: Shape): ReturnType<SaveMigration> {
+  if (saved['teaId'] === undefined) return null
+  return {
+    migrated: withoutTheField(saved, 'teaId'),
+    change: `a save from before each caddy held its own tea forgets that the ritual chose ${String(saved['teaId'])}`,
   }
 }
 

@@ -7,7 +7,7 @@ import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/Test
 import { TestRitual } from '../Support/TestRitual.ts'
 
 test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
-  const savedState = TestRitual.begun().savedState as { cloths: Record<string, Record<string, unknown>> }
+  const savedState = new TestRitual().savedState as { cloths: Record<string, Record<string, unknown>> }
   delete savedState.cloths['cloth']?.['teaStain']
 
   const resuming = RitualSession.resume(testCatalog(), savedState, 1, new RecordingLog(), true)
@@ -16,7 +16,7 @@ test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
 })
 
 test('savedState_withLeavesOfATeaTheCatalogNoLongerHas_doesNotFit', () => {
-  const savedState = TestRitual.begun().savedState as { vessels: Record<string, { leaves: Record<string, unknown> }> }
+  const savedState = new TestRitual().savedState as { vessels: Record<string, { leaves: Record<string, unknown> }> }
   const caddy = savedState.vessels['caddy']
   if (caddy !== undefined) caddy.leaves['teaId'] = 'earlGrey'
 
@@ -26,13 +26,13 @@ test('savedState_withLeavesOfATeaTheCatalogNoLongerHas_doesNotFit', () => {
 })
 
 test('savedState_ofAnotherVersion_doesNotFit', () => {
-  const resuming = RitualSession.resume(testCatalog(), TestRitual.begun().savedState, 0, new RecordingLog(), true)
+  const resuming = RitualSession.resume(testCatalog(), new TestRitual().savedState, 0, new RecordingLog(), true)
 
   assert.equal(resuming.kind, 'savedStateDoesNotFit')
 })
 
 test('savedState_whenTheRoomGainedAVessel_placesTheNewVesselAtItsStart', () => {
-  const savedState = TestRitual.begun().savedState
+  const savedState = new TestRitual().savedState
 
   const resumed = TestRitual.resumedFrom(savedState, catalogWithAFourthCup())
 
@@ -40,7 +40,7 @@ test('savedState_whenTheRoomGainedAVessel_placesTheNewVesselAtItsStart', () => {
 })
 
 test('savedState_whenTheRoomLostAVesselHeldInAHand_emptiesThatHand', () => {
-  const ritual = TestRitual.begun(catalogWithAFourthCup())
+  const ritual = new TestRitual(catalogWithAFourthCup())
   ritual.do({ type: 'pickUp', itemId: 'cup4' })
 
   const resumed = TestRitual.resumedFrom(ritual.savedState, testCatalog())
@@ -50,7 +50,7 @@ test('savedState_whenTheRoomLostAVesselHeldInAHand_emptiesThatHand', () => {
 })
 
 test('savedState_fromBeforeTheMiddleHand_resumesWithAnEmptyMiddleHand', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   const savedState = ritual.savedState as { keeper: { hands: unknown[]; hasAMiddleHand?: boolean } }
   savedState.keeper.hands = savedState.keeper.hands.slice(0, 2)
@@ -62,7 +62,7 @@ test('savedState_fromBeforeTheMiddleHand_resumesWithAnEmptyMiddleHand', () => {
 })
 
 test('savedState_withAnItemInTheMiddleHand_resumesWithTheMiddleHandHoldingIt', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'pickUp', itemId: 'thermos' })
   ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
@@ -74,7 +74,7 @@ test('savedState_withAnItemInTheMiddleHand_resumesWithTheMiddleHandHoldingIt', (
 })
 
 test('savedState_fromBeforeARoomCouldHoldSeveralCloths_resumesWithItsOneClothUnderTheIdCloth', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   const savedState = ritual.savedState as { cloth?: unknown; cloths?: Record<string, { id?: string }> }
   savedState.cloth = Object.fromEntries(Object.entries(savedState.cloths?.['cloth'] ?? {}).filter(([key]) => key !== 'id'))
@@ -87,7 +87,7 @@ test('savedState_fromBeforeARoomCouldHoldSeveralCloths_resumesWithItsOneClothUnd
 })
 
 test('savedState_fromBeforeTheTapRememberedWhatItRanOnto_resumesCountingTheItemInTheSinkAsRunOnto', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
@@ -103,7 +103,7 @@ test('savedState_fromBeforeTheTapRememberedWhatItRanOnto_resumesCountingTheItemI
 })
 
 test('savedState_whenTheRoomGainedASecondCloth_laysTheNewClothAtItsStart', () => {
-  const savedState = TestRitual.begun().savedState
+  const savedState = new TestRitual().savedState
 
   const resumed = TestRitual.resumedFrom(savedState, withASecondCloth(testCatalog()))
 
@@ -111,7 +111,7 @@ test('savedState_whenTheRoomGainedASecondCloth_laysTheNewClothAtItsStart', () =>
 })
 
 test('savedState_fromBeforeTheLightWasKept_standsHalfwayThroughItsTimeOfDay', () => {
-  const savedState = TestRitual.begun().savedState as { atmosphere: Record<string, unknown> }
+  const savedState = new TestRitual().savedState as { atmosphere: Record<string, unknown> }
   delete savedState.atmosphere['shareThroughTheTimeOfDay']
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -120,7 +120,7 @@ test('savedState_fromBeforeTheLightWasKept_standsHalfwayThroughItsTimeOfDay', ()
 })
 
 test('savedState_fromBeforeTheHeaterCountedItsWaste_startsCountingItAtNothing', () => {
-  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  const savedState = new TestRitual().savedState as { heater: Record<string, unknown> }
   delete savedState.heater['secondsWasted']
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -129,7 +129,7 @@ test('savedState_fromBeforeTheHeaterCountedItsWaste_startsCountingItAtNothing', 
 })
 
 test('savedState_fromBeforeTheThermostat_getsOneAtAHundredDegreesNotWorking', () => {
-  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  const savedState = new TestRitual().savedState as { heater: Record<string, unknown> }
   delete savedState.heater['thermostat']
   delete savedState.heater['secondsHeating']
 
@@ -140,7 +140,7 @@ test('savedState_fromBeforeTheThermostat_getsOneAtAHundredDegreesNotWorking', ()
 })
 
 test('savedState_fromBeforeTheHeaterCouldHoldItsTarget_boilsByHandAsItDid', () => {
-  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  const savedState = new TestRitual().savedState as { heater: Record<string, unknown> }
   delete savedState.heater['holdsTheThermostatsTarget']
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -149,7 +149,7 @@ test('savedState_fromBeforeTheHeaterCouldHoldItsTarget_boilsByHandAsItDid', () =
 })
 
 test('savedState_fromBeforeVesselsRememberedBeingFull_countsNoneAsFull', () => {
-  const savedState = TestRitual.begun().savedState as { vessels: Record<string, Record<string, unknown>> }
+  const savedState = new TestRitual().savedState as { vessels: Record<string, Record<string, unknown>> }
   for (const vessel of Object.values(savedState.vessels)) delete vessel['hasOnlyBoiledDownSinceFull']
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -158,7 +158,7 @@ test('savedState_fromBeforeVesselsRememberedBeingFull_countsNoneAsFull', () => {
 })
 
 test('savedState_fromBeforePuddlesHadATemperature_findsThemAtRoomTemperature', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', null, 2.5)
   const savedState = ritual.savedState as { puddles: Record<string, Record<string, unknown>> }
   for (const puddle of Object.values(savedState.puddles)) delete puddle['temperatureC']
@@ -169,11 +169,11 @@ test('savedState_fromBeforePuddlesHadATemperature_findsThemAtRoomTemperature', (
 })
 
 test('savedState_fromBeforeTheSpoonKnewItsTea_findsTheRitualsTeaOnAFullSpoon', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
-  const savedState = ritual.savedState as { spoon: Record<string, unknown> }
+  const savedState = { ...(ritual.savedState as { spoon: Record<string, unknown> }), teaId: 'testGreen' }
   delete savedState.spoon['teaId']
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -182,12 +182,12 @@ test('savedState_fromBeforeTheSpoonKnewItsTea_findsTheRitualsTeaOnAFullSpoon', (
 })
 
 test('savedState_fromBeforeLiquidsKnewTheirTeas_givesTheStrengthOfEveryLiquidToTheRitualsTea', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   ritual.wait(60)
   ritual.pour('kettle', 'cup1', 5)
-  const savedState = ritual.savedState as { vessels: Record<string, { liquid: Record<string, unknown> }> }
+  const savedState = { ...(ritual.savedState as { vessels: Record<string, { liquid: Record<string, unknown> }> }), teaId: 'testGreen' }
   for (const vessel of Object.values(savedState.vessels)) delete vessel.liquid['strengthByTeaId']
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -199,7 +199,7 @@ test('savedState_fromBeforeLiquidsKnewTheirTeas_givesTheStrengthOfEveryLiquidToT
 })
 
 test('savedState_fromBeforeTheWaterWentUnjudged_forgetsWhetherTheHeaterAnnouncedTheTeasRange', () => {
-  const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
+  const savedState = new TestRitual().savedState as { heater: Record<string, unknown> }
   savedState.heater['hasAnnouncedTargetTemperature'] = true
 
   const resumed = TestRitual.resumedFrom(savedState)
@@ -207,8 +207,24 @@ test('savedState_fromBeforeTheWaterWentUnjudged_forgetsWhetherTheHeaterAnnounced
   assert.equal('hasAnnouncedTargetTemperature' in resumed.state.heater, false)
 })
 
+test('savedState_fromBeforeTheRitualLostItsPhases_resumesWithoutAPhase', () => {
+  const savedState = { ...(new TestRitual().savedState as object), phase: 'resting' }
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal('phase' in resumed.state, false)
+})
+
+test('savedState_fromBeforeEachCaddyHeldItsOwnTea_resumesWithoutAChosenTea', () => {
+  const savedState = { ...(new TestRitual().savedState as object), teaId: 'testGreen' }
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal('teaId' in resumed.state, false)
+})
+
 test('savedState_whoseHeaterLeftTheCatalog_resumesWithTheRoomsHeaterSwitchedOff', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 

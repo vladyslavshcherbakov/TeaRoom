@@ -248,7 +248,7 @@ class StorageInMemory implements AchievementStorage {
 }
 
 class AchievementsInTheRoom {
-  readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
+  readonly ritual = new TestRitual(defaultCatalog, 'quietRoom')
   readonly announced: AchievementId[] = []
   readonly achievements: Achievements
 

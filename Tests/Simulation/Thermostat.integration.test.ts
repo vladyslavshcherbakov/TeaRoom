@@ -7,13 +7,13 @@ import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 const kettleCoolingPerSecond = 0.01
 
 test('thermostat_ofANewHeater_isSetToAHundredDegreesAndNotWorking', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   assert.deepEqual(ritual.state.heater.thermostat, { targetC: 100, isOn: false })
 })
 
 test('thermostat_whenSetToSixtyDegrees_saysSo', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'setTheThermostat', targetC: 60 })
 
@@ -22,7 +22,7 @@ test('thermostat_whenSetToSixtyDegrees_saysSo', () => {
 })
 
 test('thermostat_whenSetBelowFortyDegrees_isRefused', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'setTheThermostat', targetC: 39 })
 
@@ -31,7 +31,7 @@ test('thermostat_whenSetBelowFortyDegrees_isRefused', () => {
 })
 
 test('thermostat_whenSetAboveAHundredDegrees_isRefused', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'setTheThermostat', targetC: 101 })
 
@@ -78,7 +78,7 @@ test('thermostat_workingForTenMinutes_keepsTheWaterWithinTwoDegreesBelowTheTarge
 })
 
 test('thermostat_withNothingOnTheHeater_keepsThePlateColdAndWastesNothing', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'startTheThermostat' })
 
   ritual.wait(60)
@@ -90,7 +90,7 @@ test('thermostat_withNothingOnTheHeater_keepsThePlateColdAndWastesNothing', () =
 })
 
 test('thermostat_withAnEmptyThermosOnTheHeater_keepsThePlateCold', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'startTheThermostat' })
 
@@ -100,7 +100,7 @@ test('thermostat_withAnEmptyThermosOnTheHeater_keepsThePlateCold', () => {
 })
 
 test('thermostat_startedWhileTheHeaterBoilsByHand_stopsAtTheTarget', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.do({ type: 'setTheThermostat', targetC: 60 })
@@ -118,7 +118,6 @@ test('heaterSwitch_turnedOffWhileTheThermostatWaits_switchesTheHeaterAndTheTherm
 
   const events = ritual.do({ type: 'switchHeaterOff' })
 
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, true)
   assert.equal(ritual.state.heater.isOn, false)
   assert.equal(ritual.state.heater.thermostat.isOn, false)
 })
@@ -139,7 +138,6 @@ test('heaterSwitch_turnedOffWhileTheThermostatHeats_switchesTheHeaterAndTheTherm
 
   const events = ritual.do({ type: 'switchHeaterOff' })
 
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, true)
   assert.equal(ritual.state.heater.isOn, false)
   assert.equal(ritual.state.heater.thermostat.isOn, false)
 })
@@ -163,7 +161,7 @@ test('thermostat_whenStartedTwice_isRefused', () => {
 })
 
 test('heaterSwitch_askedToHoldSixtyDegrees_keepsTheWaterAtSixtyWhileItStaysOn', () => {
-  const ritual = TestRitual.begun(testCatalog({ kettle: kettleCoolingPerSecond }))
+  const ritual = new TestRitual(testCatalog({ kettle: kettleCoolingPerSecond }))
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'setTheThermostat', targetC: 60 })
   ritual.do({ type: 'switchHeaterOn', holdsTheThermostatsTarget: true })
@@ -176,7 +174,7 @@ test('heaterSwitch_askedToHoldSixtyDegrees_keepsTheWaterAtSixtyWhileItStaysOn', 
 })
 
 test('heaterSwitch_notAskedToHoldTheTarget_boilsPastIt', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'setTheThermostat', targetC: 60 })
   ritual.do({ type: 'switchHeaterOn' })
@@ -197,16 +195,6 @@ test('heater_switchedOffAfterTheThermostatHeatedTenSecondsInAMinute_countsTheEne
   assertNear(switchedOff?.kilowattHoursUsed ?? 0, 0.00833, 0.0002)
 })
 
-test('ritual_finishedWhileTheThermostatWaits_switchesTheHeaterOff', () => {
-  const ritual = kettleOnTheHeaterWithTheThermostatAt(60)
-  ritual.wait(20)
-
-  const events = ritual.do({ type: 'finishRitual' })
-
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, false)
-  assert.equal(ritual.state.heater.thermostat.isOn, false)
-})
-
 test('thermostat_whileTheKeeperIsAwayAnHour_keepsTheWaterNearTheTarget', () => {
   const catalog = testCatalog({ kettle: kettleCoolingPerSecond })
   const ritual = kettleOnTheHeaterWithTheThermostatAt(60, catalog)
@@ -219,7 +207,7 @@ test('thermostat_whileTheKeeperIsAwayAnHour_keepsTheWaterNearTheTarget', () => {
 })
 
 function kettleOnTheHeaterWithTheThermostatAt(targetC: number, catalog = testCatalog()): TestRitual {
-  const ritual = TestRitual.begun(catalog)
+  const ritual = new TestRitual(catalog)
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'setTheThermostat', targetC })
   ritual.do({ type: 'startTheThermostat' })

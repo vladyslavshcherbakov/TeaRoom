@@ -80,7 +80,7 @@ test('senchaColour_blendsFromClearWaterToTheTeaDarkensWhenBitterAndTurnsToTarAtF
   ] as const
 
   for (const [liquid, colour] of rows) {
-    const state = structuredClone(TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom').state) as SessionState
+    const state = structuredClone(new TestRitual(defaultCatalog, 'quietRoom').state) as SessionState
     const bowl = state.vessels['bowl1']
     if (bowl === undefined) throw new Error('the quiet room has no bowl1')
     bowl.liquid = { ...bowl.liquid, volumeMl: 100, ...ofTea('sencha', liquid) }
@@ -89,7 +89,7 @@ test('senchaColour_blendsFromClearWaterToTheTeaDarkensWhenBitterAndTurnsToTarAtF
 })
 
 test('liquorColour_ofTwoTeasMixedHalfAndHalf_isTheirColoursMixedHalfAndHalf', () => {
-  const state = structuredClone(TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom').state) as SessionState
+  const state = structuredClone(new TestRitual(defaultCatalog, 'quietRoom').state) as SessionState
   const bowl = state.vessels['bowl1']
   if (bowl === undefined) throw new Error('the quiet room has no bowl1')
   bowl.liquid = { ...bowl.liquid, volumeMl: 100, strength: 90, strengthByTeaId: { sencha: 45, shouPuerh: 45 }, bitterness: 0 }
@@ -193,7 +193,7 @@ test('soakedLeaves_inAnEmptyBowl_stayInIt', () => {
 
 test('looseLeaves_ofEachCaddyAndTheSpoon_showTheirOwnTeaAndHowFullTheyAre', () => {
   const catalogWithTwoCaddies = withMoreCaddies(catalog, { blackCaddy: 'testBlack' })
-  const ritual = TestRitual.begun(catalogWithTwoCaddies)
+  const ritual = new TestRitual(catalogWithTwoCaddies)
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 0.5 })
@@ -208,7 +208,7 @@ test('looseLeaves_ofEachCaddyAndTheSpoon_showTheirOwnTeaAndHowFullTheyAre', () =
 })
 
 function ritualState(): SessionState {
-  return structuredClone(TestRitual.begun(catalog).state) as SessionState
+  return structuredClone(new TestRitual(catalog).state) as SessionState
 }
 
 function stateWithLiquid(vesselId: string, liquid: Partial<Liquid>, isLidOpen = false): SessionState {

@@ -22,7 +22,7 @@ const longestWalkSeconds = 30
 
 export class TestRoom {
   readonly logLines: string[] = []
-  readonly ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
+  readonly ritual = new TestRitual(defaultCatalog, 'quietRoom')
   readonly remarks: RoomRemark[] = []
   readonly zoom = new CameraZoom()
   readonly play: RoomPlay

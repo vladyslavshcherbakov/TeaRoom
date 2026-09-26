@@ -25,12 +25,6 @@ export class TestRitual {
     this.session = opening.session
   }
 
-  static begun(catalog: Catalog = testCatalog(), teaId = 'testGreen', roomId = 'testRoom'): TestRitual {
-    const ritual = new TestRitual(catalog, roomId)
-    ritual.do({ type: 'beginRitual', teaId })
-    return ritual
-  }
-
   static resumedFrom(savedState: unknown, catalog: Catalog = testCatalog()): TestRitual {
     return new TestRitual(catalog, 'testRoom', savedState)
   }

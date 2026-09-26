@@ -5,7 +5,7 @@ import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('sip_ofPlainWater_tastesOfNoTea', () => {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
+  const ritual = new TestRitual(testCatalog({ cup: 0.02 }))
   ritual.heatKettleTo(80)
   ritual.pour('kettle', 'cup1', 9)
   ritual.waitUntilCupCoolsTo('cup1', 60)
@@ -44,7 +44,7 @@ test('sip_takesFortyMillilitresFromTheCup', () => {
 })
 
 test('tasting_anEmptyCup_isRefused', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'tasteCup', cupId: 'cup3' })
 
@@ -52,7 +52,7 @@ test('tasting_anEmptyCup_isRefused', () => {
 })
 
 test('tasting_fromTheKettle_isRefused', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'tasteCup', cupId: 'kettle' })
 
@@ -104,7 +104,7 @@ test('offering_emptiesTheWholeCupIntoTheSaucer', () => {
 })
 
 test('keeper_whenSippingTeaOfExtremeStrengthStraightFromTheCaddy_dies', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.pour('kettle', 'caddy', 10)
@@ -116,7 +116,7 @@ test('keeper_whenSippingTeaOfExtremeStrengthStraightFromTheCaddy_dies', () => {
 })
 
 test('keeper_whenSippingTeaOfExtremeStrengthStraightFromASecondCaddy_dies', () => {
-  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
   ritual.heatKettleTo(80)
   ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
   ritual.pour('kettle', 'blackCaddy', 10)
@@ -128,7 +128,7 @@ test('keeper_whenSippingTeaOfExtremeStrengthStraightFromASecondCaddy_dies', () =
 })
 
 test('keeper_whenSippingTheCaddysTeaFromABowl_lives', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.pour('kettle', 'caddy', 10)
@@ -142,7 +142,7 @@ test('keeper_whenSippingTheCaddysTeaFromABowl_lives', () => {
 })
 
 function ritualWithTeaInCups(steepSeconds: number, cupIds = ['cup1', 'cup2']): TestRitual {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0.02 }))
+  const ritual = new TestRitual(testCatalog({ cup: 0.02 }))
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   ritual.wait(steepSeconds)

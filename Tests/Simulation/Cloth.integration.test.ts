@@ -122,7 +122,7 @@ test('cloth_underTheTap_losesATenthOfAFullStainEachSecond', () => {
 })
 
 test('cloth_whenTakenOutOfTheSink_isWrungOutToEightMillilitres', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
   ritual.do({ type: 'turnTheTapOn' })
@@ -143,7 +143,7 @@ test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
 })
 
 test('puddle_whenTheTableIsDry_isNotSoakedUp', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
 
@@ -151,13 +151,13 @@ test('puddle_whenTheTableIsDry_isNotSoakedUp', () => {
 })
 
 function ritualWithSpillOnTheTable(): TestRitual {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', null, 2.5)
   return ritual
 }
 
 function ritualWithTeaSpilledOnTheTable(): TestRitual {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   ritual.wait(60)

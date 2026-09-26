@@ -6,7 +6,7 @@ import { eventsOfType, fullFlowTiltDegrees, TestRitual } from '../Support/TestRi
 import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 test('pour_whenTiltedBelowTheThreshold_movesNoWater', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   ritual.pour('kettle', 'cup1', 5, 8)
 
@@ -15,7 +15,7 @@ test('pour_whenTiltedBelowTheThreshold_movesNoWater', () => {
 })
 
 test('pour_whenTiltedHalfwayForFiveSeconds_movesFiftyMillilitres', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.pour('kettle', 'cup1', 5)
 
@@ -27,7 +27,7 @@ test('pour_whenTiltedHalfwayForFiveSeconds_movesFiftyMillilitres', () => {
 })
 
 test('pour_whenHalfTheStreamMissesTheCup_spillsTheOtherHalfOnTheTable', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.pour('kettle', 'cup1', 5, undefined, 0.5)
 
@@ -38,7 +38,7 @@ test('pour_whenHalfTheStreamMissesTheCup_spillsTheOtherHalfOnTheTable', () => {
 })
 
 test('pour_whenFast_splashesATenthOfTheStream', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.pour('kettle', 'cup1', 4, fullFlowTiltDegrees)
 
@@ -47,7 +47,7 @@ test('pour_whenFast_splashesATenthOfTheStream', () => {
 })
 
 test('pour_atFullFlowIntoTheWideCaddy_splashesNothing', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
   const events = ritual.pour('kettle', 'caddy', 4, fullFlowTiltDegrees)
@@ -57,7 +57,7 @@ test('pour_atFullFlowIntoTheWideCaddy_splashesNothing', () => {
 })
 
 test('cup_whenPouredPastItsBrim_overflowsOntoTheTableOnce', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.pour('kettle', 'cup1', 15)
 
@@ -67,7 +67,7 @@ test('cup_whenPouredPastItsBrim_overflowsOntoTheTableOnce', () => {
 })
 
 test('cup_whenFullOfColdWaterAndACupfulOfBoilingWaterIsPouredIn_isWarmerThan60C', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', 'cup1', 10)
   ritual.heatKettleTo(100)
 
@@ -77,7 +77,7 @@ test('cup_whenFullOfColdWaterAndACupfulOfBoilingWaterIsPouredIn_isWarmerThan60C'
 })
 
 test('pour_whenStoppedAbruptly_leavesNoStreamRunning', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', 'cup1', 3)
 
   ritual.wait(5)
@@ -87,7 +87,7 @@ test('pour_whenStoppedAbruptly_leavesNoStreamRunning', () => {
 })
 
 test('thermos_whenItsLidIsClosed_refusesWater', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'thermos' })
 
@@ -96,7 +96,7 @@ test('thermos_whenItsLidIsClosed_refusesWater', () => {
 })
 
 test('thermosLid_whileTheKettlePoursIntoIt_cannotBeClosed', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'thermos' })
 
@@ -107,7 +107,7 @@ test('thermosLid_whileTheKettlePoursIntoIt_cannotBeClosed', () => {
 })
 
 test('kettle_whileOnTheHeater_cannotBePoured', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   const events = ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
@@ -116,7 +116,7 @@ test('kettle_whileOnTheHeater_cannotBePoured', () => {
 })
 
 test('emptyVessel_whenTilted_refusesToPour', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'startPouring', sourceId: 'cup1', targetId: 'cup2' })
 
@@ -124,7 +124,7 @@ test('emptyVessel_whenTilted_refusesToPour', () => {
 })
 
 test('pouredWater_carriesItsTemperatureIntoTheCup', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   const kettleTemperatureC = ritual.vessel('kettle').liquid.temperatureC
 
@@ -134,7 +134,7 @@ test('pouredWater_carriesItsTemperatureIntoTheCup', () => {
 })
 
 test('cup_whenHotWaterMeetsColdWater_settlesInBetween', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', 'cup1', 5)
   ritual.heatKettleTo(60)
 
@@ -145,7 +145,7 @@ test('cup_whenHotWaterMeetsColdWater_settlesInBetween', () => {
 })
 
 test('thermos_whenFilledAndClosed_keepsWaterHotterThanTheKettle', () => {
-  const ritual = TestRitual.begun(testCatalog({ kettle: 0.003, thermos: 0.0004 }))
+  const ritual = new TestRitual(testCatalog({ kettle: 0.003, thermos: 0.0004 }))
   ritual.heatKettleTo(90)
   ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.pour('kettle', 'thermos', 25)

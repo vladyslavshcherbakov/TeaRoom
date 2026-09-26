@@ -8,7 +8,7 @@ import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 const catalogOfTwoTeas = withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' })
 
 test('leaves_steepingInWater_creditTheStrengthTheyGiveToTheirTea', () => {
-  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  const ritual = new TestRitual(catalogOfTwoTeas)
   ritual.heatKettleTo(80)
   ritual.pour('kettle', 'cup1', 5)
   ritual.tipASpoonOfLeavesInto('cup1', 'blackCaddy')
@@ -21,7 +21,7 @@ test('leaves_steepingInWater_creditTheStrengthTheyGiveToTheirTea', () => {
 })
 
 test('leaves_whenTheirVesselIsPouredFrom_stayInItAndOnlyTheTeaGoes', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   ritual.wait(60)
@@ -34,7 +34,7 @@ test('leaves_whenTheirVesselIsPouredFrom_stayInItAndOnlyTheTeaGoes', () => {
 })
 
 test('tea_pouredIntoAsMuchPlainWater_hasHalfItsStrengthAndStaysOfItsOneTea', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.pour('kettle', 'cup2', 2.5)
   ritual.addLeavesToKettle(5)
@@ -51,7 +51,7 @@ test('tea_pouredIntoAsMuchPlainWater_hasHalfItsStrengthAndStaysOfItsOneTea', () 
 })
 
 test('teas_ofEqualStrengthPouredTogether_eachGiveHalfTheStrength', () => {
-  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  const ritual = new TestRitual(catalogOfTwoTeas)
 
   ritual.mixInTheThermos(['caddy', 'blackCaddy'])
 
@@ -61,7 +61,7 @@ test('teas_ofEqualStrengthPouredTogether_eachGiveHalfTheStrength', () => {
 })
 
 test('mixture_whenPartOfItIsPouredOut_keepsItsBlend', () => {
-  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  const ritual = new TestRitual(catalogOfTwoTeas)
   ritual.mixInTheThermos(['caddy', 'blackCaddy'])
 
   ritual.pour('thermos', 'cup3', 4)
@@ -73,7 +73,7 @@ test('mixture_whenPartOfItIsPouredOut_keepsItsBlend', () => {
 })
 
 test('sip_ofTwoTeasMixedHalfAndHalf_isJudgedAgainstTheAverageOfTheirBalancedStrengths', () => {
-  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  const ritual = new TestRitual(catalogOfTwoTeas)
   ritual.mixInTheThermos(['caddy', 'blackCaddy'])
   ritual.pour('thermos', 'cup3', 4)
 
@@ -83,7 +83,7 @@ test('sip_ofTwoTeasMixedHalfAndHalf_isJudgedAgainstTheAverageOfTheirBalancedStre
 })
 
 test('sip_ofTheSecondTeaAloneBrewedTheSameWay_tastesWeak', () => {
-  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  const ritual = new TestRitual(catalogOfTwoTeas)
   ritual.mixInTheThermos(['blackCaddy'])
   ritual.pour('thermos', 'cup3', 4)
 
@@ -93,7 +93,7 @@ test('sip_ofTheSecondTeaAloneBrewedTheSameWay_tastesWeak', () => {
 })
 
 test('figurine_offeredHalfATeaItLikesAndHalfATeaItIsIndifferentTo_respondsSubtly', () => {
-  const ritual = TestRitual.begun(catalogOfTwoTeas)
+  const ritual = new TestRitual(catalogOfTwoTeas)
   ritual.mixInTheThermos(['caddy', 'blackCaddy'])
   ritual.pour('thermos', 'cup3', 4)
 

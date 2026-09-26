@@ -135,7 +135,6 @@ export class Achievements {
 
   private heaterSwitchedOff(event: HeaterSwitchedOff): void {
     if (event.wastedSeconds < longRunSeconds) return
-    if (!event.wasSwitchedOffByTheKeeper) return this.log(`the heater wasted ${event.wastedSeconds.toFixed(0)} s but the end of the ritual switched it off, not the keeper`)
     this.log(`the heater wasted ${event.wastedSeconds.toFixed(0)} s on the air or on things not made for it and was switched off`)
     this.ranForNothing({ ...this.record, hasTheHeaterRunForNothing: true })
   }

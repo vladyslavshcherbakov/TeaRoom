@@ -6,7 +6,7 @@ import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 const longestSecondsToBoilDry = 105
 
 test('fullKettleOfTapWater_onTheWorkingPlate_boilsDryWithinOneMinuteFortyFive', () => {
-  const ritual = TestRitual.begun(defaultCatalog, 'sencha', 'quietRoom')
+  const ritual = new TestRitual(defaultCatalog, 'quietRoom')
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })

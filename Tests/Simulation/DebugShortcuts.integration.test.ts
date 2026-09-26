@@ -3,7 +3,7 @@ import test from 'node:test'
 import { TestRitual } from '../Support/TestRitual.ts'
 
 test('kettle_whenFilledWithBoilingWaterFromTheDebugMenuWhileHeldWithLeaves_holdsALitreOfCleanWaterAt100C', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.addLeavesToKettle(5)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 

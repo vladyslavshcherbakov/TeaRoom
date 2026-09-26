@@ -6,12 +6,6 @@ import type { TasteVerdict } from '../Judgement/TasteJudgement.ts'
 import type { Command } from './Command.ts'
 
 export type RefusalReason =
-  | 'ritualNotStarted'
-  | 'ritualAlreadyStarted'
-  | 'ritualInProgress'
-  | 'ritualIsOver'
-  | 'sessionEnded'
-  | 'unknownTea'
   | 'unknownVessel'
   | 'unknownFigurine'
   | 'notAvailableInThisRoom'
@@ -63,7 +57,6 @@ export type RefusalReason =
   | 'burntAway'
 
 export type RitualEvent =
-  | { readonly type: 'ritualBegan'; readonly teaId: string }
   | { readonly type: 'atmosphereChanged'; readonly atmosphere: Atmosphere }
   | { readonly type: 'actionRefused'; readonly command: Command['type']; readonly reason: RefusalReason }
   | { readonly type: 'keeperMoved'; readonly placeId: string | null }
@@ -85,7 +78,6 @@ export type RitualEvent =
       readonly wastedSeconds: number
       readonly kilowattHoursWasted: number
       readonly secondsHeatedByItemId: Readonly<Record<string, number>>
-      readonly wasSwitchedOffByTheKeeper: boolean
     }
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'vesselOverflowed'; readonly vesselId: string }
@@ -114,5 +106,3 @@ export type RitualEvent =
   | { readonly type: 'boiledDry'; readonly vesselId: string; readonly wasFullAndOnlyBoiledDown: boolean }
   | { readonly type: 'metalGlowsTooHotToHold'; readonly vesselId: string }
   | { readonly type: 'clothTakenOffTheHeater'; readonly clothId: string; readonly charring: number }
-  | { readonly type: 'ritualFinished' }
-  | { readonly type: 'roomLeft' }

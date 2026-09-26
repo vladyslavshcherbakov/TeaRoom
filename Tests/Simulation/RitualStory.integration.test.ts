@@ -5,7 +5,7 @@ import { testCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('clumsyRitual_overheatedThenWaitedThenOversteeped_isTastedAndOfferedWithoutARefusal', () => {
-  const ritual = TestRitual.begun(testCatalog({ kettle: 0.003, thermos: 0.0004, cup: 0.02 }))
+  const ritual = new TestRitual(testCatalog({ kettle: 0.003, thermos: 0.0004, cup: 0.02 }))
   const events: RitualEvent[] = []
 
   events.push(...ritual.heatKettleTo(100))

@@ -33,7 +33,7 @@ test('tea_whenLeftSteepingForFiveMinutes_tastesOverbrewed', () => {
 })
 
 test('tea_whenBrewedWithSixTimesTheLeavesForAMinute_tastesExtremelyStrongButNotOverbrewed', () => {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0.05 }))
+  const ritual = new TestRitual(testCatalog({ cup: 0.05 }))
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(30)
   ritual.wait(60)
@@ -90,7 +90,7 @@ test('tea_onceTheHeaterUnderItsBoilIsSwitchedOff_brewsAtItsUsualPaceAgain', () =
 })
 
 test('brew_whenWaterMeetsTheLeaves_starts', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
 
   const events = ritual.addLeavesToKettle(5)
@@ -101,7 +101,7 @@ test('brew_whenWaterMeetsTheLeaves_starts', () => {
 })
 
 test('brew_whenWaterIsPouredOntoLeavesInAnEmptyKettle_startsWithThatWater', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.pour('kettle', 'thermos', 50)
@@ -116,7 +116,7 @@ test('brew_whenWaterIsPouredOntoLeavesInAnEmptyKettle_startsWithThatWater', () =
 })
 
 test('caddy_whenHotWaterIsPouredOntoItsLeaves_brewsTeaOfExtremeStrength', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.pour('kettle', 'caddy', 10)
@@ -139,7 +139,7 @@ test('tea_onceInTheCup_stopsGrowingStronger', () => {
 })
 
 test('leaves_whenTheKettleLidIsClosed_areRefusedAndStayOnTheSpoon', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
@@ -151,7 +151,7 @@ test('leaves_whenTheKettleLidIsClosed_areRefusedAndStayOnTheSpoon', () => {
 })
 
 test('spoon_whenTheCaddyIsClosed_scoopsNothing', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
 
   const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
@@ -161,7 +161,7 @@ test('spoon_whenTheCaddyIsClosed_scoopsNothing', () => {
 })
 
 test('spoon_whenDippedHalfway_holdsHalfItsCapacity', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
@@ -172,7 +172,7 @@ test('spoon_whenDippedHalfway_holdsHalfItsCapacity', () => {
 })
 
 test('leaves_whenTippedIntoTheThermos_areRefused', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
@@ -183,7 +183,7 @@ test('leaves_whenTippedIntoTheThermos_areRefused', () => {
 })
 
 test('leaves_whenTippedIntoACup_lieInTheCup', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   ritual.tipASpoonOfLeavesInto('cup1')
 
@@ -191,7 +191,7 @@ test('leaves_whenTippedIntoACup_lieInTheCup', () => {
 })
 
 test('tea_whenHotWaterIsPouredOnLeavesInACup_brewsInTheCup', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.tipASpoonOfLeavesInto('cup1')
 
@@ -201,7 +201,7 @@ test('tea_whenHotWaterIsPouredOnLeavesInACup_brewsInTheCup', () => {
 })
 
 test('sip_fromACupWithLeavesInIt_saysTheCupHeldLeaves', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.pour('kettle', 'cup1', 5)
@@ -222,7 +222,7 @@ test('sip_fromACupPouredFromTheKettle_saysTheCupHeldNoLeaves', () => {
 })
 
 test('spoon_lyingOnTheTable_scoopsNothingUntilItIsTaken', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
   const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
@@ -232,7 +232,7 @@ test('spoon_lyingOnTheTable_scoopsNothingUntilItIsTaken', () => {
 })
 
 test('leaves_scoopedFromASecondCaddy_areOfTheTeaThatCaddyKeeps', () => {
-  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
 
   ritual.tipASpoonOfLeavesInto('cup1', 'blackCaddy')
 
@@ -240,7 +240,7 @@ test('leaves_scoopedFromASecondCaddy_areOfTheTeaThatCaddyKeeps', () => {
 })
 
 test('spoon_holdingLeavesOfOneTea_refusesToScoopFromTheCaddyOfAnother', () => {
-  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
@@ -253,7 +253,7 @@ test('spoon_holdingLeavesOfOneTea_refusesToScoopFromTheCaddyOfAnother', () => {
 })
 
 test('leaves_ofOneTea_areRefusedByAVesselHoldingLeavesOfAnother', () => {
-  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 1 })
@@ -265,7 +265,7 @@ test('leaves_ofOneTea_areRefusedByAVesselHoldingLeavesOfAnother', () => {
 })
 
 test('spoon_dippedIntoAVesselTheRoomKeepsNoTeaIn_scoopsNothing', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.tipASpoonOfLeavesInto('cup1')
 
   const events = ritual.do({ type: 'scoopTea', caddyId: 'cup1', depth: 1 })
@@ -274,7 +274,7 @@ test('spoon_dippedIntoAVesselTheRoomKeepsNoTeaIn_scoopsNothing', () => {
 })
 
 function ritualWithTeaSteepingAt(waterC: number): TestRitual {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0.05 }))
+  const ritual = new TestRitual(testCatalog({ cup: 0.05 }))
   ritual.heatKettleTo(waterC)
   ritual.addLeavesToKettle(5)
   return ritual

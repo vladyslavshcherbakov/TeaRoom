@@ -3,7 +3,7 @@ import test from 'node:test'
 import { TestRitual } from '../Support/TestRitual.ts'
 
 test('refusedCommand_isLoggedWithItsReasonAndTheValueThatDecidedIt', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
@@ -15,7 +15,7 @@ test('refusedCommand_isLoggedWithItsReasonAndTheValueThatDecidedIt', () => {
 })
 
 test('heaterSwitchOff_isLoggedWithTheTemperatureOfTheWaterOnIt', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(14)
@@ -29,7 +29,7 @@ test('heaterSwitchOff_isLoggedWithTheTemperatureOfTheWaterOnIt', () => {
 })
 
 test('logLine_startsWithTheSimulatedTimeToTheMillisecond', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.wait(2.5)
 
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
@@ -38,7 +38,7 @@ test('logLine_startsWithTheSimulatedTimeToTheMillisecond', () => {
 })
 
 test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
 
   ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0.5, missedStreamLandsAt: null })
@@ -48,7 +48,7 @@ test('pourTilt_isLoggedOnlyAtDebugLevel', () => {
 })
 
 test('worldReport_whileTheKettleHeats_logsItsWaterAndHowFastItWarms', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -61,7 +61,7 @@ test('worldReport_whileTheKettleHeats_logsItsWaterAndHowFastItWarms', () => {
 })
 
 test('worldReport_whileTheTapWashesLeavesOutOfAFullKettle_logsHowFastTheLeavesGo', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.addLeavesToKettle(5)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
@@ -77,7 +77,7 @@ test('worldReport_whileTheTapWashesLeavesOutOfAFullKettle_logsHowFastTheLeavesGo
 })
 
 test('worldReport_ofARoomWhereNothingChanges_saysTheRoomIsStill', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   ritual.wait(6)
 

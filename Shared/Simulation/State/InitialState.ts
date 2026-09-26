@@ -7,11 +7,9 @@ import type { ClothState, FigurineState, SessionState, VesselState } from './Ses
 export function initialSessionState(catalog: Catalog, roomId: string): SessionState {
   const room = definitionIn(catalog, 'rooms', roomId)
   return {
-    phase: 'settingUp',
     elapsedSeconds: 0,
     roomId,
     atmosphere: { timeOfDay: firstOf(room.timesOfDay, room), shareThroughTheTimeOfDay: 0, weather: firstOf(room.weathers, room) },
-    teaId: null,
     keeper: { placeId: room.keeperStartsAt, hands: [null, null, null], hasAMiddleHand: false },
     vessels: vesselsInTheRoom(room),
     heater: {

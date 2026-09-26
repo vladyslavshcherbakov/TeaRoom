@@ -25,7 +25,6 @@ export function simulateStep(state: SessionState, seconds: number, catalog: Cata
 }
 
 export function stepTheWorld(draft: Draft, seconds: number): void {
-  if (draft.state.phase === 'ended') return
   coolVessels(draft, seconds)
   letTheThermostatDecide(draft)
   heatWhatSitsOnTheWorkingHeater(draft, seconds)

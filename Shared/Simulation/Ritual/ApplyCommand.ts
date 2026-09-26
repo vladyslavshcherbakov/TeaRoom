@@ -4,25 +4,19 @@ import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { soakUpThePuddle, wipeTable } from './CleanupCommands.ts'
 import type { Command } from './Command.ts'
-import { noteDetail, outcomeOf, refuse, startDraft, type Draft, type Outcome } from './Draft.ts'
+import { noteDetail, outcomeOf, startDraft, type Draft, type Outcome } from './Draft.ts'
 import { pickUp, pickUpWithAMiddleHand, putDown, standAt } from './KeeperCommands.ts'
 import { placeOnHeater, setTheThermostat, startTheThermostat, stopTheThermostat, switchHeaterOff, switchHeaterOn } from './HeatingCommands.ts'
 import { scoopTea, tipSpoonInto } from './LeavesCommands.ts'
 import { moveVesselLid } from './LidCommands.ts'
-import { refusalInPhase } from './PhaseRules.ts'
 import { adjustPour, startPouring, stopPouring } from './PouringCommands.ts'
 import { offerCup, tasteCup } from './ServingCommands.ts'
 import { putInTheSink, turnTheTapOff, turnTheTapOn } from './SinkCommands.ts'
-import { beginRitual, chooseAtmosphere, finishRitual, leaveRoom } from './SessionCommands.ts'
+import { chooseAtmosphere } from './SessionCommands.ts'
 
 export function applyCommand(state: SessionState, command: Command, catalog: Catalog): Outcome {
   const draft = startDraft(state, catalog)
-  noteDetail(draft, `received ${JSON.stringify(command)} in phase ${state.phase}`)
-  const phaseRefusal = refusalInPhase(state.phase, command.type)
-  if (phaseRefusal !== null) {
-    refuse(draft, command, phaseRefusal)
-    return outcomeOf(draft)
-  }
+  noteDetail(draft, `received ${JSON.stringify(command)}`)
   carryOut(draft, command)
   startOrEndBrews(draft)
   return outcomeOf(draft)
@@ -30,8 +24,6 @@ export function applyCommand(state: SessionState, command: Command, catalog: Cat
 
 function carryOut(draft: Draft, command: Command): void {
   switch (command.type) {
-    case 'beginRitual':
-      return beginRitual(draft, command)
     case 'chooseAtmosphere':
       return chooseAtmosphere(draft, command)
     case 'standAt':
@@ -83,9 +75,5 @@ function carryOut(draft: Draft, command: Command): void {
       return soakUpThePuddle(draft, command)
     case 'fillWithBoilingWater':
       return fillWithBoilingWater(draft, command)
-    case 'finishRitual':
-      return finishRitual(draft)
-    case 'leaveRoom':
-      return leaveRoom(draft)
   }
 }

@@ -42,7 +42,7 @@ test('cloth_whenItWipesTheTable_takesInTheWaterItWipedUp', () => {
 })
 
 test('cloth_whenItWipesMoreThanItHolds_stopsAtItsCapacityAndLeavesTheRestOnTheTable', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', null, 5, fullFlowTiltDegrees)
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   const wetMlBeforeWiping = wetMlOnEveryPlace(ritual.state)
@@ -64,7 +64,7 @@ test('table_withTheClothLyingOnIt_isNotWiped', () => {
 })
 
 test('cloth_whenWipingWhereNothingIsSpilled_isRefused', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'table' })
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'standAt', placeId: 'counter' })
@@ -75,7 +75,7 @@ test('cloth_whenWipingWhereNothingIsSpilled_isRefused', () => {
 })
 
 test('puddleOnTheCounter_whenWipedThere_shrinks', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'table' })
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'standAt', placeId: 'counter' })
@@ -89,7 +89,7 @@ test('puddleOnTheCounter_whenWipedThere_shrinks', () => {
 })
 
 test('secondCloth_whenItWipesTheTable_takesTheWaterWhileTheFirstStaysDry', () => {
-  const ritual = TestRitual.begun(withASecondCloth(testCatalog()))
+  const ritual = new TestRitual(withASecondCloth(testCatalog()))
   ritual.pour('kettle', null, 2.5)
   ritual.do({ type: 'pickUp', itemId: 'cloth2' })
 
@@ -100,7 +100,7 @@ test('secondCloth_whenItWipesTheTable_takesTheWaterWhileTheFirstStaysDry', () =>
 })
 
 test('wipe_withAClothLyingOnTheTable_isRefusedAsNotInHand', () => {
-  const ritual = TestRitual.begun(withASecondCloth(testCatalog()))
+  const ritual = new TestRitual(withASecondCloth(testCatalog()))
   ritual.pour('kettle', null, 2.5)
   ritual.do({ type: 'pickUp', itemId: 'cloth2' })
 
@@ -110,7 +110,7 @@ test('wipe_withAClothLyingOnTheTable_isRefusedAsNotInHand', () => {
 })
 
 test('puddle_ofWaterAtNinetyDegrees_driesFasterThanOneAtRoomTemperature', () => {
-  const hot = TestRitual.begun()
+  const hot = new TestRitual()
   hot.heatKettleTo(90)
   hot.pour('kettle', null, 2.5)
   const cold = ritualWithSpillOnTheTable()
@@ -124,7 +124,7 @@ test('puddle_ofWaterAtNinetyDegrees_driesFasterThanOneAtRoomTemperature', () => 
 })
 
 test('puddle_ofHotWater_coolsToTheRoomWithinThreeMinutes', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(90)
   ritual.pour('kettle', null, 2.5)
 
@@ -135,7 +135,7 @@ test('puddle_ofHotWater_coolsToTheRoomWithinThreeMinutes', () => {
 })
 
 function ritualWithSpillOnTheTable(): TestRitual {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', null, 2.5)
   return ritual
 }

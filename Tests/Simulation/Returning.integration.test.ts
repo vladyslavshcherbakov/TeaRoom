@@ -5,7 +5,7 @@ import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('kettle_whenTheKeeperIsAwayAnHour_coolsToTheRoom', () => {
   const coolingCatalog = testCatalog({ kettle: 0.01 })
-  const ritual = TestRitual.begun(coolingCatalog)
+  const ritual = new TestRitual(coolingCatalog)
   ritual.heatKettleTo(90)
 
   const { ritual: returned } = ritual.leaveAndReturnAfter(3600, coolingCatalog)
@@ -14,7 +14,7 @@ test('kettle_whenTheKeeperIsAwayAnHour_coolsToTheRoom', () => {
 })
 
 test('kettle_leftOnTheWorkingHeaterForAnHour_boilsDry', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -24,7 +24,7 @@ test('kettle_leftOnTheWorkingHeaterForAnHour_boilsDry', () => {
 })
 
 test('leavesInTheKettle_whenTheKeeperIsAwayTenMinutes_steepTenMinutesLonger', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   const steepedSecondsBefore = ritual.vessel('kettle').leaves?.steepedSeconds ?? 0
@@ -35,7 +35,7 @@ test('leavesInTheKettle_whenTheKeeperIsAwayTenMinutes_steepTenMinutesLonger', ()
 })
 
 test('absence_longerThanTwelveHours_livesOnlyTheFirstTwelveHours', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   const elapsedSecondsBefore = ritual.state.elapsedSeconds
 
   const { ritual: returned } = ritual.leaveAndReturnAfter(100_000)
@@ -44,7 +44,7 @@ test('absence_longerThanTwelveHours_livesOnlyTheFirstTwelveHours', () => {
 })
 
 test('pour_whenTheKeeperLeftInTheMiddleOfIt_stopsOnReturnWithoutPouringWhileAway', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
   ritual.do({ type: 'adjustPour', tiltDegrees: 45, streamOnTargetFraction: 1, missedStreamLandsAt: null })
@@ -59,7 +59,7 @@ test('pour_whenTheKeeperLeftInTheMiddleOfIt_stopsOnReturnWithoutPouringWhileAway
 })
 
 test('spoon_whenItCrumbledBeforeTheAbsence_waitsAtItsPlaceAgainAndIsAnnounced', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
   ritual.do({ type: 'switchHeaterOn' })
@@ -73,7 +73,7 @@ test('spoon_whenItCrumbledBeforeTheAbsence_waitsAtItsPlaceAgainAndIsAnnounced', 
 })
 
 test('caddy_whenWashedCleanBeforeTheAbsence_isFullAndDryAgainAndIsAnnouncedAsEmpty', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
   ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
   ritual.do({ type: 'turnTheTapOn' })
@@ -89,7 +89,7 @@ test('caddy_whenWashedCleanBeforeTheAbsence_isFullAndDryAgainAndIsAnnouncedAsEmp
 })
 
 test('caddy_holdingTeaBrewedInIt_isPouredOutAndRefilledWhereItStands', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
   ritual.pour('kettle', 'caddy', 5)
@@ -105,7 +105,7 @@ test('caddy_holdingTeaBrewedInIt_isPouredOutAndRefilledWhereItStands', () => {
 
 test('caddies_whenBothWereScoopedFrom_areEachRefilledWithTheirOwnTea', () => {
   const catalog = withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' })
-  const ritual = TestRitual.begun(catalog)
+  const ritual = new TestRitual(catalog)
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
   ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 1 })
@@ -118,7 +118,7 @@ test('caddies_whenBothWereScoopedFrom_areEachRefilledWithTheirOwnTea', () => {
 })
 
 test('return_withTheSpoonHereAndTheCaddyFullAndDry_restocksNothing', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const { events } = ritual.leaveAndReturnAfter(60)
 
@@ -126,7 +126,7 @@ test('return_withTheSpoonHereAndTheCaddyFullAndDry_restocksNothing', () => {
 })
 
 test('timeOfDay_onReturn_movesOnToTheNextTimeOfDayTheRoomOffers', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const { ritual: returned } = ritual.leaveAndReturnAfter(60, testCatalog(), 0.25)
 
@@ -134,7 +134,7 @@ test('timeOfDay_onReturn_movesOnToTheNextTimeOfDayTheRoomOffers', () => {
 })
 
 test('timeOfDay_onReturnAtTheLastTimeOfDayTheRoomOffers_startsTheDayAgainAtDawn', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'chooseAtmosphere', timeOfDay: 'night', shareThroughTheTimeOfDay: 0.5, weather: 'rain' })
 
   const { ritual: returned, events } = ritual.leaveAndReturnAfter(60)

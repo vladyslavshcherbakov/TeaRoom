@@ -128,7 +128,7 @@ test('tap_whenTurnedOffWithTheKettleInTheSink_stopsFillingIt', () => {
 })
 
 test('sink_whenSomethingIsInIt_refusesASecondItem', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'shelf' })
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
   ritual.do({ type: 'standAt', placeId: 'counter' })
@@ -141,7 +141,7 @@ test('sink_whenSomethingIsInIt_refusesASecondItem', () => {
 })
 
 test('caddy_underTheRunningTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'caddy' })
   ritual.do({ type: 'putInTheSink', itemId: 'caddy' })
   ritual.do({ type: 'turnTheTapOn' })
@@ -163,7 +163,7 @@ test('sink_awayFromTheCounter_isRefused', () => {
 })
 
 test('sink_withTheKettleStandingOnTheCounter_isRefusedUntilItIsHeld', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })
 
   const events = ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
@@ -181,7 +181,7 @@ test('kettle_inTheSink_cannotBePouredFrom', () => {
 })
 
 test('sink_inARoomWithoutATap_isRefused', () => {
-  const ritual = TestRitual.begun(catalogWithoutATap())
+  const ritual = new TestRitual(catalogWithoutATap())
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
   const events = ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
@@ -202,7 +202,7 @@ test('teaInABowl_whenTheTapRunsOverItsRim_fadesToPlainWater', () => {
 })
 
 test('leavesInABowl_whenTheTapRunsOverItsRim_areWashedOut', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
 
@@ -214,7 +214,7 @@ test('leavesInABowl_whenTheTapRunsOverItsRim_areWashedOut', () => {
 })
 
 test('leavesInABowl_whileTheTapFillsItBelowTheRim_stayAndFloat', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
 
@@ -237,7 +237,7 @@ test('bowl_whenTakenOutAfterTheTapRanOverItsRim_isPouredEmpty', () => {
 })
 
 test('bowl_whenTakenOutBeforeTheTapRanOverItsRim_keepsItsWater', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
   ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
   ritual.do({ type: 'turnTheTapOn' })
@@ -258,7 +258,7 @@ test('kettle_whenTakenOutAfterTheTapRanOverItsRim_keepsItsWater', () => {
 })
 
 test('kettleOfTea_whenTheTapRunsOverItsRimForLong_comesOutFullOfClearWater', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   ritual.wait(60)
@@ -271,7 +271,7 @@ test('kettleOfTea_whenTheTapRunsOverItsRimForLong_comesOutFullOfClearWater', () 
 })
 
 test('boilingWaterInTheThermos_whenTheTapRunsOverItsRim_coolsToTheTapWater', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.heatKettleTo(100)
   ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.pour('kettle', 'thermos', 10)
@@ -339,7 +339,7 @@ test('tap_whenTurnedOffAfterTheKettleWasTakenOutOfTheSink_saysItRanOntoAnItem', 
 })
 
 function openKettleInHandAtTheCounter(): TestRitual {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
@@ -354,7 +354,7 @@ function catalogWithoutATap(): Catalog {
 }
 
 function cupOfTeaInHand(): TestRitual {
-  const ritual = TestRitual.begun(testCatalog({ cup: 0 }))
+  const ritual = new TestRitual(testCatalog({ cup: 0 }))
   ritual.heatKettleTo(80)
   ritual.addLeavesToKettle(5)
   ritual.wait(60)

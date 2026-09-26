@@ -3,8 +3,6 @@ import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { Leaves } from '../Physics/Brewing.ts'
 import type { Liquid } from '../Physics/Liquid.ts'
 
-export type Phase = 'settingUp' | 'ritual' | 'resting' | 'ended'
-
 export type HandIndex = 0 | 1 | 2
 
 export type ItemLocation = { kind: 'onSurface'; spot: Spot } | { kind: 'inHand'; handIndex: HandIndex } | { kind: 'gone' }
@@ -104,11 +102,9 @@ export type PuddleState = {
 }
 
 export type SessionState = {
-  phase: Phase
   elapsedSeconds: number
   roomId: string
   atmosphere: Atmosphere
-  teaId: string | null
   keeper: KeeperState
   vessels: Record<string, VesselState>
   heater: HeaterState

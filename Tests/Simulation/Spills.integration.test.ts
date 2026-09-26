@@ -15,7 +15,7 @@ test('table_whenLeftAlone_driesByItself', () => {
 })
 
 test('spill_whilePouringAtTheCounter_wetsTheCounterAndNotTheTeaTable', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'counter' })
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
@@ -26,7 +26,7 @@ test('spill_whilePouringAtTheCounter_wetsTheCounterAndNotTheTeaTable', () => {
 })
 
 test('spill_besideACupOnTheCounter_liesAroundThatCup', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   ritual.do({ type: 'standAt', placeId: 'shelf' })
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
   ritual.do({ type: 'standAt', placeId: 'counter' })
@@ -39,7 +39,7 @@ test('spill_besideACupOnTheCounter_liesAroundThatCup', () => {
 })
 
 test('spill_ofAStreamThatMissesTheCup_liesWhereTheStreamFalls', () => {
-  const ritual = TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  const ritual = new TestRitual(testHouseCatalog(), 'testHouse')
   const whereTheStreamFalls = { placeId: 'counter', x: 3, y: 0, z: 0.5 }
   ritual.do({ type: 'standAt', placeId: 'shelf' })
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
@@ -56,7 +56,7 @@ test('spill_ofAStreamThatMissesTheCup_liesWhereTheStreamFalls', () => {
 })
 
 function ritualWithSpillOnTheTable(): TestRitual {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', null, 2.5)
   return ritual
 }

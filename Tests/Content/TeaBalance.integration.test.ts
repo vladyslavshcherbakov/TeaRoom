@@ -35,7 +35,7 @@ function quietRoomWithItsCaddyOf(teaId: string): Catalog {
 
 for (const tea of Object.values(defaultCatalog.teas)) {
   test(`${tea.id}_whenBrewedByTheBookInTheQuietRoom_tastesBalancedAndSoft`, () => {
-    const ritual = TestRitual.begun(quietRoomWithItsCaddyOf(tea.id), tea.id, 'quietRoom')
+    const ritual = new TestRitual(quietRoomWithItsCaddyOf(tea.id), 'quietRoom')
     bringTheBowlAndTheCaddyToTheTeaTable(ritual)
     fillBoilAndBringTheKettleToTheTeaTable(ritual, tea.water.idealC)
     ritual.addLeavesToKettle((tea.steeping.idealGramsPer100Ml * ritual.vessel('kettle').liquid.volumeMl) / 100)

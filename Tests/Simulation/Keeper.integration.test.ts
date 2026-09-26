@@ -196,7 +196,7 @@ test('caddy_whenPickedUpOpen_isClosed', () => {
 })
 
 test('middleHand_withBothHandsFull_growsAndTakesTheItem', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'pickUp', itemId: 'thermos' })
 
@@ -208,7 +208,7 @@ test('middleHand_withBothHandsFull_growsAndTakesTheItem', () => {
 })
 
 test('middleHand_whenAHandIsStillFree_doesNotGrow', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
   const events = ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
@@ -218,7 +218,7 @@ test('middleHand_whenAHandIsStillFree_doesNotGrow', () => {
 })
 
 test('middleHand_whenItsItemIsPutDown_vanishesAndTakesNothingMore', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'pickUp', itemId: 'thermos' })
   ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
@@ -231,7 +231,7 @@ test('middleHand_whenItsItemIsPutDown_vanishesAndTakesNothingMore', () => {
 })
 
 test('middleHand_forAThermosTooHotToTake_doesNotGrow', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
@@ -258,5 +258,5 @@ test('middleHand_forAnItemOutOfReach_isRefusedAsTheMiddleHandTakeAndDoesNotGrow'
 })
 
 function houseRitual(): TestRitual {
-  return TestRitual.begun(testHouseCatalog(), 'testGreen', 'testHouse')
+  return new TestRitual(testHouseCatalog(), 'testHouse')
 }

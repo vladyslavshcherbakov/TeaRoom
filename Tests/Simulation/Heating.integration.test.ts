@@ -29,7 +29,7 @@ test('heater_whenSwitchedOffAfterTheKettleWasTakenOffAndTheSpoonPutOn_namesBothW
 })
 
 test('heater_whenSwitchedOffEmpty_saysItHeatedNothingAndTheKeeperSwitchedItOff', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(10)
 
@@ -37,16 +37,6 @@ test('heater_whenSwitchedOffEmpty_saysItHeatedNothingAndTheKeeperSwitchedItOff',
 
   const [switchedOff] = eventsOfType(events, 'heaterSwitchedOff')
   assert.deepEqual(switchedOff?.secondsHeatedByItemId, {})
-  assert.equal(switchedOff?.wasSwitchedOffByTheKeeper, true)
-})
-
-test('heater_whenTheRitualFinishesWhileItWorks_saysTheKeeperDidNotSwitchItOff', () => {
-  const ritual = TestRitual.begun()
-  ritual.do({ type: 'switchHeaterOn' })
-
-  const events = ritual.do({ type: 'finishRitual' })
-
-  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, false)
 })
 
 test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
@@ -97,7 +87,7 @@ test('heater_whenSwitchedOffAfterHeatingOnlyTheKettle_hasWastedNothing', () => {
 })
 
 test('heater_whenSwitchedOffAfterTwoMinutesWithNothingOnIt_hasWastedATenthOfAKilowattHour', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(120)
 
@@ -146,7 +136,7 @@ test('kettle_whenLiftedOffAWorkingHeater_isTakenOffAndStopsWarming', () => {
 })
 
 test('kettleWater_whenOffTheHeater_coolsButStaysAboveTheRoom', () => {
-  const ritual = TestRitual.begun(testCatalog({ kettle: 0.01 }))
+  const ritual = new TestRitual(testCatalog({ kettle: 0.01 }))
   ritual.heatKettleTo(80)
   const temperatureWhenLiftedC = ritual.vessel('kettle').liquid.temperatureC
 
@@ -158,7 +148,7 @@ test('kettleWater_whenOffTheHeater_coolsButStaysAboveTheRoom', () => {
 })
 
 test('cup_whenPlacedOnTheHeater_isRefused', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
 
   const events = ritual.do({ type: 'placeOnHeater', itemId: 'cup1' })
 
@@ -166,7 +156,7 @@ test('cup_whenPlacedOnTheHeater_isRefused', () => {
 })
 
 test('cloth_onAWorkingHeater_charsThroughInAMinute', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -176,7 +166,7 @@ test('cloth_onAWorkingHeater_charsThroughInAMinute', () => {
 })
 
 test('cloth_wetOnAWorkingHeater_steamsDryBeforeItChars', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.pour('kettle', null, 2.5)
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
@@ -189,7 +179,7 @@ test('cloth_wetOnAWorkingHeater_steamsDryBeforeItChars', () => {
 })
 
 test('cloth_whenTakenOffTheHeater_saysHowCharredItIs', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
@@ -200,7 +190,7 @@ test('cloth_whenTakenOffTheHeater_saysHowCharredItIs', () => {
 })
 
 test('cloth_onAHeaterThatIsOff_doesNotChar', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
 
   ritual.wait(30)
@@ -209,7 +199,7 @@ test('cloth_onAHeaterThatIsOff_doesNotChar', () => {
 })
 
 test('charredCloth_whenWashedUnderTheTap_isAsGoodAsNew', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(60)
@@ -224,7 +214,7 @@ test('charredCloth_whenWashedUnderTheTap_isAsGoodAsNew', () => {
 })
 
 test('washedBurntCloth_whenTakenOutOfTheSink_isNoticedAsNew', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(10)
@@ -240,7 +230,7 @@ test('washedBurntCloth_whenTakenOutOfTheSink_isNoticedAsNew', () => {
 })
 
 test('clothThatNeverBurnt_whenTakenOutOfTheSink_isNotRemarkedOn', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })
   ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
   ritual.wait(5)
@@ -259,7 +249,7 @@ test('spoon_onAWorkingHeater_charsThroughInTwentySeconds', () => {
 })
 
 test('spoon_onAHeaterThatIsOff_doesNotChar', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
 
   ritual.wait(30)
@@ -279,7 +269,7 @@ test('spoon_whenTakenBeforeItBurns_isSavedButStaysCharred', () => {
 })
 
 test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
   ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
@@ -328,8 +318,8 @@ test('spoon_afterItCrumbled_cannotBePutDown', () => {
 
 test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
   const catalog = testCatalog({ kettle: 0.01, cup: 0.02 })
-  const at30 = ritualWithKettleOnWorkingHeater(TestRitual.begun(catalog))
-  const at60 = ritualWithKettleOnWorkingHeater(TestRitual.begun(catalog))
+  const at30 = ritualWithKettleOnWorkingHeater(new TestRitual(catalog))
+  const at60 = ritualWithKettleOnWorkingHeater(new TestRitual(catalog))
 
   for (const [ritual, framesPerSecond] of [[at30, 30], [at60, 60]] as const) {
     for (let frame = 0; frame < 12 * framesPerSecond; frame += 1) ritual.wait(1 / framesPerSecond)
@@ -343,7 +333,7 @@ test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
 })
 
 test('kettleWater_whenCoolingWhileOnAWorkingHeater_stillReachesBoiling', () => {
-  const ritual = ritualWithKettleOnWorkingHeater(TestRitual.begun(testCatalog({ kettle: 0.01 })))
+  const ritual = ritualWithKettleOnWorkingHeater(new TestRitual(testCatalog({ kettle: 0.01 })))
 
   ritual.wait(120)
 
@@ -351,7 +341,7 @@ test('kettleWater_whenCoolingWhileOnAWorkingHeater_stillReachesBoiling', () => {
 })
 
 test('water_boilingOnAWorkingHeater_boilsAwayAtTheHeatersRate', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(200)
@@ -374,7 +364,7 @@ test('water_liftedOffTheHeaterAtTheBoil_stopsBoilingAway', () => {
 })
 
 test('water_belowTheBoil_doesNotBoilAway', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -384,7 +374,7 @@ test('water_belowTheBoil_doesNotBoilAway', () => {
 })
 
 test('thermos_afterHalfAMinuteOnAWorkingHeater_isTooHotToPickUp', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
@@ -396,7 +386,7 @@ test('thermos_afterHalfAMinuteOnAWorkingHeater_isTooHotToPickUp', () => {
 })
 
 test('thermos_afterTenSecondsOnAWorkingHeater_canStillBePickedUp', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(10)
@@ -407,7 +397,7 @@ test('thermos_afterTenSecondsOnAWorkingHeater_canStillBePickedUp', () => {
 })
 
 test('thermosLid_whenTheThermosIsRedHot_staysClosed', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
@@ -419,7 +409,7 @@ test('thermosLid_whenTheThermosIsRedHot_staysClosed', () => {
 })
 
 test('thermosLid_whenOpenAsTheThermosTurnsRedHot_staysOpen', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
@@ -432,7 +422,7 @@ test('thermosLid_whenOpenAsTheThermosTurnsRedHot_staysOpen', () => {
 })
 
 test('thermos_aMinuteAfterTheHeaterIsSwitchedOff_canBePickedUpAgain', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
@@ -445,7 +435,7 @@ test('thermos_aMinuteAfterTheHeaterIsSwitchedOff_canBePickedUpAgain', () => {
 })
 
 test('thermos_onAHeaterThatIsOff_staysCoolAndCanBePickedUp', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.wait(30)
 
@@ -456,7 +446,7 @@ test('thermos_onAHeaterThatIsOff_staysCoolAndCanBePickedUp', () => {
 })
 
 test('thermos_onAWorkingHeater_announcesOnceThatItsMetalGlowsTooHotToHold', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -466,7 +456,7 @@ test('thermos_onAWorkingHeater_announcesOnceThatItsMetalGlowsTooHotToHold', () =
 })
 
 test('kettle_leftOnAWorkingHeaterUntilItsWaterIsGone_announcesOnceThatItBoiledDry', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -479,7 +469,7 @@ test('kettle_boilingAwayInStepsThatDoNotDivideItsWaterEvenly_stillBoilsDryAndSay
   const catalog = testCatalog()
   const heater = catalog.heaters['testHeater']
   if (heater === undefined) throw new Error('the test catalog lost its heater')
-  const ritual = TestRitual.begun({ ...catalog, heaters: { testHeater: { ...heater, boilingAwayMlPerSecond: 8 } } })
+  const ritual = new TestRitual({ ...catalog, heaters: { testHeater: { ...heater, boilingAwayMlPerSecond: 8 } } })
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -490,7 +480,7 @@ test('kettle_boilingAwayInStepsThatDoNotDivideItsWaterEvenly_stillBoilsDryAndSay
 })
 
 test('kettle_filledToTheBrimAndLeftToBoilDry_saysAllItsWaterBoiledAway', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
   ritual.fillInTheSink('kettle', 10)
@@ -503,7 +493,7 @@ test('kettle_filledToTheBrimAndLeftToBoilDry_saysAllItsWaterBoiledAway', () => {
 })
 
 test('kettle_filledToTheBrimThenPouredFromAndLeftToBoilDry_saysSomeWaterWasTaken', () => {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
   ritual.fillInTheSink('kettle', 10)
@@ -517,7 +507,7 @@ test('kettle_filledToTheBrimThenPouredFromAndLeftToBoilDry_saysSomeWaterWasTaken
 })
 
 test('secondCloth_onAWorkingHeater_charsWhileTheFirstStaysWhole', () => {
-  const ritual = TestRitual.begun(withASecondCloth(testCatalog()))
+  const ritual = new TestRitual(withASecondCloth(testCatalog()))
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth2' })
   ritual.do({ type: 'switchHeaterOn' })
 
@@ -528,7 +518,7 @@ test('secondCloth_onAWorkingHeater_charsWhileTheFirstStaysWhole', () => {
 })
 
 test('secondCloth_takenOffTheHeaterBurning_isNamedInTheEvent', () => {
-  const ritual = TestRitual.begun(withASecondCloth(testCatalog()))
+  const ritual = new TestRitual(withASecondCloth(testCatalog()))
   ritual.do({ type: 'placeOnHeater', itemId: 'cloth2' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
@@ -538,7 +528,7 @@ test('secondCloth_takenOffTheHeaterBurning_isNamedInTheEvent', () => {
   assert.deepEqual(eventsOfType(events, 'clothTakenOffTheHeater').map((event) => event.clothId), ['cloth2'])
 })
 
-function ritualWithKettleOnWorkingHeater(ritual = TestRitual.begun()): TestRitual {
+function ritualWithKettleOnWorkingHeater(ritual = new TestRitual()): TestRitual {
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
   ritual.do({ type: 'switchHeaterOn' })
   return ritual
@@ -552,7 +542,7 @@ function ritualWithACrumbledSpoon(): TestRitual {
 }
 
 function ritualWithTheSpoonOnAWorkingHeater(): TestRitual {
-  const ritual = TestRitual.begun()
+  const ritual = new TestRitual()
   ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
   ritual.do({ type: 'switchHeaterOn' })
   return ritual
