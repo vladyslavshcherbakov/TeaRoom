@@ -35,12 +35,12 @@ test('sip_atNinetyThreeDegrees_isNoLongerTooHot', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.temperature, 'pleasant')
 })
 
-test('sip_takesTwentyMillilitresFromTheCup', () => {
+test('sip_takesFortyMillilitresFromTheCup', () => {
   const ritual = ritualWithTeaInCups(60)
 
   ritual.do({ type: 'tasteCup', cupId: 'cup1' })
 
-  assertNear(ritual.vessel('cup1').liquid.volumeMl, 70)
+  assertNear(ritual.vessel('cup1').liquid.volumeMl, 50)
 })
 
 test('tasting_anEmptyCup_isRefused', () => {
@@ -141,6 +141,6 @@ function ritualWithTeaInCups(steepSeconds: number, cupIds = ['cup1', 'cup2']): T
 function ritualWithTeaBoiledAgainInCup1(): TestRitual {
   const ritual = ritualWithTeaInCups(60, [])
   ritual.heatKettleTo(100)
-  ritual.pour('kettle', 'cup1', 3)
+  ritual.pour('kettle', 'cup1', 9)
   return ritual
 }

@@ -71,7 +71,7 @@ Tea poured out of the brewing vessel stops changing, apart from cooling. When th
 
 ## Tasting
 
-A sip takes 20 ml, and it says whether the bowl held leaves. The verdict has four parts.
+A sip takes 40 ml, so a full tea bowl is drunk in three sips, and it says whether the bowl held leaves. The verdict has four parts.
 
 | Part | Values |
 |---|---|

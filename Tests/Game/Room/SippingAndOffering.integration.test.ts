@@ -24,7 +24,7 @@ test('sipButton_whenTheChosenBowlIsEmpty_isNotOffered', () => {
   assert.equal(room.play.sippableCupId, null)
 })
 
-test('sip_fromTheChosenBowlOfTea_takesTwentyMillilitres', () => {
+test('sip_fromTheChosenBowlOfTea_takesFortyMillilitres', () => {
   const room = new TestRoom()
   setTheTeaTable(room)
   room.ritual.pour('kettle', 'bowl1', 4)
@@ -34,7 +34,7 @@ test('sip_fromTheChosenBowlOfTea_takesTwentyMillilitres', () => {
 
   room.play.sipTapped()
 
-  assertNear(room.state.vessels['bowl1']?.liquid.volumeMl ?? 0, volumeBeforeTheSip - 20)
+  assertNear(room.state.vessels['bowl1']?.liquid.volumeMl ?? 0, volumeBeforeTheSip - 40)
 })
 
 test('sipGesture_rightAfterASip_stillShowsTheSipInTheBowlAtTheHand', () => {
@@ -45,7 +45,7 @@ test('sipGesture_rightAfterASip_stillShowsTheSipInTheBowlAtTheHand', () => {
 
   assert.equal(room.play.sipGestureView?.cupId, 'bowl1')
   assert.equal(room.play.sipGestureView?.liftShare, 0)
-  assertNear(room.play.sipGestureView?.fillShareNotYetSipped ?? 0, 20 / 120)
+  assertNear(room.play.sipGestureView?.fillShareNotYetSipped ?? 0, 40 / 120)
 })
 
 test('sipGesture_halfwayThroughTheDrink_holdsTheBowlAtTheLipsWithHalfTheSipLeft', () => {
@@ -56,7 +56,7 @@ test('sipGesture_halfwayThroughTheDrink_holdsTheBowlAtTheLipsWithHalfTheSipLeft'
   room.advance(0.75)
 
   assertNear(room.play.sipGestureView?.liftShare ?? 0, 1)
-  assertNear(room.play.sipGestureView?.fillShareNotYetSipped ?? 0, 10 / 120)
+  assertNear(room.play.sipGestureView?.fillShareNotYetSipped ?? 0, 20 / 120)
 })
 
 test('sipGesture_afterOneAndAHalfSeconds_isOver', () => {
@@ -108,7 +108,7 @@ test('keeper_whenSippingColdTapWaterStraightFromTheCaddy_lives', () => {
   room.play.sipTapped()
 
   assert.equal(room.deathsSeen, 0)
-  assertNear(mlBeforeTheSip - (room.state.vessels['caddy']?.liquid.volumeMl ?? 0), 20)
+  assertNear(mlBeforeTheSip - (room.state.vessels['caddy']?.liquid.volumeMl ?? 0), 40)
 })
 
 function holdABowlOfTea(room: TestRoom): void {

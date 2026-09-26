@@ -16,7 +16,7 @@ import {
 import { caddyItemId, isKeeperAt, isWithinReach, ritualPlaceOf, whereTheKeeperStands } from './Reach.ts'
 import type { RefusalReason } from './RitualEvent.ts'
 
-const sipMl = 20
+const sipMl = 40
 
 export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void {
   const cup = draft.state.vessels[command.cupId]
