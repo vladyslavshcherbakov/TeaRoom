@@ -30,13 +30,13 @@ type Wave = {
 
 const lidLyingOnTheSurfaceMetres = 0.015
 const openLidSwungPastUprightRadians = (105 * Math.PI) / 180
-const steamRiseMetresPerSecond = 0.12
-const steamColumnMetres = 0.18
+const steamRiseMetresPerSecond = 0.2
+const steamColumnMetres = 0.12
 const steamStartsAboveTheOpeningMetres = 0.04
 const steamStartsAboveTheSpoutMetres = 0.02
 const smallestPuffScale = 0.6
 const sipPuffCrossingsPerSecond = 0.38
-const sipPuffFadesOverShareOfItsWay = 0.3
+const steamAppearsOverShareOfItsRise = 0.12
 const leftBehindPuffFadesInSeconds = 0.8
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
@@ -121,7 +121,6 @@ function showSipSteam(model: CarriedModel, sipPuffCount: number, timeSeconds: nu
       releaseThePuff(model, puff, trail, opening, steamRisingTo(opening, toTheEyes), reachMetres, model.steamLook.drawnToTheEyes, whereTheVesselIs)
     }
     showThePuff(model, puff, trail, rise, timeSeconds, whereTheVesselIs)
-    trail.material.opacity *= Math.min(1, (1 - rise) / sipPuffFadesOverShareOfItsWay)
   })
   if (toTheEyes === null && model.sipPuffTrails.every((trail) => !trail.isOut)) model.sipSteamStartedAtSeconds = null
 }
@@ -142,10 +141,14 @@ function showThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail, ri
   if (trail.leftBehindAtSeconds === null && trail.whereTheVesselWas !== whereTheVesselIs) trail.leftBehindAtSeconds = timeSeconds
   const shareLeft = trail.leftBehindAtSeconds === null ? 1 : Math.max(0, 1 - (timeSeconds - trail.leftBehindAtSeconds) / leftBehindPuffFadesInSeconds)
   trail.lastRise = rise
-  trail.material.opacity = trail.opacity * shareLeft
+  trail.material.opacity = trail.opacity * shareLeft * shareOfSteamLeftAt(rise)
   puff.visible = shareLeft > 0
   puff.position.copy(trail.origin).addScaledVector(trail.direction, rise * trail.reachMetres)
   puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare * trail.size)
+}
+
+export function shareOfSteamLeftAt(rise: number): number {
+  return Math.min(1, rise / steamAppearsOverShareOfItsRise) * (1 - rise) ** 2
 }
 
 function hideThePuff(puff: THREE.Mesh, trail: PuffTrail | undefined): void {

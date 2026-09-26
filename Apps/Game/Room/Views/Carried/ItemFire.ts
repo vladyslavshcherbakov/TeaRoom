@@ -4,12 +4,14 @@ import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedModel } from './CarriedModel.ts'
 import type { FireLook } from './CarriedShapeLook.ts'
 import type { CharTo } from './ItemParts.ts'
+import { shareOfSteamLeftAt } from './ItemContents.ts'
 
 const puffCount = 5
 const puffRadiusMetres = 0.022
 const steamRiseMetresPerSecond = 0.16
 const smokeRiseMetresPerSecond = 0.07
-const columnMetres = 0.26
+const smokeColumnMetres = 0.26
+const steamColumnMetres = 0.14
 const smallestPuffScale = 0.5
 const smokeDriftMetres = 0.03
 const flameRadiusMetres = 0.012
@@ -32,6 +34,7 @@ export class ItemFire {
   private readonly charTo: CharTo
   private readonly steam: THREE.Material
   private readonly smoke: THREE.Material
+  private readonly steamOfEachPuff: readonly THREE.Material[]
   private readonly puffs: readonly THREE.Mesh[]
   private readonly flame = new THREE.Group()
   private readonly embers: readonly THREE.Mesh[]
@@ -44,6 +47,7 @@ export class ItemFire {
     this.charTo = charTo
     this.steam = materials.materialFor('steam')
     this.smoke = materials.materialFor('smoke')
+    this.steamOfEachPuff = Array.from({ length: puffCount }, () => this.steam.clone())
     this.puffs = Array.from({ length: puffCount }, () => new THREE.Mesh(new THREE.SphereGeometry(puffRadiusMetres, 8, 6), this.smoke))
     const outerFlame = new THREE.Mesh(new THREE.ConeGeometry(flameRadiusMetres, flameHeightMetres, 10), materials.materialFor('flame'))
     const flameCore = new THREE.Mesh(new THREE.ConeGeometry(flameRadiusMetres * flameCoreShare, flameHeightMetres * flameCoreShare, 8), materials.materialFor('flameCore'))
@@ -99,12 +103,19 @@ export class ItemFire {
   private risePuffs(rootOfTheFlame: THREE.Vector3, heating: TableViewState.Heating, timeSeconds: number): void {
     const isSmoke = heating !== 'steaming'
     const risePerSecond = isSmoke ? smokeRiseMetresPerSecond : steamRiseMetresPerSecond
+    const columnMetres = isSmoke ? smokeColumnMetres : steamColumnMetres
     this.puffs.forEach((puff, index) => {
       const rise = (timeSeconds * risePerSecond / columnMetres + index / puffCount) % 1
       const drift = isSmoke ? Math.sin(timeSeconds + index * 1.3) * smokeDriftMetres * rise : 0
-      puff.material = isSmoke ? this.smoke : this.steam
+      puff.material = isSmoke ? this.smoke : this.fadingSteam(index, rise)
       puff.position.set(rootOfTheFlame.x + drift, rootOfTheFlame.y + flameHeightMetres + rise * columnMetres, rootOfTheFlame.z)
       puff.scale.setScalar(smallestPuffScale + rise * (isSmoke ? smokeGrowsFasterThanSteam : 1))
     })
+  }
+
+  private fadingSteam(index: number, rise: number): THREE.Material {
+    const steam = this.steamOfEachPuff[index] ?? this.steam
+    steam.opacity = this.steam.opacity * shareOfSteamLeftAt(rise)
+    return steam
   }
 }
