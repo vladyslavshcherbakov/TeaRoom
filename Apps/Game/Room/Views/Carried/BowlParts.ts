@@ -68,7 +68,6 @@ const bowlLookById: Readonly<Record<TeaBowlId, BowlLook>> = {
   bowl6: { ...plainBowl, glaze: 'emeraldGlaze', liquidTint: '#5fb08a' },
   bowl7: { ...plainBowl, glaze: 'temperGlaze', liquidTint: '#b393cf' },
   bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted', liquidTint: '#ffffff' },
-  bowl9: { ...plainBowl, glaze: 'glass', relief: 'hobnail', isRimGilded: true, liquidTint: '#fff1cc' },
   bowl10: { ...plainBowl, glaze: 'yixingClay', liquidTint: '#a8683f', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
 
