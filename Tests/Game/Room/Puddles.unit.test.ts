@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { furnitureWithId, puddleOutlineOn, quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 
-test('puddleOutline_ofAPuddleSpreadingPastTheTeaTablesEdge_staysOnTheTable', () => {
+test('drawnPuddle_spreadingPastTheTeaTablesEdge_staysOnTheTable', () => {
   const table = furnitureWithId(quietRoomLayout, 'teaTable')
   const byTheEdge = { x: table.footprint.x + table.footprint.width / 2 - 0.05, z: table.footprint.z }
 
@@ -11,7 +11,7 @@ test('puddleOutline_ofAPuddleSpreadingPastTheTeaTablesEdge_staysOnTheTable', () 
   assert.ok(outline.every((point) => point.x <= table.footprint.x + table.footprint.width / 2), 'a point reaches past the edge')
 })
 
-test('puddleOutline_ofAPuddleInTheMiddleOfTheTable_isARoundPuddle', () => {
+test('drawnPuddle_inTheMiddleOfTheTable_isRound', () => {
   const table = furnitureWithId(quietRoomLayout, 'teaTable')
 
   const outline = puddleOutlineOn(quietRoomLayout, 'teaTable', { x: table.footprint.x, z: table.footprint.z }, 0.1, 4)

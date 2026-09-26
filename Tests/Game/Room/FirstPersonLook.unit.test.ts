@@ -30,7 +30,7 @@ test('look_whenTiltedUpForLong_stopsAtItsSteepest', () => {
   assert.equal(look.pitchRadians, 1)
 })
 
-test('firstPersonPose_standsAtTheWalkersEyes', () => {
+test('firstPersonCamera_standsAtTheWalkersEyes', () => {
   const pose = firstPersonPose({ x: 0.5, z: -1 }, { headingRadians: 0, pitchRadians: 0 }, 1.3)
 
   assert.deepEqual(pose.position, { x: 0.5, y: 1.3, z: -1 })

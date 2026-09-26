@@ -176,19 +176,19 @@ test('achievement_whenTheIdleTapIsStillRunning_isNotUnlockedBeforeItIsTurnedOff'
   assert.deepEqual(room.announced, [])
 })
 
-test('achievementsOutOfReach_whenTheRoomOpensWithTheProphecy_areNone', () => {
+test('dimmedAchievements_whenTheRoomOpensWithTheProphecy_areNone', () => {
   const room = new AchievementsInTheRoom()
 
   assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: true })], [])
 })
 
-test('achievementsOutOfReach_inARoomWithoutTheProphecy_includeTheDelphicOracle', () => {
+test('dimmedAchievements_inARoomWithoutTheProphecy_includeTheDelphicOracle', () => {
   const room = new AchievementsInTheRoom()
 
   assert.deepEqual([...achievementsOutOfReach(room.ritual.state, { hasTheProphecy: false })], ['delphicOracle'])
 })
 
-test('achievementsOutOfReach_whenTheCaddyIsWashedOut_includeEveryAchievementThatNeedsLeaves', () => {
+test('dimmedAchievements_whenTheCaddyIsWashedOut_includeEveryAchievementThatNeedsLeaves', () => {
   const room = new AchievementsInTheRoom()
   room.washOutTheCaddy()
 

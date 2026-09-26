@@ -30,7 +30,7 @@ test('keeper_whenStandingUpToWalkFromTheTeaTable_staysWithinReachOfIt', () => {
   assert.equal(room.play.isSeatedAtTheRitualPlace, false)
 })
 
-test('keeper_standingAtTheTeaTable_whenPuttingABowlOnIt_sitsDown', () => {
+test('keeper_whenPuttingABowlOnTheTeaTableWhileStandingThere_sitsDown', () => {
   const room = new TestRoom()
   room.carryFromTheShelf('bowl1')
   room.walkTo('teaTable')

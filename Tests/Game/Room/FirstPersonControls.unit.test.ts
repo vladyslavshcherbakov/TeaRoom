@@ -19,11 +19,11 @@ test('sticks_withTheKeyboardAndTheLookStickOnTheLeft_showOnlyTheLookStickOnTheLe
   assert.deepEqual(sticksShownFor('keyboardAndLookStick', 'lookOnTheLeft'), { left: 'look', right: null })
 })
 
-test('walkFromTheKeys_withWHeld_goesForward', () => {
+test('keyboardWalk_withWHeld_goesForward', () => {
   assert.deepEqual(walkFromTheKeys(new Set(['KeyW'])), { right: 0, up: 1 })
 })
 
-test('walkFromTheKeys_withTheUpAndRightArrowsHeld_goesDiagonallyNoFasterThanStraight', () => {
+test('keyboardWalk_withTheUpAndRightArrowsHeld_goesDiagonallyNoFasterThanStraight', () => {
   const walk = walkFromTheKeys(new Set(['ArrowUp', 'ArrowRight']))
 
   assertNear(walk.right, Math.SQRT1_2)

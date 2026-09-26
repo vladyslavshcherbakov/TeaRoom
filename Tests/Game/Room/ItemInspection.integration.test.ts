@@ -84,7 +84,7 @@ test('pressThatInspects_whenTheFingerLifts_isNotATapAndChoosesNoHand', () => {
   assert.equal(room.play.chosenHandIndex, null)
 })
 
-test('inspection_ofTheChosenHand_whenLeft_leavesThatHandChosen', () => {
+test('inspectionOfTheChosenHand_whenLeft_leavesThatHandChosen', () => {
   const room = new InspectingRoom()
   room.tapOn(onTheFirstHand)
   room.inspect(onTheFirstHand)
@@ -95,7 +95,7 @@ test('inspection_ofTheChosenHand_whenLeft_leavesThatHandChosen', () => {
   assert.equal(room.play.chosenHandIndex, 0)
 })
 
-test('inspection_ofAnUnchosenHand_whenLeft_leavesTheOtherHandChosen', () => {
+test('inspectionOfAnUnchosenHand_whenLeft_leavesTheOtherHandChosen', () => {
   const room = new InspectingRoom()
   room.tapOn(onTheSecondHand)
   room.inspect(onTheFirstHand)

@@ -47,7 +47,7 @@ test('pinch_whenTheFingersCloseToAQuarterOfTheirGap_stopsAtTheFarthestZoom', () 
   assert.equal(distanceShare, 1.6)
 })
 
-test('zoomedPose_atHalfTheDistance_keepsTheTargetAndHalvesTheWayToIt', () => {
+test('zoomedCamera_atHalfTheDistance_keepsTheTargetAndHalvesTheWayToIt', () => {
   const pose = { position: { x: 4, y: 6, z: 8 }, target: { x: 0, y: 2, z: 0 } }
 
   const zoomed = zoomedPose(pose, 0.5)

@@ -2,11 +2,11 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { arrangementOfAnEarlierSave, arrangementOfANewGame, problemWithArrangement } from '../../../Apps/Game/Room/RoomArrangement.ts'
 
-test('arrangementOfANewGame_whenEveryDrawIsTheLowest_takesTheFirstOfEachChoice', () => {
+test('newGameArrangement_whenEveryDrawIsTheLowest_takesTheFirstOfEachChoice', () => {
   assert.deepEqual(arrangementOfANewGame(() => 0), { window: 'inTheBackWall', besideTheWindow: 'kitchen', table: 'byTheWindow', tools: 'onTheTeaTable', cushionColour: 'terracotta', cushionCount: 1, clothPatterns: ['blueStripes'] })
 })
 
-test('arrangementOfANewGame_whenEveryDrawIsTheHighest_takesTheLastOfEachChoice', () => {
+test('newGameArrangement_whenEveryDrawIsTheHighest_takesTheLastOfEachChoice', () => {
   assert.deepEqual(arrangementOfANewGame(() => 0.999), { window: 'alongTheLeftWall', besideTheWindow: 'shelf', table: 'againstTheRightEdge', tools: 'apart', cushionColour: 'softBlue', cushionCount: 2, clothPatterns: ['redCheck', 'redCheck'] })
 })
 
