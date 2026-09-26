@@ -1,13 +1,11 @@
 import { browserStorage, parsedJsonOrNull } from './BrowserStorage.ts'
 import type { FirstPersonLook } from './Camera/FirstPersonLook.ts'
-import { isAKeeperHeight, keeperHeightByDefaultCentimetres } from './Camera/KeeperHeight.ts'
 import { arrangementBeforeRoomsVaried, arrangementOfAnEarlierSave, describeArrangement, problemWithArrangement, type RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 
 export const savedVisitVersion = 1
 
 export type SavedCamera = {
-  readonly keeperHeightCentimetres: number
   readonly look: FirstPersonLook
 }
 
@@ -28,7 +26,7 @@ type VisitMigration = (visit: VisitShape) => { readonly migrated: VisitShape; re
 export type FoundVisit = { readonly kind: 'none' } | { readonly kind: 'found'; readonly visit: SavedVisit } | { readonly kind: 'brokenByAnUpdate' }
 
 const storageKey = 'visit'
-const migrationsOldestFirst: readonly VisitMigration[] = [withItsArrangement, withTheArrangementInTodaysWords, withTheKeeperOfTheHeightByDefault]
+const migrationsOldestFirst: readonly VisitMigration[] = [withItsArrangement, withTheArrangementInTodaysWords, withoutTheKeepersHeight]
 
 export class VisitStore {
   private readonly log: RoomLog
@@ -101,7 +99,6 @@ function problemWith(visit: unknown): string | null {
   const camera = saved.camera as Partial<Record<keyof SavedCamera, unknown>> | undefined
   const look = camera?.look as Partial<Record<keyof FirstPersonLook, unknown>> | undefined
   if (typeof look?.headingRadians !== 'number' || typeof look.pitchRadians !== 'number') return 'its first-person look is missing'
-  if (!isAKeeperHeight(camera?.keeperHeightCentimetres)) return 'its keeper is of a height the game does not have'
   const arrangementProblem = problemWithArrangement(saved.arrangement)
   return arrangementProblem === null ? null : `its room ${arrangementProblem}`
 }
@@ -123,12 +120,13 @@ function withTheArrangementInTodaysWords(visit: VisitShape): ReturnType<VisitMig
   }
 }
 
-function withTheKeeperOfTheHeightByDefault(visit: VisitShape): ReturnType<VisitMigration> {
+function withoutTheKeepersHeight(visit: VisitShape): ReturnType<VisitMigration> {
   const camera = visit['camera']
-  if (!isVisitShape(camera) || camera['keeperHeightCentimetres'] !== undefined) return null
+  if (!isVisitShape(camera) || camera['keeperHeightCentimetres'] === undefined) return null
+  const { keeperHeightCentimetres, ...cameraWithoutTheHeight } = camera
   return {
-    migrated: { ...visit, camera: { ...camera, keeperHeightCentimetres: keeperHeightByDefaultCentimetres } },
-    change: `the saved visit is from before the keeper's height could be chosen, so the keeper is ${keeperHeightByDefaultCentimetres} cm tall`,
+    migrated: { ...visit, camera: cameraWithoutTheHeight },
+    change: `the saved visit keeps the keeper's height of ${String(keeperHeightCentimetres)} cm, which the debug settings hold now for every game, so the visit's is left out`,
   }
 }
 

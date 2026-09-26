@@ -1,5 +1,6 @@
 import { text, textWith, type TextKey } from '../../Texts/Texts.ts'
 import { keeperHeightByDefaultCentimetres, keeperHeightSteppedBy } from '../Camera/KeeperHeight.ts'
+import type { DebugSettings } from '../DebugSettings.ts'
 import { stepsDueWhileAnArrowIsHeld } from '../HeldArrow.ts'
 
 type HeldHeightArrow = {
@@ -22,6 +23,10 @@ export class DebugMenu {
   private readonly heightShown: HTMLElement
   private keeperHeightCentimetres = keeperHeightByDefaultCentimetres
   private heldHeightArrow: HeldHeightArrow | null = null
+  private readonly frameBudgetToggle = checkbox()
+  private readonly googlyEyesToggle = checkbox()
+  private readonly giantAfroToggle = checkbox()
+  private readonly everyFaceToggle = checkbox()
 
   constructor(container: HTMLElement, listener: DebugMenuListener) {
     this.listener = listener
@@ -46,17 +51,21 @@ export class DebugMenu {
       title,
       heightLabel,
       heightStepper,
-      toggleRow('debug.frameBudget', listener.frameBudgetShownChosen),
-      toggleRow('debug.googlyEyes', listener.googlyEyesChosen),
-      toggleRow('debug.giantAfro', listener.giantAfroChosen),
-      toggleRow('debug.everyFaceAtOnce', listener.everyFaceAtOnceChosen),
+      toggleRow('debug.frameBudget', this.frameBudgetToggle, listener.frameBudgetShownChosen),
+      toggleRow('debug.googlyEyes', this.googlyEyesToggle, listener.googlyEyesChosen),
+      toggleRow('debug.giantAfro', this.giantAfroToggle, listener.giantAfroChosen),
+      toggleRow('debug.everyFaceAtOnce', this.everyFaceToggle, listener.everyFaceAtOnceChosen),
       closeButton,
     )
     container.append(this.panel)
   }
 
-  open(keeperHeightCentimetres: number): void {
-    this.showTheHeight(keeperHeightCentimetres)
+  open(settings: DebugSettings): void {
+    this.showTheHeight(settings.keeperHeightCentimetres)
+    this.frameBudgetToggle.checked = settings.isFrameBudgetShown
+    this.googlyEyesToggle.checked = settings.areEyesGoogly
+    this.giantAfroToggle.checked = settings.isAfroGiant
+    this.everyFaceToggle.checked = settings.isEveryFaceShown
     this.panel.hidden = false
   }
 
@@ -101,9 +110,13 @@ export class DebugMenu {
   }
 }
 
-function toggleRow(textKey: TextKey, chosen: (isOn: boolean) => void): HTMLElement {
+function checkbox(): HTMLInputElement {
   const toggle = document.createElement('input')
   toggle.type = 'checkbox'
+  return toggle
+}
+
+function toggleRow(textKey: TextKey, toggle: HTMLInputElement, chosen: (isOn: boolean) => void): HTMLElement {
   toggle.addEventListener('change', () => chosen(toggle.checked))
   const row = document.createElement('label')
   row.className = 'debug-toggle'

@@ -23,7 +23,9 @@ import {
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookBetween, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, rightOnTheFloorOf, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
-import { easedSeatedShare, eyeHeightMetres, keeperHeightByDefaultCentimetres, seatedShareAfter } from './Camera/KeeperHeight.ts'
+import { easedSeatedShare, eyeHeightMetres, seatedShareAfter } from './Camera/KeeperHeight.ts'
+import { debugSettingsByDefault, type DebugSettings } from './DebugSettings.ts'
+import { DebugSettingsStore } from './DebugSettingsStore.ts'
 import { sticksShownFor, usesTheKeyboard, usesTheMouse, walkFromTheKeys } from './Camera/FirstPersonControls.ts'
 import { KeyboardAndMouse } from './Views/KeyboardAndMouse.ts'
 import { KeyboardShortcuts } from './KeyboardShortcuts.ts'
@@ -125,7 +127,6 @@ export class RoomScene {
   private softShadowsInCorners: EffectComposer | null = null
   private glow: RoomGlow | null = null
   private edgeSmoothing: EdgeSmoothing | null = null
-  private isFrameBudgetShown = false
   private readonly carried: CarriedItems
   private readonly sipButton: SipButton
   private readonly pourControls: PourControls
@@ -146,7 +147,8 @@ export class RoomScene {
   private readonly roomLights = new RoomLights()
   private readonly inspectionStage = new InspectionStage()
   private cameraPose: CameraPose
-  private keeperHeightCentimetres = keeperHeightByDefaultCentimetres
+  private debugSettings: DebugSettings = debugSettingsByDefault
+  private readonly debugSettingsStore: DebugSettingsStore
   private wasSeatedInFirstPerson = false
   private seatedShare = 0
   private lookWhileSittingDown: { readonly from: FirstPersonLook; readonly to: FirstPersonLook } | null = null
@@ -192,7 +194,7 @@ export class RoomScene {
       debugMenuAsked: () => {
         this.achievements.roseBushTappedTenTimes()
         this.keyboardAndMouse.letGoOfTheMouse('the debug menu opened')
-        this.debugMenu.open(this.keeperHeightCentimetres)
+        this.debugMenu.open(this.debugSettings)
       },
       achievementsAsked: () => {
         this.keyboardAndMouse.letGoOfTheMouse('the achievements opened')
@@ -266,6 +268,8 @@ export class RoomScene {
     this.settingsStore = new SettingsStore(log, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
     this.playTime = new PlayTime(new PlayTimeStore(log), log)
     this.settings = this.settingsStore.load()
+    this.debugSettingsStore = new DebugSettingsStore(log)
+    this.debugSettings = this.debugSettingsStore.load()
     this.settingsScreen = new SettingsScreen(container, {
       coatColourChosen: (coatColour) => this.settingChosen({ coatColour }),
       softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.settingChosen({ hasSoftShadowsInCorners }),
@@ -292,6 +296,7 @@ export class RoomScene {
     this.fitToWindow()
     if (arrival.faceOfANewGame === null) this.showTheSettings()
     else this.changeTheSettings({ faceFeature: arrival.faceOfANewGame }, 'as a new game begins')
+    this.showTheDebugSettings()
     this.cameraPose = overviewPose(this.play.walk.position, this.camera.aspect)
     this.listenToPresses()
     window.addEventListener('resize', () => this.fitToWindow())
@@ -367,7 +372,7 @@ export class RoomScene {
 
   private reportTheFrameBudgetNowAndThen(): void {
     const report = this.frameBudget.frameEnded(performance.now())
-    if (report === null || !this.isFrameBudgetShown) return
+    if (report === null || !this.debugSettings.isFrameBudgetShown) return
     const counts = this.sceneCounts()
     this.frameBudgetPanel.show(report, counts)
     this.log(`frame budget: ${linesOf(report, counts).join('; ')}`)
@@ -381,24 +386,33 @@ export class RoomScene {
   }
 
   private frameBudgetShownChosen(isShown: boolean): void {
-    this.isFrameBudgetShown = isShown
-    if (!isShown) this.frameBudgetPanel.hide()
-    this.log(isShown ? 'the frame budget is shown from the debug menu, every 2 s' : 'the frame budget is hidden from the debug menu')
+    this.changeTheDebugSettings({ isFrameBudgetShown: isShown }, isShown ? 'the frame budget is shown from the debug menu, every 2 s' : 'the frame budget is hidden from the debug menu')
   }
 
   private googlyEyesChosen(areGoogly: boolean): void {
-    this.walker.showGooglyEyes(areGoogly)
-    this.log(areGoogly ? 'the eyes are googly from the debug menu, when the face has eyes' : 'the eyes are plain dots again from the debug menu')
+    this.changeTheDebugSettings({ areEyesGoogly: areGoogly }, areGoogly ? 'the eyes are googly from the debug menu, when the face has eyes' : 'the eyes are plain dots again from the debug menu')
   }
 
   private giantAfroChosen(isGiant: boolean): void {
-    this.walker.growTheAfroGiant(isGiant)
-    this.log(isGiant ? 'the afro grows giant from the debug menu, whenever it shows' : 'the afro is its own size again from the debug menu')
+    this.changeTheDebugSettings({ isAfroGiant: isGiant }, isGiant ? 'the afro grows giant from the debug menu, whenever it shows' : 'the afro is its own size again from the debug menu')
   }
 
   private everyFaceAtOnceChosen(isEveryFaceShown: boolean): void {
-    this.walker.showEveryFaceAtOnce(isEveryFaceShown)
-    this.log(isEveryFaceShown ? `the face shows the nose, the eyes, the ears and the afro at once from the debug menu, over the chosen ${this.settings.faceFeature}` : `the face shows only the chosen ${this.settings.faceFeature} again from the debug menu`)
+    this.changeTheDebugSettings({ isEveryFaceShown }, isEveryFaceShown ? `the face shows the nose, the eyes, the ears and the afro at once from the debug menu, over the chosen ${this.settings.faceFeature}` : `the face shows only the chosen ${this.settings.faceFeature} again from the debug menu`)
+  }
+
+  private changeTheDebugSettings(change: Partial<DebugSettings>, why: string): void {
+    this.debugSettings = { ...this.debugSettings, ...change }
+    this.debugSettingsStore.keep(this.debugSettings)
+    this.showTheDebugSettings()
+    this.log(why)
+  }
+
+  private showTheDebugSettings(): void {
+    if (!this.debugSettings.isFrameBudgetShown) this.frameBudgetPanel.hide()
+    this.walker.showGooglyEyes(this.debugSettings.areEyesGoogly)
+    this.walker.growTheAfroGiant(this.debugSettings.isAfroGiant)
+    this.walker.showEveryFaceAtOnce(this.debugSettings.isEveryFaceShown)
   }
 
   private showTheAchievements(): void {
@@ -447,8 +461,7 @@ export class RoomScene {
 
   private restoreTheCamera(camera: SavedCamera): void {
     this.look = camera.look
-    this.keeperHeightCentimetres = camera.keeperHeightCentimetres
-    this.log(`the first-person look is back and the keeper is ${camera.keeperHeightCentimetres} cm tall, as the visit left them`)
+    this.log('the first-person look is back as the visit left it')
   }
 
   private keepTheVisitWhenThePageIsLeft(): void {
@@ -478,7 +491,7 @@ export class RoomScene {
       savedAtMilliseconds: Date.now(),
       ritual: this.session.state,
       place: this.play.place,
-      camera: { look: this.look, keeperHeightCentimetres: this.keeperHeightCentimetres },
+      camera: { look: this.look },
       arrangement: this.arrangement,
     })
     if (reason !== null) this.log(`the visit is saved because ${reason}`)
@@ -494,6 +507,7 @@ export class RoomScene {
 
   private settingChosen(change: Partial<RoomSettings>): void {
     this.changeTheSettings(change, 'from the settings')
+    if (change.faceFeature !== undefined && this.debugSettings.isEveryFaceShown) this.changeTheDebugSettings({ isEveryFaceShown: false }, `every face at once is turned off, because the settings chose the ${change.faceFeature}`)
     this.room.turnTheSettingsGearOneTooth()
   }
 
@@ -556,8 +570,7 @@ export class RoomScene {
   }
 
   private keeperHeightChosen(heightCentimetres: number): void {
-    this.keeperHeightCentimetres = heightCentimetres
-    this.log(`the keeper is ${heightCentimetres} cm tall from the debug menu`)
+    this.changeTheDebugSettings({ keeperHeightCentimetres: heightCentimetres }, `the keeper is ${heightCentimetres} cm tall from the debug menu`)
   }
 
   private cameraModeChanged(): void {
@@ -582,7 +595,7 @@ export class RoomScene {
     const closeUp = this.play.closeUpInView
     if (closeUp === null) return this.log('the keeper sits down with no tea table in view to turn to')
     const walker = this.play.walk.position
-    const lookAtTheTable = lookAt(closeUp.target, { x: walker.x, y: eyeHeightMetres(this.keeperHeightCentimetres, 1), z: walker.z })
+    const lookAtTheTable = lookAt(closeUp.target, { x: walker.x, y: eyeHeightMetres(this.debugSettings.keeperHeightCentimetres, 1), z: walker.z })
     this.lookWhileSittingDown = { from: this.look, to: lookAtTheTable }
     this.log('the keeper sits down at the tea table, the view sinking and turning to it, then free to look around')
   }
@@ -661,7 +674,7 @@ export class RoomScene {
 
   private cameraGoal(): CameraPose {
     const closeUp = this.play.closeUpInView
-    if (this.settings.cameraMode === 'firstPerson') return firstPersonPose(this.play.walk.position, this.look, eyeHeightMetres(this.keeperHeightCentimetres, this.seatedShare))
+    if (this.settings.cameraMode === 'firstPerson') return firstPersonPose(this.play.walk.position, this.look, eyeHeightMetres(this.debugSettings.keeperHeightCentimetres, this.seatedShare))
     if (closeUp !== null) return closeUpPose(closeUp, this.camera.aspect)
     return overviewPose(this.play.walk.position, this.camera.aspect)
   }
