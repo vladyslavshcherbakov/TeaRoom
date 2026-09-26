@@ -98,6 +98,80 @@ test('heater_whenTheKeeperIsNotAtTheCounter_cannotBeSwitchedOn', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'switchHeaterOn', reason: 'notAtThatPlace' }])
 })
 
+test('offering_awayFromTheRitualPlace_isRefusedAndKeepsTheTea', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.pour('kettle', 'cup1', 5)
+
+  const events = ritual.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'toad' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'offerCup', reason: 'notAtThatPlace' }])
+  assert.equal(Math.round(ritual.vessel('cup1').liquid.volumeMl), 50)
+})
+
+test('spoon_inHandAtTheTable_cannotScoopFromTheCaddyOnTheShelf', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'table' })
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+
+  const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'outOfReach' }])
+})
+
+test('spoon_inHandAtTheTable_cannotTipLeavesIntoACupOnTheShelf', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'table' })
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  ritual.do({ type: 'standAt', placeId: 'shelf' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'outOfReach' }])
+  assert.equal(ritual.state.spoon.grams, 5)
+})
+
+test('kettle_inHandAwayFromTheCounter_cannotBePutOnTheHeater', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  const events = ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'notAtThatPlace' }])
+  assert.equal(ritual.state.heater.itemIdOnTop, null)
+})
+
+for (const command of [{ type: 'setTheThermostat', targetC: 60 }, { type: 'startTheThermostat' }, { type: 'stopTheThermostat' }, { type: 'switchHeaterOff' }, { type: 'turnTheTapOn' }, { type: 'turnTheTapOff' }] as const) {
+  test(`${command.type}_awayFromTheCounter_isRefused`, () => {
+    const ritual = houseRitual()
+    ritual.do({ type: 'standAt', placeId: 'table' })
+
+    const events = ritual.do(command)
+
+    assert.deepEqual(events, [{ type: 'actionRefused', command: command.type, reason: 'notAtThatPlace' }])
+  })
+}
+
+test('cloth_lyingOnTheTable_cannotSoakUpItsPuddleFromTheCounter', () => {
+  const ritual = houseRitual()
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'standAt', placeId: 'table' })
+  ritual.pour('kettle', null, 2.5)
+  ritual.do({ type: 'standAt', placeId: 'counter' })
+
+  const events = ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'outOfReach' }])
+})
+
 test('kettle_whenPutOnTheHeaterFromTheHand_leavesTheHandFree', () => {
   const ritual = houseRitual()
   ritual.do({ type: 'standAt', placeId: 'counter' })
