@@ -233,7 +233,7 @@ A shape is how the room draws an item, such as a kettle or a teapot. A new shape
 4. Its parts file in `Views/Carried/` with its `CarriedShapeLook`, registered in `lookByShape` in `CarriedModel.ts`. The compiler lists the missing look.
 5. Its new surfaces in `Surface` and `lookBySurface` in `Views/RoomMaterials.ts`. The compiler lists a surface that `lookBySurface` lacks.
 6. Every place that treats a shape as a role in the game: `RoomPlay.ts`, `RoomRemarks.ts` and `Achievements.ts` compare with a shape by name. Search for `carriedShapeOf`. Nothing lists these.
-7. Run `Tests/Game/Room/CarriedItems.integration.test.ts`. It builds every item of the room and checks what every shape promises. An aimed item stays above the surface, and an open lid fits the place kept for it. A held item stays on a phone's screen, an overflow runs down the wall, and an item has a fire exactly when it can char.
+7. Run `Tests/Game/Room/CarriedItems.integration.test.ts`. It builds one item of each geometry in the room and checks what every shape promises. A standing item is drawn inside its footprint, an aimed item stays above the surface, and an open lid fits the place kept for it and rests on the surface. A held item stays on a phone's screen, an overflow runs down the wall, and an item has a fire exactly when it can char.
 
 ### Adding a mechanic
 
@@ -315,6 +315,6 @@ A new setting is a field in `RoomSettings` with its default and its reading in `
 - In `testCatalog`, vessels do not cool unless a test asks for cooling. Only the kettle's open lid changes how it cools, and it doubles the rate. Its room keeps everything at one place, so reach cannot fail there. A test of reach, places or lids uses `testHouseCatalog`, and a test with two cloths uses `withASecondCloth`. Its caddy holds `testGreen`, and a test of several teas adds caddies with `withMoreCaddies`, which names the tea of each.
 - Content tests run the real catalog.
 - Room tests in `Tests/Game/Room/` drive `RoomNavigator` and `RoomPlay` with taps and presses. `RoomPlay` runs over a real session in the default catalog's quiet room through `Tests/Support/TestRoom.ts`. There is one file for each feature of the room, and the folder is flat. `onTopOf` names a place on a piece of furniture from the quiet room's layout.
-- `Tests/Game/Room/CarriedItems.integration.test.ts` builds the real Three.js model of every item and checks what every shape promises.
+- `Tests/Game/Room/CarriedItems.integration.test.ts` builds the real Three.js model of one item of each geometry and checks what every shape promises, such as a standing item drawn inside its footprint and an open lid resting on the surface.
 - End-to-end UI tests in `Tests/Browser/` play the built site with Playwright on iPhone WebKit and Android Chromium. They read the `[room]` and `[ritual]` lines from the console, so the game needs no test hooks.
 - CI runs the scripts named in the README section "Deploy" on every push and on every pull request from a fork. It does not build the artifact.
