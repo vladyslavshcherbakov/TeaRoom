@@ -333,8 +333,8 @@ export class RoomMaterials {
       clearcoatMap: surface,
       metalness: 1,
       roughness: 1,
-      clearcoat: 0.6,
-      clearcoatRoughness: 0.1,
+      clearcoat: 0.25,
+      clearcoatRoughness: 0.2,
       envMap: this.reflections,
       envMapIntensity: 1.4,
     })
