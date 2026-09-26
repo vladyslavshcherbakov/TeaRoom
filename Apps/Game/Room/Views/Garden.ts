@@ -1,11 +1,11 @@
 import * as THREE from 'three'
 import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
-import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import type { PlantSurface, RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
 type PlantPart = {
   readonly geometry: THREE.BufferGeometry
-  readonly surface: Surface
+  readonly surface: PlantSurface
   readonly offset: THREE.Matrix4
 }
 
@@ -65,7 +65,7 @@ function ground(materials: RoomMaterials): THREE.Mesh {
 }
 
 function instancesOf(plantPart: PlantPart, plants: readonly Plant[], materials: RoomMaterials): THREE.InstancedMesh {
-  const material = materials.materialFor(plantPart.surface)
+  const material = materials.plantMaterialFor(plantPart.surface)
   const mesh = new THREE.InstancedMesh(plantPart.geometry, material, plants.length)
   const placement = new THREE.Matrix4()
   const turn = new THREE.Quaternion()
@@ -76,7 +76,7 @@ function instancesOf(plantPart: PlantPart, plants: readonly Plant[], materials: 
     if (plantPart.surface === 'bloom') mesh.setColorAt(index, new THREE.Color(plant.bloomColour))
   })
   mesh.castShadow = false
-  mesh.receiveShadow = true
+  mesh.receiveShadow = false
   mesh.computeBoundingSphere()
   return mesh
 }
@@ -85,11 +85,11 @@ function stem(heightMetres: number): PlantPart {
   return part(new THREE.CylinderGeometry(0.005, 0.006, heightMetres, 3, 1, true), 'stem', 0, heightMetres / 2, 0)
 }
 
-function part(geometry: THREE.BufferGeometry, surface: Surface, x: number, y: number, z: number): PlantPart {
+function part(geometry: THREE.BufferGeometry, surface: PlantSurface, x: number, y: number, z: number): PlantPart {
   return { geometry, surface, offset: new THREE.Matrix4().makeTranslation(x, y, z) }
 }
 
-function tiltedTowardsTheRoom(geometry: THREE.BufferGeometry, surface: Surface, height: number, forward: number): PlantPart {
+function tiltedTowardsTheRoom(geometry: THREE.BufferGeometry, surface: PlantSurface, height: number, forward: number): PlantPart {
   const tilt = new THREE.Matrix4().makeRotationZ(Math.PI / 2 - 0.35)
   const place = new THREE.Matrix4().makeTranslation(-forward, height, 0)
   return { geometry, surface, offset: place.multiply(tilt) }

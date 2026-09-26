@@ -88,13 +88,8 @@ export type Surface =
   | 'teaCharacterPainting'
   | 'yixingClay'
   | 'lawn'
-  | 'bloom'
-  | 'foliage'
-  | 'stem'
-  | 'daisyPetals'
-  | 'flowerHeart'
-  | 'poppyHeart'
-  | 'sunflowerHeart'
+
+export type PlantSurface = 'bloom' | 'foliage' | 'stem' | 'daisyPetals' | 'flowerHeart' | 'poppyHeart' | 'sunflowerHeart'
 
 export type SurfaceMaterials = Pick<RoomMaterials, 'materialFor' | 'unsharedMaterialFor' | 'colourOf' | 'bowlIdWithTheToadUnderneath'>
 
@@ -205,17 +200,21 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
   yixingClay: { colour: '#ffffff', kind: 'yixingClay' },
   lawn: { colour: '#79a94f', kind: 'matte' },
-  bloom: { colour: '#ffffff', kind: 'matte' },
-  foliage: { colour: '#3f7a32', kind: 'matte' },
-  stem: { colour: '#4d8a36', kind: 'matte' },
-  daisyPetals: { colour: '#fbfbf6', kind: 'matte' },
-  flowerHeart: { colour: '#f2c21c', kind: 'matte' },
-  poppyHeart: { colour: '#1d1a17', kind: 'matte' },
-  sunflowerHeart: { colour: '#5a3616', kind: 'matte' },
+}
+
+const colourByPlantSurface: Readonly<Record<PlantSurface, string>> = {
+  bloom: '#ffffff',
+  foliage: '#3f7a32',
+  stem: '#4d8a36',
+  daisyPetals: '#fbfbf6',
+  flowerHeart: '#f2c21c',
+  poppyHeart: '#1d1a17',
+  sunflowerHeart: '#5a3616',
 }
 
 export class RoomMaterials {
   private readonly materialsBySurface = new Map<Surface, THREE.Material>()
+  private readonly materialsByPlantSurface = new Map<PlantSurface, THREE.MeshLambertMaterial>()
   private readonly reflections: THREE.Texture | null
   private readonly koiPond: KoiPond
   private prophecyPainting: HTMLCanvasElement | null = null
@@ -232,6 +231,14 @@ export class RoomMaterials {
     if (existing !== undefined) return existing
     const material = this.unsharedMaterialFor(surface)
     this.materialsBySurface.set(surface, material)
+    return material
+  }
+
+  plantMaterialFor(surface: PlantSurface): THREE.MeshLambertMaterial {
+    const existing = this.materialsByPlantSurface.get(surface)
+    if (existing !== undefined) return existing
+    const material = new THREE.MeshLambertMaterial({ color: colourByPlantSurface[surface], flatShading: true })
+    this.materialsByPlantSurface.set(surface, material)
     return material
   }
 
