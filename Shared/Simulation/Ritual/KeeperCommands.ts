@@ -4,9 +4,8 @@ import type { CommandOfType } from './Command.ts'
 import { note, refuse, type Draft } from './Draft.ts'
 import { liftOffTheHeater } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
-import { liftOutOfTheSink } from './SinkCommands.ts'
+import { liftTheItem } from './LiftTheItem.ts'
 import { emptyTheHand, middleHandIndex, locationOfItem, moveItem, whereIs } from './Reach.ts'
-import { rulesFor } from './ItemKinds.ts'
 import { isCoolEnoughToHold, isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 
 export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
@@ -37,13 +36,6 @@ export function pickUpWithAMiddleHand(draft: Draft, command: CommandOfType<'pick
   draft.events.push({ type: 'middleHandGrown', itemId })
 }
 
-export function liftTheItem(draft: Draft, itemId: string): 'whole' | 'crumbled' {
-  if (draft.state.heater.itemIdOnTop === itemId) liftOffTheHeater(draft, itemId)
-  if (rulesFor(draft.state, itemId)?.takeIntoAHand(draft, itemId) === 'crumbled') return 'crumbled'
-  liftOutOfTheSink(draft, itemId)
-  return 'whole'
-}
-
 export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
   const itemId = command.itemId
   if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isInAHand(itemId), isTheKeeperAt(command.spot.placeId, 'the spot'), isNotBeingPoured(itemId)])) return
@@ -60,6 +52,7 @@ function checksToTake(itemId: string): readonly Check[] {
 
 function takeIntoTheHand(draft: Draft, itemId: string, handIndex: HandIndex): 'whole' | 'crumbled' {
   const whereItWas = whereIs(locationOfItem(draft, itemId))
+  if (draft.state.heater.itemIdOnTop === itemId) liftOffTheHeater(draft, itemId)
   if (liftTheItem(draft, itemId) === 'crumbled') return 'crumbled'
   draft.state.keeper.hands[handIndex] = itemId
   moveItem(draft, itemId, { kind: 'inHand', handIndex })

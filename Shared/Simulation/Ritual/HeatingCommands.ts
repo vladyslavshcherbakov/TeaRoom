@@ -8,7 +8,7 @@ import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
 import { isKnown, isNotBeingPoured, isNotBurntAway, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
-import { liftTheItem } from './KeeperCommands.ts'
+import { liftTheItem } from './LiftTheItem.ts'
 import { emptyTheHand, heaterSpotOf, locationOfItem, moveItem } from './Reach.ts'
 
 export type HeaterSwitchedOffBy = 'byTheKeeper' | 'byTheEndOfTheRitual'
