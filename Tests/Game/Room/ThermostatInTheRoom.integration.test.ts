@@ -92,6 +92,29 @@ test('heaterSwitch_whenTappedWhileTheThermostatWaits_boilsByHand', () => {
   assert.equal(room.state.heater.thermostat.isOn, false)
 })
 
+test('heaterSwitch_inNerdMode_heatsTheKettleOnlyToTheShownTarget', () => {
+  const room = kettleOfTapWaterOnTheHeater()
+  room.isNerdModeOn = true
+  room.tapTimes(20, down)
+
+  room.tap({ kind: 'heaterSwitch' })
+  room.advance(40)
+
+  assert.ok(kettleWaterC(room) < 81, `the kettle reached ${kettleWaterC(room)} °C`)
+  assert.equal(room.state.heater.isOn, false)
+})
+
+test('heaterSwitch_withoutNerdMode_boilsTheKettlePastTheTarget', () => {
+  const room = kettleOfTapWaterOnTheHeater()
+  room.tapTimes(20, down)
+
+  room.tap({ kind: 'heaterSwitch' })
+  room.advance(40)
+
+  assert.equal(kettleWaterC(room), 100)
+  assert.equal(room.state.heater.isOn, true)
+})
+
 test('thermostatControls_whenTappedWithBothHandsFull_workAndKeepTheItemsInHand', () => {
   const room = new TestRoom()
   room.walkTo('counter')
@@ -121,3 +144,16 @@ test('downArrow_whenTappedFromTheRoom_walksToTheCounterWithoutStepping', () => {
 
   assert.equal(room.state.heater.thermostat.targetC, 100)
 })
+
+function kettleOfTapWaterOnTheHeater(): TestRoom {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.fillInTheSink('kettle')
+  room.session.dispatch({ type: 'placeOnHeater', itemId: 'kettle' })
+  return room
+}
+
+function kettleWaterC(room: TestRoom): number {
+  return room.state.vessels['kettle']?.liquid.temperatureC ?? Number.NaN
+}

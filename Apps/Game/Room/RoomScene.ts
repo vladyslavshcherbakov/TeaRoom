@@ -169,6 +169,7 @@ export class RoomScene {
       settingsAsked: () => this.settingsScreen.show(this.settings),
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       temperatureUnit: () => this.settings.temperatureUnit,
+      isNerdModeOn: () => this.settings.isNerdModeOn,
       keeperDied: () => {
         this.hasTheKeeperDied = true
         this.achievements.keeperDied()

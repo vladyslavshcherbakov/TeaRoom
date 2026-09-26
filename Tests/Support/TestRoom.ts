@@ -29,6 +29,7 @@ export class TestRoom {
   settingsAsked = 0
   mayGrowAMiddleHand = true
   temperatureUnit: TemperatureUnit = 'celsius'
+  isNerdModeOn = false
   deathsSeen = 0
 
   constructor(options: TestRoomOptions = {}) {
@@ -42,6 +43,7 @@ export class TestRoom {
       settingsAsked: () => (this.settingsAsked += 1),
       mayGrowAMiddleHand: () => this.mayGrowAMiddleHand,
       temperatureUnit: () => this.temperatureUnit,
+      isNerdModeOn: () => this.isNerdModeOn,
       keeperDied: () => (this.deathsSeen += 1),
     })
     const screen = options.screen?.(this) ?? { tapTargetAt: () => ({ kind: 'nothing' }), aimPointAt: () => ({ x: 0, z: 0 }) }

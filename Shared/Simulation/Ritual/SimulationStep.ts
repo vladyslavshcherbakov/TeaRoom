@@ -10,6 +10,7 @@ import { takeIntoTheCloth } from './CleanupCommands.ts'
 import type { ClothState, SessionState, VesselState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
 import { note, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { switchTheHeaterOffAtItsTarget } from './HeatingCommands.ts'
 import { rulesFor } from './ItemKinds.ts'
 import { tapOf } from './Reach.ts'
 import { drain } from './RunningWater.ts'
@@ -26,6 +27,7 @@ export function stepTheWorld(draft: Draft, seconds: number): void {
   if (draft.state.phase === 'ended') return
   coolVessels(draft, seconds)
   letTheThermostatDecide(draft)
+  stopTheHeaterAtItsTargetIfItShould(draft)
   heatWhatSitsOnTheWorkingHeater(draft, seconds)
   countTheSecondsOnTheWorkingHeater(draft, seconds)
   heatOrCoolMetalShells(draft, seconds)
@@ -37,6 +39,15 @@ export function stepTheWorld(draft: Draft, seconds: number): void {
   for (const cloth of Object.values(draft.state.cloths)) cloth.wetMl = clothWetMlAfterDrying(cloth.wetMl, cloth.teaStain, seconds)
   startOrEndBrews(draft)
   draft.state.elapsedSeconds += seconds
+}
+
+function stopTheHeaterAtItsTargetIfItShould(draft: Draft): void {
+  const heater = draft.state.heater
+  if (!heater.isOn || heater.thermostat.isOn || !heater.stopsAtTheThermostatsTarget) return
+  const itemId = heater.itemIdOnTop
+  const vessel = itemId === null ? undefined : draft.state.vessels[itemId]
+  if (vessel === undefined || isEmpty(vessel.liquid) || vessel.liquid.temperatureC < heater.thermostat.targetC) return
+  switchTheHeaterOffAtItsTarget(draft)
 }
 
 function letTheThermostatDecide(draft: Draft): void {

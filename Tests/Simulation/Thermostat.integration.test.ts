@@ -152,6 +152,29 @@ test('thermostat_whenStartedTwice_isRefused', () => {
   assert.equal(eventsOfType(events, 'actionRefused')[0]?.reason, 'thermostatAlreadyOn')
 })
 
+test('heaterSwitch_askedToStopAtSixtyDegrees_heatsTheWaterToSixtyAndSwitchesItselfOff', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'setTheThermostat', targetC: 60 })
+  ritual.do({ type: 'switchHeaterOn', stopsAtTheThermostatsTarget: true })
+
+  const events = ritual.wait(20)
+
+  assertNear(ritual.vessel('kettle').liquid.temperatureC, 60, 0.2)
+  assert.equal(ritual.state.heater.isOn, false)
+  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, false)
+})
+
+test('heaterSwitch_askedToStopAtTheTargetWithNothingOnTheHeater_keepsHeating', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'setTheThermostat', targetC: 60 })
+  ritual.do({ type: 'switchHeaterOn', stopsAtTheThermostatsTarget: true })
+
+  ritual.wait(20)
+
+  assert.equal(ritual.state.heater.isOn, true)
+})
+
 test('heater_switchedOffAfterTheThermostatHeatedTenSecondsInAMinute_countsTheEnergyOfTheTenSeconds', () => {
   const ritual = kettleOnTheHeaterWithTheThermostatAt(60)
   ritual.wait(60)

@@ -83,6 +83,7 @@ export type RoomPlayListener = {
   readonly settingsAsked: () => void
   readonly mayGrowAMiddleHand: () => boolean
   readonly temperatureUnit: () => TemperatureUnit
+  readonly isNerdModeOn: () => boolean
   readonly keeperDied: () => void
 }
 
@@ -385,7 +386,8 @@ export class RoomPlay {
   }
 
   private switchTheHeater(): void {
-    this.ritual.dispatch({ type: this.ritual.state.heater.isOn ? 'switchHeaterOff' : 'switchHeaterOn' })
+    const command: Command = this.ritual.state.heater.isOn ? { type: 'switchHeaterOff' } : { type: 'switchHeaterOn', stopsAtTheThermostatsTarget: this.listener.isNerdModeOn() }
+    this.ritual.dispatch(command)
   }
 
   private stepTheThermostat(step: 1 | -1): void {
