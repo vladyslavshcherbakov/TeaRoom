@@ -314,4 +314,4 @@ A new setting is a field in `RoomSettings` with its default and its reading in `
 - Room tests in `Tests/Game/Room/` drive `RoomNavigator` and `RoomPlay` with taps and presses. `RoomPlay` runs over a real session in the default catalog's quiet room through `Tests/Support/TestRoom.ts`. There is one file for each feature of the room, and the folder is flat. `onTopOf` names a place on a piece of furniture from the quiet room's layout.
 - `Tests/Game/Room/CarriedItems.integration.test.ts` builds the real Three.js model of every item and checks what every shape promises.
 - End-to-end UI tests in `Tests/Browser/` play the built site with Playwright on iPhone WebKit and Android Chromium. They read the `[room]` and `[ritual]` lines from the console, so the game needs no test hooks.
-- CI runs the scripts named in the README section "Deploy" on every push and pull request. It does not build the artifact.
+- CI runs the scripts named in the README section "Deploy" on every push and on every pull request from a fork. It does not build the artifact.
