@@ -33,6 +33,17 @@ test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
   assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" repeats vessel id "cup1"'])
 })
 
+test('contentProblems_whenAVesselHasTheSpoonsId_nameTheId', () => {
+  const catalog = catalogWithRoomChanges({
+    vessels: [
+      { id: 'spoon', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
+      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
+    ],
+  })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" gives a vessel the spoon\'s id "spoon"'])
+})
+
 test('contentProblems_whenTheRoomHasNoCaddy_sayWhereTheTeaIsMissing', () => {
   const catalog = catalogWithRoomChanges({
     vessels: [{ id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],

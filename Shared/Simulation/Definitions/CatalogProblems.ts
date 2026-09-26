@@ -28,6 +28,7 @@ function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
   for (const repeatedId of new Set(vesselIds.filter((id, index) => vesselIds.indexOf(id) !== index))) {
     problems.push(`room "${room.id}" repeats vessel id "${repeatedId}"`)
   }
+  if (vesselIds.includes(spoonItemId)) problems.push(`room "${room.id}" gives a vessel the spoon's id "${spoonItemId}"`)
   const clothIds = room.cloths.map((cloth) => cloth.id)
   const takenIds = new Set([...vesselIds, spoonItemId])
   for (const clashingId of new Set(clothIds.filter((id, index) => clothIds.indexOf(id) !== index || takenIds.has(id)))) {
