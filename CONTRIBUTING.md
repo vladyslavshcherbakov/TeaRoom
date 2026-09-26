@@ -8,6 +8,8 @@ A change is done when the commands in the README section "Test" and `Scripts/bui
 
 The artifact build in the section "Build" is not part of it. The agent that publishes the artifact runs it.
 
+A change that adds to or changes what the player can do updates `docs/` and `docs/roadmap.md` in the same commit. A planned step that is built moves from its planned version to the version in progress. A feature built outside the roadmap is added to the version in progress. Only the user closes a version.
+
 ## Architecture
 
 ### Layers

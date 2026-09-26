@@ -2,7 +2,7 @@
 
 ## Plan
 
-The plan is in `docs/roadmap.md`.
+The plan is in `docs/roadmap.md`. Its version in progress collects what is built until the user closes it. So a built step moves there from its planned version, and it is not removed, because the user wants to see what each version built. A rejected step is removed.
 
 ## Decisions
 
@@ -209,5 +209,5 @@ The plan is in `docs/roadmap.md`.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.
 - Whether a vessel may hold the leaves of two teas that steep together, or the refusals `spoonHoldsAnotherTea`, `holdsLeavesOfAnotherTea` and `notACaddy` stay. They matter once a room has two caddies. The user answers it.
-- Whether `docs/game-design.md` is marked as the vision rather than the game as it is, and whether the roadmap drops its done and rejected steps. The user answers it.
+- Whether `docs/game-design.md` is marked as the vision rather than the game as it is. The user answers it.
 - What a bowl that an update adds does in a continued visit when the player has put something on its spot of the shelf: it moves to a free spot, or it stays out of the room. The user answers it.

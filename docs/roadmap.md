@@ -129,7 +129,6 @@ These are written so that the engine takes them over unchanged.
 ### 7. Documents
 
 - `README.md`: "Nothing is won or lost" meets the one death, and the test tree does not mirror the code's subfolders.
-- This roadmap: done steps and the rejected sockets go. Waits for an answer.
 - `docs/world-memory.md` still says nothing of it is built in 0.1. `docs/game-design.md` is marked as the vision, not the game as it is. Waits for an answer.
 - The long paragraphs of `docs/interactions.md` become sections and tables. Entries in DECISIONS.md lose their history and keep the decision, its reason and what was rejected.
 
