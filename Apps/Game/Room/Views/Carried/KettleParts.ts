@@ -32,6 +32,7 @@ export const kettleShapeLook: CarriedShapeLook = {
   partsFor: kettleParts,
   steamRisesAboveTheSpout: true,
   steamPuffSizeShare: 1,
+  steamSurface: 'steam',
   looseLeaves: null,
   soakedLeaves: {
     pile: { leafCount: mostSoakedLeavesShown, radiusMetres: soakedLeavesRadiusMetres, heightMetres: 0, isLyingFlat: true },

@@ -7,6 +7,7 @@ export const clothShapeLook: CarriedShapeLook = {
   partsFor: (materials) => clothParts(materials.cloth, materials.room.colourOf('charredCloth')),
   steamRisesAboveTheSpout: false,
   steamPuffSizeShare: 1,
+  steamSurface: 'steam',
   looseLeaves: null,
   soakedLeaves: null,
   fire: { flameAt: { x: 0.035, y: 0.012, z: -0.01 }, embersAround: { x: 0, y: 0.006, z: 0 }, emberSpreadMetres: { x: 0.07, z: 0.07 } },

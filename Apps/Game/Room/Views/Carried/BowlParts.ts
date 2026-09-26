@@ -86,6 +86,7 @@ export const bowlShapeLook: CarriedShapeLook = {
   partsFor: (materials, itemId) => bowlParts(materials.room, itemId),
   steamRisesAboveTheSpout: false,
   steamPuffSizeShare: 0.6,
+  steamSurface: 'bowlSteam',
   looseLeaves: null,
   soakedLeaves: {
     pile: { leafCount: mostSoakedLeavesShown, radiusMetres: 0.035, heightMetres: 0, isLyingFlat: true },

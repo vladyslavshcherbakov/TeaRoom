@@ -16,6 +16,7 @@ import { thermosShapeLook } from './ThermosParts.ts'
 export type SteamLook = {
   readonly inRoom: THREE.Material
   readonly heldInView: THREE.Material
+  readonly drawnToTheEyes: THREE.Material
 }
 
 export type CarriedModel = {
@@ -100,7 +101,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const soakedLeafHolder = look.soakedLeaves === null ? null : new THREE.Group()
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !isATouchArea(part)))
-  const steamLook: SteamLook = { inRoom: materials.room.materialFor('steam'), heldInView: materials.room.materialFor('heldSteam') }
+  const steamLook: SteamLook = { inRoom: materials.room.materialFor(look.steamSurface), heldInView: materials.room.materialFor('heldSteam'), drawnToTheEyes: materials.room.materialFor('steam') }
   const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(steamPuffGeometry, steamLook.inRoom))
   for (const puff of puffs) puff.castShadow = false
   return {

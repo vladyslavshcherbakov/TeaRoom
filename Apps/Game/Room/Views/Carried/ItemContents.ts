@@ -78,7 +78,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
 
 function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], puffsPerSource: number, timeSeconds: number, eyes: SteamDrawnToTheEyes | null): void {
   const sizeInView = model.root.scale.x
-  const steamMaterial = model.isHeldInView && eyes === null ? model.steamLook.heldInView : model.steamLook.inRoom
+  const steamMaterial = eyes !== null ? model.steamLook.drawnToTheEyes : model.isHeldInView ? model.steamLook.heldInView : model.steamLook.inRoom
   model.puffs.forEach((puff, index) => {
     puff.material = steamMaterial
     const source = steamSources[index % steamSources.length]

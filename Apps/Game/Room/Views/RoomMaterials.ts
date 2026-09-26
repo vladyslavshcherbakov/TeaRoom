@@ -65,6 +65,7 @@ export type Surface =
   | 'liquidSurface'
   | 'steam'
   | 'heldSteam'
+  | 'bowlSteam'
   | 'sinkHollow'
   | 'sinkWall'
   | 'caddyInside'
@@ -117,7 +118,8 @@ type SurfaceLook = { readonly colour: string } & (
 )
 
 const steamOpacity = 0.25
-const heldSteamOpacity = 0.12
+const bowlSteamOpacity = 0.15
+const heldSteamOpacity = 0.08
 const smokeOpacity = 0.4
 const glassEdgeSharpness = 2
 const glassGlintFrom = 0.7
@@ -186,6 +188,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   liquidSurface: { colour: '#ffffff', kind: 'liquidSurface' },
   steam: { colour: '#ffffff', kind: 'mist', opacity: steamOpacity },
   heldSteam: { colour: '#ffffff', kind: 'mist', opacity: heldSteamOpacity },
+  bowlSteam: { colour: '#ffffff', kind: 'mist', opacity: bowlSteamOpacity },
   sinkHollow: { colour: '#56626a', kind: 'matte' },
   sinkWall: { colour: '#b7c2c7', kind: 'matte' },
   caddyInside: { colour: '#2f3d33', kind: 'matte' },

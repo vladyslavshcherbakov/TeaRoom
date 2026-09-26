@@ -45,6 +45,7 @@ export const thermosShapeLook: CarriedShapeLook = {
   partsFor: (materials) => thermosParts(materials.room),
   steamRisesAboveTheSpout: false,
   steamPuffSizeShare: 1,
+  steamSurface: 'steam',
   looseLeaves: null,
   soakedLeaves: null,
   fire: null,
