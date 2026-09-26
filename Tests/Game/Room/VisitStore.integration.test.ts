@@ -9,7 +9,7 @@ const aVisit = {
   savedAtMilliseconds: 0,
   ritual: {},
   place: { position: { x: 0.5, z: 0.5 }, headingRadians: 0, closeUpOf: null },
-  camera: { mode: 'room', stickLayout: 'walkOnTheLeft', look: { headingRadians: 0, pitchRadians: 0 } },
+  camera: { look: { headingRadians: 0, pitchRadians: 0 } },
 }
 
 test('savedVisit_fromBeforeTheRoomWasArrangedForEachGame_continuesInTheRoomItWasPlayedIn', () => {
@@ -28,14 +28,6 @@ test('savedVisit_namingItsRoomByTheKitchenFacingTheWindow_keepsTheWindowAlongThe
   const found = store.find()
 
   assert.deepEqual(found.kind === 'found' ? found.visit.arrangement : null, { ...rest, window: 'alongTheLeftWall', besideTheWindow: 'kitchen', table: 'byTheWindow' })
-})
-
-test('savedVisit_fromBeforeTheMouseAndKeyboardCouldControlTheLook_keepsItsTwoSticks', () => {
-  const store = storeHolding(aVisit)
-
-  const found = store.find()
-
-  assert.equal(found.kind === 'found' ? found.visit.camera.controlScheme : null, 'twoSticks')
 })
 
 test('savedVisit_fromBeforeTheKeepersHeightCouldBeChosen_hasAKeeperOf140cm', () => {

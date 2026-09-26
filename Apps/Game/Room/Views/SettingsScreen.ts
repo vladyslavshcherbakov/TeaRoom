@@ -1,6 +1,7 @@
 import { text, textWith, type TextKey } from '../../Texts/Texts.ts'
 import { playTimeShownFor } from '../PlayTime.ts'
-import { coatColours, faceFeatures, type CoatColour, type FaceFeature, type RoomSettings } from '../RoomSettings.ts'
+import { controlSchemes, type ControlScheme } from '../Camera/FirstPersonControls.ts'
+import { cameraModes, coatColours, faceFeatures, stickLayouts, type CameraMode, type CoatColour, type FaceFeature, type RoomSettings, type StickLayout } from '../RoomSettings.ts'
 import { temperatureUnits, type TemperatureUnit } from '../Temperatures.ts'
 
 export type SettingsChoices = {
@@ -11,6 +12,14 @@ export type SettingsChoices = {
   readonly faceFeatureChosen: (feature: FaceFeature) => void
   readonly nerdModeChosen: (isOn: boolean) => void
   readonly temperatureUnitChosen: (unit: TemperatureUnit) => void
+  readonly cameraModeChosen: (mode: CameraMode) => void
+  readonly controlSchemeChosen: (scheme: ControlScheme) => void
+  readonly stickLayoutChosen: (layout: StickLayout) => void
+}
+
+type ChoiceRow<Value extends string> = {
+  readonly element: HTMLElement
+  readonly showTheChosen: (chosen: Value) => void
 }
 
 export class SettingsScreen {
@@ -18,6 +27,9 @@ export class SettingsScreen {
   private readonly swatches: readonly HTMLButtonElement[]
   private readonly faceChoices: readonly HTMLButtonElement[]
   private readonly unitChoices: readonly HTMLButtonElement[]
+  private readonly cameraModeRow: ChoiceRow<CameraMode>
+  private readonly controlSchemeRow: ChoiceRow<ControlScheme>
+  private readonly stickLayoutRow: ChoiceRow<StickLayout>
   private readonly nerdModeToggle: HTMLInputElement
   private readonly softShadowsToggle: HTMLInputElement
   private readonly glowToggle: HTMLInputElement
@@ -47,6 +59,9 @@ export class SettingsScreen {
     unitRow.className = 'settings-units'
     this.unitChoices = temperatureUnits.map((unit) => this.unitChoice(unit, choices))
     unitRow.append(...this.unitChoices)
+    this.cameraModeRow = choiceRow(cameraModes, (mode) => `settings.camera.${mode}`, choices.cameraModeChosen)
+    this.controlSchemeRow = choiceRow(controlSchemes, (scheme) => `settings.controls.${scheme}`, choices.controlSchemeChosen)
+    this.stickLayoutRow = choiceRow(stickLayouts, (layout) => `settings.sticks.${layout}`, choices.stickLayoutChosen)
     this.softShadowsToggle = toggle(choices.softShadowsInCornersChosen)
     this.glowToggle = toggle(choices.glowChosen)
     this.frameRateToggle = toggle(choices.frameRateShownChosen)
@@ -61,7 +76,7 @@ export class SettingsScreen {
     closeButton.className = 'settings-close'
     closeButton.textContent = text('settings.close')
     closeButton.addEventListener('click', () => this.hide())
-    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
+    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.camera'), this.cameraModeRow.element, heading('h3', 'settings.controls'), this.controlSchemeRow.element, heading('h3', 'settings.sticks'), this.stickLayoutRow.element, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
     this.element.append(sheet)
     container.append(this.element)
   }
@@ -75,6 +90,9 @@ export class SettingsScreen {
     this.frameRateToggle.checked = settings.isFrameRateShown
     this.nerdModeToggle.checked = settings.isNerdModeOn
     this.showTheChosenUnit(settings.temperatureUnit)
+    this.cameraModeRow.showTheChosen(settings.cameraMode)
+    this.controlSchemeRow.showTheChosen(settings.controlScheme)
+    this.stickLayoutRow.showTheChosen(settings.stickLayout)
     this.element.hidden = false
   }
 
@@ -144,7 +162,25 @@ function timePlayedText(secondsPlayed: number): string {
   }
 }
 
-function heading(tag: 'h2' | 'h3', key: 'settings.title' | 'settings.coatColour' | 'settings.face' | 'settings.temperature' | 'settings.advanced' | 'settings.statistics'): HTMLElement {
+function choiceRow<Value extends string>(values: readonly Value[], labelKeyOf: (value: Value) => TextKey, chosen: (value: Value) => void): ChoiceRow<Value> {
+  const row = document.createElement('div')
+  row.className = 'settings-units'
+  const buttons = values.map((value) => {
+    const button = document.createElement('button')
+    button.className = 'settings-unit'
+    button.textContent = text(labelKeyOf(value))
+    button.addEventListener('click', () => {
+      showTheChosen(value)
+      chosen(value)
+    })
+    return button
+  })
+  const showTheChosen = (chosenValue: Value): void => buttons.forEach((button, index) => button.setAttribute('aria-pressed', String(values[index] === chosenValue)))
+  row.append(...buttons)
+  return { element: row, showTheChosen }
+}
+
+function heading(tag: 'h2' | 'h3', key: 'settings.title' | 'settings.coatColour' | 'settings.face' | 'settings.camera' | 'settings.controls' | 'settings.sticks' | 'settings.temperature' | 'settings.advanced' | 'settings.statistics'): HTMLElement {
   const element = document.createElement(tag)
   element.textContent = text(key)
   return element

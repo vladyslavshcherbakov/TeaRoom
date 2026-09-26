@@ -1,17 +1,12 @@
 import { browserStorage, parsedJsonOrNull } from './BrowserStorage.ts'
-import { controlSchemes, type ControlScheme } from './Camera/FirstPersonControls.ts'
 import type { FirstPersonLook } from './Camera/FirstPersonLook.ts'
 import { isAKeeperHeight, keeperHeightByDefaultCentimetres } from './Camera/KeeperHeight.ts'
 import { arrangementBeforeRoomsVaried, arrangementOfAnEarlierSave, describeArrangement, problemWithArrangement, type RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
-import type { CameraMode, StickLayout } from './Views/DebugMenu.ts'
 
 export const savedVisitVersion = 1
 
 export type SavedCamera = {
-  readonly mode: CameraMode
-  readonly stickLayout: StickLayout
-  readonly controlScheme: ControlScheme
   readonly keeperHeightCentimetres: number
   readonly look: FirstPersonLook
 }
@@ -33,9 +28,7 @@ type VisitMigration = (visit: VisitShape) => { readonly migrated: VisitShape; re
 export type FoundVisit = { readonly kind: 'none' } | { readonly kind: 'found'; readonly visit: SavedVisit } | { readonly kind: 'brokenByAnUpdate' }
 
 const storageKey = 'visit'
-const cameraModes: readonly CameraMode[] = ['room', 'firstPerson']
-const stickLayouts: readonly StickLayout[] = ['walkOnTheLeft', 'lookOnTheLeft']
-const migrationsOldestFirst: readonly VisitMigration[] = [withItsArrangement, withTheArrangementInTodaysWords, withTheCameraControlledByTwoSticks, withTheKeeperOfTheHeightByDefault]
+const migrationsOldestFirst: readonly VisitMigration[] = [withItsArrangement, withTheArrangementInTodaysWords, withTheKeeperOfTheHeightByDefault]
 
 export class VisitStore {
   private readonly log: RoomLog
@@ -107,8 +100,6 @@ function problemWith(visit: unknown): string | null {
   if (place.closeUpOf !== null && typeof place.closeUpOf !== 'string') return 'its close-up is not a piece of furniture'
   const camera = saved.camera as Partial<Record<keyof SavedCamera, unknown>> | undefined
   const look = camera?.look as Partial<Record<keyof FirstPersonLook, unknown>> | undefined
-  if (!cameraModes.includes(camera?.mode as CameraMode) || !stickLayouts.includes(camera?.stickLayout as StickLayout)) return 'its camera is not one the game has'
-  if (!controlSchemes.includes(camera?.controlScheme as ControlScheme)) return 'its first-person controls are not ones the game has'
   if (typeof look?.headingRadians !== 'number' || typeof look.pitchRadians !== 'number') return 'its first-person look is missing'
   if (!isAKeeperHeight(camera?.keeperHeightCentimetres)) return 'its keeper is of a height the game does not have'
   const arrangementProblem = problemWithArrangement(saved.arrangement)
@@ -129,15 +120,6 @@ function withTheArrangementInTodaysWords(visit: VisitShape): ReturnType<VisitMig
   return {
     migrated: { ...visit, arrangement },
     change: 'the saved visit names its room by its kitchen alone, from before the furniture could move, so it keeps its window with the kitchen beside it and the tea table by the window',
-  }
-}
-
-function withTheCameraControlledByTwoSticks(visit: VisitShape): ReturnType<VisitMigration> {
-  const camera = visit['camera']
-  if (!isVisitShape(camera) || camera['controlScheme'] !== undefined) return null
-  return {
-    migrated: { ...visit, camera: { ...camera, controlScheme: 'twoSticks' } },
-    change: 'the saved visit is from before the first-person look could be controlled by a mouse or keyboard, so it keeps its two sticks',
   }
 }
 

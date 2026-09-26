@@ -1,4 +1,4 @@
-import type { StickLayout } from '../Views/DebugMenu.ts'
+import type { StickLayout } from '../RoomSettings.ts'
 import type { StickDeflection } from './FirstPersonLook.ts'
 
 export type ControlScheme = 'twoSticks' | 'mouseAndKeyboard' | 'mouseAndWalkStick' | 'keyboardAndLookStick'
