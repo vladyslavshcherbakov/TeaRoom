@@ -32,7 +32,7 @@ const heldInViewMostShareOfScreenHeight = 0.2
 const sipRiseShareOfScreenHeight = 0.1
 const sipTowardTheMiddleShare = 0.35
 const sipNearerShare = 0.12
-const sipTiltTowardTheEyesRadians = 0.55
+const headInCamera = new THREE.Vector3(0, -0.1, 0.1)
 
 export function holdInView(model: Pick<CarriedModel, 'root' | 'footprintRadius' | 'rimHeight'>, handIndex: HandIndex, heldInView: HeldInView): void {
   const { camera } = heldInView
@@ -49,8 +49,14 @@ export function raiseTowardTheEyes(model: Pick<CarriedModel, 'root'>, handIndex:
   const frame = heldInViewFrame(heldInView, handIndex)
   const atTheLips = new THREE.Vector3(frame.baseInCamera.x * (1 - sipTowardTheMiddleShare), frame.baseInCamera.y + frame.screenHeight * sipRiseShareOfScreenHeight, frame.baseInCamera.z * (1 - sipNearerShare))
   model.root.position.copy(camera.localToWorld(frame.baseInCamera.clone().lerp(atTheLips, liftShare)))
-  const cameraRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion)
-  model.root.quaternion.premultiply(new THREE.Quaternion().setFromAxisAngle(cameraRight, sipTiltTowardTheEyesRadians * liftShare))
+  const openingAxis = new THREE.Vector3(0, 1, 0).applyQuaternion(model.root.quaternion)
+  const towardTheHead = headOf(camera).sub(model.root.position).normalize()
+  const openingFacingTheHead = new THREE.Quaternion().setFromUnitVectors(openingAxis, towardTheHead)
+  model.root.quaternion.premultiply(new THREE.Quaternion().slerp(openingFacingTheHead, liftShare))
+}
+
+export function headOf(camera: THREE.Camera): THREE.Vector3 {
+  return camera.localToWorld(headInCamera.clone())
 }
 
 function turnFacingTheEyes(frame: HeldInViewFrame, camera: THREE.Camera, handIndex: HandIndex): THREE.Quaternion {

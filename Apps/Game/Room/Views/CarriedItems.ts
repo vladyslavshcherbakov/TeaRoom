@@ -55,7 +55,7 @@ export class CarriedItems {
     claySeenFromInside.side = THREE.DoubleSide
     this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, { room: materials, claySeenFromInside, cloth: this.clothMaterialFor(itemId, shape) }))
     for (const model of this.models) {
-      this.root.add(model.root, ...model.puffs)
+      this.root.add(model.root, ...model.puffs, ...model.sipPuffs)
       this.tappableMeshes.push(model.root)
     }
     this.waterStreams = new WaterStreams(materials, sinkSpot, surroundings.layout.faucetSpout)

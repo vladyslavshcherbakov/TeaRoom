@@ -14,10 +14,14 @@ import { spoonShapeLook } from './SpoonParts.ts'
 import { thermosShapeLook } from './ThermosParts.ts'
 
 export type PuffTrail = {
+  readonly material: THREE.Material
   readonly origin: THREE.Vector3
   readonly direction: THREE.Vector3
   size: number
   reachMetres: number
+  opacity: number
+  whereTheVesselWas: string
+  leftBehindAtSeconds: number | null
   lastRise: number
   isOut: boolean
 }
@@ -58,7 +62,9 @@ export type CarriedModel = {
   readonly heldInViewLook: HeldInViewLook | null
   readonly steamLook: SteamLook
   readonly puffTrails: readonly PuffTrail[]
-  steamRise: { share: number; atSeconds: number } | null
+  readonly sipPuffs: readonly THREE.Mesh[]
+  readonly sipPuffTrails: readonly PuffTrail[]
+  sipSteamStartedAtSeconds: number | null
   readonly glowingShell: GlowingShell | null
   readonly charTo: CharTo | null
   readonly thermometer: LampDisplay | null
@@ -73,6 +79,7 @@ export type CarriedModel = {
 const mostSteamSources = 2
 const steamPuffGeometry = new THREE.SphereGeometry(0.03, 8, 6)
 export const mostPuffsFromOneSource = 3
+export const mostSipPuffs = 6
 
 const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
@@ -113,8 +120,11 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !isATouchArea(part)))
   const steamLook: SteamLook = { inRoom: materials.room.materialFor(look.steamSurface), heldInView: materials.room.materialFor('heldSteam'), drawnToTheEyes: materials.room.materialFor('steam') }
-  const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(steamPuffGeometry, steamLook.inRoom))
-  for (const puff of puffs) puff.castShadow = false
+  const puffTrails = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => newPuffTrail(steamLook.inRoom))
+  const sipPuffTrails = Array.from({ length: mostSipPuffs }, () => newPuffTrail(steamLook.drawnToTheEyes))
+  const puffs = puffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
+  const sipPuffs = sipPuffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
+  for (const puff of [...puffs, ...sipPuffs]) puff.castShadow = false
   return {
     itemId,
     shape,
@@ -144,8 +154,10 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     puffs,
     heldInViewLook: parts.heldInViewLook,
     steamLook,
-    puffTrails: puffs.map(() => ({ origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, reachMetres: 0, lastRise: 0, isOut: false })),
-    steamRise: null,
+    puffTrails,
+    sipPuffs,
+    sipPuffTrails,
+    sipSteamStartedAtSeconds: null,
     glowingShell: parts.glowingShell,
     charTo: parts.charTo,
     thermometer: parts.thermometer,
@@ -156,6 +168,10 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     isHeldInView: false,
     castsShadow: true,
   }
+}
+
+function newPuffTrail(look: THREE.Material): PuffTrail {
+  return { material: look.clone(), origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, reachMetres: 0, opacity: look.opacity, whereTheVesselWas: '', leftBehindAtSeconds: null, lastRise: 0, isOut: false }
 }
 
 function forgivingTouchPad(shape: CarriedShape, rimHeight: number): THREE.Mesh {
