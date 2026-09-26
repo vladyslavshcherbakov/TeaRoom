@@ -8,7 +8,7 @@ import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
 import { isKnown, isNotBeingPoured, isNotBurntAway, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
-import { liftOutOfTheSink } from './SinkCommands.ts'
+import { liftTheItem } from './KeeperCommands.ts'
 import { emptyTheHand, heaterSpotOf, locationOfItem, moveItem } from './Reach.ts'
 
 export type HeaterSwitchedOffBy = 'byTheKeeper' | 'byTheEndOfTheRitual'
@@ -21,7 +21,7 @@ export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeate
   const heaterSpot = heaterSpotOf(draft)
   const location = locationOfItem(draft, itemId)
   if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
-  liftOutOfTheSink(draft, itemId)
+  else if (liftTheItem(draft, itemId) === 'crumbled') return
   moveItem(draft, itemId, { kind: 'onSurface', spot: heaterSpot })
   draft.state.heater.itemIdOnTop = itemId
   note(draft, `placed on heater: ${rulesFor(draft.state, itemId)?.describeOnTheHeater(draft, itemId) ?? itemId}, heater ${draft.state.heater.isOn ? 'on' : 'off'}`)

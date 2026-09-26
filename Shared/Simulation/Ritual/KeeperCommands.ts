@@ -3,7 +3,6 @@ import type { HandIndex } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { note, refuse, type Draft } from './Draft.ts'
 import { liftOffTheHeater } from './HeatingCommands.ts'
-import { closeTheLidAsItIsLifted } from './LidCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { emptyTheHand, middleHandIndex, locationOfItem, moveItem, whereIs } from './Reach.ts'
@@ -38,6 +37,13 @@ export function pickUpWithAMiddleHand(draft: Draft, command: CommandOfType<'pick
   draft.events.push({ type: 'middleHandGrown', itemId })
 }
 
+export function liftTheItem(draft: Draft, itemId: string): 'whole' | 'crumbled' {
+  if (draft.state.heater.itemIdOnTop === itemId) liftOffTheHeater(draft, itemId)
+  if (rulesFor(draft.state, itemId)?.takeIntoAHand(draft, itemId) === 'crumbled') return 'crumbled'
+  liftOutOfTheSink(draft, itemId)
+  return 'whole'
+}
+
 export function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
   const itemId = command.itemId
   if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isInAHand(itemId), isTheKeeperAt(command.spot.placeId, 'the spot'), isNotBeingPoured(itemId)])) return
@@ -54,14 +60,11 @@ function checksToTake(itemId: string): readonly Check[] {
 
 function takeIntoTheHand(draft: Draft, itemId: string, handIndex: HandIndex): 'whole' | 'crumbled' {
   const whereItWas = whereIs(locationOfItem(draft, itemId))
-  if (draft.state.heater.itemIdOnTop === itemId) liftOffTheHeater(draft, itemId)
-  if (rulesFor(draft.state, itemId)?.takeIntoAHand(draft, itemId) === 'crumbled') return 'crumbled'
+  if (liftTheItem(draft, itemId) === 'crumbled') return 'crumbled'
   draft.state.keeper.hands[handIndex] = itemId
-  liftOutOfTheSink(draft, itemId)
   moveItem(draft, itemId, { kind: 'inHand', handIndex })
   note(draft, `picked up ${itemId}, which was ${whereItWas}, into hand ${handIndex}`)
   draft.events.push({ type: 'pickedUp', itemId, handIndex })
-  closeTheLidAsItIsLifted(draft, itemId, 'it was picked up')
   return 'whole'
 }
 

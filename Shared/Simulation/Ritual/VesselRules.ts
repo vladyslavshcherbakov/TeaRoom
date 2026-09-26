@@ -25,7 +25,10 @@ export const vesselRules: ItemKindRules = {
   takeOffTheHeater: () => undefined,
   runTheTapOnto: (draft, itemId, runningWater, tap, seconds) => withTheVessel(draft, itemId, (vessel) => fillTheVessel(draft, vessel, runningWater, tap, seconds)),
   liftOutOfTheSink: (draft, itemId) => withTheVessel(draft, itemId, (vessel) => pourAwayTheRinseWaterIfItRanOver(draft, vessel)),
-  takeIntoAHand: () => 'whole',
+  takeIntoAHand: (draft, itemId) => {
+    withTheVessel(draft, itemId, (vessel) => closeTheLidAsItIsTaken(draft, vessel))
+    return 'whole'
+  },
 }
 
 function withTheVessel(draft: Draft, itemId: string, act: (vessel: VesselState) => void): void {
@@ -107,4 +110,11 @@ function pourAwayTheRinseWaterIfItRanOver(draft: Draft, vessel: VesselState): vo
   note(draft, `${vessel.id} was rinsed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
   vessel.liquid = water(0, vessel.liquid.temperatureC)
   vessel.hasOnlyBoiledDownSinceFull = false
+}
+
+function closeTheLidAsItIsTaken(draft: Draft, vessel: VesselState): void {
+  if (!vessel.isLidOpen) return
+  vessel.isLidOpen = false
+  note(draft, `${vessel.id} lid closed as it was taken`)
+  draft.events.push({ type: 'vesselLidClosed', vesselId: vessel.id })
 }

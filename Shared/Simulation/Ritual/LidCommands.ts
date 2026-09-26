@@ -17,14 +17,6 @@ export function moveVesselLid(
   draft.events.push({ type: shouldOpen ? 'vesselLidOpened' : 'vesselLidClosed', vesselId: vessel.id })
 }
 
-export function closeTheLidAsItIsLifted(draft: Draft, itemId: string, how: string): void {
-  const vessel = draft.state.vessels[itemId]
-  if (vessel === undefined || !vessel.isLidOpen) return
-  vessel.isLidOpen = false
-  note(draft, `${vessel.id} lid closed as ${how}`)
-  draft.events.push({ type: 'vesselLidClosed', vesselId: vessel.id })
-}
-
 function hasALid(vessel: VesselState): Check {
   return (draft) => (vesselDefinitionOf(draft, vessel).lid === null ? { reason: 'vesselHasNoLid', values: `${vessel.id} has no lid` } : null)
 }

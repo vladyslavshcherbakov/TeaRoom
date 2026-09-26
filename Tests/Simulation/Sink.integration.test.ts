@@ -81,6 +81,16 @@ test('kettle_whenTakenOutOfTheSink_comesOutWithTheLidClosed', () => {
   assert.deepEqual(eventsOfType(events, 'vesselLidClosed'), [{ type: 'vesselLidClosed', vesselId: 'kettle' }])
 })
 
+test('kettle_whenPutOnTheHeaterStraightFromTheSink_closesItsLid', () => {
+  const ritual = openKettleInHandAtTheCounter()
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+
+  const events = ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+
+  assert.equal(ritual.vessel('kettle').isLidOpen, false)
+  assert.deepEqual(eventsOfType(events, 'vesselLidClosed'), [{ type: 'vesselLidClosed', vesselId: 'kettle' }])
+})
+
 test('tap_whenTheKeeperWalksAway_keepsRunningIntoTheKettle', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'putInTheSink', itemId: 'kettle' })

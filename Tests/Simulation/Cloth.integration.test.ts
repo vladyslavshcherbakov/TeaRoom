@@ -47,6 +47,15 @@ test('cloth_whenLiftedOutOfThePuddle_stopsSoakingIt', () => {
   assertNear(wetMlOnEveryPlace(ritual.state), wetMlWhenLifted - 1)
 })
 
+test('cloth_whenPutOnTheHeaterFromThePuddle_stopsSoakingIt', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
+
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+
+  assert.equal(ritual.cloth().isSoakingThePuddle, false)
+})
+
 test('cloth_whenItSoaksUpSpilledTea_isStained', () => {
   const ritual = ritualWithTeaSpilledOnTheTable()
   ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })

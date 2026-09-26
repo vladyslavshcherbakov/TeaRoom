@@ -468,8 +468,8 @@ test('thermosLid_whenTheThermosIsRedHot_staysClosed', () => {
 
 test('thermosLid_whenOpenAsTheThermosTurnsRedHot_staysOpen', () => {
   const ritual = TestRitual.begun()
-  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(30)
 
