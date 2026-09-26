@@ -1,4 +1,4 @@
-import type { CameraPose, CloseUp, FloorPoint, WorldPoint } from '../RoomLayout.ts'
+import { directionIntoTheRoomFrom, metresClearOfFurnitureAlong, pointAwayFromTheWall, type CameraPose, type CloseUp, type FloorPoint, type RoomLayout, type WorldPoint } from '../RoomLayout.ts'
 
 export type ThingOnAWall = {
   readonly centre: WorldPoint
@@ -19,6 +19,11 @@ const farthestDistanceShare = 1.6
 const wheelZoomPerPixel = 0.001
 
 const thingShareOfAPortraitScreenHeight = 0.2
+const gearsAwayFromTheWallMetres = 0.03
+const gearsCentreRightOfTheBigGearMetres = 0.07
+const gearsCentreAboveTheBigGearMetres = 0.07
+const gearsSpanMetres = 0.5
+const cameraWatchingTheGearsBeforeFurnitureMetres = 0.3
 const thingShareOfALandscapeScreenHeight = 0.4
 const thingAboveTheMiddleOfAPortraitScreenShare = 0.31
 const thingLeftOfTheMiddleOfALandscapeScreenShare = 0.22
@@ -39,10 +44,21 @@ export function closeUpPose(closeUp: CloseUp, aspect: number): CameraPose {
   return poseLookingAt(closeUp.target, normalised(closeUp.directionToCamera), distance)
 }
 
-export function poseWatchingBesideASheet(thing: ThingOnAWall, aspect: number): CameraPose {
+export function poseWatchingTheGears(layout: RoomLayout, aspect: number): CameraPose {
+  const spot = layout.settingsGear
+  const towardsTheRoom = directionIntoTheRoomFrom(spot.wall)
+  const onTheWall = pointAwayFromTheWall(spot, gearsAwayFromTheWallMetres)
+  const right = { x: towardsTheRoom.z, z: -towardsTheRoom.x }
+  const centre = { x: onTheWall.x + right.x * gearsCentreRightOfTheBigGearMetres, y: onTheWall.y + gearsCentreAboveTheBigGearMetres, z: onTheWall.z + right.z * gearsCentreRightOfTheBigGearMetres }
+  const clearMetres = metresClearOfFurnitureAlong(layout, centre, towardsTheRoom, cameraWatchingTheGearsBeforeFurnitureMetres)
+  return poseWatchingBesideASheet({ centre, towardsTheRoom, sizeMetres: gearsSpanMetres }, aspect, clearMetres)
+}
+
+export function poseWatchingBesideASheet(thing: ThingOnAWall, aspect: number, farthestMetres = Infinity): CameraPose {
   const isPortrait = aspect < 1
-  const visibleHeight = thing.sizeMetres / (isPortrait ? thingShareOfAPortraitScreenHeight : thingShareOfALandscapeScreenHeight)
-  const distance = visibleHeight / 2 / halfHeightTangent()
+  const heightToShow = thing.sizeMetres / (isPortrait ? thingShareOfAPortraitScreenHeight : thingShareOfALandscapeScreenHeight)
+  const distance = Math.min(heightToShow / 2 / halfHeightTangent(), farthestMetres)
+  const visibleHeight = 2 * distance * halfHeightTangent()
   const right = { x: thing.towardsTheRoom.z, y: 0, z: -thing.towardsTheRoom.x }
   const shift = isPortrait ? { right: 0, down: visibleHeight * thingAboveTheMiddleOfAPortraitScreenShare } : { right: visibleHeight * aspect * thingLeftOfTheMiddleOfALandscapeScreenShare, down: 0 }
   const target = { x: thing.centre.x + right.x * shift.right, y: thing.centre.y - shift.down, z: thing.centre.z + right.z * shift.right }

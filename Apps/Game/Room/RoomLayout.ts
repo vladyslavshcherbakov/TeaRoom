@@ -226,6 +226,24 @@ export function nearestFurnitureWithin(layout: RoomLayout, point: FloorPoint, me
   return nearest?.id ?? null
 }
 
+export function metresClearOfFurnitureAlong(layout: RoomLayout, from: FloorPoint, direction: FloorPoint, marginMetres: number): number {
+  const entries = layout.furniture.map((piece) => entryAlongARay(piece.footprint, from, direction, marginMetres)).filter((entry) => entry >= 0)
+  return Math.min(Infinity, ...entries)
+}
+
+function entryAlongARay(footprint: Footprint, from: FloorPoint, direction: FloorPoint, marginMetres: number): number {
+  const [enterX, leaveX] = slabCrossing(from.x, direction.x, footprint.x - footprint.width / 2 - marginMetres, footprint.x + footprint.width / 2 + marginMetres)
+  const [enterZ, leaveZ] = slabCrossing(from.z, direction.z, footprint.z - footprint.depth / 2 - marginMetres, footprint.z + footprint.depth / 2 + marginMetres)
+  const enter = Math.max(enterX, enterZ)
+  return enter <= Math.min(leaveX, leaveZ) ? enter : -1
+}
+
+function slabCrossing(start: number, step: number, low: number, high: number): readonly [number, number] {
+  if (step === 0) return start >= low && start <= high ? [-Infinity, Infinity] : [Infinity, -Infinity]
+  const [first, second] = [(low - start) / step, (high - start) / step]
+  return [Math.min(first, second), Math.max(first, second)]
+}
+
 function distanceToTheEdgeOf(footprint: Footprint, point: FloorPoint): number {
   const across = Math.max(0, Math.abs(point.x - footprint.x) - footprint.width / 2)
   const along = Math.max(0, Math.abs(point.z - footprint.z) - footprint.depth / 2)
