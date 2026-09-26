@@ -229,7 +229,6 @@ function moveToLayer(model: CarriedModel, layer: number): void {
   putOnLayer(model.root, layer)
   const look = model.heldInViewLook
   if (look !== null) look.mesh.material = model.isHeldInView ? look.heldInView : look.inRoom
-  for (const puff of model.puffs) puff.layers.set(layer)
 }
 
 function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {

@@ -10,7 +10,7 @@ import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
-import { mostPuffsFromOneSource, type CarriedModel } from './CarriedModel.ts'
+import { mostPuffsFromOneSource, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
 import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
 import { kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
@@ -77,18 +77,31 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
 }
 
 function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], puffsPerSource: number, timeSeconds: number, eyes: SteamDrawnToTheEyes | null): void {
-  const sizeInView = model.root.scale.x
-  const steamMaterial = eyes !== null ? model.steamLook.drawnToTheEyes : model.isHeldInView ? model.steamLook.heldInView : model.steamLook.inRoom
   model.puffs.forEach((puff, index) => {
-    puff.material = steamMaterial
+    const trail = model.puffTrails[index]
     const source = steamSources[index % steamSources.length]
     const puffAtItsSource = Math.floor(index / steamSources.length)
-    puff.visible = source !== undefined && puffAtItsSource < puffsPerSource
-    if (!puff.visible || source === undefined) return
+    if (trail === undefined || source === undefined || puffAtItsSource >= puffsPerSource) {
+      puff.visible = false
+      if (trail !== undefined) trail.isOut = false
+      return
+    }
     const rise = (timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
-    puff.position.copy(source).addScaledVector(steamRisingFrom(source, eyes), rise * steamColumnMetres * sizeInView)
-    puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare * sizeInView)
+    if (!trail.isOut || rise < trail.lastRise) releaseThePuff(model, puff, trail, source, eyes)
+    trail.lastRise = rise
+    puff.visible = true
+    puff.position.copy(trail.origin).addScaledVector(trail.direction, rise * steamColumnMetres * trail.size)
+    puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare * trail.size)
   })
+}
+
+function releaseThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail, source: THREE.Vector3, eyes: SteamDrawnToTheEyes | null): void {
+  trail.isOut = true
+  trail.origin.copy(source)
+  trail.direction.copy(steamRisingFrom(source, eyes))
+  trail.size = model.root.scale.x
+  puff.material = eyes !== null ? model.steamLook.drawnToTheEyes : model.isHeldInView ? model.steamLook.heldInView : model.steamLook.inRoom
+  puff.layers.set(model.layer)
 }
 
 function steamRisingFrom(source: THREE.Vector3, eyes: SteamDrawnToTheEyes | null): THREE.Vector3 {

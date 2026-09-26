@@ -13,6 +13,14 @@ import type { LeafPile } from './LeafPile.ts'
 import { spoonShapeLook } from './SpoonParts.ts'
 import { thermosShapeLook } from './ThermosParts.ts'
 
+export type PuffTrail = {
+  readonly origin: THREE.Vector3
+  readonly direction: THREE.Vector3
+  size: number
+  lastRise: number
+  isOut: boolean
+}
+
 export type SteamLook = {
   readonly inRoom: THREE.Material
   readonly heldInView: THREE.Material
@@ -48,6 +56,7 @@ export type CarriedModel = {
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
   readonly steamLook: SteamLook
+  readonly puffTrails: readonly PuffTrail[]
   readonly glowingShell: GlowingShell | null
   readonly charTo: CharTo | null
   readonly thermometer: LampDisplay | null
@@ -133,6 +142,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     puffs,
     heldInViewLook: parts.heldInViewLook,
     steamLook,
+    puffTrails: puffs.map(() => ({ origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, lastRise: 0, isOut: false })),
     glowingShell: parts.glowingShell,
     charTo: parts.charTo,
     thermometer: parts.thermometer,
