@@ -386,7 +386,7 @@ export class RoomPlay {
   }
 
   private switchTheHeater(): void {
-    const command: Command = this.ritual.state.heater.isOn ? { type: 'switchHeaterOff' } : { type: 'switchHeaterOn', stopsAtTheThermostatsTarget: this.listener.isNerdModeOn() }
+    const command: Command = this.ritual.state.heater.isOn ? { type: 'switchHeaterOff' } : { type: 'switchHeaterOn', holdsTheThermostatsTarget: this.listener.isNerdModeOn() }
     this.ritual.dispatch(command)
   }
 

@@ -129,13 +129,13 @@ test('savedState_fromBeforeTheThermostat_getsOneAtAHundredDegreesNotWorking', ()
   assert.equal(resumed.state.heater.secondsHeating, 0)
 })
 
-test('savedState_fromBeforeTheHeaterCouldStopAtItsTarget_boilsByHandAsItDid', () => {
+test('savedState_fromBeforeTheHeaterCouldHoldItsTarget_boilsByHandAsItDid', () => {
   const savedState = TestRitual.begun().savedState as { heater: Record<string, unknown> }
-  delete savedState.heater['stopsAtTheThermostatsTarget']
+  delete savedState.heater['holdsTheThermostatsTarget']
 
   const resumed = TestRitual.resumedFrom(savedState)
 
-  assert.equal(resumed.state.heater.stopsAtTheThermostatsTarget, false)
+  assert.equal(resumed.state.heater.holdsTheThermostatsTarget, false)
 })
 
 test('savedState_fromBeforeVesselsRememberedBeingFull_countsNoneAsFull', () => {

@@ -17,7 +17,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
       definitionId: room.heaterId,
       isOn: false,
       thermostat: { targetC: definitionIn(catalog, 'heaters', room.heaterId).thermostat.startsAtC, isOn: false },
-      stopsAtTheThermostatsTarget: false,
+      holdsTheThermostatsTarget: false,
       switchedOnAtSeconds: 0,
       itemIdOnTop: null,
       secondsHeatedByItemId: {},

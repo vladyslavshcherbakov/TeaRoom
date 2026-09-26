@@ -35,7 +35,7 @@ export type HeaterState = {
   definitionId: string
   isOn: boolean
   thermostat: ThermostatState
-  stopsAtTheThermostatsTarget: boolean
+  holdsTheThermostatsTarget: boolean
   switchedOnAtSeconds: number
   itemIdOnTop: string | null
   secondsHeatedByItemId: Record<string, number>

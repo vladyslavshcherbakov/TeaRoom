@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { degreesShownIn } from '../../../Apps/Game/Room/Temperatures.ts'
+import { assertNear } from '../../Support/Assertions.ts'
 import { TestRoom } from '../../Support/TestRoom.ts'
 
 const down = { kind: 'thermostatArrow', step: -1 } as const
@@ -92,16 +93,16 @@ test('heaterSwitch_whenTappedWhileTheThermostatWaits_boilsByHand', () => {
   assert.equal(room.state.heater.thermostat.isOn, false)
 })
 
-test('heaterSwitch_inNerdMode_heatsTheKettleOnlyToTheShownTarget', () => {
+test('heaterSwitch_inNerdMode_holdsTheKettleAtTheShownTargetAndStaysOn', () => {
   const room = kettleOfTapWaterOnTheHeater()
   room.isNerdModeOn = true
   room.tapTimes(20, down)
 
   room.tap({ kind: 'heaterSwitch' })
-  room.advance(40)
+  room.advance(60)
 
-  assert.ok(kettleWaterC(room) < 81, `the kettle reached ${kettleWaterC(room)} °C`)
-  assert.equal(room.state.heater.isOn, false)
+  assertNear(kettleWaterC(room), 80, 0.05)
+  assert.equal(room.state.heater.isOn, true)
 })
 
 test('heaterSwitch_withoutNerdMode_boilsTheKettlePastTheTarget', () => {

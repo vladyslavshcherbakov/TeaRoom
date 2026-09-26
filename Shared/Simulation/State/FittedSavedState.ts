@@ -25,7 +25,7 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterStoppingAtTheTarget, withVesselsRememberingTheyWereFull]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -251,12 +251,12 @@ function withTheThermostat(saved: Shape, catalog: Catalog): ReturnType<SaveMigra
   }
 }
 
-function withTheHeaterStoppingAtTheTarget(saved: Shape): ReturnType<SaveMigration> {
+function withTheHeaterHoldingTheTarget(saved: Shape): ReturnType<SaveMigration> {
   const heater = saved['heater']
-  if (!isShape(heater) || heater['stopsAtTheThermostatsTarget'] !== undefined) return null
+  if (!isShape(heater) || heater['holdsTheThermostatsTarget'] !== undefined) return null
   return {
-    migrated: { ...saved, heater: { ...heater, stopsAtTheThermostatsTarget: false } },
-    change: 'a save from before the heater could stop at the thermostat\'s target boils by hand as it did',
+    migrated: { ...saved, heater: { ...heater, holdsTheThermostatsTarget: false } },
+    change: 'a save from before the heater could hold the thermostat\'s target boils by hand as it did',
   }
 }
 

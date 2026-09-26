@@ -35,7 +35,9 @@ function withTheVessel(draft: Draft, itemId: string, act: (vessel: VesselState) 
 
 function heatTheVessel(draft: Draft, vessel: VesselState, seconds: number): void {
   const heaterDefinition = definitionIn(draft.catalog, 'heaters', draft.state.heater.definitionId)
-  const heated = heatLiquid(vessel.liquid, heaterDefinition, shareOfTheHeatKeptBy(vesselDefinitionOf(draft, vessel), vessel.isLidOpen), seconds)
+  const heater = draft.state.heater
+  const highestC = heater.holdsTheThermostatsTarget && !heater.thermostat.isOn ? heater.thermostat.targetC : undefined
+  const heated = heatLiquid(vessel.liquid, heaterDefinition, shareOfTheHeatKeptBy(vesselDefinitionOf(draft, vessel), vessel.isLidOpen), seconds, highestC)
   vessel.liquid = liquidBoiledAway(heated, heaterDefinition, seconds)
   announceTargetTemperatureOnce(draft, vessel.id, vessel.liquid.temperatureC)
   if (vessel.liquid.volumeMl < heated.volumeMl) noteBoilingAway(draft, vessel, heaterDefinition.boilingAwayMlPerSecond)

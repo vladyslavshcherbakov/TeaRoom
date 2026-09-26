@@ -11,9 +11,9 @@ import { isKnown, isNotBeingPoured, isNotBurntAway, isWithinTheKeepersReach, was
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { emptyTheHand, heaterSpotOf, isKeeperAt, locationOfItem, moveItem, whereTheKeeperStands } from './Reach.ts'
 
-export type HeaterSwitchedOffBy = 'byTheKeeper' | 'byTheEndOfTheRitual' | 'atItsTarget'
+export type HeaterSwitchedOffBy = 'byTheKeeper' | 'byTheEndOfTheRitual'
 
-const switchedOffWords: Readonly<Record<HeaterSwitchedOffBy, string>> = { byTheKeeper: 'by the keeper', byTheEndOfTheRitual: 'by the end of the ritual', atItsTarget: 'by itself at its target' }
+const switchedOffWords: Readonly<Record<HeaterSwitchedOffBy, string>> = { byTheKeeper: 'by the keeper', byTheEndOfTheRitual: 'by the end of the ritual' }
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
@@ -45,8 +45,8 @@ export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeate
   if (!wasTheThermostatWaiting) beginToUseTheHeater(draft)
   heater.thermostat.isOn = false
   heater.isOn = true
-  heater.stopsAtTheThermostatsTarget = command.stopsAtTheThermostatsTarget === true
-  if (heater.stopsAtTheThermostatsTarget) note(draft, `the heater will switch itself off once the water on it reaches the thermostat's ${heater.thermostat.targetC} °C`)
+  heater.holdsTheThermostatsTarget = command.holdsTheThermostatsTarget === true
+  if (heater.holdsTheThermostatsTarget) note(draft, `the heater heats the water on it up to the thermostat's ${heater.thermostat.targetC} °C and holds it there until it is switched off`)
   if (wasTheThermostatWaiting) note(draft, `heater switched on by hand while its thermostat waited at ${heater.thermostat.targetC} °C, so the thermostat is off and the heater heats to the boil`)
   else note(draft, `heater switched on with ${heater.itemIdOnTop ?? 'nothing'} on top`)
   draft.events.push({ type: 'heaterSwitchedOn' })
@@ -86,11 +86,6 @@ export function stopTheThermostat(draft: Draft, command: CommandOfType<'stopTheT
   switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'byTheKeeper')
 }
 
-export function switchTheHeaterOffAtItsTarget(draft: Draft): void {
-  note(draft, `the heater switches itself off: the water on it reached the thermostat's ${draft.state.heater.thermostat.targetC} °C`)
-  switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'atItsTarget')
-}
-
 export function isTheHeaterInUse(heater: DeepReadonly<HeaterState>): boolean {
   return heater.isOn || heater.thermostat.isOn
 }
@@ -100,7 +95,7 @@ export function switchTheHeaterOff(draft: Draft, waterJudgement: WaterJudgement 
   const wasSwitchedOffByTheKeeper = switchedOff === 'byTheKeeper'
   heater.isOn = false
   heater.thermostat.isOn = false
-  heater.stopsAtTheThermostatsTarget = false
+  heater.holdsTheThermostatsTarget = false
   const onSeconds = draft.state.elapsedSeconds - heater.switchedOnAtSeconds
   const heaterDefinition = definitionIn(draft.catalog, 'heaters', heater.definitionId)
   const kilowattHours = kilowattHoursUsed(heaterDefinition, heater.secondsHeating)

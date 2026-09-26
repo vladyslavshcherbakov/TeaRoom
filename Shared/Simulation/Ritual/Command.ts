@@ -11,7 +11,7 @@ export type Command =
   | { readonly type: 'openVesselLid'; readonly vesselId: string }
   | { readonly type: 'closeVesselLid'; readonly vesselId: string }
   | { readonly type: 'placeOnHeater'; readonly itemId: string }
-  | { readonly type: 'switchHeaterOn'; readonly stopsAtTheThermostatsTarget?: boolean }
+  | { readonly type: 'switchHeaterOn'; readonly holdsTheThermostatsTarget?: boolean }
   | { readonly type: 'switchHeaterOff' }
   | { readonly type: 'setTheThermostat'; readonly targetC: number }
   | { readonly type: 'startTheThermostat' }
