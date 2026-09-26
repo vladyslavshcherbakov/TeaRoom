@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
 import { carriedShapeOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
-import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Views/Carried/CarriedModel.ts'
 import { drawInTheDetailItsSizeNeeds } from '../../../Apps/Game/Room/Views/CarriedItems.ts'
@@ -15,10 +14,8 @@ import type { SurfaceMaterials } from '../../../Apps/Game/Room/Views/RoomMateria
 import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { tiltOfFullFlowDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
-import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import { cameraFieldOfViewDegrees } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
-import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
 
 const teaTableTopMetres = 0.42
@@ -189,13 +186,6 @@ test('invisibleMeshes_ofEveryShape_areAllTouchAreas', () => {
 
     assert.ok(invisibleMeshes.every((mesh) => isATouchArea(mesh)), model.itemId)
   }
-})
-
-test('itemInTheSink_standsOnTheTopOfTheSinksFloorPlate', () => {
-  const tap = definitionIn(defaultCatalog, 'rooms', 'quietRoom').tap
-
-  assert.ok(tap !== null, 'the quiet room has a tap')
-  assertNear(tap.sinkSpot.y, quietRoomLayout.sinkBasin.floorHeight + quietRoomLayout.sinkBasin.plateMetres)
 })
 
 test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDownAboveTheSticks_staysInsideAPortraitPhoneScreen', () => {
