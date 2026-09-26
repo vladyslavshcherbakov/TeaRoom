@@ -192,6 +192,20 @@ test('lids_whenTheClosedThermosIsAimedAtTheClosedKettle_bothOpen', () => {
   assert.equal(room.play.aimedPourView?.targetId, 'kettle')
 })
 
+test('kettleLid_whenTappedWithTheClosedThermosChosen_opensBothLidsAndAimsAtTheKettle', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
+  room.fillInTheSink('thermos')
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  room.tap({ kind: 'lid', itemId: 'kettle' })
+
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, true)
+  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
+})
+
 test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
   const room = new TestRoom()
   room.walkTo('counter')

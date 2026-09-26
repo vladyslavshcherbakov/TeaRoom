@@ -361,6 +361,7 @@ export class RoomPlay {
       case 'item':
         return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId || this.canAimAPourAt(target.itemId), isAControl: false }
       case 'lid':
+        if (this.canAimAPourAt(target.itemId)) return { act: () => this.startAimingAt(target.itemId), isDoneWithTheChosenItem: true, isAControl: false }
         return { act: () => this.toggleLidOf(target.itemId), isDoneWithTheChosenItem: false, isAControl: false }
       case 'figurine':
         return { act: () => this.offerTheChosenCupTo(target.figurineId), isDoneWithTheChosenItem: true, isAControl: false }
