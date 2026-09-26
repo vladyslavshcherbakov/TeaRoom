@@ -23,7 +23,7 @@ Definition of done for a new mechanic: a gesture, a visual response, a continuou
 
 ## Touch profiles
 
-Objects share one physics profile per weight class, so mass is felt through the finger.
+Not in the room yet: the room has no grab animation, no follow lag and no lift. Objects are to share one physics profile per weight class, so mass is felt through the finger.
 
 | Class | Examples | Follow lag | Lift | Scale on grab |
 |---|---|---|---|---|
@@ -31,26 +31,26 @@ Objects share one physics profile per weight class, so mass is felt through the 
 | Medium | caddy, thermos | medium | 4 px | +3% |
 | Heavy | kettle | high | 2–3 px | +2% |
 
-Grab: `pointerdown`, then 100–150 ms without movement. The lift animation takes 120–180 ms. Nothing counts as moved before `pointerup`. On release the object snaps to a matching socket if it is over one, stays where it was put if the spot is allowed, and springs back to where it came from if the spot is forbidden. A spot is forbidden when any part of the item would be over another item, the kettle's spout included, while the spout may hang past an edge. There is no red highlight and no error text.
+Grab: `pointerdown`, then 100–150 ms without movement. The lift animation takes 120–180 ms. Nothing counts as moved before `pointerup`. On release the object stays where it was put if the spot is allowed, and stays in the hand if the spot is forbidden. A spot is forbidden when any part of the item would be over another item, the kettle's spout included, while the spout may hang past an edge. There is no red highlight and no error text.
 
 Animation always goes anticipation, action, settle. A bowl: lift, move, descend, contact, settle. A lid: grip, lift, rotate, settle. Water: tilt, stream, transfer, final drops, stop.
 
 ## Interactions and the simulation
 
-The simulation core receives one command per player decision and answers with events. A refused command is an `actionRefused` event with a reason, and the presentation shows it materially: the object springs back, the lid stays shut.
+The simulation core receives one command per player decision and answers with events. A refused command is an `actionRefused` event with a reason, and the presentation shows it materially: the item stays where it was, the lid stays shut, or the keeper answers in one line.
 
 | Interaction | Gesture | Commands | Events the presentation reacts to |
 |---|---|---|---|
 | Walk to a place | tap a piece of furniture, the keeper arrives | `standAt` with the place, or with none when walking away | `keeperMoved` |
 | Take an item | tap it in a close-up | `pickUp` | `pickedUp` with the hand |
 | Put an item down | select it in a hand, then tap a surface | `putDown` with the exact spot | `putDown` |
-| Choose the mood | pick presets before or during the ritual | `chooseAtmosphere` | `atmosphereChanged` |
-| Begin | pick a tea | `beginRitual` | `ritualBegan` |
+| Choose the mood | not in the room yet: the room chooses the time of day at random when it opens | `chooseAtmosphere` | `atmosphereChanged` |
+| Begin | not in the room yet: the room begins with the first tea of the catalog when it opens | `beginRitual` | `ritualBegan` |
 | Open or close a lid | tap the lid | `openVesselLid`, `closeVesselLid` | `vesselLidOpened`, `vesselLidClosed` |
 | Put the kettle on the heater | choose the kettle's hand, then tap the heater | `placeOnHeater` | `placedOnHeater` |
 | Lift the kettle off | tap the kettle on the heater | `pickUp` | `takenOffHeater` with a water judgement if the heater was on, then `pickedUp` |
 | Fill in the sink | choose the kettle's hand, tap the sink, tap the tap to turn it on and open the kettle's lid; tap the tap again to turn it off, and tap the kettle to take it | `putInTheSink`, `turnTheTapOn`, `turnTheTapOff` | `putInTheSink`, `tapTurnedOn`, `vesselOverflowed`, `tapTurnedOff` |
-| Heat | tap the switch on the counter's front | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `targetTemperatureReached`, `heaterSwitchedOff` with a water judgement |
+| Heat | tap the switch on the counter's front | `switchHeaterOn`, `switchHeaterOff` | `heaterSwitchedOn`, `heaterSwitchedOff` with a water judgement |
 | Keep the water at a temperature | tap the arrows beside the heater's display to set it, then tap the thermostat's button | `setTheThermostat`, `startTheThermostat`, `stopTheThermostat` | `thermostatSet`, `thermostatStarted`, `heaterSwitchedOff` with a water judgement |
 | Pour | choose the hand with the vessel, tap the target, then move the vessel with one finger and hold the tilt button with another | `startPouring`, `adjustPour` on every tilt change, `stopPouring` | `pourStarted`, `vesselOverflowed`, `pourFinished` with poured and spilled millilitres |
 | Scoop leaves | take the spoon, choose its hand, then tap the open caddy | `scoopTea` with a full spoon's depth | `teaScooped` |
@@ -59,8 +59,8 @@ The simulation core receives one command per player decision and answers with ev
 | Offer | choose the hand with a tea bowl, then tap a figurine | `offerCup` | `figurineAcceptedTea` with a response |
 | Wipe | take the cloth, choose its hand, then stroke the tea table with a finger | `wipeTable` for every 2 cm of the stroke, with the cloth, that piece's speed and covered share | `tableWiped` |
 | Soak | put the cloth down in the puddle on the tea table | `putDown`, then `soakUpThePuddle` with the cloth | `putDown`, `clothLaidInThePuddle` with the cloth |
-| Finish | tap "Finish" | `finishRitual` | `ritualFinished` |
-| Leave | tap "Leave" while resting | `leaveRoom` | `roomLeft` |
+| Finish | not in the room yet | `finishRitual` | `ritualFinished` |
+| Leave | not in the room yet | `leaveRoom` | `roomLeft` |
 
 ## Gestures in the room
 
