@@ -7,6 +7,7 @@ import { caddyItemId, carriedItemIdsIn, isACloth, itemLocationIn, middleHandInde
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
+import { stepsDueWhileAnArrowIsHeld } from './HeldArrow.ts'
 import { AimedPour, type AimedPourView, type PourTarget, type SpoutArea } from './AimedPour.ts'
 import { ItemInspection, type ItemInspectionView } from './ItemInspection.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
@@ -69,8 +70,6 @@ type CloseUpAction = {
 }
 
 const fullSpoonDepth = 1
-const holdSecondsBeforeAnArrowRepeats = 0.5
-const secondsBetweenRepeatedSteps = 0.1
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const sameBoardWithinMetres = 0.15
@@ -430,8 +429,7 @@ export class RoomPlay {
   private repeatTheHeldArrow(press: Press): void {
     const target = press.target
     if (target.kind !== 'thermostatArrow' || press.hasMovedAway || this.view.kind !== 'closeUp') return
-    if (press.heldSeconds < holdSecondsBeforeAnArrowRepeats) return
-    const stepsDue = 1 + Math.floor((press.heldSeconds - holdSecondsBeforeAnArrowRepeats) / secondsBetweenRepeatedSteps)
+    const stepsDue = stepsDueWhileAnArrowIsHeld(press.heldSeconds)
     while (press.repeatedSteps < stepsDue) {
       press.repeatedSteps += 1
       this.stepTheThermostat(target.step)
