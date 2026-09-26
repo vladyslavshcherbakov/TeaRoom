@@ -117,7 +117,7 @@ function continuePour(draft: Draft, seconds: number): void {
   pour.pouredMl += landing.landedMl
   pour.spilledMl += landing.spilledMl
   spillWhatMissedAndOverflowed(draft, pour.missedStreamLandsAt, target, landing, source.liquid)
-  if (target !== undefined && landing.overflowedMl > 0 && !pour.hasOverflowed) {
+  if (target !== undefined && landing.overflowed.volumeMl > 0 && !pour.hasOverflowed) {
     pour.hasOverflowed = true
     note(draft, `${target.id} overflowed at ${target.liquid.volumeMl.toFixed(1)} ml while pouring from ${source.id}`)
     draft.events.push({ type: 'vesselOverflowed', vesselId: target.id })
@@ -141,11 +141,12 @@ function runTheTap(draft: Draft, seconds: number): void {
   runTheTapOnto(draft, itemId, runningWater, tap, seconds)
 }
 
-function spillWhatMissedAndOverflowed(draft: Draft, missedStreamLandsAt: Spot | null, target: VesselState | undefined, landing: StreamLanding, spilled: Liquid): void {
+function spillWhatMissedAndOverflowed(draft: Draft, missedStreamLandsAt: Spot | null, target: VesselState | undefined, landing: StreamLanding, stream: Liquid): void {
   const aroundTheTarget = placeWhereAPourSpills(draft, target)
-  if (missedStreamLandsAt === null) return spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.spilledMl, spilled)
-  spill(draft, missedStreamLandsAt.placeId, missedStreamLandsAt, landing.spilledMl - landing.overflowedMl, spilled)
-  spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.overflowedMl, spilled)
+  const missedMl = landing.spilledMl - landing.overflowed.volumeMl
+  if (missedStreamLandsAt === null) spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, missedMl, stream)
+  else spill(draft, missedStreamLandsAt.placeId, missedStreamLandsAt, missedMl, stream)
+  spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.overflowed.volumeMl, landing.overflowed)
 }
 
 function steepAllLeaves(draft: Draft, seconds: number): void {

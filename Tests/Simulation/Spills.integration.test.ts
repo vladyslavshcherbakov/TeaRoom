@@ -55,6 +55,23 @@ test('spill_ofAStreamThatMissesTheCup_liesWhereTheStreamFalls', () => {
   assert.equal(ritual.vessel('cup1').liquid.volumeMl, 0)
 })
 
+test('overflow_ofWaterPouredOnABowlFullOfTea_leavesAPuddleOfTheMixtureThatRanOver', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
+  ritual.pour('kettle', 'thermos', 10)
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(5)
+  ritual.wait(60)
+  ritual.pour('kettle', 'cup1', 9)
+  const strengthOfTheTea = ritual.vessel('cup1').liquid.strength
+
+  ritual.pour('thermos', 'cup1', 5)
+
+  const puddleStrength = ritual.state.puddles['table']?.strength ?? 0
+  assert.ok(puddleStrength > ritual.vessel('cup1').liquid.strength, `the puddle has strength ${puddleStrength}, the bowl ${ritual.vessel('cup1').liquid.strength}`)
+  assert.ok(puddleStrength < strengthOfTheTea, `the puddle has strength ${puddleStrength}, the tea had ${strengthOfTheTea}`)
+})
+
 function ritualWithSpillOnTheTable(): TestRitual {
   const ritual = new TestRitual()
   ritual.pour('kettle', null, 2.5)

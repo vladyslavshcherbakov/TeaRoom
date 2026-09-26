@@ -7,7 +7,7 @@ export type StreamLanding = {
   readonly target: Liquid | null
   readonly landedMl: number
   readonly spilledMl: number
-  readonly overflowedMl: number
+  readonly overflowed: Liquid
 }
 
 const tiltWhereWaterStartsDegrees = 10
@@ -40,17 +40,16 @@ export function pourStream(
   const reachingTargetMl = target === null ? 0 : stream.volumeMl * clampedToShare(streamOnTargetFraction) * (1 - splashedShare)
   const roomLeftMl = target === null ? 0 : Math.max(0, target.definition.capacityMl - target.liquid.volumeMl)
   const landedMl = Math.min(reachingTargetMl, roomLeftMl)
-  const overflowedMl = reachingTargetMl - landedMl
+  const mixedInTheTarget = target === null ? null : mixLiquids(target.liquid, { ...stream, volumeMl: reachingTargetMl })
   return {
     source: sourceAfter,
-    target: target === null ? null : mixedUpToTheBrim(target.liquid, { ...stream, volumeMl: reachingTargetMl }, target.definition.capacityMl),
+    target: target === null || mixedInTheTarget === null ? null : upToTheBrim(mixedInTheTarget, target.definition.capacityMl),
     landedMl,
     spilledMl: stream.volumeMl - landedMl,
-    overflowedMl,
+    overflowed: { ...(mixedInTheTarget ?? stream), volumeMl: reachingTargetMl - landedMl },
   }
 }
 
-function mixedUpToTheBrim(liquid: Liquid, poured: Liquid, capacityMl: number): Liquid {
-  const mixed = mixLiquids(liquid, poured)
-  return mixed.volumeMl > capacityMl ? { ...mixed, volumeMl: capacityMl } : mixed
+function upToTheBrim(liquid: Liquid, capacityMl: number): Liquid {
+  return liquid.volumeMl > capacityMl ? { ...liquid, volumeMl: capacityMl } : liquid
 }
