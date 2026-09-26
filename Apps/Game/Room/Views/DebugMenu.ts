@@ -11,6 +11,7 @@ type HeldHeightArrow = {
 export type DebugMenuListener = {
   readonly keeperHeightChosen: (heightCentimetres: number) => void
   readonly frameBudgetShownChosen: (isShown: boolean) => void
+  readonly googlyEyesChosen: (areGoogly: boolean) => void
 }
 
 export class DebugMenu {
@@ -45,7 +46,13 @@ export class DebugMenu {
     const frameBudgetRow = document.createElement('label')
     frameBudgetRow.className = 'debug-toggle'
     frameBudgetRow.append(frameBudgetToggle, document.createTextNode(text('debug.frameBudget')))
-    this.panel.append(title, heightLabel, heightStepper, frameBudgetRow, closeButton)
+    const googlyEyesToggle = document.createElement('input')
+    googlyEyesToggle.type = 'checkbox'
+    googlyEyesToggle.addEventListener('change', () => listener.googlyEyesChosen(googlyEyesToggle.checked))
+    const googlyEyesRow = document.createElement('label')
+    googlyEyesRow.className = 'debug-toggle'
+    googlyEyesRow.append(googlyEyesToggle, document.createTextNode(text('debug.googlyEyes')))
+    this.panel.append(title, heightLabel, heightStepper, frameBudgetRow, googlyEyesRow, closeButton)
     container.append(this.panel)
   }
 

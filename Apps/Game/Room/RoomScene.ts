@@ -250,6 +250,7 @@ export class RoomScene {
     this.debugMenu = new DebugMenu(container, {
       keeperHeightChosen: (heightCentimetres) => this.keeperHeightChosen(heightCentimetres),
       frameBudgetShownChosen: (isShown) => this.frameBudgetShownChosen(isShown),
+      googlyEyesChosen: (areGoogly) => this.googlyEyesChosen(areGoogly),
     })
     this.garden = new Garden(materials, log)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
@@ -374,6 +375,11 @@ export class RoomScene {
     this.isFrameBudgetShown = isShown
     if (!isShown) this.frameBudgetPanel.hide()
     this.log(isShown ? 'the frame budget is shown from the debug menu, every 2 s' : 'the frame budget is hidden from the debug menu')
+  }
+
+  private googlyEyesChosen(areGoogly: boolean): void {
+    this.walker.showGooglyEyes(areGoogly)
+    this.log(areGoogly ? 'the eyes are googly from the debug menu, when the face has eyes' : 'the eyes are plain dots again from the debug menu')
   }
 
   private showTheAchievements(): void {

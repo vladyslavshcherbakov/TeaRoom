@@ -52,6 +52,7 @@ export type Surface =
   | 'walkerCoat'
   | 'walkerSkin'
   | 'walkerEye'
+  | 'googlyEyeWhite'
   | 'walkerHair'
   | 'terracottaCushion'
   | 'softBlueCushion'
@@ -167,6 +168,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   walkerCoat: { colour: '#3f7f8f', kind: 'matte' },
   walkerSkin: { colour: '#f1c9a5', kind: 'matte' },
   walkerEye: { colour: '#221a16', kind: 'matte' },
+  googlyEyeWhite: { colour: '#fbfbf8', kind: 'glaze', paint: null },
   walkerHair: { colour: '#2b1d15', kind: 'matte' },
   terracottaCushion: { colour: '#d4735e', kind: 'matte' },
   softBlueCushion: { colour: '#7f9dc4', kind: 'matte' },

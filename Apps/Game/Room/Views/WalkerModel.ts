@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { GooglyPupil, type EyePlaneVector } from '../GooglyPupil.ts'
 import type { FaceFeature } from '../RoomSettings.ts'
 import { isWalking, type Walk } from '../Walking/Walk.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
@@ -21,11 +22,32 @@ const afroCentre = { y: 1.08, z: -0.07 }
 const afroFillingShare = 0.85
 const faceLeftOpenBelowMetres = 1.07
 const faceLeftOpenFromMetres = 0.06
+const googlyEyeRadiusMetres = 0.036
+const googlyPupilRadiusMetres = 0.017
+const googlyEyesApartMetres = 0.11
+const googlyEyeDepthMetres = 0.008
+const googlyEyesTurnOutwardRadians = 0.3
+const hardestHeadShakeMetresPerSecondSquared = 60
+
+type GooglyEye = {
+  readonly pupilMesh: THREE.Mesh
+  readonly pupil: GooglyPupil
+}
+
+type HeadMotion = {
+  readonly timeSeconds: number
+  readonly position: THREE.Vector3
+  readonly velocity: THREE.Vector3
+}
 
 export class WalkerModel {
   readonly root = new THREE.Group()
   private readonly body: THREE.Mesh
   private readonly faces: Record<FaceFeature, THREE.Object3D>
+  private readonly dottedEyes: THREE.Object3D
+  private readonly googlyEyesPair = new THREE.Group()
+  private readonly googlyEyes: readonly GooglyEye[]
+  private headMotion: HeadMotion | null = null
 
   constructor(materials: RoomMaterials) {
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.5, 4, 10), materials.unsharedMaterialFor('walkerCoat'))
@@ -33,7 +55,10 @@ export class WalkerModel {
     this.body = body
     const head = new THREE.Mesh(new THREE.SphereGeometry(headRadiusMetres, 12, 10), materials.materialFor('walkerSkin'))
     head.position.y = headHeightMetres
-    this.faces = { nose: nose(materials), eyes: eyes(materials), ears: ears(materials), afro: afro(materials) }
+    this.dottedEyes = eyes(materials)
+    this.googlyEyes = [-1, 1].map((side) => this.googlyEye(materials, side))
+    this.googlyEyesPair.visible = false
+    this.faces = { nose: nose(materials), eyes: new THREE.Group().add(this.dottedEyes, this.googlyEyesPair), ears: ears(materials), afro: afro(materials) }
     this.root.add(body, head, ...Object.values(this.faces))
     this.root.traverse((part) => (part.castShadow = true))
   }
@@ -47,6 +72,11 @@ export class WalkerModel {
     for (const [shownFeature, face] of Object.entries(this.faces)) face.visible = shownFeature === feature
   }
 
+  showGooglyEyes(areGoogly: boolean): void {
+    this.googlyEyesPair.visible = areGoogly
+    this.dottedEyes.visible = !areGoogly
+  }
+
   get shadowPose(): string {
     const { position, rotation } = this.root
     return this.root.visible ? `walker ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)} ${rotation.y.toFixed(3)}` : 'walker hidden'
@@ -56,6 +86,40 @@ export class WalkerModel {
     const bob = isWalking(walk) ? Math.abs(Math.sin(timeSeconds * stepsPerSecond * Math.PI)) * bobHeightMetres : 0
     this.root.position.set(walk.position.x, bob, walk.position.z)
     this.root.rotation.y = walk.headingRadians
+    if (this.googlyEyesPair.visible && this.faces.eyes.visible) this.shakeTheGooglyEyes(timeSeconds)
+  }
+
+  private shakeTheGooglyEyes(timeSeconds: number): void {
+    const position = new THREE.Vector3(0, headHeightMetres, headRadiusMetres).applyMatrix4(new THREE.Matrix4().compose(this.root.position, this.root.quaternion, this.root.scale))
+    const before = this.headMotion
+    const seconds = before === null ? 0 : timeSeconds - before.timeSeconds
+    const velocity = before === null || seconds <= 0 ? new THREE.Vector3() : position.clone().sub(before.position).divideScalar(seconds)
+    const acceleration = before === null || seconds <= 0 ? new THREE.Vector3() : velocity.clone().sub(before.velocity).divideScalar(seconds).clampLength(0, hardestHeadShakeMetresPerSecondSquared)
+    this.headMotion = { timeSeconds, position, velocity }
+    if (seconds <= 0) return
+    const accelerationInTheEyes = this.inTheEyePlane(acceleration)
+    for (const eye of this.googlyEyes) {
+      eye.pupil.advance(seconds, accelerationInTheEyes)
+      eye.pupilMesh.position.set(eye.pupil.offset.x, eye.pupil.offset.y, googlyEyeDepthMetres)
+    }
+  }
+
+  private inTheEyePlane(acceleration: THREE.Vector3): EyePlaneVector {
+    const heading = this.root.rotation.y
+    return { x: acceleration.x * Math.cos(heading) - acceleration.z * Math.sin(heading), y: acceleration.y }
+  }
+
+  private googlyEye(materials: RoomMaterials, side: number): GooglyEye {
+    const eye = new THREE.Group()
+    const white = new THREE.Mesh(new THREE.CylinderGeometry(googlyEyeRadiusMetres, googlyEyeRadiusMetres, googlyEyeDepthMetres, 20).rotateX(Math.PI / 2), materials.materialFor('googlyEyeWhite'))
+    const pupilMesh = new THREE.Mesh(new THREE.CylinderGeometry(googlyPupilRadiusMetres, googlyPupilRadiusMetres, googlyEyeDepthMetres / 2, 16).rotateX(Math.PI / 2), materials.materialFor('walkerEye'))
+    eye.add(white, pupilMesh)
+    const x = (side * googlyEyesApartMetres) / 2
+    const y = eyesAboveTheHeadsMiddleMetres
+    eye.position.set(x, headHeightMetres + y, Math.sqrt(headRadiusMetres ** 2 - x ** 2 - y ** 2))
+    eye.rotation.y = side * googlyEyesTurnOutwardRadians
+    this.googlyEyesPair.add(eye)
+    return { pupilMesh, pupil: new GooglyPupil(googlyEyeRadiusMetres - googlyPupilRadiusMetres) }
   }
 }
 
