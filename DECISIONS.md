@@ -12,7 +12,7 @@ The plan is in `docs/roadmap.md`.
 
 **The room is real 3D in Three.js, seen from above at an angle, and controlled by taps.** A 3D room lets the camera change later, to first person or over the shoulder, by changing only the camera module and the tap rules. Seen from above, the whole small room fits a portrait phone, and one thumb is enough: a tap on the floor walks there, a tap on furniture walks to it and shows it close up. Rejected: isometric 2D sprites, because another camera would mean redrawing every picture. Rejected: first person as the start, because it needs looking around with a second gesture and a model of the hands.
 
-**Three.js and Vite are pinned to exact versions, and CI installs from the lockfile.** A game's feel depends on the renderer's timing and input handling, so an update is a deliberate change with its own commit, not a side effect of a fresh install.
+**Three.js, Vite and TypeScript are pinned to exact versions, and CI installs from the lockfile.** A game's feel depends on the renderer's timing and input handling, and TypeScript's printer writes the code of the Claude artifact, so an update is a deliberate change with its own commit, not a side effect of a fresh install.
 
 **No debug page next to the game.** The ritual bench drove the simulation with plain buttons and showed the log on a page. Nobody used it: the rules are checked by integration tests, the room by playing it, and the history by the log with its world report. It only had to be fixed after each change to the simulation. The log is read in the browser's console.
 
@@ -211,5 +211,4 @@ The plan is in `docs/roadmap.md`.
 - Whether a vessel may hold the leaves of two teas that steep together, or the refusals `spoonHoldsAnotherTea`, `holdsLeavesOfAnotherTea` and `notACaddy` stay. They matter once a room has two caddies. The user answers it.
 - Whether the thermos's opening shrinks to its drawn mouth, so a stream on its lip no longer fills it. The user answers it.
 - Whether the thermos and the caddy get a forgiving touch area like the bowls. The user answers it.
-- Whether the WebKit UI test job runs in Playwright's container image, whether a failed UI test is retried once in CI, and whether TypeScript is pinned to an exact version. The user answers it.
 - Whether `docs/game-design.md` is marked as the vision rather than the game as it is, and whether the roadmap drops its done and rejected steps. The user answers it.
