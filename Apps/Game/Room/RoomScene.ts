@@ -265,6 +265,7 @@ export class RoomScene {
     this.keyboardAndMouse = new KeyboardAndMouse(container, this.renderer.domElement, {
       keyPressed: (code) => this.shortcuts.keyPressed(code),
       keyReleased: (code) => this.shortcuts.keyReleased(code),
+      everyKeyReleased: (reason) => this.shortcuts.everyKeyReleased(reason),
     }, log)
     this.debugMenu = new DebugMenu(container, {
       keeperHeightChosen: (heightCentimetres) => this.keeperHeightChosen(heightCentimetres),

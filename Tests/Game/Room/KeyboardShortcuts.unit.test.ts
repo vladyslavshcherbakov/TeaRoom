@@ -58,6 +58,26 @@ test('spaceKey_whileHeld_tiltsAndReleasesTheTilt', () => {
   assert.deepEqual(calls, ['tilt pressed', 'tilt released'])
 })
 
+test('spaceKey_heldWhenEveryKeyIsReleased_releasesTheTilt', () => {
+  const { shortcuts, calls } = shortcutsRecording()
+  shortcuts.keyPressed('Space')
+
+  shortcuts.everyKeyReleased('the window lost focus')
+
+  assert.deepEqual(calls, ['tilt pressed', 'tilt released'])
+})
+
+test('handKey_heldWhenEveryKeyIsReleased_neitherShowsTheItemNorTapsLater', () => {
+  const { shortcuts, calls } = shortcutsRecording()
+  shortcuts.keyPressed('Digit1')
+
+  shortcuts.everyKeyReleased('the page was hidden')
+  shortcuts.advance(1.2)
+  shortcuts.keyReleased('Digit1')
+
+  assert.deepEqual(calls, [])
+})
+
 function shortcutsRecording(isInspecting = false): { shortcuts: KeyboardShortcuts; calls: string[] } {
   const calls: string[] = []
   const shortcuts = new KeyboardShortcuts({

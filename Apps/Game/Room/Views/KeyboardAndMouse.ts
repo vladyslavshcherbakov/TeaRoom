@@ -4,6 +4,7 @@ import type { RoomLog } from '../RoomNavigator.ts'
 export type KeyListener = {
   readonly keyPressed: (code: string) => void
   readonly keyReleased: (code: string) => void
+  readonly everyKeyReleased: (reason: string) => void
 }
 
 const noMovement: MouseMovement = { x: 0, y: 0 }
@@ -12,6 +13,7 @@ const largestMouseStepPixels = 150
 export class KeyboardAndMouse {
   private readonly canvas: HTMLCanvasElement
   private readonly log: RoomLog
+  private readonly keys: KeyListener
   private readonly crosshair: HTMLElement
   private readonly heldKeys = new Set<string>()
   private movement: MouseMovement = noMovement
@@ -20,6 +22,7 @@ export class KeyboardAndMouse {
   constructor(container: HTMLElement, canvas: HTMLCanvasElement, keys: KeyListener, log: RoomLog) {
     this.canvas = canvas
     this.log = log
+    this.keys = keys
     this.crosshair = document.createElement('div')
     this.crosshair.className = 'crosshair'
     this.crosshair.hidden = true
@@ -32,7 +35,10 @@ export class KeyboardAndMouse {
       this.heldKeys.delete(event.code)
       keys.keyReleased(event.code)
     })
-    window.addEventListener('blur', () => this.heldKeys.clear())
+    window.addEventListener('blur', () => this.releaseEveryKey('the window lost focus'))
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.releaseEveryKey('the page was hidden')
+    })
     document.addEventListener('mousemove', (event) => {
       const isAJumpOfTheBrowser = Math.abs(event.movementX) > largestMouseStepPixels || Math.abs(event.movementY) > largestMouseStepPixels
       if (!this.isLocked || isAJumpOfTheBrowser) return
@@ -74,6 +80,12 @@ export class KeyboardAndMouse {
     if (!this.isLocked) return
     this.log(`letting go of the mouse: ${reason}`)
     document.exitPointerLock()
+  }
+
+  private releaseEveryKey(reason: string): void {
+    this.log(`every key is released, because ${reason}, with ${this.heldKeys.size === 0 ? 'none' : [...this.heldKeys].join(', ')} held`)
+    this.heldKeys.clear()
+    this.keys.everyKeyReleased(reason)
   }
 
   private refused(reason: string): void {

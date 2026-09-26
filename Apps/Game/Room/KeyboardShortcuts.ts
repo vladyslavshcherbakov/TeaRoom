@@ -32,6 +32,7 @@ export class KeyboardShortcuts {
   private readonly port: ShortcutPort
   private readonly log: RoomLog
   private handKeyHeld: HandKeyHeld | null = null
+  private isTiltHeld = false
 
   constructor(port: ShortcutPort, log: RoomLog) {
     this.port = port
@@ -42,7 +43,7 @@ export class KeyboardShortcuts {
     const shortcut = shortcutByCode[code]
     if (shortcut === undefined) return
     if (shortcut.kind === 'sip') return this.port.sipped()
-    if (shortcut.kind === 'tilt') return this.port.tiltPressed()
+    if (shortcut.kind === 'tilt') return this.pressTheTilt()
     if (this.port.isInspecting()) {
       this.log(`key ${code} closes the item shown up close`)
       return this.port.inspectionClosed()
@@ -51,13 +52,22 @@ export class KeyboardShortcuts {
   }
 
   keyReleased(code: string): void {
-    if (shortcutByCode[code]?.kind === 'tilt') return this.port.tiltReleased()
+    if (shortcutByCode[code]?.kind === 'tilt') return this.releaseTheTilt()
     const held = this.handKeyHeld
     if (held === null || held.code !== code) return
     this.handKeyHeld = null
     if (held.hasShownTheItem) return
     this.log(`key ${code} taps hand ${held.handIndex}`)
     this.port.handTapped(held.handIndex)
+  }
+
+  everyKeyReleased(reason: string): void {
+    const held = this.handKeyHeld
+    this.handKeyHeld = null
+    if (held !== null && !held.hasShownTheItem) this.log(`key ${held.code} is let go without tapping hand ${held.handIndex}: ${reason}`)
+    if (!this.isTiltHeld) return
+    this.log(`the tilt key is let go: ${reason}`)
+    this.releaseTheTilt()
   }
 
   advance(seconds: number): void {
@@ -68,5 +78,15 @@ export class KeyboardShortcuts {
     held.hasShownTheItem = true
     this.log(`key ${held.code} held ${held.heldSeconds.toFixed(1)} s shows the item in hand ${held.handIndex} up close`)
     this.port.handHeld(held.handIndex, held.heldSeconds)
+  }
+
+  private pressTheTilt(): void {
+    this.isTiltHeld = true
+    this.port.tiltPressed()
+  }
+
+  private releaseTheTilt(): void {
+    this.isTiltHeld = false
+    this.port.tiltReleased()
   }
 }
