@@ -6,6 +6,7 @@ import { paintCrackle } from './CrackleGlaze.ts'
 import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
 import { paintKoiPond, type KoiPond } from './KoiPond.ts'
+import { paintGinkgoLeaves } from './GinkgoPainting.ts'
 import { paintLotus } from './LotusPainting.ts'
 import { paintProphecyInscription, prophecyInscriptionPixelsPerMetre } from './ProphecyInscription.ts'
 import { paintTeaCharacter } from './TeaCharacterPainting.ts'
@@ -71,6 +72,7 @@ export type Surface =
   | 'skyBlueGlaze'
   | 'blueGlaze'
   | 'yellowGlaze'
+  | 'blackGlaze'
   | 'emeraldGlaze'
   | 'temperGlaze'
   | 'glass'
@@ -85,6 +87,7 @@ export type Surface =
   | 'toadPainting'
   | 'prophecyInscription'
   | 'lotusPainting'
+  | 'ginkgoPainting'
   | 'heronPainting'
   | 'teaCharacterPainting'
   | 'yixingClay'
@@ -184,6 +187,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   skyBlueGlaze: { colour: '#9fd0ea', kind: 'glaze', paint: paintCrackle },
   blueGlaze: { colour: '#2f5ea8', kind: 'kintsugi' },
   yellowGlaze: { colour: '#f1cd55', kind: 'glaze', paint: null },
+  blackGlaze: { colour: '#15120f', kind: 'glaze', paint: null },
   emeraldGlaze: { colour: '#1f8a68', kind: 'glaze', paint: paintGreenMarble },
   temperGlaze: { colour: '#7a6650', kind: 'temperGlaze' },
   glass: { colour: '#ffffff', kind: 'glass' },
@@ -198,6 +202,7 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   toadPainting: { colour: '#ffffff', kind: 'painting', paint: paintToad },
   prophecyInscription: { colour: '#ffffff', kind: 'prophecy' },
   lotusPainting: { colour: '#ffffff', kind: 'painting', paint: paintLotus },
+  ginkgoPainting: { colour: '#ffffff', kind: 'painting', paint: paintGinkgoLeaves },
   heronPainting: { colour: '#ffffff', kind: 'painting', paint: paintHeron },
   teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
   yixingClay: { colour: '#ffffff', kind: 'yixingClay' },

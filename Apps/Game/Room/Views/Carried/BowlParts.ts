@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { teaBowlIds, type TeaBowlId } from '../../../../../Shared/Content/Rooms.ts'
+import { ginkgoPaintingAspect } from '../GinkgoPainting.ts'
 import { heronPaintingAspect } from '../HeronPainting.ts'
 import { koiPondAspect, koiPondWidthMetres } from '../KoiPond.ts'
 import { lotusPaintingAspect } from '../LotusPainting.ts'
@@ -70,6 +71,7 @@ const bowlLookById: Readonly<Record<TeaBowlId, BowlLook>> = {
   bowl6: { ...plainBowl, glaze: 'emeraldGlaze', liquidTint: '#5fb08a' },
   bowl7: { ...plainBowl, glaze: 'temperGlaze', liquidTint: '#b393cf' },
   bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted', liquidTint: '#ffffff' },
+  bowl11: { ...plainBowl, glaze: 'blackGlaze', liquidTint: '#8a6a4a', painting: { surface: 'ginkgoPainting', lengthMetres: 0.09, aspect: ginkgoPaintingAspect, turnRadians: 0 } },
   bowl10: { ...plainBowl, glaze: 'yixingClay', liquidTint: '#a8683f', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
 

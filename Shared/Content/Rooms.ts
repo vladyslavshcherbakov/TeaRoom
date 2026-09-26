@@ -70,7 +70,7 @@ const tablesByWindow: Readonly<Record<WindowPlace, readonly [readonly [TablePlac
   ],
 }
 
-export const teaBowlIds = ['bowl1', 'bowl2', 'bowl3', 'bowl4', 'bowl5', 'bowl6', 'bowl7', 'bowl8', 'bowl10'] as const
+export const teaBowlIds = ['bowl1', 'bowl2', 'bowl3', 'bowl4', 'bowl5', 'bowl6', 'bowl7', 'bowl8', 'bowl10', 'bowl11'] as const
 
 export type TeaBowlId = (typeof teaBowlIds)[number]
 
@@ -107,6 +107,7 @@ const onTheShelf = {
     bowl7: { across: -0.75, forward: 0, y: onTheMiddleBoard },
     bowl8: { across: -0.75, forward: 0, y: onTheBottomBoard },
     bowl10: { across: 0.65, forward: 0, y: onTheBottomBoard },
+    bowl11: { across: 0.65, forward: 0, y: onTheMiddleBoard },
   } satisfies Readonly<Record<TeaBowlId, SpotOnAPiece>>,
   caddy: { across: 0.5, forward: 0, y: onTheUpperBoard },
   clothApart: { across: -0.5, forward: 0, y: onTheUpperBoard },
