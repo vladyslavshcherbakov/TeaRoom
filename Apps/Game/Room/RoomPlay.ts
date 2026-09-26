@@ -441,7 +441,6 @@ export class RoomPlay {
     const sourceId = this.chosenItemId()
     const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
     if (source === undefined) return `${sourceId ?? 'nothing'} is not a vessel`
-    if (isEmpty(source.liquid)) return `${source.id} is empty`
     if (source.id === targetId) return `${targetId} is the chosen vessel itself`
     return `${targetId} is not a vessel standing on a surface`
   }
@@ -459,8 +458,7 @@ export class RoomPlay {
     const sourceId = this.chosenItemId()
     const target = this.ritual.state.vessels[targetId]
     const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
-    const hasSomethingToPour = source !== undefined && !isEmpty(source.liquid)
-    return hasSomethingToPour && sourceId !== targetId && target?.location.kind === 'onSurface'
+    return source !== undefined && sourceId !== targetId && target?.location.kind === 'onSurface'
   }
 
   private startAimingAt(targetId: string): void {

@@ -55,6 +55,7 @@ test('faucet_whenTappedWithBothHandsFull_turnsTheRunningTapOff', () => {
   room.walkTo('counter')
   room.tap({ kind: 'faucet' })
   room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'item', itemId: 'thermos' })
 
   room.tap({ kind: 'faucet' })

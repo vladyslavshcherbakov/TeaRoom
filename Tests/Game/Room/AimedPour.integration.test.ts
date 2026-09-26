@@ -220,6 +220,17 @@ test('thermos_whenTappedAfterATapOnTheLidOfTheKettleInHand_isAimedAtAndNotTaken'
   assert.deepEqual(room.state.keeper.hands, ['kettle', null, null])
 })
 
+test('kettle_whenTappedWithTheEmptyThermosChosen_isAimedAtAndNotTaken', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'thermos' })
+
+  room.tap({ kind: 'item', itemId: 'kettle' })
+
+  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
+  assert.deepEqual(room.state.keeper.hands, ['thermos', null, null])
+})
+
 test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
   const room = new TestRoom()
   room.walkTo('counter')
