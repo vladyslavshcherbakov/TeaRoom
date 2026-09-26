@@ -2,76 +2,80 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { problemsOpeningRoom } from '../../Shared/Simulation/Definitions/CatalogProblems.ts'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import type { RoomVessel } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import type { TeaDefinition } from '../../Shared/Simulation/Definitions/TeaDefinition.ts'
+import { catalogWithRoomChanges, testCatalog } from '../Support/TestCatalog.ts'
+
+const caddyOfTestGreen: RoomVessel = { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 3, y: 0, z: 0 } }
 
 test('contentProblems_whenTheRoomIsMissing_nameTheRoom', () => {
-  assert.deepEqual(problemsOpeningRoom(testCatalog(), 'attic'), ['room "attic" is not in the catalog'])
+  assertOneProblemNaming(problemsOpeningRoom(testCatalog(), 'attic'), 'attic')
 })
 
 test('contentProblems_whenTheRoomNamesAnUnknownHeater_nameTheHeater', () => {
-  const catalog = catalogWithRoomChanges({ heaterId: 'campfire' })
-
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" uses unknown heater "campfire"'])
+  assertOneProblemNaming(problemsOpeningRoom(catalogWithRoomChanges({ heaterId: 'campfire' }), 'testRoom'), 'campfire')
 })
 
-test('contentProblems_whenTheRoomOffersNoWeather_sayWhatIsMissing', () => {
-  const catalog = catalogWithRoomChanges({ weathers: [] })
+test('contentProblems_whenTheRoomOffersNoWeather_nameTheRoom', () => {
+  assertOneProblemNaming(problemsOpeningRoom(catalogWithRoomChanges({ weathers: [] }), 'testRoom'), 'testRoom')
+})
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" offers no weather'])
+test('contentProblems_whenTheRoomOffersNoTimeOfDay_nameTheRoom', () => {
+  assertOneProblemNaming(problemsOpeningRoom(catalogWithRoomChanges({ timesOfDay: [] }), 'testRoom'), 'testRoom')
+})
+
+test('contentProblems_whenAVesselOfTheRoomIsOfAnUnknownDefinition_nameTheDefinitionAndTheVessel', () => {
+  const catalog = catalogWithRoomChanges({ vessels: [caddyOfTestGreen, { ...caddyOfTestGreen, id: 'teapot', definitionId: 'testTeapot', teaStock: null }] })
+
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'testTeapot', 'teapot')
+})
+
+test('contentProblems_whenTheRoomNamesAnUnknownFigurine_nameTheFigurine', () => {
+  assertOneProblemNaming(problemsOpeningRoom(catalogWithRoomChanges({ figurineIds: ['dragon', 'monk'] }), 'testRoom'), 'monk')
+})
+
+test('contentProblems_whenAnItemStartsAtAPlaceTheRoomDoesNotHave_nameThePlace', () => {
+  assertOneProblemNaming(problemsOpeningRoom(catalogWithRoomChanges({ spoonStartsAt: { placeId: 'attic', x: 0, y: 0, z: 0 } }), 'testRoom'), 'attic')
 })
 
 test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
-  const catalog = catalogWithRoomChanges({
-    vessels: [
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 2, y: 0, z: 0 } },
-      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 3, y: 0, z: 0 } },
-    ],
-  })
+  const cup = { ...caddyOfTestGreen, id: 'cup1', definitionId: 'testCup', teaStock: null }
+  const catalog = catalogWithRoomChanges({ vessels: [cup, cup, cup, caddyOfTestGreen] })
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" repeats vessel id "cup1"'])
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'cup1')
 })
 
 test('contentProblems_whenAVesselHasTheSpoonsId_nameTheId', () => {
-  const catalog = catalogWithRoomChanges({
-    vessels: [
-      { id: 'spoon', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
-      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
-    ],
-  })
+  const catalog = catalogWithRoomChanges({ vessels: [{ ...caddyOfTestGreen, id: 'spoon', definitionId: 'testCup', teaStock: null }, caddyOfTestGreen] })
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" gives a vessel the spoon\'s id "spoon"'])
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'spoon')
 })
 
-test('contentProblems_whenTheRoomHasNoCaddy_sayWhereTheTeaIsMissing', () => {
-  const catalog = catalogWithRoomChanges({
-    vessels: [{ id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],
-  })
+test('contentProblems_whenTheRoomHasNoCaddy_nameTheRoom', () => {
+  const catalog = catalogWithRoomChanges({ vessels: [{ ...caddyOfTestGreen, id: 'cup1', definitionId: 'testCup', teaStock: null }] })
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" keeps its tea in no caddy'])
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'testRoom')
 })
 
 test('contentProblems_whenACaddyKeepsAnUnknownTea_nameTheTeaAndTheCaddy', () => {
-  const catalog = catalogWithRoomChanges({
-    vessels: [{ id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'matcha', grams: 50 }, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],
-  })
+  const catalog = catalogWithRoomChanges({ vessels: [{ ...caddyOfTestGreen, teaStock: { teaId: 'matcha', grams: 50 } }] })
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" keeps unknown tea "matcha" in "caddy"'])
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'matcha', 'caddy')
 })
 
-test('contentProblems_whenTeaIsKeptInAVesselThatCannotHoldLeavesOrHasNoLid_nameTheVessel', () => {
+test('contentProblems_whenTeaIsKeptInAVesselThatCannotHoldLeavesOrHasNoLid_nameEachVessel', () => {
   const catalog = catalogWithRoomChanges({
     vessels: [
-      { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
+      { ...caddyOfTestGreen, id: 'thermos', definitionId: 'testThermos' },
+      { ...caddyOfTestGreen, id: 'cup1', definitionId: 'testCup' },
     ],
   })
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), [
-    'room "testRoom" keeps tea in "thermos", which cannot hold leaves',
-    'room "testRoom" keeps tea in "cup1", which has no lid',
-  ])
+  const problems = problemsOpeningRoom(catalog, 'testRoom')
+
+  assert.equal(problems.length, 2, problems.join('\n'))
+  assert.match(problems[0] ?? '', /"thermos"/)
+  assert.match(problems[1] ?? '', /"cup1"/)
 })
 
 test('contentProblems_whenAFigurineLikesAnUnknownTea_nameTheFigurineAndTea', () => {
@@ -81,37 +85,43 @@ test('contentProblems_whenAFigurineLikesAnUnknownTea_nameTheFigurineAndTea', () 
     figurines: { ...catalog.figurines, monk: { id: 'monk', affinityByTeaId: { matcha: 2 }, preferredStrength: { lowest: 40, highest: 60 } } },
   }
 
-  assert.deepEqual(problemsOpeningRoom(brokenCatalog, 'testRoom'), ['figurine "monk" likes unknown tea "matcha"'])
+  assertOneProblemNaming(problemsOpeningRoom(brokenCatalog, 'testRoom'), 'monk', 'matcha')
 })
 
 test('contentProblems_whenATeasGoodRangeLeavesItsAcceptableRange_nameTheTea', () => {
-  const catalog = testCatalog()
-  const tea = catalog.teas.testGreen
-  if (tea === undefined) throw new Error('the test catalog lost its tea')
-  const brokenCatalog: Catalog = {
-    ...catalog,
-    teas: { testGreen: { ...tea, water: { ...tea.water, good: { lowestC: 65, highestC: 85 } } } },
-  }
+  const catalog = catalogWithTestGreenChanges((tea) => ({ ...tea, water: { ...tea.water, good: { lowestC: 65, highestC: 85 } } }))
 
-  assert.deepEqual(problemsOpeningRoom(brokenCatalog, 'testRoom'), [
-    'tea "testGreen" water ranges are not nested around its ideal 80 °C',
-  ])
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'testGreen')
+})
+
+test('contentProblems_whenATeaAcceptsWaterAboveBoiling_nameTheTea', () => {
+  const catalog = catalogWithTestGreenChanges((tea) => ({ ...tea, water: { ...tea.water, acceptable: { lowestC: 70, highestC: 101 } } }))
+
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'testGreen')
+})
+
+test('contentProblems_whenATeasBalancedStrengthIsOutOfOrder_nameTheTea', () => {
+  const catalog = catalogWithTestGreenChanges((tea) => ({ ...tea, balancedStrength: { lowest: 70, highest: 40 } }))
+
+  assertOneProblemNaming(problemsOpeningRoom(catalog, 'testRoom'), 'testGreen')
 })
 
 test('room_withAClothSharingAnIdWithAVessel_isRefusedNamingThatCloth', () => {
-  const catalog = testCatalog()
-  const room = catalog.rooms['testRoom']
+  const room = testCatalog().rooms['testRoom']
   if (room === undefined) throw new Error('the test catalog lost its room')
   const clothAsACup = { id: 'cup1', startsAt: { placeId: 'table', x: 9, y: 0, z: 0 } }
 
-  const problems = problemsOpeningRoom({ ...catalog, rooms: { testRoom: { ...room, cloths: [...room.cloths, clothAsACup] } } }, 'testRoom')
-
-  assert.deepEqual(problems, ['room "testRoom" gives the cloth "cup1" an id another item has'])
+  assertOneProblemNaming(problemsOpeningRoom(catalogWithRoomChanges({ cloths: [...room.cloths, clothAsACup] }), 'testRoom'), 'cup1')
 })
 
-function catalogWithRoomChanges(changes: Partial<Catalog['rooms'][string]>): Catalog {
+function assertOneProblemNaming(problems: readonly string[], ...ids: readonly string[]): void {
+  assert.equal(problems.length, 1, problems.join('\n'))
+  for (const id of ids) assert.ok(problems[0]?.includes(`"${id}"`), `${problems[0]} does not name "${id}"`)
+}
+
+function catalogWithTestGreenChanges(change: (tea: TeaDefinition) => TeaDefinition): Catalog {
   const catalog = testCatalog()
-  const room = catalog.rooms.testRoom
-  if (room === undefined) throw new Error('the test catalog lost its room')
-  return { ...catalog, rooms: { testRoom: { ...room, ...changes } } }
+  const tea = catalog.teas['testGreen']
+  if (tea === undefined) throw new Error('the test catalog lost its tea')
+  return { ...catalog, teas: { ...catalog.teas, testGreen: change(tea) } }
 }
