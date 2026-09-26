@@ -145,14 +145,22 @@ test('heater_whenSwitchedOnAgain_countsItsTimeFromTheNewSwitch', () => {
   assertNear(eventsOfType(events, 'heaterSwitchedOff')[0]?.onSeconds ?? 0, 10)
 })
 
-test('kettle_whenLiftedOffAWorkingHeater_isTakenOffAndStopsWarming', () => {
+test('kettle_whenLiftedOffAWorkingHeater_isTakenOff', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
   ritual.wait(14)
 
   const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
-  ritual.wait(10)
 
   assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle' }])
+})
+
+test('kettle_liftedOffAWorkingHeater_stopsWarming', () => {
+  const ritual = ritualWithKettleOnWorkingHeater()
+  ritual.wait(14)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+
+  ritual.wait(10)
+
   assertNear(ritual.vessel('kettle').liquid.temperatureC, 76)
 })
 
@@ -291,14 +299,22 @@ test('spoon_onAHeaterThatIsOff_doesNotChar', () => {
   assert.equal(ritual.state.spoon.charring, 0)
 })
 
-test('spoon_whenTakenBeforeItBurns_isSavedButStaysCharred', () => {
+test('spoon_whenTakenBeforeItBurns_isSaved', () => {
   const ritual = ritualWithTheSpoonOnAWorkingHeater()
   ritual.wait(10)
 
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
-  ritual.wait(10)
 
   assert.deepEqual(ritual.state.spoon.location, { kind: 'inHand', handIndex: 0 })
+})
+
+test('spoon_takenBeforeItBurns_staysAsCharredAsItWas', () => {
+  const ritual = ritualWithTheSpoonOnAWorkingHeater()
+  ritual.wait(10)
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+
+  ritual.wait(10)
+
   assertNear(ritual.state.spoon.charring, 0.5)
 })
 

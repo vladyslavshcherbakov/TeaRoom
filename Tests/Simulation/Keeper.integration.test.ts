@@ -279,17 +279,22 @@ test('middleHand_whenAHandIsStillFree_doesNotGrow', () => {
   assert.equal(ritual.state.keeper.hasAMiddleHand, false)
 })
 
-test('middleHand_whenItsItemIsPutDown_vanishesAndTakesNothingMore', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'pickUp', itemId: 'kettle' })
-  ritual.do({ type: 'pickUp', itemId: 'thermos' })
-  ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
+test('middleHand_whenItsItemIsPutDown_vanishes', () => {
+  const ritual = ritualWithAMiddleHandHoldingCup1()
 
   const events = ritual.do({ type: 'putDown', itemId: 'cup1', spot: { placeId: 'table', x: 3, y: 0, z: 0 } })
 
   assert.deepEqual(eventsOfType(events, 'middleHandVanished'), [{ type: 'middleHandVanished' }])
   assert.equal(ritual.state.keeper.hasAMiddleHand, false)
-  assert.deepEqual(ritual.do({ type: 'pickUp', itemId: 'cup2' }), [{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }])
+})
+
+test('middleHand_afterItVanished_takesNothingMore', () => {
+  const ritual = ritualWithAMiddleHandHoldingCup1()
+  ritual.do({ type: 'putDown', itemId: 'cup1', spot: { placeId: 'table', x: 3, y: 0, z: 0 } })
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'cup2' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }])
 })
 
 test('middleHand_whenItHasGrownAndHoldsAnItem_growsNoSecond', () => {
@@ -373,6 +378,14 @@ test('lid_ofABowl_cannotBeOpenedAsItHasNone', () => {
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'openVesselLid', reason: 'vesselHasNoLid' }])
 })
+
+function ritualWithAMiddleHandHoldingCup1(): TestRitual {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'pickUp', itemId: 'thermos' })
+  ritual.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
+  return ritual
+}
 
 function houseRitual(): TestRitual {
   return new TestRitual(testHouseCatalog(), 'testHouse')
