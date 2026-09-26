@@ -133,6 +133,23 @@ test('cloth_whenTakenOutOfTheSink_isWrungOutToEightMillilitres', () => {
   assert.equal(ritual.cloth().wetMl, 8)
 })
 
+test('cloth_whenLaidInThePuddleItAlreadySoaks_isRefused', () => {
+  const ritual = ritualWithSpillOnTheTable()
+  ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
+
+  const events = ritual.do({ type: 'soakUpThePuddle', clothId: 'cloth' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'clothIsAlreadySoaking' }])
+})
+
+test('wipe_withAClothTheRoomDoesNotHave_isRefused', () => {
+  const ritual = ritualWithSpillOnTheTable()
+
+  const events = ritual.do({ type: 'wipeTable', clothId: 'towel', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'unknownItem' }])
+})
+
 test('puddle_whenTheClothIsInAHand_isNotSoakedUp', () => {
   const ritual = ritualWithSpillOnTheTable()
   ritual.do({ type: 'pickUp', itemId: 'cloth' })

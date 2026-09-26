@@ -42,6 +42,24 @@ test('heater_whenSwitchedOffEmpty_saysItHeatedNothingAndTheKeeperSwitchedItOff',
   assert.deepEqual(switchedOff?.secondsHeatedByItemId, {})
 })
 
+test('heater_whenSwitchedOffWhileOff_isRefused', () => {
+  const ritual = new TestRitual()
+
+  const events = ritual.do({ type: 'switchHeaterOff' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'switchHeaterOff', reason: 'heaterAlreadyOff' }])
+})
+
+test('heater_withTheKettleOnIt_refusesTheThermos', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+
+  const events = ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'heaterOccupied' }])
+  assert.equal(ritual.state.heater.itemIdOnTop, 'kettle')
+})
+
 test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
   const ritual = ritualWithKettleOnWorkingHeater()
 

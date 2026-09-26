@@ -86,6 +86,58 @@ test('pour_whenStoppedAbruptly_leavesNoStreamRunning', () => {
   assert.equal(ritual.state.pour, null)
 })
 
+test('pour_whileAnotherPourRuns_isRefusedAndTheFirstGoesOn', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
+
+  const events = ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup2' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'startPouring', reason: 'alreadyPouring' }])
+  assert.equal(ritual.state.pour?.targetId, 'cup1')
+})
+
+test('pour_fromAVesselIntoItself_isRefused', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+
+  const events = ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'kettle' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'startPouring', reason: 'cannotPourIntoItself' }])
+})
+
+test('pour_intoAVesselTheRoomDoesNotHave_isRefused', () => {
+  const ritual = new TestRitual()
+
+  const events = ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'teapot' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'startPouring', reason: 'unknownVessel' }])
+})
+
+test('tilt_withNoPourRunning_isRefused', () => {
+  const ritual = new TestRitual()
+
+  const events = ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 1, missedStreamLandsAt: null })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'adjustPour', reason: 'notPouring' }])
+})
+
+test('stoppingAPour_withNoPourRunning_isRefused', () => {
+  const ritual = new TestRitual()
+
+  const events = ritual.do({ type: 'stopPouring' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'stopPouring', reason: 'notPouring' }])
+})
+
+test('cup_whileTheKettlePoursIntoIt_cannotBePickedUp', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
+
+  const events = ritual.do({ type: 'pickUp', itemId: 'cup1' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'vesselIsBeingPoured' }])
+})
+
 test('thermos_whenItsLidIsClosed_refusesWater', () => {
   const ritual = new TestRitual()
 

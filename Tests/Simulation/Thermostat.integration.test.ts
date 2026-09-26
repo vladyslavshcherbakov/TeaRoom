@@ -160,6 +160,14 @@ test('thermostat_whenStartedTwice_isRefused', () => {
   assert.equal(eventsOfType(events, 'actionRefused')[0]?.reason, 'thermostatAlreadyOn')
 })
 
+test('thermostat_whenStoppedWhileNotWorking_isRefused', () => {
+  const ritual = new TestRitual()
+
+  const events = ritual.do({ type: 'stopTheThermostat' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'stopTheThermostat', reason: 'thermostatAlreadyOff' }])
+})
+
 test('heaterSwitch_askedToHoldSixtyDegrees_keepsTheWaterAtSixtyWhileItStaysOn', () => {
   const ritual = new TestRitual(testCatalog({ kettle: kettleCoolingPerSecond }))
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })

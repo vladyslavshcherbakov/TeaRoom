@@ -95,6 +95,15 @@ test('figurine_whenOfferedTwiceInOneRitual_refusesTheSecondCup', () => {
   assertNear(ritual.vessel('cup2').liquid.volumeMl, 90)
 })
 
+test('offering_toAFigurineTheRoomDoesNotHave_isRefusedAndKeepsTheTea', () => {
+  const ritual = ritualWithTeaInCups(60)
+
+  const events = ritual.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'monk' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'offerCup', reason: 'unknownFigurine' }])
+  assertNear(ritual.vessel('cup1').liquid.volumeMl, 90)
+})
+
 test('offering_emptiesTheWholeCupIntoTheSaucer', () => {
   const ritual = ritualWithTeaInCups(60)
 

@@ -153,6 +153,33 @@ test('caddy_underTheRunningTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', (
   assert.deepEqual(eventsOfType(events, 'lastLeavesWashedOut'), [{ type: 'lastLeavesWashedOut', vesselId: 'caddy', isACaddy: true }])
 })
 
+test('spoon_whenPutInTheSink_isRefusedAndStaysInHand', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+
+  const events = ritual.do({ type: 'putInTheSink', itemId: 'spoon' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'putInTheSink', reason: 'cannotGoInTheSink' }])
+  assert.deepEqual(ritual.state.spoon.location, { kind: 'inHand', handIndex: 0 })
+})
+
+test('tap_whenTurnedOnWhileItRuns_isRefused', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'turnTheTapOn' })
+
+  const events = ritual.do({ type: 'turnTheTapOn' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'turnTheTapOn', reason: 'tapAlreadyOn' }])
+})
+
+test('tap_whenTurnedOffWhileClosed_isRefused', () => {
+  const ritual = new TestRitual()
+
+  const events = ritual.do({ type: 'turnTheTapOff' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'turnTheTapOff', reason: 'tapAlreadyOff' }])
+})
+
 test('sink_awayFromTheCounter_isRefused', () => {
   const ritual = openKettleInHandAtTheCounter()
   ritual.do({ type: 'standAt', placeId: 'table' })
