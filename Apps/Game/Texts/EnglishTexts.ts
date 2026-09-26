@@ -16,6 +16,10 @@ export const englishTexts = {
   'debug.sticks': 'Sticks',
   'debug.sticks.walkOnTheLeft': 'Walk left, look right',
   'debug.sticks.lookOnTheLeft': 'Look left, walk right',
+  'debug.height': 'Height',
+  'debug.height.value': '{centimetres} cm',
+  'debug.height.lower': 'Shorter',
+  'debug.height.higher': 'Taller',
   'debug.close': 'Close',
 
   'aim.tiltButton': '🫖',

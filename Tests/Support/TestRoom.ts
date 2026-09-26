@@ -48,6 +48,7 @@ export class TestRoom {
       temperatureUnit: () => this.temperatureUnit,
       isNerdModeOn: () => this.isNerdModeOn,
       keeperDied: () => (this.deathsSeen += 1),
+      screenRightOnTheFloor: () => null,
     })
     const screen = options.screen?.(this) ?? { tapTargetAt: () => ({ kind: 'nothing' }), aimPointAt: () => ({ x: 0, z: 0 }) }
     this.gestures = new RoomGestures(this.play, this.zoom, screen, log)

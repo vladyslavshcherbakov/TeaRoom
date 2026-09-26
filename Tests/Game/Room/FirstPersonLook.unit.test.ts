@@ -19,7 +19,7 @@ test('step_whenTheStickIsPushedRightFacingForward_goesToTheScreensRight', () => 
 
 test('look_whenTheStickIsPushedRight_turnsRight', () => {
   const look = lookTurnedBy({ headingRadians: Math.PI, pitchRadians: 0 }, { right: 1, up: 0 }, 0.5)
-  const pose = firstPersonPose({ x: 0, z: 0 }, look)
+  const pose = firstPersonPose({ x: 0, z: 0 }, look, 1.3)
 
   assert.ok(pose.target.x > 0, `target x ${pose.target.x}`)
 })
@@ -31,9 +31,9 @@ test('look_whenTiltedUpForLong_stopsAtItsSteepest', () => {
 })
 
 test('firstPersonPose_standsAtTheWalkersEyes', () => {
-  const pose = firstPersonPose({ x: 0.5, z: -1 }, { headingRadians: 0, pitchRadians: 0 })
+  const pose = firstPersonPose({ x: 0.5, z: -1 }, { headingRadians: 0, pitchRadians: 0 }, 1.3)
 
-  assert.deepEqual(pose.position, { x: 0.5, y: 1, z: -1 })
+  assert.deepEqual(pose.position, { x: 0.5, y: 1.3, z: -1 })
 })
 
 test('look_whenTurnedTowardsAWalk_turnsPartWayAtFirst', () => {

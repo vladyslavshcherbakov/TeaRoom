@@ -18,8 +18,6 @@ export type MouseMovement = {
 
 export const firstPersonFieldOfViewDegrees = 70
 
-const eyeHeightMetres = 1
-export const seatedEyeHeightMetres = 0.8
 const turnRadiansPerMousePixel = 0.0025
 const fastestTurnRadiansPerSecond = 2.1
 const fastestTiltRadiansPerSecond = 1.1
@@ -56,11 +54,15 @@ export function lookTurnedTowards(look: FirstPersonLook, headingRadians: number,
 export function stepFor(stick: StickDeflection, headingRadians: number, seconds: number, speedShare = 1): FloorPoint {
   const metres = walkingSpeedMetresPerSecond * speedShare * seconds
   const forward = { x: Math.sin(headingRadians), z: Math.cos(headingRadians) }
-  const right = { x: -forward.z, z: forward.x }
+  const right = rightOnTheFloorOf(headingRadians)
   return { x: (forward.x * stick.up + right.x * stick.right) * metres, z: (forward.z * stick.up + right.z * stick.right) * metres }
 }
 
-export function firstPersonPose(walker: FloorPoint, look: FirstPersonLook, eyeHeight = eyeHeightMetres): CameraPose {
+export function rightOnTheFloorOf(headingRadians: number): FloorPoint {
+  return { x: -Math.cos(headingRadians), z: Math.sin(headingRadians) }
+}
+
+export function firstPersonPose(walker: FloorPoint, look: FirstPersonLook, eyeHeight: number): CameraPose {
   const flatReach = Math.cos(look.pitchRadians)
   return {
     position: { x: walker.x, y: eyeHeight, z: walker.z },

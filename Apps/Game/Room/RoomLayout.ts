@@ -220,6 +220,18 @@ export function undersideOfTheBoardAbove(layout: RoomLayout, spot: Spot): number
   return undersides.length === 0 ? null : Math.min(...undersides)
 }
 
+export function nearestFurnitureWithin(layout: RoomLayout, point: FloorPoint, metres: number): FurnitureId | null {
+  const distances = layout.furniture.map((piece) => ({ id: piece.id, distance: distanceToTheEdgeOf(piece.footprint, point) })).filter((piece) => piece.distance <= metres)
+  const nearest = distances.reduce<(typeof distances)[number] | null>((closest, piece) => (closest === null || piece.distance < closest.distance ? piece : closest), null)
+  return nearest?.id ?? null
+}
+
+function distanceToTheEdgeOf(footprint: Footprint, point: FloorPoint): number {
+  const across = Math.max(0, Math.abs(point.x - footprint.x) - footprint.width / 2)
+  const along = Math.max(0, Math.abs(point.z - footprint.z) - footprint.depth / 2)
+  return Math.hypot(across, along)
+}
+
 export function pointAwayFromTheWall(spot: SpotOnAWall, intoTheRoom: number): WorldPoint {
   const wallFace = -roomHalfSize + intoTheRoom
   return spot.wall === 'back' ? { x: spot.alongTheWall, y: spot.y, z: wallFace } : { x: wallFace, y: spot.y, z: spot.alongTheWall }

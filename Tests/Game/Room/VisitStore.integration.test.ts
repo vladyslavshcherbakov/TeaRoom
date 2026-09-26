@@ -38,6 +38,14 @@ test('savedVisit_fromBeforeTheMouseAndKeyboardCouldControlTheLook_keepsItsTwoSti
   assert.equal(found.kind === 'found' ? found.visit.camera.controlScheme : null, 'twoSticks')
 })
 
+test('savedVisit_fromBeforeTheKeepersHeightCouldBeChosen_hasAKeeperOf140cm', () => {
+  const store = storeHolding(aVisit)
+
+  const found = store.find()
+
+  assert.equal(found.kind === 'found' ? found.visit.camera.keeperHeightCentimetres : null, 140)
+})
+
 test('savedVisit_ofAnotherVersion_isBrokenByAnUpdate', () => {
   const store = storeHolding({ ...aVisit, savedVisitVersion: 0 })
 

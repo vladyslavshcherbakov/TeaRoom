@@ -96,9 +96,23 @@ test('walker_whenWalkingFreelyAwayFromFurniture_leavesIt', () => {
   navigator.tapped({ kind: 'furniture', furnitureId: 'teaTable' })
   walkUntilStill(navigator)
 
-  navigator.walkFreely({ x: 0, z: 0.1 }, 0)
+  for (let step = 0; step < 20; step += 1) navigator.walkFreely({ x: 0, z: 0.1 }, 0)
 
   assert.deepEqual(places, ['teaTable', null])
+  assert.deepEqual(navigator.view, { kind: 'overview' })
+})
+
+test('walker_whenWalkingFreelyUpToTheShelf_standsWithinReachOfItWithoutWalkingOnToIt', () => {
+  const moves: string[] = []
+  const navigator = new RoomNavigator(quietRoomLayout, () => {}, (furnitureId, byWalkingFreely) => moves.push(`${furnitureId} ${byWalkingFreely ? 'freely' : 'by a tap'}`))
+  navigator.tapped({ kind: 'furniture', furnitureId: 'shelf' })
+  walkUntilStill(navigator)
+  for (let step = 0; step < 20; step += 1) navigator.walkFreely({ x: 0, z: 0.1 }, 0)
+
+  for (let step = 0; step < 20; step += 1) navigator.walkFreely({ x: 0, z: -0.1 }, Math.PI)
+
+  assert.deepEqual(navigator.view, { kind: 'closeUp', furnitureId: 'shelf' })
+  assert.deepEqual(moves, ['shelf by a tap', 'null freely', 'shelf freely'])
 })
 
 test('walker_whenWalkingFreelyOnTheWayToFurniture_givesUpTheWay', () => {

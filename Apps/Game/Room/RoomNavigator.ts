@@ -1,4 +1,4 @@
-import { furnitureWithId, sideStoodAt, walkerStart, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout } from './RoomLayout.ts'
+import { furnitureWithId, nearestFurnitureWithin, sideStoodAt, walkerStart, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout } from './RoomLayout.ts'
 import { FloorGrid } from './Walking/FloorGrid.ts'
 import { isWalking, standingAt, walkFurther, type Walk } from './Walking/Walk.ts'
 
@@ -22,7 +22,9 @@ export const roomEntrance: RoomPlace = { position: walkerStart, headingRadians: 
 
 export type RoomLog = (message: string) => void
 
-export type KeeperMoved = (furnitureId: FurnitureId | null) => void
+export type KeeperMoved = (furnitureId: FurnitureId | null, byWalkingFreely: boolean) => void
+
+const furnitureWithinReachWhileWalkingFreelyMetres = 0.7
 
 export class RoomNavigator {
   private readonly layout: RoomLayout
@@ -84,11 +86,7 @@ export class RoomNavigator {
     this.currentView = { kind: 'closeUp', furnitureId }
     this.furnitureStoodAt = furnitureId
     this.log(`arrived at ${furnitureId}, showing it close up`)
-    this.keeperMoved(furnitureId)
-  }
-
-  standUpToWalk(): void {
-    this.leaveCloseUp('the walking controls were used')
+    this.keeperMoved(furnitureId, false)
   }
 
   walkFreely(step: FloorPoint, headingRadians: number): void {
@@ -100,6 +98,7 @@ export class RoomNavigator {
     ].find((point) => this.floor.isWalkable(point))
     if (!this.isWalkingFreely) this.startWalkingFreely()
     this.currentWalk = { position: reachable ?? from, headingRadians, waypoints: [] }
+    this.standAtTheFurnitureWithinReach()
   }
 
   stopWalkingFreely(): void {
@@ -127,10 +126,15 @@ export class RoomNavigator {
       this.log(`gave up walking to ${this.currentView.furnitureId}`)
       this.currentView = { kind: 'overview' }
     }
-    if (this.furnitureStoodAt === null) return
-    this.log(`left ${this.furnitureStoodAt}`)
-    this.furnitureStoodAt = null
-    this.keeperMoved(null)
+  }
+
+  private standAtTheFurnitureWithinReach(): void {
+    const furnitureId = nearestFurnitureWithin(this.layout, this.currentWalk.position, furnitureWithinReachWhileWalkingFreelyMetres)
+    if (furnitureId === this.furnitureStoodAt) return
+    this.furnitureStoodAt = furnitureId
+    this.currentView = furnitureId === null ? { kind: 'overview' } : { kind: 'closeUp', furnitureId }
+    this.log(furnitureId === null ? `walked out of reach of the furniture at ${coordinatesOf(this.currentWalk.position)}` : `walked within reach of ${furnitureId} at ${coordinatesOf(this.currentWalk.position)}`)
+    this.keeperMoved(furnitureId, true)
   }
 
   private walkToFloor(point: FloorPoint): void {
@@ -172,7 +176,7 @@ export class RoomNavigator {
     if (this.furnitureStoodAt === null) return
     this.log(`left ${this.furnitureStoodAt}`)
     this.furnitureStoodAt = null
-    this.keeperMoved(null)
+    this.keeperMoved(null, false)
   }
 
   private leaveCloseUp(reason: string): void {

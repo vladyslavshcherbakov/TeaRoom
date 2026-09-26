@@ -88,6 +88,7 @@ export type RoomPlayListener = {
   readonly temperatureUnit: () => TemperatureUnit
   readonly isNerdModeOn: () => boolean
   readonly keeperDied: () => void
+  readonly screenRightOnTheFloor: () => FloorPoint | null
 }
 
 export class RoomPlay {
@@ -104,6 +105,7 @@ export class RoomPlay {
   private press: Press | null = null
   private aimedPour: AimedPour | null = null
   private inspection: ItemInspection | null = null
+  private isSeated: boolean
 
   constructor(ritual: RitualPort, catalog: Catalog, layout: RoomLayout, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
     this.ritual = ritual
@@ -112,7 +114,8 @@ export class RoomPlay {
     this.log = log
     this.listener = listener
     this.remarks = new RoomRemarks(heaterItemsBeforeTheTesterJoke, log, (remark) => listener.remarked(remark))
-    this.navigator = new RoomNavigator(layout, log, (furnitureId) => this.keeperMovedTo(furnitureId), startsAt)
+    this.navigator = new RoomNavigator(layout, log, (furnitureId, byWalkingFreely) => this.keeperMovedTo(furnitureId, byWalkingFreely), startsAt)
+    this.isSeated = startsAt.closeUpOf !== null && startsAt.closeUpOf === this.ritualFurnitureId()
   }
 
   get walk(): Walk {
@@ -136,8 +139,7 @@ export class RoomPlay {
   }
 
   get isSeatedAtTheRitualPlace(): boolean {
-    const view = this.view
-    return view.kind === 'closeUp' && view.furnitureId === this.ritualFurnitureId()
+    return this.isSeated && this.isAtTheRitualPlace()
   }
 
   get sippableCupId(): string | null {
@@ -287,7 +289,9 @@ export class RoomPlay {
   }
 
   standUpToWalk(): void {
-    this.navigator.standUpToWalk()
+    if (!this.isSeated) return
+    this.isSeated = false
+    this.log('the keeper stands up from the tea table to walk')
   }
 
   stopWalkingFreely(): void {
@@ -372,7 +376,19 @@ export class RoomPlay {
   private actAtCloseUp(target: RoomTapTarget): void {
     const action = this.closeUpActionOn(target)
     if (action === null) return this.log(`tap on ${describeTarget(target)} in the close-up does nothing`)
+    this.sitDownAtTheRitualPlace(`to act on ${describeTarget(target)}`)
     action.act()
+  }
+
+  private sitDownAtTheRitualPlace(reason: string): void {
+    if (this.isSeated || !this.isAtTheRitualPlace()) return
+    this.isSeated = true
+    this.log(`the keeper sits down at the tea table ${reason}`)
+  }
+
+  private isAtTheRitualPlace(): boolean {
+    const view = this.view
+    return view.kind === 'closeUp' && view.furnitureId === this.ritualFurnitureId()
   }
 
   private closeUpActionOn(target: RoomTapTarget): CloseUpAction | null {
@@ -436,9 +452,11 @@ export class RoomPlay {
     }
   }
 
-  private keeperMovedTo(furnitureId: FurnitureId | null): void {
+  private keeperMovedTo(furnitureId: FurnitureId | null, byWalkingFreely: boolean): void {
     if (this.aimedPour !== null) this.pourDone()
+    this.isSeated = false
     this.ritual.dispatch({ type: 'standAt', placeId: furnitureId })
+    if (!byWalkingFreely) this.sitDownAtTheRitualPlace('after walking to it')
   }
 
   private touchItem(itemId: string): void {
@@ -486,7 +504,7 @@ export class RoomPlay {
     const closeUp = this.closeUpInView
     if (source === undefined || target?.location.kind !== 'onSurface' || targetLayout === undefined || closeUp === null) return this.log(`no pour to aim at ${targetId}`)
     this.openTheLidsThePourNeeds(source, target)
-    const spoutDirection = screenRightOnTheFloor(closeUp)
+    const spoutDirection = this.listener.screenRightOnTheFloor() ?? screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
     this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection, this.spoutAreaOver(target.location.spot.placeId, spoutDirection))
   }
