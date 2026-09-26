@@ -12,6 +12,8 @@ const faucetsArea: TapHit = { target: { kind: 'faucet' }, isForgivingTouchArea: 
 const sinkBasin: TapHit = { target: { kind: 'sink' }, isForgivingTouchArea: false }
 const kettlesLid: TapHit = { target: { kind: 'lid', itemId: 'kettle' }, isForgivingTouchArea: false }
 const kettle: TapHit = { target: { kind: 'item', itemId: 'kettle' }, isForgivingTouchArea: false }
+const gearsArea: TapHit = { target: { kind: 'settingsGear' }, isForgivingTouchArea: true }
+const guideBooksPage: TapHit = { target: { kind: 'guideBook' }, isForgivingTouchArea: false }
 const canActOnAnything = (): boolean => true
 const canActOnNothing = (): boolean => false
 
@@ -73,4 +75,10 @@ test('tap_throughAHandsAreaOnTheSinkBehind_staysOnTheHand', () => {
   const target = tapTargetAmong([firstHandsArea, sinkBasin], null, canActOnNothing)
 
   assert.deepEqual(target, { kind: 'hand', handIndex: 0 } satisfies RoomTapTarget)
+})
+
+test('tap_throughTheGearsAreaOnTheGuideBookBelowIt_opensTheBook', () => {
+  const target = tapTargetAmong([gearsArea, guideBooksPage], null, canActOnAnything)
+
+  assert.deepEqual(target, guideBooksPage.target)
 })
