@@ -432,7 +432,18 @@ export class RoomPlay {
   private touchItem(itemId: string): void {
     if (this.chosenItemId() === spoonItemId) return this.useTheSpoonOn(itemId)
     if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
+    const chosenItemId = this.chosenItemId()
+    if (chosenItemId !== null) this.log(`no pour aimed from ${chosenItemId} at ${itemId}: ${this.whyNoPourCanBeAimedAt(itemId)}, so ${itemId} is taken`)
     this.pickUpAndChoose(itemId)
+  }
+
+  private whyNoPourCanBeAimedAt(targetId: string): string {
+    const sourceId = this.chosenItemId()
+    const source = sourceId === null ? undefined : this.ritual.state.vessels[sourceId]
+    if (source === undefined) return `${sourceId ?? 'nothing'} is not a vessel`
+    if (isEmpty(source.liquid)) return `${source.id} is empty`
+    if (source.id === targetId) return `${targetId} is the chosen vessel itself`
+    return `${targetId} is not a vessel standing on a surface`
   }
 
   private pickUpAndChoose(itemId: string): void {
