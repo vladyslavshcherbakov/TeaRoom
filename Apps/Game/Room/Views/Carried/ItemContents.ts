@@ -15,6 +15,12 @@ import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
 import { kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
 import { LeafPile } from './LeafPile.ts'
+import { roomLayers } from '../RoomLayers.ts'
+
+type SteamDrawnToTheEyes = {
+  readonly position: THREE.Vector3
+  readonly share: number
+}
 
 type Wave = {
   readonly riseMetres: number
@@ -63,20 +69,33 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   if (model.soakedLeafHolder !== null && vessel !== undefined) showSoakedLeaves(model, model.soakedLeafHolder, vessel, wave, scene.timeSeconds)
   if (model.leafHolder !== null) showLeaves(model, model.leafHolder, scene)
   if (model.glowingShell !== null && vessel !== undefined) showRedHeat(model.glowingShell, vessel.shellGlow)
-  const puffsPerSource = vessel === undefined || !model.root.visible || model.isHeldInView ? 0 : puffsBySteam[vessel.steam]
-  showSteam(model, steamSourcesOf(model, model.lid === null || isOpen), puffsPerSource, scene.timeSeconds)
+  const puffsPerSource = vessel === undefined || !model.root.visible || model.layer === roomLayers.inspected ? 0 : puffsBySteam[vessel.steam]
+  const sip = scene.sipGesture?.cupId === model.itemId ? scene.sipGesture : null
+  const eyes = sip === null || scene.heldInView === null ? null : { position: scene.heldInView.camera.position, share: sip.liftShare }
+  model.root.updateMatrixWorld()
+  showSteam(model, steamSourcesOf(model, model.lid === null || isOpen), puffsPerSource, scene.timeSeconds, eyes)
 }
 
-function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], puffsPerSource: number, timeSeconds: number): void {
+function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], puffsPerSource: number, timeSeconds: number, eyes: SteamDrawnToTheEyes | null): void {
+  const sizeInView = model.root.scale.x
+  const steamMaterial = model.isHeldInView && eyes === null ? model.steamLook.heldInView : model.steamLook.inRoom
   model.puffs.forEach((puff, index) => {
+    puff.material = steamMaterial
     const source = steamSources[index % steamSources.length]
     const puffAtItsSource = Math.floor(index / steamSources.length)
     puff.visible = source !== undefined && puffAtItsSource < puffsPerSource
     if (!puff.visible || source === undefined) return
     const rise = (timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
-    puff.position.set(source.x, source.y + rise * steamColumnMetres, source.z)
-    puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare)
+    puff.position.copy(source).addScaledVector(steamRisingFrom(source, eyes), rise * steamColumnMetres * sizeInView)
+    puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare * sizeInView)
   })
+}
+
+function steamRisingFrom(source: THREE.Vector3, eyes: SteamDrawnToTheEyes | null): THREE.Vector3 {
+  const up = new THREE.Vector3(0, 1, 0)
+  if (eyes === null) return up
+  const towardTheEyes = eyes.position.clone().sub(source).normalize()
+  return up.lerp(towardTheEyes, eyes.share).normalize()
 }
 
 function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
@@ -200,7 +219,7 @@ function showTheThermometer(thermometer: LampDisplay, vessel: TableViewState.Ves
 }
 
 function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vector3[] {
-  const aboveTheOpening = model.root.position.clone().add(new THREE.Vector3(0, model.rimHeight + steamStartsAboveTheOpeningMetres, 0))
+  const aboveTheOpening = model.root.localToWorld(new THREE.Vector3(0, model.rimHeight + steamStartsAboveTheOpeningMetres, 0))
   const aboveTheSpout = model.root.localToWorld(model.spoutTip.clone()).add(new THREE.Vector3(0, steamStartsAboveTheSpoutMetres, 0))
   return [...(model.look.steamRisesAboveTheSpout ? [aboveTheSpout] : []), ...(isOpenToTheAir ? [aboveTheOpening] : [])]
 }

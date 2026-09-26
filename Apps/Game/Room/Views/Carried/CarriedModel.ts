@@ -13,6 +13,11 @@ import type { LeafPile } from './LeafPile.ts'
 import { spoonShapeLook } from './SpoonParts.ts'
 import { thermosShapeLook } from './ThermosParts.ts'
 
+export type SteamLook = {
+  readonly inRoom: THREE.Material
+  readonly heldInView: THREE.Material
+}
+
 export type CarriedModel = {
   readonly itemId: string
   readonly shape: CarriedShape
@@ -41,6 +46,7 @@ export type CarriedModel = {
   readonly liquidTint: THREE.Color | null
   readonly puffs: readonly THREE.Mesh[]
   readonly heldInViewLook: HeldInViewLook | null
+  readonly steamLook: SteamLook
   readonly glowingShell: GlowingShell | null
   readonly charTo: CharTo | null
   readonly thermometer: LampDisplay | null
@@ -94,7 +100,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const soakedLeafHolder = look.soakedLeaves === null ? null : new THREE.Group()
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !isATouchArea(part)))
-  const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(steamPuffGeometry, materials.room.materialFor('steam')))
+  const steamLook: SteamLook = { inRoom: materials.room.materialFor('steam'), heldInView: materials.room.materialFor('heldSteam') }
+  const puffs = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => new THREE.Mesh(steamPuffGeometry, steamLook.inRoom))
   for (const puff of puffs) puff.castShadow = false
   return {
     itemId,
@@ -124,6 +131,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     liquidTint: parts.liquidTint,
     puffs,
     heldInViewLook: parts.heldInViewLook,
+    steamLook,
     glowingShell: parts.glowingShell,
     charTo: parts.charTo,
     thermometer: parts.thermometer,
