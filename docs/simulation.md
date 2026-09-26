@@ -8,6 +8,8 @@ Units: temperature in °C, volume in millilitres, leaves in grams, time in secon
 
 The world advances in fixed steps of 0.05 s, whatever the frame rate. A frame hands over its elapsed time and the core runs as many whole steps as fit, carrying the remainder to the next frame. The same session played at 30 and at 60 frames per second ends in the same state.
 
+The ritual has no phases: every command is accepted from the moment the room opens, and the world never stops.
+
 ## Places and hands
 
 A room has places, such as the counter, the shelf and the tea table. Each item that can be carried — every vessel, the caddy among them, the spoon and the cloth — is either on a surface at a spot of a place, or in one of the keeper's hands: the two hands, and a middle hand that can grow when both are full. A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`. The spot keeps the exact position where the item was put down, so the room can show it there.
@@ -16,7 +18,7 @@ The keeper stands at one place, or at none while walking. An item is within reac
 
 An action on an item checks first that the item exists, that it has not crumbled to ash and that it is within reach, and only then what else it needs: a hand, the keeper's place, a lid, a pour. It is refused with the reason of the first check that fails, so an item out of reach is refused with `outOfReach` whatever else is wrong with it. The heater, the thermostat and the tap check first that the keeper stands at their place.
 
-- Picking up needs the item within reach and a free hand. The first free hand takes it, and an open lid of the vessel closes. Picking up the kettle from the heater lifts it off, and the water is judged if the heater was on.
+- Picking up needs the item within reach and a free hand. The first free hand takes it, and an open lid of the vessel closes. Picking up the kettle from the heater lifts it off.
 - Putting down needs the item in a hand and the spot at the keeper's place.
 - With both hands full, `pickUpWithAMiddleHand` grows a middle hand that takes the item at once, as picking up would. It checks the item as picking up does, then that both hands are full and no middle hand is there yet, and every refusal names `pickUpWithAMiddleHand`. If the item cannot be taken, for a spoon that crumbles or a thermos too hot to hold, no hand grows. The middle hand is gone as soon as it lets go of its item, however it lets go, and says so with `middleHandVanished`. A saved state from before the middle hand gets an empty one that has not grown.
 - The heater's switch and the heater plate need the keeper at the heater's place. Putting a vessel on the heater takes it from the hand or from the same surface. Taken from a surface or from the sink, it is lifted as picking up lifts it: an open lid closes, and a cloth lying in a puddle stops soaking it.
@@ -33,19 +35,17 @@ A vessel with a metal shell, the thermos, may stand on the heater too. On a work
 
 The heater has a thermostat with a target temperature, from `lowestC` to `highestC` of its definition, 40 to 100 °C for the electric plate, which starts at 100 °C. The keeper sets it and starts or stops it at the heater's place, with `setTheThermostat`, `startTheThermostat` and `stopTheThermostat`. A working thermostat measures the water in the vessel on the plate. It heats until the water reaches the target, then leaves the plate cold until the water has cooled `heatsAgainBelowTheTargetByC` below the target, 2 °C, and heats again. With nothing on the plate, or an empty vessel, it leaves the plate cold. Starting it while the heater boils by hand hands the heater to the thermostat. While the thermostat works, the heater's switch switches the heater off, whether the plate heats or waits at that moment: the plate and the thermostat both stop, and the switch never takes the heater over by hand, so `switchHeaterOn` is refused with `heaterAlreadyOn`. Switching the heater off, or stopping the thermostat, switches both off. The heater switched on by hand with `holdsTheThermostatsTarget` heats the water on it no higher than the thermostat's target, so it holds the water there, and works until it is switched off. The room asks for that in nerd mode. Without it the heater heats to the boil. The thermostat keeps working while the keeper is away. The heater is in use from the moment it is switched on or its thermostat started until both are off, and its energy counts only the seconds the plate heated.
 
-When the water on the heater first reaches the lower edge of the chosen tea's good range, the core announces it once per switch-on with `targetTemperatureReached`.
-
-Switching the heater off, by hand or by finishing the ritual, reports how long it was in use since it was last switched on, and the energy it used: its `powerWatts` for the seconds the plate heated, 2000 W for the electric plate. It also reports whether the keeper switched it off, each item that sat on it while it worked, with the seconds it sat there, and the seconds and energy it wasted: the time it worked with nothing on it or with something not made for the heater. Only the kettle is made for the heater, so the thermos, the spoon and the cloth waste its energy, and an empty kettle does not.
-
-## Judging water
-
-Each tea defines an ideal temperature, a good range and a wider acceptable range. Water is `ideal` inside the good range, `slightlyCool` or `slightlyHot` between the good and acceptable ranges, and `tooCool` or `tooHot` outside them. Switching the heater off, or lifting the kettle off a working heater, reports this judgement.
+Switching the heater off reports how long it was in use since it was last switched on, and the energy it used: its `powerWatts` for the seconds the plate heated, 2000 W for the electric plate. It also reports each item that sat on it while it worked, with the seconds it sat there, and the seconds and energy it wasted: the time it worked with nothing on it or with something not made for the heater. Only the kettle is made for the heater, so the thermos, the spoon and the cloth waste its energy, and an empty kettle does not.
 
 ## Pouring
 
-Flow follows tilt: nothing below 10°, a linear rise to the vessel's `maxPourMlPerSecond` at 45°. Each vessel's opening takes a stream of up to `takesAStreamOfUpToMlPerSecond`, and a faster stream splashes a tenth of itself onto the table. So how fast a vessel can be filled depends on both: the kettle pours up to 45 ml/s, a tea bowl takes 28 ml/s and the thermos neck 20 ml/s cleanly, the kettle's opening 40 ml/s, and the wide caddy 60 ml/s, so the kettle fills the caddy at full tilt. The share of the stream that misses the opening also lands on the table. A target that is full overflows onto the table, and the core reports the first overflow of a pour. Temperature, strength and bitterness travel with the liquid and mix by volume in the target. The stream mixes into what the target holds before anything runs over, so what overflows is the mixture: boiling water poured on into a full bowl of cold water warms it, and a bowlful poured in brings it close to the stream's heat.
+Flow follows tilt: nothing below 10°, a linear rise to the vessel's `maxPourMlPerSecond` at 45°. Each vessel's opening takes a stream of up to `takesAStreamOfUpToMlPerSecond`, and a faster stream splashes a tenth of itself onto the table. So how fast a vessel can be filled depends on both: the kettle pours up to 45 ml/s, a tea bowl takes 28 ml/s and the thermos neck 20 ml/s cleanly, the kettle's opening 40 ml/s, and the wide caddy 60 ml/s, so the kettle fills the caddy at full tilt. The share of the stream that misses the opening also lands on the table. A target that is full overflows onto the table, and the core reports the first overflow of a pour. Temperature, strength, the teas and bitterness travel with the liquid and mix by volume in the target, as the next section says. The stream mixes into what the target holds before anything runs over, so what overflows is the mixture: boiling water poured on into a full bowl of cold water warms it, and a bowlful poured in brings it close to the stream's heat.
 
 A vessel cannot be poured while it stands on the heater. A vessel whose lid must be open to pour, or to be poured into, refuses while that lid is closed. The lid of a vessel that is being poured from or into cannot be closed until the pour ends.
+
+## Teas in a liquid
+
+A liquid knows which teas it is made of: it keeps the strength each tea gave it, and together they make its strength. Plain water has no tea. Leaves steeping in water credit the strength they add to their own tea. Leaves never pour: they stay in their vessel, and only the liquid carries its teas. Mixing averages each tea's strength by volume, as it averages the strength, so a tea's share of a mixture is what it contributed, its strength times its volume. Plain water poured in dilutes the strength and keeps the blend, and a part poured out keeps the blend of the whole.
 
 ## The sink and the tap
 
@@ -59,14 +59,14 @@ An item leaves the sink when it is picked up or put on the heater. Either way it
 
 ## Leaves and brewing
 
-The caddy is a vessel with a lid, and the room's leaves lie in it: the ritual fills it with the room's `caddyGrams` of the chosen tea. It opens, the spoon scoops `capacity × depth` grams, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from. Water poured into the open caddy brews all its leaves at once, so its tea turns extremely strong within seconds. The keeper may pour it out or sip it straight from the caddy. A sip of heavy or extreme tea straight from the caddy kills the keeper and reports `keeperDied`. The same tea poured into a bowl first is only extremely strong. In the sink with its lid open, the tap fills the caddy and washes every leaf out, and the room has no tea left. The last leaves washed out of any vessel report `lastLeavesWashedOut`.
+A room keeps its tea in caddies. A caddy is a vessel with a lid that can hold leaves, and the room says which tea and how many grams it holds. The quiet room has one caddy, with 60 g of sencha. The room opens with every caddy full. A caddy opens, the spoon scoops `capacity × depth` grams from the caddy it is dipped into, and the spoon tips everything it holds into a vessel that can hold leaves and whose lid is open. The spoon carries one tea at a time: it refuses to scoop from the caddy of another tea while it holds leaves, with `spoonHoldsAnotherTea`, and a vessel with leaves of one tea refuses leaves of another, with `holdsLeavesOfAnotherTea`, because the leaves in a vessel steep as one tea. Scooping from a vessel the room keeps no tea in is refused with `notACaddy`. The kettle and the tea bowls can hold leaves, so tea may be brewed right in a bowl. Leaves stay in their vessel when it is poured from. Water poured into the open caddy brews all its leaves at once, so its tea turns extremely strong within seconds. The keeper may pour it out or sip it straight from the caddy. A sip of heavy or extreme tea straight from the caddy kills the keeper and reports `keeperDied`. The same tea poured into a bowl first is only extremely strong. In the sink with its lid open, the tap fills a caddy and washes every leaf out, and that caddy has no tea left until the keeper returns. The last leaves washed out of any vessel report `lastLeavesWashedOut`.
 
 A brew starts when leaves and water first share a vessel, whichever arrives second. While it lasts:
 
 - The leaf ratio is the grams per 100 ml divided by the tea's ideal grams per 100 ml.
 - The heat factor is 0 at 40 °C, 1 at the tea's ideal temperature, and at most 1.5.
 - The boil stirs the leaves while their vessel stands on a working heater at 100 °C, and doubles both strength and bitterness per second. Leaves may go into the kettle before the water, or while it stands on the heater.
-- Strength closes `strengthRatePerSecond × leaf ratio × heat factor × stirring` of the remaining gap to 100 each second, so it rises fast and then levels off.
+- Strength closes `strengthRatePerSecond × leaf ratio × heat factor × stirring` of the remaining gap to 100 each second, so it rises fast and then levels off. The strength it adds is credited to the tea of the leaves.
 - Bitterness grows by `bitternessPerSecond × leaf ratio × heat factor × stirring` each second, multiplied by `bitternessMultiplierAfterIdealTime` once the steep passes the tea's ideal time, and by `1 + bitternessGainPerDegreeAboveGood × degrees above the good range` when the water is too hot.
 
 Tea poured out of the brewing vessel stops changing, apart from cooling. When the brewing vessel is emptied, that brew ends, and new water starts a new one.
@@ -78,15 +78,17 @@ A sip takes 40 ml, so a full tea bowl is drunk in three sips, and it says whethe
 | Part | Values |
 |---|---|
 | Temperature | `tooHot` above 93 °C, `pleasant` from 45 to 93 °C, `lukewarm` from 30 to 45 °C, `cold` below 30 °C |
-| Strength | `none` while it is still plain water, below 5, `weak` below the tea's balanced range, `balanced` inside it, `rich` up to 15 above it, `heavy` beyond, `extreme` from 98, the ceiling that a pile of leaves reaches within a minute |
+| Strength | `none` while it is still plain water, below 5, or holds no tea, `weak` below the blend's balanced range, `balanced` inside it, `rich` up to 15 above it, `heavy` beyond, `extreme` from 98, the ceiling that a pile of leaves reaches within a minute |
 | Bitterness | `soft` below 25, `noticeable` from 25, `high` from 45, `overbrewed` from 70 |
 | Reaction | `waitsForItToCool` if too hot, else `strongGrimace` if overbrewed, else `grimace` if high bitterness or heavy or extreme strength, else `shrug` if plain water, weak or cold, else `contentSigh` |
+
+The blend's balanced range is the average of the balanced ranges of the teas in the sip, each weighted by its share of the strength, so a mixture of two teas half and half is balanced between the averages of their lowest and of their highest balanced strengths. The temperature parts are the same for every tea. Nothing is judged before a sip: the water is not judged when it is heated, lifted off the heater or poured onto leaves.
 
 A tea bowl filled from a boiling kettle stays above 93 °C for about five seconds after the pour, so only a keeper who hurries sips it too hot.
 
 ## Offerings
 
-A bowl set before a figurine goes entirely into its saucer. Each figurine accepts one offering per ritual. The figurine's satisfaction changes by 4 for any tea, plus 4 per point of its hidden affinity for that tea, plus 4 when the strength is in its preferred range, minus 4 when the bitterness is 45 or more. Near-plain water earns 1. The figurine answers with `glow` from 12, `subtle` from 6, and `barely` below that.
+A bowl set before a figurine goes entirely into its saucer. Each figurine accepts one offering per ritual. The figurine's satisfaction changes by 4 for any tea, plus 4 per point of its hidden affinity for the teas of the offering, each weighted by its share of the strength, plus 4 when the strength is in its preferred range, minus 4 when the bitterness is 45 or more. Near-plain water earns 1. The figurine answers with `glow` from 12, `subtle` from 6, and `barely` below that.
 
 ## The table
 
@@ -96,13 +98,9 @@ A room may hold more than one cloth, each with its own id. Each keeps its own wa
 
 The spoon may lie on the heater too. On a working heater it chars, fully in 20 seconds, and charring stops when the heater is off or the spoon is lifted. From four fifths charred it burns, 16 seconds after it went on a working plate: taken then, it crumbles to ash in the hand, the leaves on it are lost with it, and it is gone. Taken earlier, it is saved and stays as charred as it was.
 
-## Phases
-
-`settingUp` accepts only choosing the mood, beginning, walking with `standAt` and filling a vessel with boiling water. `ritual` accepts everything except beginning again and leaving. Finishing ends any pour, switches the heater off and moves to `resting`, where the room keeps cooling and drying, and the keeper can still walk, take and put down items, change the mood, fill a vessel with boiling water and leave. Leaving moves to `ended`, where time stops and every command is refused.
-
 ## Shortcuts for building the game
 
-`fillWithBoilingWater` fills a vessel to its capacity with clean water at 100 °C, wherever it is: in a hand, on a surface, on the heater or in the sink. Leaves in it are gone, and so is any tea. It takes no reach and no open lid, and it works in every phase but `ended`, because the debug menu uses it to skip boiling while the game is tested.
+`fillWithBoilingWater` fills a vessel to its capacity with clean water at 100 °C, wherever it is: in a hand, on a surface, on the heater or in the sink. Leaves in it are gone, and so is any tea. It takes no reach and no open lid, because the debug menu uses it to skip boiling while the game is tested.
 
 ## Returning
 
@@ -110,6 +108,6 @@ A session can be saved as its plain state and resumed later. The saved state mus
 
 On the keeper's return the world first lives through the absence. A pour that was running stops. Then the room steps through the time away in fixed steps of 1 s, up to twelve hours, by which time everything has settled: tea goes cold even in the thermos, leaves go on steeping and turn bitter, a kettle left on the working heater boils dry, a cloth on it burns, and a running tap keeps running. Longer absences live only their first twelve hours. What happened while away is logged and is not shown.
 
-Then the house is restocked. A spoon that crumbled to ash waits at its starting place again, clean and empty. The caddy is refilled where it stands, with the chosen tea up to the room's full amount, after any water or tea in it is poured out along with its wet leaves. The return says whether the spoon came back and whether the caddy was empty, so the keeper can remark on it.
+Then the house is restocked. A spoon that crumbled to ash waits at its starting place again, clean and empty. Each caddy is refilled where it stands, with its own tea up to the grams the room keeps in it, after any water or tea in it is poured out along with its wet leaves. The return says whether the spoon came back and whether a caddy was empty, so the keeper can remark on it.
 
 Last, the day moves on. The time of day becomes the next one the room offers, in the order dawn, morning, day, sunset, dusk, night, and after the last one the day starts again. The return is placed at a share through the new time of day that the presentation passes in, and it reports `atmosphereChanged`.
