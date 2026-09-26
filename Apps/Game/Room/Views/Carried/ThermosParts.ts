@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
+import { markAsGlowing } from '../RoomLayers.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { liquidBelowTheRimMetres, overflowOverTheLipMetres, type ItemParts, type PointDownTheSide } from './ItemParts.ts'
 
@@ -75,6 +76,7 @@ function thermosParts(materials: SurfaceMaterials): ItemParts {
   floor.position.y = thermosFloorMetres
   const meshes = [foot, base, body, shoulder, neck, ...ridges, lip, inside, floor]
   const glowingShell = aluminium instanceof THREE.MeshStandardMaterial ? { metal: aluminium, coolColour: aluminium.color.clone(), coolMetalness: aluminium.metalness } : null
+  markAsGlowing(aluminium)
   return {
     meshes,
     lid: thermosCup(aluminium),

@@ -29,6 +29,7 @@ const upArrowX = 0.055
 const arrowHalfWidthMetres = 0.045
 const arrowHalfHeightMetres = 0.032
 const arrowDepthMetres = 0.015
+const nixieGlowStrength = 0.35
 const buttonInTheNerdPanel = { x: 0.21, y: nerdPanel.centreY - 0.02, radius: 0.045, length: 0.03 }
 const lampInTheNerdPanel = { x: 0.21, y: nerdPanel.centreY + 0.08, radius: 0.014 }
 const touchAreaOutMetres = 0.1
@@ -51,6 +52,7 @@ export class HeaterControls {
     this.tag = tag
     this.buildThePlainPanel()
     this.display = new LampDisplay(displayInTheNerdPanel.width, displayInTheNerdPanel.height, materials.unsharedMaterialFor('lampDisplay'))
+    markAsGlowing(this.display.mesh, nixieGlowStrength)
     this.lampLit = this.lamp('lampLit')
     markAsGlowing(this.lampLit)
     this.lampDark = this.lamp('lampDark')
