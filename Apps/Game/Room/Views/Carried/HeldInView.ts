@@ -24,7 +24,8 @@ const heldInFirstPersonWidestShareOfScreenHeight = 0.3
 const heldInViewShareOfScreenHeightFromBottom = 0.07
 const chosenHeldLiftShareOfScreenHeight = 0.05
 const heldInViewTiltTowardsCameraRadians = 0.55
-const heldFacingTheEyesTiltRadians = 0.25
+const heldFacingTheEyesTiltRadians = 0.5
+const heldFacingTheEyesRollInwardRadians = 0.2
 const heldInViewInsetShareOfItemWidth = 0.8
 const touchAreaCentreShareOfItsHeight = 0.4
 const heldInViewMostShareOfScreenHeight = 0.2
@@ -33,16 +34,19 @@ export function holdInView(model: Pick<CarriedModel, 'root' | 'footprintRadius' 
   const { camera } = heldInView
   const frame = heldInViewFrame(heldInView, handIndex)
   model.root.position.copy(camera.localToWorld(frame.baseInCamera))
-  model.root.quaternion.copy(heldInView.isFirstPerson ? turnFacingTheEyes(frame, camera) : turnTiltedTowardsTheCamera(camera))
+  model.root.quaternion.copy(heldInView.isFirstPerson ? turnFacingTheEyes(frame, camera, handIndex) : turnTiltedTowardsTheCamera(camera))
   const widthScale = frame.itemWidth / (2 * model.footprintRadius)
   const heightScale = (frame.screenHeight * heldInViewMostShareOfScreenHeight) / model.rimHeight
   model.root.scale.setScalar(Math.min(widthScale, heightScale))
 }
 
-function turnFacingTheEyes(frame: HeldInViewFrame, camera: THREE.Camera): THREE.Quaternion {
+function turnFacingTheEyes(frame: HeldInViewFrame, camera: THREE.Camera, handIndex: HandIndex): THREE.Quaternion {
   const sightLine = frame.centreInCamera.clone().normalize()
   const alongTheSightLine = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, -1), sightLine)
-  return camera.quaternion.clone().multiply(alongTheSightLine).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), heldFacingTheEyesTiltRadians))
+  const side = handIndex === middleHandIndex ? 0 : handIndex === 0 ? -1 : 1
+  const topLeaningInward = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), side * heldFacingTheEyesRollInwardRadians)
+  const tiltedTowardsTheEyes = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), heldFacingTheEyesTiltRadians)
+  return camera.quaternion.clone().multiply(alongTheSightLine).multiply(topLeaningInward).multiply(tiltedTowardsTheEyes)
 }
 
 function turnTiltedTowardsTheCamera(camera: THREE.Camera): THREE.Quaternion {
