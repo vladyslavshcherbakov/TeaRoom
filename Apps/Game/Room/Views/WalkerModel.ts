@@ -95,7 +95,9 @@ export class WalkerModel {
 
   get shadowPose(): string {
     const { position, rotation } = this.root
-    return this.root.visible ? `walker ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)} ${rotation.y.toFixed(3)}` : 'walker hidden'
+    if (!this.root.visible) return 'walker hidden'
+    const shownFaces = Object.entries(this.faces).filter(([, face]) => face.visible).map(([feature]) => feature).join('+')
+    return `walker ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)} ${rotation.y.toFixed(3)} with ${shownFaces}, afro at ${this.faces.afro.scale.x}`
   }
 
   show(walk: Walk, timeSeconds: number): void {
