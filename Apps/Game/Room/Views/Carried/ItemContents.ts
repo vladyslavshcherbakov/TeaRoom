@@ -10,7 +10,7 @@ import { teaLookFor } from '../../../Table/TeaLooks.ts'
 import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
-import { mostPuffsFromOneSource, mostSipPuffs, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
+import { mostPuffsFromOneSource, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
 import { headOf } from './HeldInView.ts'
 import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
@@ -36,7 +36,7 @@ const steamColumnMetres = 0.18
 const steamStartsAboveTheOpeningMetres = 0.04
 const steamStartsAboveTheSpoutMetres = 0.02
 const smallestPuffScale = 0.6
-const sipPuffCrossingsPerSecond = 1.25
+const sipPuffCrossingsPerSecond = 0.5
 const leftBehindPuffFadesInSeconds = 0.8
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
@@ -79,7 +79,7 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   const whereTheVesselIs = whereIsTheVessel(model, scene)
   model.root.updateMatrixWorld()
   showSteam(model, steamSourcesOf(model, isOpenToTheAir), puffsPerSource, scene.timeSeconds, whereTheVesselIs)
-  showSipSteam(model, isOpenToTheAir ? Math.min(mostSipPuffs, 2 * puffsPerSource) : 0, scene.timeSeconds, toTheHead, whereTheVesselIs)
+  showSipSteam(model, isOpenToTheAir ? puffsPerSource : 0, scene.timeSeconds, toTheHead, whereTheVesselIs)
 }
 
 function whereIsTheVessel(model: CarriedModel, scene: CarriedItemsScene): string {

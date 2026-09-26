@@ -79,7 +79,6 @@ export type CarriedModel = {
 const mostSteamSources = 2
 const steamPuffGeometry = new THREE.SphereGeometry(0.03, 8, 6)
 export const mostPuffsFromOneSource = 3
-export const mostSipPuffs = 6
 
 const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
@@ -121,7 +120,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   root.traverse((part) => (part.castShadow = !isATouchArea(part)))
   const steamLook: SteamLook = { inRoom: materials.room.materialFor(look.steamSurface), heldInView: materials.room.materialFor('heldSteam'), drawnToTheEyes: materials.room.materialFor('steam') }
   const puffTrails = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => newPuffTrail(steamLook.inRoom))
-  const sipPuffTrails = Array.from({ length: mostSipPuffs }, () => newPuffTrail(steamLook.drawnToTheEyes))
+  const sipPuffTrails = Array.from({ length: mostPuffsFromOneSource }, () => newPuffTrail(steamLook.drawnToTheEyes))
   const puffs = puffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
   const sipPuffs = sipPuffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
   for (const puff of [...puffs, ...sipPuffs]) {
