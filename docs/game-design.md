@@ -21,7 +21,7 @@ Success means the player finishes with "I spent five minutes doing something wit
 11. Tidy up: close the lids, wipe the table.
 12. Stay, invite a guest (after 1.0) or leave.
 
-The ritual always completes, even when every step went wrong. There is no game over and no failure screen.
+The ritual always completes, even when every step went wrong. There is one game over, and it is a joke: a sip straight from a caddy of brewed tea kills the keeper, the screen says YOU DIED, and the game starts over. There is no other failure screen.
 
 ## Principles
 
@@ -59,9 +59,9 @@ A new tea, bowl, room, figurine or guest is a definition, not new code. Instead 
 
 ## Presentation
 
-UI is hidden almost all the time. There is no permanent HUD. State is shown on the objects themselves: the thermometer is a real object on the table, and the gods' satisfaction is a small plaque in a corner of the room.
+UI is hidden almost all the time. There is no permanent HUD. Achievements are hidden at first: the player earns them without knowing, and sees them only after turning them on in the settings. State is shown on the objects themselves: the thermometer is a real object on the table, and the gods' satisfaction is a small plaque in a corner of the room.
 
-The camera is fixed on a small 2.5D diorama. It may drift slightly closer to the kettle while it is held, or pan a little during the ritual. The player never rotates the world.
+The room view looks down on a small diorama. It may drift slightly closer to the kettle while it is held, or pan a little during the ritual. In first person the player walks the room and turns the view freely.
 
 The style is a warm illustrated diorama, neither realistic nor cartoonish. Objects are slightly oversized so steam, streams and levels read well. Every object should look as if it wants to be touched.
 
