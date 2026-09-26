@@ -235,9 +235,7 @@ export class RoomScene {
       tiltReleased: () => this.play.tiltReleased(),
     }, log)
     this.keyboardAndMouse = new KeyboardAndMouse(container, this.renderer.domElement, {
-      keyPressed: (code) => {
-        if (this.cameraMode === 'firstPerson' && usesTheKeyboard(this.controlScheme)) this.shortcuts.keyPressed(code)
-      },
+      keyPressed: (code) => this.shortcuts.keyPressed(code),
       keyReleased: (code) => this.shortcuts.keyReleased(code),
     }, log)
     this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout), controlSchemeChosen: (scheme) => this.controlSchemeChosen(scheme) })
