@@ -41,7 +41,7 @@ const layoutSeed = 20260925
 const outside = roomHalfSize + clearOfTheWallsMetres
 
 const scatters: readonly Scatter[] = [
-  { kinds: ['roseBush'], count: 17, footprintRadiusMetres: 0.4 },
+  { kinds: ['roseBush'], count: 11, footprintRadiusMetres: 0.4 },
   { kinds: ['tulip', 'daisy', 'marigold', 'poppy'], count: 1230, footprintRadiusMetres: 0.08 },
 ]
 
