@@ -208,7 +208,7 @@ export const englishTexts = {
   'settings.objectDetail': 'Object detail',
   'settings.objectDetail.full': 'Full',
   'settings.objectDetail.reduced': 'Reduced',
-  'settings.objectDetailNote': 'Shape, not sharpness: Reduced builds the tea bowls far from you from fewer polygons, so the phone stays cooler. Up close they are always in full.',
+  'settings.objectDetailNote': 'Reduced draws faraway bowls and flowers a little simpler, so the phone stays cool. Up close, everything is always in full.',
   'settings.showFrameRate': 'Show frame rate',
   'settings.camera': 'Camera',
   'settings.camera.room': 'Room view',

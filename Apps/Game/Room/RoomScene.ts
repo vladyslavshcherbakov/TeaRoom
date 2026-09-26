@@ -489,6 +489,7 @@ export class RoomScene {
     this.showSmoothEdges(this.settings.hasSmoothEdges)
     this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
     this.showTheGlow(this.settings.hasGlow)
+    this.garden.showDistantFlowers(this.settings.objectDetail)
   }
 
   private showTheResolution(isFull: boolean): void {

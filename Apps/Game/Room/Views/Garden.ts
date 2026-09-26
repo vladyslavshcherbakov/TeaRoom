@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
 import { roomHalfSize } from '../RoomLayout.ts'
+import type { ObjectDetail } from '../RoomSettings.ts'
 import type { RoomLog } from '../RoomNavigator.ts'
 import type { PlantSurface, RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
@@ -44,28 +45,36 @@ const distantPartsByKind: Readonly<Partial<Record<PlantKind, readonly PlantPart[
 export class Garden {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
+  private readonly distantFlowersInFull = new THREE.Group()
+  private readonly distantFlowersSimpler = new THREE.Group()
 
   constructor(materials: RoomMaterials, log: RoomLog) {
-    this.root.add(ground(materials))
-    let simplerPlants = 0
+    this.root.add(ground(materials), this.distantFlowersInFull, this.distantFlowersSimpler)
+    let distantFlowers = 0
     for (const [kind, plantsOfTheKind] of plantsByKind(gardenPlants())) {
-      const distantParts = distantPartsByKind[kind]
-      const distantPlants = distantParts === undefined ? [] : plantsOfTheKind.filter(isFarFromTheWalls)
-      const nearPlants = distantParts === undefined ? plantsOfTheKind : plantsOfTheKind.filter((plant) => !isFarFromTheWalls(plant))
-      this.addPlants(kind, nearPlants, partsByKind[kind], materials)
-      this.addPlants(kind, distantPlants, distantParts ?? [], materials)
-      simplerPlants += distantPlants.length
+      const simplerParts = distantPartsByKind[kind]
+      const distantPlants = simplerParts === undefined ? [] : plantsOfTheKind.filter(isFarFromTheWalls)
+      const nearPlants = simplerParts === undefined ? plantsOfTheKind : plantsOfTheKind.filter((plant) => !isFarFromTheWalls(plant))
+      this.addPlants(this.root, kind, nearPlants, partsByKind[kind], materials)
+      this.addPlants(this.distantFlowersInFull, kind, distantPlants, partsByKind[kind], materials)
+      this.addPlants(this.distantFlowersSimpler, kind, distantPlants, simplerParts ?? [], materials)
+      distantFlowers += distantPlants.length
     }
-    log(`the garden draws ${simplerPlants} flowers beyond ${simplerPlantsBeyondTheWallsMetres} m from the walls with simpler shapes`)
+    log(`the garden has ${distantFlowers} flowers beyond ${simplerPlantsBeyondTheWallsMetres} m from the walls, which the object detail may draw simpler`)
   }
 
-  private addPlants(kind: PlantKind, plants: readonly Plant[], parts: readonly PlantPart[], materials: RoomMaterials): void {
+  showDistantFlowers(detail: ObjectDetail): void {
+    this.distantFlowersInFull.visible = detail === 'full'
+    this.distantFlowersSimpler.visible = detail === 'reduced'
+  }
+
+  private addPlants(group: THREE.Group, kind: PlantKind, plants: readonly Plant[], parts: readonly PlantPart[], materials: RoomMaterials): void {
     if (plants.length === 0) return
-    for (const plantPart of parts) this.addInstances(kind, instancesOf(plantPart, plants, materials))
+    for (const plantPart of parts) this.addInstances(group, kind, instancesOf(plantPart, plants, materials))
   }
 
-  private addInstances(kind: PlantKind, instances: THREE.InstancedMesh): void {
-    this.root.add(instances)
+  private addInstances(group: THREE.Group, kind: PlantKind, instances: THREE.InstancedMesh): void {
+    group.add(instances)
     if (!kindsThatOpenTheDebugMenu.has(kind)) return
     instances.userData = { ...instances.userData, tapTarget: roseBushTag }
     this.tappableMeshes.push(instances)
