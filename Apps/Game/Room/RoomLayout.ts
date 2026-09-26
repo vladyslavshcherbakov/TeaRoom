@@ -209,6 +209,20 @@ export function puddleRadiusMetres(puddleShare: number): number {
   return Math.sqrt(puddleShare) * largestPuddleRadiusMetres
 }
 
+export function puddleOutlineOn(layout: RoomLayout, placeId: string, centre: FloorPoint, radiusMetres: number, pointCount: number): FloorPoint[] {
+  const piece = layout.furniture.find((candidate) => candidate.id === placeId)
+  return Array.from({ length: pointCount }, (_, index) => {
+    const angle = (index / pointCount) * Math.PI * 2
+    const onTheCircle = { x: centre.x + Math.cos(angle) * radiusMetres, z: centre.z + Math.sin(angle) * radiusMetres }
+    return piece === undefined ? onTheCircle : keptOnTheTopOf(piece, onTheCircle)
+  })
+}
+
+function keptOnTheTopOf(piece: Furniture, point: FloorPoint): FloorPoint {
+  const { x, z, width, depth } = piece.footprint
+  return { x: Math.min(x + width / 2, Math.max(x - width / 2, point.x)), z: Math.min(z + depth / 2, Math.max(z - depth / 2, point.z)) }
+}
+
 export function furnitureWithId(layout: RoomLayout, id: FurnitureId): Furniture {
   const found = layout.furniture.find((piece) => piece.id === id)
   if (found === undefined) throw new Error(`the room layout has no furniture "${id}"`)

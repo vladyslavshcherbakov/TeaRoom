@@ -4,11 +4,13 @@ import type { HandIndex } from '../../../../Shared/Simulation/State/SessionState
 import {
   furnitureWithId,
   puddleCentreOn,
+  puddleOutlineOn,
   puddleRadiusMetres,
   heaterPlate,
   pointAwayFromTheWall,
   roomHalfSize,
   turnFacing,
+  type FloorPoint,
   type Footprint,
   type Furniture,
   type FurnitureId,
@@ -141,7 +143,7 @@ export class RoomModel {
       if (centre === null || puddle.share === 0) continue
       const mesh = this.puddlesByPlace.get(puddle.placeId) ?? this.addPuddle(puddle.placeId)
       mesh.position.set(centre.x, centre.y, centre.z)
-      mesh.scale.setScalar(puddleRadiusMetres(puddle.share))
+      this.shapeThePuddle(mesh, puddleOutlineOn(this.layout, puddle.placeId, centre, puddleRadiusMetres(puddle.share), puddleSegments))
       mesh.visible = true
     }
   }
@@ -309,6 +311,20 @@ export class RoomModel {
     if (spot.shape === 'faucet') return this.tag(mesh, { isFaucet: true })
     const furnitureId = furnitureWithinReachOf(this.layout, spot)
     if (furnitureId !== null) this.tag(mesh, { furnitureId })
+  }
+
+  private shapeThePuddle(mesh: THREE.Mesh, outline: readonly FloorPoint[]): void {
+    const positions = mesh.geometry.attributes['position']
+    if (positions === undefined) return
+    const middleX = outline.reduce((sum, point) => sum + point.x, 0) / outline.length
+    const middleZ = outline.reduce((sum, point) => sum + point.z, 0) / outline.length
+    positions.setXY(0, middleX - mesh.position.x, mesh.position.z - middleZ)
+    for (let ringIndex = 0; ringIndex <= outline.length; ringIndex += 1) {
+      const point = outline[(outline.length - ringIndex) % outline.length]
+      if (point !== undefined) positions.setXY(ringIndex + 1, point.x - mesh.position.x, mesh.position.z - point.z)
+    }
+    positions.needsUpdate = true
+    mesh.geometry.computeBoundingSphere()
   }
 
   private addPuddle(placeId: string): THREE.Mesh {
