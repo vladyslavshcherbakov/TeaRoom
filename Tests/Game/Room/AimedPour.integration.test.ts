@@ -441,6 +441,26 @@ test('aimingFinger_whenTheBrowserCancelsIt_returnsTheKettleToItsHandThatIsNoLong
   assert.equal(room.play.chosenHandIndex, null)
 })
 
+test('handKey_whileAPourIsAimed_leavesTheHandOfTheAimedVesselChosen', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+
+  room.play.handKeyTapped(1)
+
+  assert.equal(room.play.chosenHandIndex, 0)
+  assert.equal(room.play.aimedPourView?.sourceId, 'kettle')
+})
+
+test('handKey_heldForASecondWhileAPourIsAimed_showsNothingUpClose', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+
+  room.play.handPressHeld(0, 1)
+
+  assert.equal(room.play.inspectionView, null)
+  assert.equal(room.play.aimedPourView?.sourceId, 'kettle')
+})
+
 test('secondFinger_whileAFingerAims_isIgnored', () => {
   const room = roomWithAScreen()
   aimTheKettleAtTheBowl(room)

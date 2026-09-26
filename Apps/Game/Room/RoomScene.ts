@@ -254,7 +254,7 @@ export class RoomScene {
     })
     this.joysticks = new Joysticks(container)
     this.shortcuts = new KeyboardShortcuts({
-      isInspecting: () => this.play.inspectionView !== null,
+      isInspecting: () => this.play.mode === 'lookingClosely',
       handTapped: (handIndex) => this.play.handKeyTapped(handIndex),
       handHeld: (handIndex, heldSeconds) => this.play.handPressHeld(handIndex, heldSeconds),
       inspectionClosed: () => this.play.inspectionTapped({ kind: 'nothing' }),
@@ -369,7 +369,7 @@ export class RoomScene {
     this.frameBudget.phaseEnded('roomParts', performance.now())
     const isAiming = this.play.aimedPourView !== null
     const isInspecting = inspection !== null
-    this.sipButton.show(this.play.sippableCupId !== null && !isAiming && !isInspecting)
+    this.sipButton.show(this.play.isTheSipOffered)
     this.pourControls.show(isAiming)
     const isLookingFreely = isFirstPerson && !isAiming && !isInspecting
     this.leaveFirstPersonButton.show(isFirstPerson)

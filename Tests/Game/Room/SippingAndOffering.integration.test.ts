@@ -69,6 +69,36 @@ test('sipGesture_afterOneAndAHalfSeconds_isOver', () => {
   assert.equal(room.play.sipGestureView, null)
 })
 
+test('sipButton_whileTheBowlIsAtTheLips_isNotOffered', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+
+  room.play.sipTapped()
+
+  assert.equal(room.play.isTheSipOffered, false)
+})
+
+test('sipButton_afterTheBowlIsLoweredFromASip_isOfferedAgain', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+  room.play.sipTapped()
+
+  room.advance(1.6)
+
+  assert.equal(room.play.isTheSipOffered, true)
+})
+
+test('secondSip_whileTheBowlIsStillAtTheLips_drinksNothing', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+  room.play.sipTapped()
+  const volumeAfterTheFirstSip = room.state.vessels['bowl1']?.liquid.volumeMl ?? 0
+
+  room.play.sipTapped()
+
+  assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, volumeAfterTheFirstSip)
+})
+
 test('figurine_whenTappedWithABowlOfTeaChosen_isOfferedIt', () => {
   const room = new TestRoom()
   setTheTeaTable(room)
@@ -98,6 +128,27 @@ test('keeper_whenSippingTeaBrewedInTheCaddyStraightFromIt_dies', () => {
   room.play.sipTapped()
 
   assert.equal(room.deathsSeen, 1)
+})
+
+test('handKey_afterTheKeeperDied_leavesTheHandsAsTheyWere', () => {
+  const room = new TestRoom()
+  holdTheCaddyWithHotWaterPouredOntoItsLeaves(room)
+  const chosenHandIndexAtTheSip = room.play.chosenHandIndex
+  room.play.sipTapped()
+
+  room.play.handKeyTapped(chosenHandIndexAtTheSip ?? 0)
+
+  assert.equal(room.play.chosenHandIndex, chosenHandIndexAtTheSip)
+})
+
+test('tapOnTheTap_afterTheKeeperDied_leavesTheWaterOff', () => {
+  const room = new TestRoom()
+  holdTheCaddyWithHotWaterPouredOntoItsLeaves(room)
+  room.play.sipTapped()
+
+  room.tap({ kind: 'faucet' })
+
+  assert.equal(room.state.sink.runningWater, null)
 })
 
 test('keeper_whenSippingColdTapWaterStraightFromTheCaddy_lives', () => {

@@ -63,6 +63,17 @@ export type FrameSeconds = {
   readonly realSeconds: number
 }
 
+export type RoomPlayMode = 'free' | 'aiming' | 'lookingClosely' | 'sipping' | 'ended'
+
+type ModeState =
+  | { readonly kind: 'free' }
+  | { readonly kind: 'aiming'; readonly pour: AimedPour }
+  | { readonly kind: 'lookingClosely'; readonly inspection: ItemInspection }
+  | { readonly kind: 'sipping'; readonly gesture: SipGesture }
+  | { readonly kind: 'ended' }
+
+type Input = 'press' | 'handKey' | 'handHold' | 'sip' | 'tilt' | 'pourFinger' | 'aimingTap' | 'inspection' | 'walk' | 'kettleFill'
+
 type Press = {
   readonly target: RoomTapTarget
   heldSeconds: number
@@ -86,6 +97,23 @@ const aimedVesselAwayFromTheWallsMetres = 0.05
 const tapsWithFullHandsThatGrowAMiddleHand = 10
 const fullTurnDegrees = 360
 const roseBushKey = 'roseBush'
+const freeMode: ModeState = { kind: 'free' }
+
+const inputsTakenByMode: Readonly<Record<RoomPlayMode, readonly Input[]>> = {
+  free: ['press', 'handKey', 'handHold', 'sip', 'walk', 'kettleFill'],
+  aiming: ['tilt', 'pourFinger', 'aimingTap', 'kettleFill'],
+  lookingClosely: ['inspection', 'kettleFill'],
+  sipping: ['press', 'handKey', 'walk', 'kettleFill'],
+  ended: [],
+}
+
+const whatIsGoingOnByMode: Readonly<Record<RoomPlayMode, string>> = {
+  free: 'nothing is going on',
+  aiming: 'a pour is being aimed',
+  lookingClosely: 'a held item is looked at closely',
+  sipping: 'a sip is being taken',
+  ended: 'the keeper has died',
+}
 
 export type RoomPlayListener = {
   readonly remarked: (remark: RoomRemark) => void
@@ -113,9 +141,8 @@ export class RoomPlay {
   private readonly tapsWithFullHands = new TapsInARow()
   private choice: HandIndex | null = null
   private press: Press | null = null
-  private aimedPour: AimedPour | null = null
-  private inspection: ItemInspection | null = null
-  private sipGesture: SipGesture | null = null
+  private modeState: ModeState = freeMode
+  private walkRefusedIn: RoomPlayMode | null = null
   private isSeated: boolean
 
   constructor(ritual: RitualPort, catalog: Catalog, layout: RoomLayout, log: RoomLog, heaterItemsBeforeTheTesterJoke: number, listener: RoomPlayListener, startsAt: RoomPlace = roomEntrance) {
@@ -153,6 +180,14 @@ export class RoomPlay {
     return this.isSeated && this.isAtTheRitualPlace()
   }
 
+  get mode(): RoomPlayMode {
+    return this.modeState.kind
+  }
+
+  get isTheSipOffered(): boolean {
+    return this.isTakenByTheMode('sip') && this.sippableCupId !== null
+  }
+
   get sippableCupId(): string | null {
     const itemId = this.chosenItemId()
     const vessel = itemId === null ? undefined : this.ritual.state.vessels[itemId]
@@ -161,15 +196,15 @@ export class RoomPlay {
   }
 
   get aimedPourView(): AimedPourView | null {
-    return this.aimedPour?.view ?? null
+    return this.modeState.kind === 'aiming' ? this.modeState.pour.view : null
   }
 
   get inspectionView(): ItemInspectionView | null {
-    return this.inspection?.view ?? null
+    return this.modeState.kind === 'lookingClosely' ? this.modeState.inspection.view : null
   }
 
   get sipGestureView(): SipGestureView | null {
-    return this.sipGesture?.view ?? null
+    return this.modeState.kind === 'sipping' ? this.modeState.gesture.view : null
   }
 
   get clothWiping(): ClothWiping | null {
@@ -184,7 +219,7 @@ export class RoomPlay {
   }
 
   pressStarted(target: RoomTapTarget): void {
-    if (this.aimedPour !== null) return this.log(`press on ${describeTarget(target)} ignored while aiming a pour`)
+    if (this.isRefusedByTheMode('press', `press on ${describeTarget(target)}`)) return
     this.press = { target, heldSeconds: 0, hasMovedAway: false, stroke: this.wipeStrokeStartingAt(target), repeatedSteps: 0 }
   }
 
@@ -208,7 +243,8 @@ export class RoomPlay {
     if (press === null) return
     if (press.stroke !== null && press.hasMovedAway) return this.finishTheStroke(press.stroke, press.heldSeconds)
     if (press.repeatedSteps > 0) return this.log(`hold on ${describeTarget(press.target)} ended after ${press.repeatedSteps} steps of the thermostat`)
-    if (!press.hasMovedAway) this.tapped(press.target)
+    if (press.hasMovedAway || this.isRefusedByTheMode('press', `tap on ${describeTarget(press.target)}`)) return
+    this.tapped(press.target)
   }
 
   pressCancelled(): void {
@@ -219,34 +255,40 @@ export class RoomPlay {
   }
 
   pourFingerDown(point: FloorPoint | null): void {
-    this.aimedPour?.fingerDown(point)
+    if (this.isRefusedByTheMode('pourFinger', 'a finger on the aimed pour') || this.modeState.kind !== 'aiming') return
+    this.modeState.pour.fingerDown(point)
   }
 
   pourFingerMoved(point: FloorPoint | null): void {
-    this.aimedPour?.fingerMoved(point)
+    if (this.isRefusedByTheMode('pourFinger', 'a finger moving the aimed pour') || this.modeState.kind !== 'aiming') return
+    this.modeState.pour.fingerMoved(point)
   }
 
   pourFingerUp(): void {
-    this.aimedPour?.fingerUp()
+    if (this.isRefusedByTheMode('pourFinger', 'a finger lifted from the aimed pour') || this.modeState.kind !== 'aiming') return
+    this.modeState.pour.fingerUp()
   }
 
   tiltPressed(): void {
-    this.aimedPour?.tiltPressed()
+    if (this.isRefusedByTheMode('tilt', 'the tilt') || this.modeState.kind !== 'aiming') return
+    this.modeState.pour.tiltPressed()
   }
 
   tiltReleased(): void {
-    this.aimedPour?.tiltReleased()
+    if (this.isRefusedByTheMode('tilt', 'the release of the tilt') || this.modeState.kind !== 'aiming') return
+    this.modeState.pour.tiltReleased()
   }
 
   pourDone(): void {
-    if (this.aimedPour === null) return
-    this.log(`the pour from ${this.aimedPour.view.sourceId} is done, and its hand is no longer chosen`)
+    if (this.isRefusedByTheMode('aimingTap', 'the end of a pour') || this.modeState.kind !== 'aiming') return
+    this.log(`the pour from ${this.modeState.pour.view.sourceId} is done, and its hand is no longer chosen`)
     this.endTheAim()
     this.choice = null
   }
 
   aimingTapped(target: RoomTapTarget): void {
-    const sourceId = this.aimedPour?.view.sourceId
+    if (this.isRefusedByTheMode('aimingTap', `tap on ${describeTarget(target)} to end a pour`) || this.modeState.kind !== 'aiming') return
+    const sourceId = this.modeState.pour.view.sourceId
     if (target.kind === 'lid' && target.itemId === sourceId) {
       this.log(`tap on the lid of ${sourceId} while aiming opens or closes it and keeps the aim`)
       return this.toggleLidOf(sourceId)
@@ -272,46 +314,53 @@ export class RoomPlay {
 
   handPressHeld(handIndex: HandIndex, heldSeconds: number): void {
     this.press = null
+    if (this.isRefusedByTheMode('handHold', `hold on hand ${handIndex}`)) return
     const itemId = this.ritual.state.keeper.hands[handIndex] ?? null
     if (itemId === null) return this.log(`hold on hand ${handIndex} inspects nothing: the hand is empty`)
-    this.inspection = new ItemInspection(itemId, handIndex)
+    this.modeState = { kind: 'lookingClosely', inspection: new ItemInspection(itemId, handIndex) }
     this.log(`inspecting ${itemId} from hand ${handIndex} after a hold of ${heldSeconds.toFixed(1)} s, ${this.describeTheChoice()} and stays so`)
   }
 
   inspectionTurnedBy(fingerStep: ScreenPoint): void {
-    this.inspection?.turnBy(fingerStep)
+    if (this.isRefusedByTheMode('inspection', 'turning the item looked at closely') || this.modeState.kind !== 'lookingClosely') return
+    this.modeState.inspection.turnBy(fingerStep)
   }
 
   inspectionZoomedTo(magnification: number): void {
-    this.inspection?.zoomTo(magnification)
+    if (this.isRefusedByTheMode('inspection', 'zooming the item looked at closely') || this.modeState.kind !== 'lookingClosely') return
+    this.modeState.inspection.zoomTo(magnification)
   }
 
   inspectionPinchEnded(): void {
-    const view = this.inspectionView
-    if (view !== null) this.log(`pinched the inspected ${view.itemId} to ${view.magnification.toFixed(2)} times its size`)
+    if (this.isRefusedByTheMode('inspection', 'a pinch of the item looked at closely') || this.modeState.kind !== 'lookingClosely') return
+    const view = this.modeState.inspection.view
+    this.log(`pinched the inspected ${view.itemId} to ${view.magnification.toFixed(2)} times its size`)
   }
 
   inspectionTapped(target: RoomTapTarget): void {
-    const view = this.inspectionView
-    if (view === null) return this.log(`tap on ${describeTarget(target)} ignored: nothing is inspected`)
+    if (this.isRefusedByTheMode('inspection', `tap on ${describeTarget(target)} to end a close look`) || this.modeState.kind !== 'lookingClosely') return
+    const view = this.modeState.inspection.view
     const isOnTheItem = (target.kind === 'hand' && target.handIndex === view.handIndex) || (target.kind === 'lid' && target.itemId === view.itemId)
     if (isOnTheItem) return this.log(`tap on the inspected ${view.itemId} does nothing`)
-    this.inspection = null
+    this.modeState = freeMode
     this.log(`inspecting ${view.itemId} ended by a tap on ${describeTarget(target)}, turned ${turnDegreesOf(view.yawRadians)}° across and ${turnDegreesOf(view.pitchRadians)}° over at ${view.magnification.toFixed(2)} times its size, ${this.describeTheChoice()} as before`)
   }
 
   sipTapped(): void {
+    if (this.isRefusedByTheMode('sip', 'sip')) return
     const cupId = this.sippableCupId
     if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
     const volumeBeforeMl = this.ritual.state.vessels[cupId]?.liquid.volumeMl ?? 0
     const events = this.ritual.dispatch({ type: 'tasteCup', cupId })
     if (events.some((event) => event.type === 'teaTasted')) this.raiseToTheLips(cupId, volumeBeforeMl)
     if (!events.some((event) => event.type === 'keeperDied')) return
-    this.log(`the sip from ${cupId} killed the keeper, so the room shows it`)
+    this.log(`the sip from ${cupId} killed the keeper, so the room shows it and takes no more input`)
+    this.modeState = { kind: 'ended' }
     this.listener.keeperDied()
   }
 
   fillTheKettleTapped(): void {
+    if (this.isRefusedByTheMode('kettleFill', 'filling the kettle from the debug menu')) return
     const kettleId = Object.keys(this.ritual.state.vessels).find((vesselId) => carriedShapeOf(this.ritual.state, vesselId) === 'kettle')
     if (kettleId === undefined) return this.log('the kettle is not filled from the debug menu: this room has no kettle')
     this.log(`the debug menu asks to fill ${kettleId} with boiling water`)
@@ -319,16 +368,17 @@ export class RoomPlay {
   }
 
   walkFreely(step: FloorPoint, headingRadians: number): void {
-    if (this.aimedPour !== null) return
+    if (this.isWalkingRefusedByTheMode()) return
     this.navigator.walkFreely(step, headingRadians)
   }
 
   handKeyTapped(handIndex: HandIndex): void {
+    if (this.isRefusedByTheMode('handKey', `key tap on hand ${handIndex}`)) return
     this.tapped({ kind: 'hand', handIndex })
   }
 
   standUpToWalk(): void {
-    if (!this.isSeated) return
+    if (!this.isSeated || this.isWalkingRefusedByTheMode()) return
     this.isSeated = false
     this.log('the keeper stands up from the tea table to walk')
   }
@@ -339,7 +389,7 @@ export class RoomPlay {
 
   advance(frame: FrameSeconds): void {
     this.navigator.advance(frame.worldSeconds)
-    this.aimedPour?.advance(frame.worldSeconds)
+    if (this.modeState.kind === 'aiming') this.modeState.pour.advance(frame.worldSeconds)
     this.advanceTheSipGesture(frame.worldSeconds)
     if (this.press === null) return
     this.press.heldSeconds += frame.realSeconds
@@ -351,21 +401,43 @@ export class RoomPlay {
     if (cup === undefined) return
     const sippedMl = volumeBeforeMl - cup.liquid.volumeMl
     const sippedFillShare = sippedMl / definitionIn(this.catalog, 'vessels', cup.definitionId).capacityMl
-    this.sipGesture = new SipGesture(cupId, sippedFillShare)
+    this.modeState = { kind: 'sipping', gesture: new SipGesture(cupId, sippedFillShare) }
     this.log(`${cupId} is raised to the lips, and ${sippedMl.toFixed(1)} ml leave it in sight`)
   }
 
   private advanceTheSipGesture(seconds: number): void {
-    if (this.sipGesture === null) return
-    this.sipGesture.advance(seconds)
-    if (!this.sipGesture.isOver) return
-    this.log(`${this.sipGesture.view.cupId} is lowered after the sip`)
-    this.sipGesture = null
+    if (this.modeState.kind !== 'sipping') return
+    const gesture = this.modeState.gesture
+    gesture.advance(seconds)
+    if (!gesture.isOver) return
+    this.log(`${gesture.view.cupId} is lowered after the sip`)
+    this.modeState = freeMode
   }
 
   private endTheAim(): void {
-    this.aimedPour?.finish()
-    this.aimedPour = null
+    if (this.modeState.kind !== 'aiming') return
+    this.modeState.pour.finish()
+    this.modeState = freeMode
+  }
+
+  private isTakenByTheMode(input: Input): boolean {
+    return inputsTakenByMode[this.mode].includes(input)
+  }
+
+  private isRefusedByTheMode(input: Input, what: string): boolean {
+    if (this.isTakenByTheMode(input)) return false
+    this.log(`${what} refused: ${whatIsGoingOnByMode[this.mode]}`)
+    return true
+  }
+
+  private isWalkingRefusedByTheMode(): boolean {
+    if (this.isTakenByTheMode('walk')) {
+      this.walkRefusedIn = null
+      return false
+    }
+    if (this.walkRefusedIn !== this.mode) this.log(`walking refused: ${whatIsGoingOnByMode[this.mode]}`)
+    this.walkRefusedIn = this.mode
+    return true
   }
 
   private tapped(target: RoomTapTarget): void {
@@ -522,7 +594,7 @@ export class RoomPlay {
   }
 
   private keeperMovedTo(furnitureId: FurnitureId | null, byWalkingFreely: boolean): void {
-    if (this.aimedPour !== null) this.pourDone()
+    if (this.modeState.kind === 'aiming') this.pourDone()
     this.isSeated = false
     this.ritual.dispatch({ type: 'standAt', placeId: furnitureId })
     if (!byWalkingFreely) this.sitDownAtTheRitualPlace('after walking to it')
@@ -575,7 +647,7 @@ export class RoomPlay {
     this.openTheLidsThePourNeeds(source, target)
     const spoutDirection = this.listener.screenRightOnTheFloor() ?? screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
-    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection, this.spoutAreaInsideTheWalls(spoutDirection), this.topOf(target.location.spot.placeId))
+    this.modeState = { kind: 'aiming', pour: new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection, this.spoutAreaInsideTheWalls(spoutDirection), this.topOf(target.location.spot.placeId)) }
   }
 
   private openTheLidsThePourNeeds(source: DeepReadonly<VesselState>, target: DeepReadonly<VesselState>): void {
