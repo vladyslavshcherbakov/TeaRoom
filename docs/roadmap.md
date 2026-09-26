@@ -50,86 +50,42 @@ A review of the whole code found the problems below. They are fixed before the e
 
 ### 1. Bugs
 
-- The keys skip the checks that a tap has. `KeyboardShortcuts.ts`, wired in `RoomScene.ts`, calls `handKeyTapped`, `handPressHeld` and `sipTapped` of `RoomPlay` while a pour is aimed, while an item is looked at closely and after the keeper died. So a key chooses the other hand in the middle of an aim, and the next tap puts down the wrong item. Fix: `RoomPlay` holds one mode, free, aiming, looking closely, sipping or ended. Every input asks it first and logs what it refused. The Sip button is shown from the same answer.
-- A cancelled pointer taps. `RoomScene.ts` sends `pointercancel` to `RoomGestures.fingerUp`, which ends in a tap, so a press the browser took away can pick up, put down or pour. Fix: a cancelled finger is forgotten and never taps. While a pour is aimed, it only returns the vessel to its hand.
-- A drag that leaves the aim plane throws the vessel. `aimPlanePointAt` in `RoomScene.ts` returns (0, 0) when the ray misses the plane, and `AimedPour.ts` moves the vessel by the change of the finger's point, so the vessel jumps to the edge of its area. In first person every drag upwards does this. Fix: no point when the ray misses. `AimedPour` then forgets the last point, so the next hit starts a new drag.
-- A key held while the window loses focus stays held. `KeyboardAndMouse.ts` clears its own keys on `blur`, but `KeyboardShortcuts` never hears them released. Space keeps the vessel tilted and the pour running, and a hand key opens the close look by itself. Fix: every held key is released on `blur` and when the page is hidden, with a log line.
-- Every change of the settings blanks the frame rate. `FrameRateCounter.show`, called from `RoomScene.showTheSettings` on any change, makes a new counter. Fix: `show` does nothing when the visibility does not change.
-- A continued visit shuffles the bowls again. `RoomMain.ts` runs `roomWithVesselsShuffled` for a resumed visit too, so a bowl added by an update joins on a spot where an old bowl stands. Fix: shuffle only for a new game, and check a joining bowl with `whyThereIsNoRoomFor`.
-- A tap on a full spot while aiming keeps the hand chosen. `aimingTapped` in `RoomPlay.ts` ends the aim and returns before the choice is let go, while `docs/interactions.md` says the hand is no longer chosen. Fix: the refused spot ends the pour the same way as any other end of an aim.
-- Two open lids can lie inside each other. `openLidOffsetBeside` in `Placement.ts` tests a lid against the furniture and the items, but not against the lids already lying. A caddy put beside the kettle and both lids opened give lids 5 cm apart where 17 cm are needed. Fix: the lids are placed one after another, each against those already placed, and `ItemContents.ts` reads their places from that one list.
-- The cloth's corners reach past its footprint. The cloth's footprint in `layoutByShape` in `CarriedShapes.ts` is 14 cm, and its drawn corners in `RumpledClothGeometry.ts` reach 17 cm, through a neighbour or over an edge. Fix: the footprint covers the corners, and a test checks that every resting part of every shape stays inside its footprint.
-- The thermos's opening is wider in its layout than its drawn mouth: 5 cm in `layoutByShape`, 3.4 to 4 cm in `ThermosParts.ts`. A stream on its lip counts as filling it. Fix: the layout's opening is the drawn mouth, and a test compares them for every vessel. Waits for an answer.
-- Whether a vessel has a lid is written twice, as `lid` in its definition in `Shared/Content/Vessels.ts` and as `lid` in `layoutByShape`, and nothing compares them. `isTheLidOpen` in `CarriedShapes.ts` reads the layout. Fix: a test over `shapeByVesselDefinitionId` that the two agree, and `isTheLidOpen` reads only the state.
-- The height a lying lid rests at is agreed only in prose. `lidLyingOnTheSurfaceMetres` in `ItemContents.ts` works only while every lid's origin sits 15 mm above its lowest point, as the lids in `KettleParts.ts`, `CaddyParts.ts` and `ThermosParts.ts` happen to. Fix: `newCarriedModel` measures each lid's lowest point, and a test checks that every open lid touches the surface.
-- The thermos and the caddy have no forgiving touch area. `CarriedModel.ts` builds the area only for a shape without a lid, and the kettle builds its own lid area in `KettleParts.ts`. Fix: every shape gets a forgiving area, and the engine builds one for every lid. Waits for an answer.
-- What overflows a vessel lands on the table as the stream. `continuePour` in `SimulationStep.ts` spills `source.liquid`, so boiling water poured over a full bowl of tea leaves a puddle of plain water. `docs/simulation.md` says the overflow is the mixture. Fix: the pour returns what overflowed, and the puddle gets that.
-- A save is checked only in part. `FittedSavedState.ts` skips every field that is `null` in a fresh room, such as `keeper.placeId`, `pour.targetId` and a spot's `turnRadians`, and it does not compare references, such as `heater.itemIdOnTop` with that item's location, or the hands with the items that say they are in a hand. Fix: a nullable field is checked as null or its type, and the references are checked. The first package of engine rules below removes some of them by construction.
-- A phrase with no lines crashes a frame. `phraseLineAtTurn` in `Texts.ts` counts a phrase's lines at run time, so zero lines give a key ending in `NaN`, `text` returns `undefined`, and `RoomScene.reactTo` throws before that batch's achievements are counted. A missing `figurine.<id>` shows the raw id. Fix: every phrase is a list of at least one line in `EnglishTexts.ts`, named by a typed key, and a figurine's key is typed by its id.
-- Death reaches the achievements twice. `RoomPlay` reports `keeperDied` to its listener, which calls `Achievements.keeperDied`, while the same event also passes through `RoomScene.reactTo`. Fix: the event is the only path.
-- Holds are timed by two clocks. `RoomScene.ts` gives `KeyboardShortcuts.advance` the capped world step and `RoomGestures.advance` the real time, so below 10 frames a second a key hold lasts longer than a finger hold, against DECISIONS.md. Fix: every hold and every repeat takes the real time, and the frame names its two clocks.
-- Two glow paths share one stand-in. `standInFor` in `RoomGlow.ts` keeps one stand-in per material, which a mesh marked with a strength and an unmarked glowing mesh both write in one frame. Nothing hits it yet. Fix: a stand-in per material and strength.
+- A bowl that an update adds joins a continued visit on its own spot of the shelf, which `fitTheVessels` in `FittedSavedState.ts` takes from the room, even where the player has put something. So it overlaps what stands there. What it does then waits for an answer: it moves to a free spot of the shelf, or it stays out of the room.
+- The thermos's opening is wider in its layout than its drawn mouth: 5 cm in `layoutByShape`, 3.4 to 4 cm in `ThermosParts.ts`. A stream on its lip counts as filling it. Fix: the layout's opening is the drawn mouth, and a test compares them for every vessel.
+- Every tappable thing is hit through an area of at least 44×44 px on the screen, in every camera and zoom. It replaces the forgiving areas measured in metres.
+- A save with an unknown time of day or weather still fits (`FittedSavedState.ts`).
+- The arrange commands inside `Tests/Content/TeaBalance.integration.test.ts` can still be refused without the test failing.
 
 ### 2. Tests that pass when the game breaks, and missing tests
 
 Wrong or weak tests:
 
-- The helpers of `Tests/Support/TestRitual.ts` ignore a refused command in the arrange, so a test of "nothing happened" passes when its setup failed. `addLeavesToKettle` loops forever when a scoop is refused. Fix: the helpers throw on a refusal and name it. Then the search for `' refused '` in `Tests/Content/TeaBalance.integration.test.ts` goes.
-- `TestRitual` forgets its catalog. `leaveAndReturnAfter` and `savedState` resume over a fresh default test catalog, so a test that began with its own cooling loses it during the absence. Fix: `TestRitual` keeps the catalog it was opened with.
-- `leavesInABowl_whileTheTapFillsItBelowTheRim_stayAndFloat` in `Tests/Simulation/Sink.integration.test.ts` never turns the tap on.
-- Every lid in `Tests/Support/TestCatalog.ts` cools at the same rate open and closed, so no test shows that an open lid cools faster. `thermos_whenFilledAndClosed_keepsWaterHotterThanTheKettle` proves only the rates it chose. Fix: a lid of the test kettle that cools faster when open, and a test that compares open and closed.
-- `Tests/Simulation/SavedState.integration.test.ts` resumes with the version written as `1`, so the next version bump fails it for the wrong reason.
-- The first test in `Tests/Browser/Room.endToEndUI.spec.ts` asserts only that more than one `[room]` line exists, and the room writes five while it opens, so it passes when the click does nothing. Fix: wait for a line that only the click causes, such as `walking to`. The second test repeats most of the first, so the two become one.
-- The continue test in the same file compares with the entrance written as `'(1.60, 1.80)'`, and it clicks guessed spots with a wait of one second each in a room arranged at random. Fix: read the entrance from the first `room opened` line of the same run, and wait with `expect.poll` for the walk. It also asserts the Sip button hidden before the button exists.
-- `Tests/Browser/playwright.config.ts` keeps no trace of a failure and allows a stray `test.only` in CI. Fix: a trace on failure, `forbidOnly` in CI, and one named timeout for `room opened`.
 - `everyFurnitureSide_inEveryArrangement_isReachedOnFootFromTheEntrance` in `Tests/Game/Room/RoomArrangements.integration.test.ts` taps each piece once, so a walled-in side passes. Fix: start next to each side and reach it.
 - `kettle_whenPutDownAtTheSinksEdge_staysInHand` in `Tests/Game/Room/Placement.integration.test.ts` does not check that the reason is `theSinkIsThere`.
 - `Tests/Game/Table/TablePresenter.unit.test.ts` sets `heater.itemIdOnTop` while the item lies elsewhere, a state the game cannot reach. Fix: arrange through commands.
 
 Rules with no test:
 
-- Refusal reasons that no test produces. A test lists every reason in `RitualEvent.ts` and fails for one that no test produces, or the missing ones get their tests, starting with `vesselIsBeingPoured`.
-- Reach and place checks, in `testHouseCatalog`, where reach can fail: offering away from the ritual place, tasting, scooping and tipping out of reach, the heater's and the thermostat's commands and the tap away from the counter, and soaking up a puddle out of reach.
-- Rows of the tables: the taste of a lukewarm, a cold, a rich and a heavy sip, noticeable and high bitterness, an offering of plain water, and day and sunset in `TimeOfDayJudgement`.
-- `CatalogProblems.ts` with unknown ids, a tea above boiling and a strength range out of order. `FittedSavedState.ts` with a lost room, a lost place with its puddle, hands and a removed cloth. An absence with the tap running. The world report's lines of the cloth, the spoon, the puddles and the tap.
 - The achievements `burntClothWashed`, `thermosGlowing`, `bowlTriedOnTheHeater`, `roseBushTappedTenTimes` and `everythingOnTheShelf`, each with its nearest miss, and the rules of `achievementsOutOfReach`.
 - Every store in `Apps/Game/Room/`: what it kept is found again, a blocked storage gives the default and a log line, and corrupt text is handled. The fake storage moves to `Tests/Support/` and is restored after each test.
 - In `RoomPlay`: the heater's panel tapped with both hands full, a refused offering that keeps the hand chosen, and the wheel zooming in the room view.
 
 Copies and brittle checks:
 
-- Setups copied between files move to `Tests/Support/`: `ritualWithSpillOnTheTable` (three copies), `setTheTeaTable` (four), `bringABowlToTheCounterAndTakeTheKettle` (two), three versions of waiting until something happens, `onTopOf` places defined again in several files, `frameSeconds`, and the screen stubs. `catalogWithRoomChanges` replaces the hand-written room overrides.
+- Setups copied between room test files move to `Tests/Support/`: `setTheTeaTable` (four copies), `bringABowlToTheCounterAndTakeTheKettle` (two), `onTopOf` places defined again in several files, `frameSeconds`, and the screen stubs.
 - Room tests name places with `onTopOf` or a named place in `TestRoom.ts`, never with raw coordinates.
-- A test reads log text only when it is about the log. Today `Logging.integration.test.ts` pins whole sentences with decimals, and `HeaterInTheRoom`, `Carrying`, `Placement`, `ThermostatInTheRoom` and `RoomNavigator` assert log lines next to the state they already check.
-- A test finds player texts through their keys. `RoomTexts.unit.test.ts` copies English lines and counts how many lines a phrase has. `CatalogProblems.unit.test.ts` pins English sentences.
+- A test reads log text only when it is about the log. Today `HeaterInTheRoom`, `Carrying`, `Placement`, `ThermostatInTheRoom` and `RoomNavigator` assert log lines next to the state they already check.
+- A test finds player texts through their keys. `RoomTexts.unit.test.ts` copies English lines.
 - A room test reads a content value from the catalog under a name, instead of 800, 100, 3, 40 or 120 from the real content.
 - A literal the reader cannot check becomes a relation from the layout: the spout's coordinates in `AimedPour.integration.test.ts`, and the liquor colours in `TablePresenter.unit.test.ts`.
 
 Order and names:
 
-- One act per test: the take and the scoop in `Heating`, the two sips in `Serving`, the pick-up inside an assertion in `Keeper`, and the 15 steps of `RitualStory`.
-- Tests that repeat others go: `wipe_withAClothLyingOnTheTable_isRefusedAsNotInHand` in `Wiping`, `kettle_whenTakenOutAfterTheTapRanOverItsRim_keepsItsWater` in `Sink`, `itemInTheSink_standsOnTheTopOfTheSinksFloorPlate` in `CarriedItems`, and the zoom test in `CameraPoses.unit.test.ts` that `RoomGestures` repeats.
-- `Heating.integration.test.ts` splits into charring, hot metal, boiling away and the fixed step. `Puddles.unit.test.ts` is named after the file it tests, `RoomLayout`.
+- A test that repeats another goes: the zoom test in `CameraPoses.unit.test.ts`, which `RoomGestures` repeats.
+- `Puddles.unit.test.ts` is named after the file it tests, `RoomLayout`.
 - A name promises only what the body checks: the remark tests of "a different line each time", the aim tests of "from the left of the screen" and "five centimetres from both walls", and a test whose name says "a fifth" while its body checks "under a fifth". A test in `Carrying` that stands after the helpers moves up.
 
-### 3. Test speed and CI
-
-- `Tests/Game/Room/CarriedItems.integration.test.ts`, the slowest file at about 7.5 s, builds every model inside its loops, 24 times in one test. It builds them once per test, and a test "of every shape" takes one item of each distinct geometry, not all ten bowls.
-- The boiling tests in `Heating.integration.test.ts` and `Thermostat.integration.test.ts` wait up to twenty minutes of simulated time. They wait for their event, and a rule that does not depend on a rate is tested with a fast one.
-- `RitualSession.advance` copies the whole state with `structuredClone` for every step of 0.05 s. It steps on one copy per call. Events and logs stay the same.
-- `Scripts/test.sh` runs the two type-checks and then the tests, one after another. They run side by side, and the script still fails when any of them fails.
-- `.github/workflows/test-and-deploy.yml`:
-  - A failed UI test keeps its trace and its screenshot, and the workflow uploads them.
-  - Every job has a timeout.
-  - The browser cache is keyed by the browser's revision, not by the whole lockfile.
-  - The deploy job has its own concurrency group that never cancels a deployment already under way.
-  - A pull request from a branch of this repository runs once, not twice.
-  - The browser jobs stop reinstalling system packages on every run. Waits for an answer, for the container image.
-- The Chromium project in `playwright.config.ts` asks for software WebGL by name, because Chromium warns that the automatic fallback is going away.
-- `Scripts/assemble-artifact-page.mjs` fails when the built page has a file it would drop, such as a stylesheet link or a second script.
-- The README's "Test" section says `npm ci`, as CI does.
-
-### 4. Rules in the code instead of conventions
+### 3. Rules in the code instead of conventions
 
 These are written so that the engine takes them over unchanged.
 
@@ -145,7 +101,7 @@ These are written so that the engine takes them over unchanged.
 - A type named by two files has its own file, and no two files import each other. `RoomLog` lives in `RoomNavigator.ts` and about twenty files import it from there. `RitualPort` and `RoomTapTarget` live in `RoomPlay.ts`, which imports `AimedPour.ts` and `TapTargetAmong.ts`, which import them back. `ScreenPoint` lives in `RoomGestures.ts`.
 - Distances on the floor, clamps and easings come from one file. The same arithmetic is written in about twenty places, and the two tests of "the cloth is over the puddle" in `RoomPlay.ts` already disagree about an empty puddle.
 
-### 5. The carried items
+### 4. The carried items
 
 - Every size of a shape is written once, in a file of plain numbers per shape, as `KettleShape.ts` already is for the kettle. `layoutByShape` in `CarriedShapes.ts` and the parts files both read it.
 - A vessel is its profile: its outside and inside walls as points of radius and height. Its liquid's surface and body, its overflow's path down the wall, its opening and its footprint come from the profile, instead of being written by hand in `ThermosParts.ts`, `CaddyParts.ts`, `BowlParts.ts` and `KettleParts.ts`.
@@ -153,7 +109,7 @@ These are written so that the engine takes them over unchanged.
 - `ItemParts.ts` groups its fields, liquid, pouring and displays, and a cloth no longer invents a spout. `rimHeight` stops meaning both the opening's height and the item's height. `CarriedModel.ts` keeps what was built apart from what changes each frame.
 - Small copies go into one file of lathe parts: walls, rims, discs and a radial fading texture. The kettle's and the caddy's numbers get names. `HeldInView` and `InspectedInView` are declared in the files of their names.
 
-### 6. The presentation
+### 5. The presentation
 
 - `RoomScene.ts` renders, raycasts and forwards input. Its decisions move to classes without Three.js that tests reach in Node: how the look turns in first person, when the keeper walks, sits or stands, which buttons and sticks show, and when the mouse is caught. `RoomScene.ts` and `Tests/Support/TestRoom.ts` assemble the room with the same code, so the paths from a remark to an achievement and from death to the forgotten visit are tested.
 - `RoomPlay.ts` is split along its seams: the aim's set-up moves to `AimedPour.ts`, the cloth on a surface and its puddle move beside `WipeStroke.ts`, the counts of taps in a row move to `TapsInARow.ts`, and `RoomPlay` keeps the routing, the choice of a hand and the mode.
@@ -166,11 +122,11 @@ These are written so that the engine takes them over unchanged.
 - Member order in `Garden.ts`, `HeaterControls.ts`, `SettingsGear.ts`, `WalkerModel.ts`, `LampDisplay.ts` and `DebugMenu.ts`. The settings screen is built from a list of sections, and each coat swatch gets a name for screen readers.
 - Code kept only for tests goes: `visibleWidthMetres` in `CameraPoses.ts`, and `quietRoomLayout`, which moves to `Tests/Support/`.
 
-### 7. Folders
+### 6. Folders
 
 - `Views/Paintings/` for the paintings and generated textures, `Views/Controls/` for the page's controls, and subfolders of `Views/Carried/` for the shapes, the streams, burning and the hands. Moves only, each in its own commit.
 
-### 8. Documents
+### 7. Documents
 
 - `README.md`: "Nothing is won or lost" meets the one death, and the test tree does not mirror the code's subfolders.
 - This roadmap: done steps and the rejected sockets go. Waits for an answer.
