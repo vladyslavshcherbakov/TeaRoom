@@ -158,6 +158,26 @@ test('savedState_fromBeforePuddlesHadATemperature_findsThemAtRoomTemperature', (
   assert.equal(resumed.state.puddles['table']?.temperatureC, 20)
 })
 
+test('savedState_whoseHeaterLeftTheCatalog_resumesWithTheRoomsHeaterSwitchedOff', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  const resumed = TestRitual.resumedFrom(ritual.savedState, catalogWithANewHeater())
+
+  assert.equal(resumed.state.heater.definitionId, 'newHeater')
+  assert.equal(resumed.state.heater.isOn, false)
+  assert.equal(resumed.state.heater.itemIdOnTop, 'kettle')
+})
+
+function catalogWithANewHeater(): Catalog {
+  const catalog = testCatalog()
+  const room = catalog.rooms['testRoom']
+  const heater = catalog.heaters['testHeater']
+  if (room === undefined || heater === undefined) throw new Error('the test catalog lost its room or its heater')
+  return { ...catalog, heaters: { newHeater: { ...heater, id: 'newHeater' } }, rooms: { testRoom: { ...room, heaterId: 'newHeater' } } }
+}
+
 function catalogWithAFourthCup(): Catalog {
   const catalog = testCatalog()
   const room = catalog.rooms['testRoom']

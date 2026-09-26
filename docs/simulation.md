@@ -106,7 +106,7 @@ The spoon may lie on the heater too. On a working heater it chars, fully in 20 s
 
 ## Returning
 
-A session can be saved as its plain state and resumed later. The saved state must fit the game that reads it. It fits when it has the same version and every field the game reads, with the same kind of value. A vessel or a figurine new to the room joins at its starting place. One the room no longer has is left out, and a hand, the heater or the sink that held it is emptied. A saved state that does not fit is not resumed, and the room opens anew.
+A session can be saved as its plain state and resumed later. The saved state must fit the game that reads it. It fits when it has the same version and every field the game reads, with the same kind of value. A vessel or a figurine new to the room joins at its starting place. One the room no longer has is left out, and a hand, the heater or the sink that held it is emptied. A heater that is no longer the room's is replaced by the room's heater, switched off, with what stood on it still on it. A saved state that does not fit is not resumed, and the room opens anew.
 
 On the keeper's return the world first lives through the absence. A pour that was running stops. Then the room steps through the time away in fixed steps of 1 s, up to twelve hours, by which time everything has settled: tea goes cold even in the thermos, leaves go on steeping and turn bitter, a kettle left on the working heater boils dry, a cloth on it burns, and a running tap keeps running. Longer absences live only their first twelve hours. What happened while away is logged and is not shown.
 

@@ -44,7 +44,7 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
   const problems = shapeProblemsOf(fresh, savedInTodaysShape)
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
   const state = structuredClone(savedInTodaysShape) as SessionState
-  changes.push(...fitTheVessels(state, fresh), ...fitTheCloths(state, fresh), ...fitTheFigurines(state, fresh))
+  changes.push(...fitTheVessels(state, fresh), ...fitTheCloths(state, fresh), ...fitTheFigurines(state, fresh), ...fitTheHeater(state, fresh))
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
   problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
   if (state.teaId !== null && catalog.teas[state.teaId] === undefined) problems.push(`the saved tea ${state.teaId} is not in the catalog`)
@@ -174,6 +174,13 @@ function fitTheFigurines(state: SessionState, fresh: SessionState): string[] {
     changes.push(`the figurine ${id} is new in the room`)
   }
   return changes
+}
+
+function fitTheHeater(state: SessionState, fresh: SessionState): string[] {
+  const savedHeater = state.heater
+  if (savedHeater.definitionId === fresh.heater.definitionId) return []
+  state.heater = { ...fresh.heater, itemIdOnTop: savedHeater.itemIdOnTop }
+  return [`the heater ${savedHeater.definitionId} is no longer the room's, so the room's ${fresh.heater.definitionId} stands in its place, switched off, with ${savedHeater.itemIdOnTop ?? 'nothing'} on it`]
 }
 
 function dropPuddlesOnLostPlaces(state: SessionState, places: ReadonlySet<string>): string[] {
