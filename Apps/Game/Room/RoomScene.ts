@@ -22,8 +22,8 @@ import {
   zoomedPose,
 } from './Camera/CameraPoses.ts'
 import { CameraZoom } from './Camera/CameraZoom.ts'
-import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, rightOnTheFloorOf, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
-import { eyeHeightMetres, keeperHeightByDefaultCentimetres } from './Camera/KeeperHeight.ts'
+import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookBetween, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, rightOnTheFloorOf, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
+import { easedSeatedShare, eyeHeightMetres, keeperHeightByDefaultCentimetres, seatedShareAfter } from './Camera/KeeperHeight.ts'
 import { sticksShownFor, usesTheKeyboard, usesTheMouse, walkFromTheKeys } from './Camera/FirstPersonControls.ts'
 import { KeyboardAndMouse } from './Views/KeyboardAndMouse.ts'
 import { KeyboardShortcuts } from './KeyboardShortcuts.ts'
@@ -141,6 +141,8 @@ export class RoomScene {
   private cameraPose: CameraPose
   private keeperHeightCentimetres = keeperHeightByDefaultCentimetres
   private wasSeatedInFirstPerson = false
+  private seatedShare = 0
+  private lookWhileSittingDown: { readonly from: FirstPersonLook; readonly to: FirstPersonLook } | null = null
   private wereTheGearsWatched = false
   private wasFirstPersonView = false
   private firstPersonSettlesAtSeconds = 0
@@ -461,14 +463,26 @@ export class RoomScene {
     else this.play.stopWalkingFreely()
   }
 
-  private lookAtTheTableAsTheKeeperSitsDown(isSeated: boolean): void {
-    const closeUp = this.play.closeUpInView
-    if (isSeated && !this.wasSeatedInFirstPerson && closeUp !== null) {
-      const walker = this.play.walk.position
-      this.look = lookAt(closeUp.target, { x: walker.x, y: eyeHeightMetres(this.keeperHeightCentimetres, true), z: walker.z })
-      this.log('the keeper sits down at the tea table and looks at it, free to look around')
-    }
+  private showTheKeeperSittingDownOrStandingUp(seconds: number): void {
+    const isSeated = this.settings.cameraMode === 'firstPerson' && this.play.isSeatedAtTheRitualPlace
+    if (isSeated && !this.wasSeatedInFirstPerson) this.turnToTheTableWhileSittingDown()
+    if (!isSeated && this.wasSeatedInFirstPerson) this.log('the keeper stands up from the tea table, the view rising to standing eyes')
+    if (!isSeated) this.lookWhileSittingDown = null
     this.wasSeatedInFirstPerson = isSeated
+    this.seatedShare = seatedShareAfter(this.seatedShare, isSeated, seconds)
+    const turn = this.lookWhileSittingDown
+    if (turn === null) return
+    this.look = lookBetween(turn.from, turn.to, easedSeatedShare(this.seatedShare))
+    if (this.seatedShare === 1) this.lookWhileSittingDown = null
+  }
+
+  private turnToTheTableWhileSittingDown(): void {
+    const closeUp = this.play.closeUpInView
+    if (closeUp === null) return this.log('the keeper sits down with no tea table in view to turn to')
+    const walker = this.play.walk.position
+    const lookAtTheTable = lookAt(closeUp.target, { x: walker.x, y: eyeHeightMetres(this.keeperHeightCentimetres, 1), z: walker.z })
+    this.lookWhileSittingDown = { from: this.look, to: lookAtTheTable }
+    this.log('the keeper sits down at the tea table, the view sinking and turning to it, then free to look around')
   }
 
   private moveCamera(seconds: number): void {
@@ -477,8 +491,7 @@ export class RoomScene {
     this.wereTheGearsWatched = areTheGearsWatched
     if (areTheGearsWatched) return this.watchTheGears(seconds)
     this.zoom.viewShown(this.play.view)
-    const isSeatedInFirstPerson = this.settings.cameraMode === 'firstPerson' && this.play.isSeatedAtTheRitualPlace
-    this.lookAtTheTableAsTheKeeperSitsDown(isSeatedInFirstPerson)
+    this.showTheKeeperSittingDownOrStandingUp(seconds)
     const isFirstPersonView = this.settings.cameraMode === 'firstPerson'
     if (isFirstPersonView && !this.wasFirstPersonView) this.firstPersonSettlesAtSeconds = this.clock.elapsedTime + firstPersonSettleSeconds
     this.wasFirstPersonView = isFirstPersonView
@@ -544,7 +557,7 @@ export class RoomScene {
 
   private cameraGoal(): CameraPose {
     const closeUp = this.play.closeUpInView
-    if (this.settings.cameraMode === 'firstPerson') return firstPersonPose(this.play.walk.position, this.look, eyeHeightMetres(this.keeperHeightCentimetres, this.play.isSeatedAtTheRitualPlace))
+    if (this.settings.cameraMode === 'firstPerson') return firstPersonPose(this.play.walk.position, this.look, eyeHeightMetres(this.keeperHeightCentimetres, this.seatedShare))
     if (closeUp !== null) return closeUpPose(closeUp, this.camera.aspect)
     return overviewPose(this.play.walk.position, this.camera.aspect)
   }

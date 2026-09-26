@@ -45,6 +45,11 @@ export function lookAt(target: WorldPoint, eye: WorldPoint): FirstPersonLook {
   return { headingRadians: Math.atan2(across.x, across.z), pitchRadians: Math.atan2(target.y - eye.y, Math.hypot(across.x, across.z)) }
 }
 
+export function lookBetween(from: FirstPersonLook, to: FirstPersonLook, share: number): FirstPersonLook {
+  const headingDifference = Math.atan2(Math.sin(to.headingRadians - from.headingRadians), Math.cos(to.headingRadians - from.headingRadians))
+  return { headingRadians: from.headingRadians + headingDifference * share, pitchRadians: from.pitchRadians + (to.pitchRadians - from.pitchRadians) * share }
+}
+
 export function lookTurnedTowards(look: FirstPersonLook, headingRadians: number, seconds: number): FirstPersonLook {
   const difference = Math.atan2(Math.sin(headingRadians - look.headingRadians), Math.cos(headingRadians - look.headingRadians))
   const share = 1 - Math.exp(-seconds / turnSettleSeconds)

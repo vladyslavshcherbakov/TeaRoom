@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { firstPersonPose, lookAt, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, stepFor } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
+import { firstPersonPose, lookAt, lookBetween, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, stepFor } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 
 test('step_whenTheStickIsPushedUp_goesForwardAlongTheHeading', () => {
@@ -66,4 +66,11 @@ test('look_atAPointAheadAndBelow_facesItAndLooksDown', () => {
 
   assertNear(look.headingRadians, 0)
   assertNear(look.pitchRadians, -Math.PI / 4)
+})
+
+test('look_halfwayBetweenTwoLooksAcrossTheBack_turnsTheShortWay', () => {
+  const look = lookBetween({ headingRadians: 3, pitchRadians: 0 }, { headingRadians: -3, pitchRadians: -0.4 }, 0.5)
+
+  assertNear(Math.cos(look.headingRadians), -1)
+  assertNear(look.pitchRadians, -0.2)
 })
