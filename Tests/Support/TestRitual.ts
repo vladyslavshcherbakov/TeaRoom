@@ -10,6 +10,10 @@ export const halfFlowTiltDegrees = 27.5
 export const fullFlowTiltDegrees = 45
 
 const longestWaitSeconds = 3600
+const waterForTheMixedTeasC = 80
+const secondsBetweenTheMixedTeas = 5
+const secondsEachMixedTeaSteeps = 60
+const spoonDepthForHalfAGram = 0.1
 
 export class TestRitual {
   readonly log = new RecordingLog()
@@ -112,6 +116,16 @@ export class TestRitual {
     ]
   }
 
+  mixInTheThermos(caddyIds: readonly string[]): void {
+    const cups = caddyIds.map((caddyId, index) => ({ caddyId, cupId: `cup${index + 1}` }))
+    this.heatKettleTo(waterForTheMixedTeasC)
+    this.do({ type: 'pickUp', itemId: 'spoon' })
+    for (const { caddyId, cupId } of cups) this.brewASpoonfulOf(caddyId, cupId)
+    this.wait(secondsEachMixedTeaSteeps - secondsBetweenTheMixedTeas * (cups.length - 1))
+    this.do({ type: 'openVesselLid', vesselId: 'thermos' })
+    for (const { cupId } of cups) this.pour(cupId, 'thermos', secondsBetweenTheMixedTeas, fullFlowTiltDegrees)
+  }
+
   pour(
     sourceId: string,
     targetId: string | null,
@@ -129,6 +143,13 @@ export class TestRitual {
 
   waitUntilCupCoolsTo(cupId: string, temperatureC: number): readonly RitualEvent[] {
     return this.waitUntil(() => this.vessel(cupId).liquid.temperatureC <= temperatureC)
+  }
+
+  private brewASpoonfulOf(caddyId: string, cupId: string): void {
+    this.pour('kettle', cupId, secondsBetweenTheMixedTeas)
+    this.do({ type: 'openVesselLid', vesselId: caddyId })
+    this.do({ type: 'scoopTea', caddyId, depth: spoonDepthForHalfAGram })
+    this.do({ type: 'tipSpoonInto', vesselId: cupId })
   }
 
   private waitUntil(isDone: () => boolean): readonly RitualEvent[] {

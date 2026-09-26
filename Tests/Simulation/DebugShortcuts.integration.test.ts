@@ -9,7 +9,7 @@ test('kettle_whenFilledWithBoilingWaterFromTheDebugMenuWhileHeldWithLeaves_holds
 
   ritual.do({ type: 'fillWithBoilingWater', vesselId: 'kettle' })
 
-  assert.deepEqual(ritual.vessel('kettle').liquid, { volumeMl: 1000, temperatureC: 100, strength: 0, bitterness: 0 })
+  assert.deepEqual(ritual.vessel('kettle').liquid, { volumeMl: 1000, temperatureC: 100, strength: 0, strengthByTeaId: {}, bitterness: 0 })
   assert.equal(ritual.vessel('kettle').leaves, null)
 })
 

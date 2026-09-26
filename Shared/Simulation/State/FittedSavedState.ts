@@ -25,7 +25,7 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, temperatureC: 0, spill
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon, withTheTeasOfEveryLiquid]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -117,7 +117,11 @@ function locationsIn(state: SessionState): [string, DeepReadonly<ItemLocation>][
 }
 
 function unknownTeaProblemsOf(state: SessionState, catalog: Catalog): string[] {
-  const heldTeas: [string, string | null][] = [['the spoon holds', state.spoon.teaId], ...Object.values(state.vessels).map((vessel): [string, string | null] => [`${vessel.id} holds leaves of`, vessel.leaves?.teaId ?? null])]
+  const heldTeas: [string, string | null][] = [
+    ['the spoon holds', state.spoon.teaId],
+    ...Object.values(state.vessels).map((vessel): [string, string | null] => [`${vessel.id} holds leaves of`, vessel.leaves?.teaId ?? null]),
+    ...Object.values(state.vessels).flatMap((vessel) => Object.keys(vessel.liquid.strengthByTeaId).map((teaId): [string, string | null] => [`${vessel.id} holds a liquid of`, teaId])),
+  ]
   return heldTeas.filter(([, teaId]) => teaId !== null && catalog.teas[teaId] === undefined).map(([holder, teaId]) => `${holder} ${String(teaId)}, which is not in the catalog`)
 }
 
@@ -303,6 +307,22 @@ function withTheTeaOnTheSpoon(saved: Shape): ReturnType<SaveMigration> {
     migrated: { ...saved, spoon: { ...spoon, teaId } },
     change: `a save from before the spoon knew its tea finds ${teaId === null ? 'no tea' : `the ritual's ${teaId}`} on it`,
   }
+}
+
+function withTheTeasOfEveryLiquid(saved: Shape): ReturnType<SaveMigration> {
+  const vessels = saved['vessels']
+  if (!isShape(vessels) || Object.values(vessels).every((vessel) => !isShape(vessel) || !isShape(vessel['liquid']) || vessel['liquid']['strengthByTeaId'] !== undefined)) return null
+  const teaId = typeof saved['teaId'] === 'string' ? saved['teaId'] : null
+  const withTeas = Object.fromEntries(Object.entries(vessels).map(([id, vessel]) => [id, isShape(vessel) && isShape(vessel['liquid']) && vessel['liquid']['strengthByTeaId'] === undefined ? { ...vessel, liquid: liquidWithTheTea(vessel['liquid'], teaId) } : vessel]))
+  return {
+    migrated: { ...saved, vessels: withTeas },
+    change: `a save from before a liquid knew its teas gives the strength of each liquid to ${teaId === null ? 'no tea' : `the ritual's ${teaId}`}`,
+  }
+}
+
+function liquidWithTheTea(liquid: Shape, teaId: string | null): Shape {
+  const strength = liquid['strength']
+  return { ...liquid, strengthByTeaId: teaId !== null && typeof strength === 'number' && strength > 0 ? { [teaId]: strength } : {} }
 }
 
 function isShape(value: unknown): value is Shape {

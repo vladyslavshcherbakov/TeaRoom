@@ -7,5 +7,5 @@ test('kettle_whenFilledFromTheDebugMenuWhereverItStands_holdsBoilingWaterToTheBr
 
   room.play.fillTheKettleTapped()
 
-  assert.deepEqual(room.state.vessels['kettle']?.liquid, { volumeMl: 800, temperatureC: 100, strength: 0, bitterness: 0 })
+  assert.deepEqual(room.state.vessels['kettle']?.liquid, { volumeMl: 800, temperatureC: 100, strength: 0, strengthByTeaId: {}, bitterness: 0 })
 })

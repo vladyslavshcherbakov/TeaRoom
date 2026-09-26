@@ -2,7 +2,7 @@ import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import { kilowattHoursUsed } from '../Physics/Heat.ts'
 import { isEmpty } from '../Physics/Liquid.ts'
 import type { ClothState, ItemLocation, SessionState, VesselState } from '../State/SessionState.ts'
-import { noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
+import { describeTheTeasOf, noteDetail, outcomeOf, startDraft, vesselDefinitionOf, type Draft, type Outcome } from './Draft.ts'
 import { isTheHeaterInUse } from './HeatingCommands.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { percent } from './Percent.ts'
@@ -60,7 +60,7 @@ function vesselLines(draft: Draft, vessel: VesselState, ahead: VesselState | und
     isEmpty(liquid) && isEmpty(next)
       ? 'empty'
       : `${liquid.volumeMl.toFixed(1)} ml (${signed(volumeRate, 2)} ml/s) at ${liquid.temperatureC.toFixed(1)} °C (${signed(temperatureRate, 3)} °C/s), ` +
-        `strength ${liquid.strength.toFixed(1)} (${signed(strengthRate, 3)}/s), bitterness ${liquid.bitterness.toFixed(1)} (${signed(bitternessRate, 3)}/s)`
+        `strength ${liquid.strength.toFixed(1)} (${signed(strengthRate, 3)}/s)${describeTheTeasOf(liquid)}, bitterness ${liquid.bitterness.toFixed(1)} (${signed(bitternessRate, 3)}/s)`
   return [`${vessel.id} ${where(draft.state, vessel.id, vessel.location)}, ${lid}: ${contents}, ${leaves}${shell}`]
 }
 

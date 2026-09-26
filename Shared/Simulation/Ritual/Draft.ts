@@ -1,10 +1,12 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { TeaDefinition } from '../Definitions/TeaDefinition.ts'
 import type { VesselDefinition } from '../Definitions/VesselDefinition.ts'
+import { shareOfTheStrengthByTeaId, type Liquid } from '../Physics/Liquid.ts'
 import type { SessionState, VesselState } from '../State/SessionState.ts'
 import type { Command } from './Command.ts'
 import type { RefusalReason, RitualEvent } from './RitualEvent.ts'
 import type { LogLine } from './RitualLog.ts'
+import { percent } from './Percent.ts'
 
 export type Draft = {
   readonly state: SessionState
@@ -44,7 +46,12 @@ export function refuse(draft: Draft, command: Command, reason: RefusalReason, de
 
 export function describeLiquid(vessel: VesselState): string {
   const { volumeMl, temperatureC, strength, bitterness } = vessel.liquid
-  return `${vessel.id} ${volumeMl.toFixed(1)} ml at ${temperatureC.toFixed(1)} °C, strength ${strength.toFixed(0)}, bitterness ${bitterness.toFixed(0)}`
+  return `${vessel.id} ${volumeMl.toFixed(1)} ml at ${temperatureC.toFixed(1)} °C, strength ${strength.toFixed(0)}${describeTheTeasOf(vessel.liquid)}, bitterness ${bitterness.toFixed(0)}`
+}
+
+export function describeTheTeasOf(liquid: Liquid): string {
+  const teas = Object.entries(shareOfTheStrengthByTeaId(liquid)).map(([teaId, share]) => `${percent(share)} ${teaId}`)
+  return teas.length === 0 ? '' : ` of ${teas.join(', ')}`
 }
 
 export function vesselDefinitionOf(draft: Draft, vessel: VesselState): VesselDefinition {

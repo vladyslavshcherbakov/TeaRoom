@@ -181,6 +181,23 @@ test('savedState_fromBeforeTheSpoonKnewItsTea_findsTheRitualsTeaOnAFullSpoon', (
   assert.equal(resumed.state.spoon.teaId, 'testGreen')
 })
 
+test('savedState_fromBeforeLiquidsKnewTheirTeas_givesTheStrengthOfEveryLiquidToTheRitualsTea', () => {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(80)
+  ritual.addLeavesToKettle(5)
+  ritual.wait(60)
+  ritual.pour('kettle', 'cup1', 5)
+  const savedState = ritual.savedState as { vessels: Record<string, { liquid: Record<string, unknown> }> }
+  for (const vessel of Object.values(savedState.vessels)) delete vessel.liquid['strengthByTeaId']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  const tea = resumed.vessel('cup1').liquid
+  assert.deepEqual(Object.keys(tea.strengthByTeaId), ['testGreen'])
+  assert.equal(tea.strengthByTeaId['testGreen'], tea.strength)
+  assert.deepEqual(resumed.vessel('cup2').liquid.strengthByTeaId, {})
+})
+
 test('savedState_whoseHeaterLeftTheCatalog_resumesWithTheRoomsHeaterSwitchedOff', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })

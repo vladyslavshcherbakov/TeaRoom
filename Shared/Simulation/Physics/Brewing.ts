@@ -1,5 +1,5 @@
 import type { TeaDefinition } from '../Definitions/TeaDefinition.ts'
-import { isEmpty, type Liquid } from './Liquid.ts'
+import { isEmpty, strengthenedBy, type Liquid } from './Liquid.ts'
 
 export type Leaves = {
   readonly teaId: string
@@ -26,12 +26,9 @@ export function steepLeaves(
   if (isEmpty(liquid)) return { liquid, leaves }
   const leafRatio = leafRatioOf(leaves, liquid, tea)
   const extractionFactor = leafRatio * heatFactorOf(liquid.temperatureC, tea) * (leaves.isStirredByTheBoil ? theBoilStirsExtractionBy : 1)
+  const strengthened = strengthenedBy(liquid, leaves.teaId, strengthAfter(liquid.strength, tea, extractionFactor, seconds) - liquid.strength)
   return {
-    liquid: {
-      ...liquid,
-      strength: strengthAfter(liquid.strength, tea, extractionFactor, seconds),
-      bitterness: Math.min(100, liquid.bitterness + bitternessPerSecond(liquid, leaves, tea, extractionFactor) * seconds),
-    },
+    liquid: { ...strengthened, bitterness: Math.min(100, liquid.bitterness + bitternessPerSecond(liquid, leaves, tea, extractionFactor) * seconds) },
     leaves: { ...leaves, steepedSeconds: leaves.steepedSeconds + seconds },
   }
 }
