@@ -31,7 +31,7 @@ export const thermos: VesselDefinition = {
 export const teaBowl: VesselDefinition = {
   id: 'teaBowl',
   capacityMl: 120,
-  maxPourMlPerSecond: 15,
+  maxPourMlPerSecond: 45,
   takesAStreamOfUpToMlPerSecond: 20,
   coolingPerSecond: 0.01,
   lid: null,
