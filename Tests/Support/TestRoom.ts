@@ -30,6 +30,7 @@ export class TestRoom {
   debugMenusAsked = 0
   achievementListsAsked = 0
   settingsAsked = 0
+  guidesAsked = 0
   mayGrowAMiddleHand = true
   temperatureUnit: TemperatureUnit = 'celsius'
   isNerdModeOn = false
@@ -44,6 +45,7 @@ export class TestRoom {
       debugMenuAsked: () => (this.debugMenusAsked += 1),
       achievementsAsked: () => (this.achievementListsAsked += 1),
       settingsAsked: () => (this.settingsAsked += 1),
+      guideAsked: () => (this.guidesAsked += 1),
       mayGrowAMiddleHand: () => this.mayGrowAMiddleHand,
       temperatureUnit: () => this.temperatureUnit,
       isNerdModeOn: () => this.isNerdModeOn,

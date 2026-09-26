@@ -49,6 +49,7 @@ export type RoomTapTarget =
   | { readonly kind: 'roseBush' }
   | { readonly kind: 'medal' }
   | { readonly kind: 'settingsGear' }
+  | { readonly kind: 'guideBook' }
   | { readonly kind: 'nothing' }
 
 export type ClothWiping = {
@@ -85,6 +86,7 @@ export type RoomPlayListener = {
   readonly debugMenuAsked: () => void
   readonly achievementsAsked: () => void
   readonly settingsAsked: () => void
+  readonly guideAsked: () => void
   readonly mayGrowAMiddleHand: () => boolean
   readonly temperatureUnit: () => TemperatureUnit
   readonly isNerdModeOn: () => boolean
@@ -340,6 +342,7 @@ export class RoomPlay {
     if ((target.kind !== 'item' && target.kind !== 'opening') || !this.tapsWithFullHands.isCounting(target.itemId)) this.forgetTheTapsWithFullHands()
     if (target.kind === 'medal') return this.showTheAchievements()
     if (target.kind === 'settingsGear') return this.showTheSettings()
+    if (target.kind === 'guideBook') return this.showTheGuide()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
     if (target.kind === 'lid') {
       const location = itemLocationIn(this.ritual.state, target.itemId)
@@ -365,6 +368,11 @@ export class RoomPlay {
   private showTheSettings(): void {
     this.log('the gear on the wall shows the settings')
     this.listener.settingsAsked()
+  }
+
+  private showTheGuide(): void {
+    this.log('the book on the wall opens on how the room works')
+    this.listener.guideAsked()
   }
 
   private showTheAchievements(): void {

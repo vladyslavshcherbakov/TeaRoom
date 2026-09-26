@@ -85,6 +85,7 @@ export type RoomLayout = {
   readonly windows: readonly WallWindow[]
   readonly medal: SpotOnAWall
   readonly settingsGear: SpotOnAWall
+  readonly guideBook: SpotOnAWall
   readonly faucetSpout: WorldPoint
   readonly sinkBasin: SinkBasin
   readonly itemSpots: readonly ItemSpot[]
@@ -194,6 +195,7 @@ export function roomLayoutFor(arrangement: FurnitureArrangement): RoomLayout {
     windows: look.windows,
     medal,
     settingsGear: { ...medal, y: 1 },
+    guideBook: { ...medal, y: 0.58 },
     faucetSpout: worldPointOn(placements.counter, onTheCounter.faucetSpout),
     sinkBasin: sinkBasinIn(placements.counter),
     itemSpots: [{ id: 'faucet', shape: 'faucet', position: worldPointOn(placements.counter, onTheCounter.faucetBase) }, ...figurineIds.map((id) => ({ id, shape: 'figurine' as const, position: look.figurines[id] }))],

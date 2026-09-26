@@ -41,6 +41,13 @@ const gearTouchAreaWidthMetres = 0.5
 const gearTouchAreaHeightMetres = 0.5
 const gearTouchAreaDepthMetres = 0.3
 const gearTouchAreaBelowTheGearMetres = 0.02
+const guidePageWidthMetres = 0.15
+const guidePageHeightMetres = 0.21
+const guidePagesOpenRadians = 0.22
+const guideCoverOverhangMetres = 0.01
+const guideCoverThicknessMetres = 0.012
+const guideTouchAreaWidthMetres = 0.45
+const guideTouchAreaHeightMetres = 0.34
 const faucetPostAboveTheSpoutMetres = 0.04
 const faucetArmUnderThePostTopMetres = 0.018
 const faucetTouchAreaWidthMetres = 0.2
@@ -69,6 +76,7 @@ export type TapTargetTag =
   | { readonly isRoseBush: true }
   | { readonly isMedal: true }
   | { readonly isSettingsGear: true }
+  | { readonly isGuideBook: true }
 
 type PointOnAWall = {
   readonly alongTheWall: number
@@ -104,6 +112,7 @@ export class RoomModel {
     this.prophecyInscription = inscriptions[0] ?? null
     this.addMedal(layout.medal)
     this.settingsGear = this.addSettingsGear(layout.settingsGear)
+    this.addGuideBook(layout.guideBook)
     for (const piece of layout.furniture) this.addFurniture(piece)
     for (const spot of layout.itemSpots) this.addItem(spot)
     this.heaterControls = new HeaterControls(materials, (object, tag) => this.tag(object, tag))
@@ -223,6 +232,24 @@ export class RoomModel {
     this.root.add(gear.root)
     this.tag(gear.root, { isSettingsGear: true })
     return gear
+  }
+
+  private addGuideBook(spot: SpotOnAWall): void {
+    const book = new THREE.Group()
+    const coverWidth = 2 * (guidePageWidthMetres * Math.cos(guidePagesOpenRadians) + guideCoverOverhangMetres)
+    book.add(this.plainBox('guideBookCover', coverWidth, guidePageHeightMetres + 2 * guideCoverOverhangMetres, guideCoverThicknessMetres, { x: 0, y: 0, z: guideCoverThicknessMetres / 2 }))
+    for (const side of [-1, 1]) {
+      const page = new THREE.Mesh(new THREE.PlaneGeometry(guidePageWidthMetres, guidePageHeightMetres), this.materials.materialFor('guideBookPage'))
+      page.position.set((side * guidePageWidthMetres * Math.cos(guidePagesOpenRadians)) / 2, 0, guideCoverThicknessMetres + (guidePageWidthMetres * Math.sin(guidePagesOpenRadians)) / 2)
+      page.rotation.y = side * guidePagesOpenRadians
+      book.add(page)
+    }
+    const touchArea = this.touchArea(guideTouchAreaWidthMetres, guideTouchAreaHeightMetres, 0.1)
+    touchArea.position.z = 0.05
+    book.add(touchArea)
+    placeOnTheWall(book, spot, 0)
+    this.root.add(book)
+    this.tag(book, { isGuideBook: true })
   }
 
   private touchArea(width: number, height: number, depth: number): THREE.Mesh {

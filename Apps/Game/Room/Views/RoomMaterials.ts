@@ -7,6 +7,7 @@ import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
 import { paintKoiPond, type KoiPond } from './KoiPond.ts'
 import { paintGinkgoLeaves } from './GinkgoPainting.ts'
+import { paintGuidePage } from './GuidePagePainting.ts'
 import { paintLotus } from './LotusPainting.ts'
 import { paintProphecyInscription, prophecyInscriptionPixelsPerMetre } from './ProphecyInscription.ts'
 import { paintTeaCharacter } from './TeaCharacterPainting.ts'
@@ -89,6 +90,8 @@ export type Surface =
   | 'prophecyInscription'
   | 'lotusPainting'
   | 'ginkgoPainting'
+  | 'guideBookPage'
+  | 'guideBookCover'
   | 'heronPainting'
   | 'teaCharacterPainting'
   | 'yixingClay'
@@ -205,6 +208,8 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   prophecyInscription: { colour: '#ffffff', kind: 'prophecy' },
   lotusPainting: { colour: '#ffffff', kind: 'painting', paint: paintLotus },
   ginkgoPainting: { colour: '#ffffff', kind: 'painting', paint: paintGinkgoLeaves },
+  guideBookPage: { colour: '#ffffff', kind: 'painting', paint: paintGuidePage },
+  guideBookCover: { colour: '#6e2f23', kind: 'matte' },
   heronPainting: { colour: '#ffffff', kind: 'painting', paint: paintHeron },
   teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
   yixingClay: { colour: '#ffffff', kind: 'yixingClay' },

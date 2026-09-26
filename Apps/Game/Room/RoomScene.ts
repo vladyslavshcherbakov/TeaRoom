@@ -46,6 +46,7 @@ import { Achievements, achievementsOutOfReach } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
 import { AchievementsList } from './Views/AchievementsList.ts'
+import { GuideBook } from './Views/GuideBook.ts'
 import { tapTargetAmong } from './TapTargetAmong.ts'
 import { savedVisitVersion, type SavedCamera, type VisitStore } from './VisitStore.ts'
 import { CarriedItems } from './Views/CarriedItems.ts'
@@ -131,6 +132,7 @@ export class RoomScene {
   private readonly caption: RoomCaption
   private readonly achievements: Achievements
   private readonly achievementsList: AchievementsList
+  private readonly guideBook: GuideBook
   private readonly achievementNotice: AchievementNotice
   private readonly debugMenu: DebugMenu
   private readonly youDied: YouDiedScreen
@@ -196,6 +198,10 @@ export class RoomScene {
         this.keyboardAndMouse.letGoOfTheMouse('the achievements opened')
         this.showTheAchievements()
       },
+      guideAsked: () => {
+        this.keyboardAndMouse.letGoOfTheMouse('the guide opened')
+        this.guideBook.show()
+      },
       settingsAsked: () => {
         this.keyboardAndMouse.letGoOfTheMouse('the settings opened')
         this.settingsScreen.show(this.settings, this.playTime.seconds)
@@ -229,6 +235,7 @@ export class RoomScene {
     this.achievementNotice = new AchievementNotice(container)
     this.achievements = new Achievements(new AchievementStore(log), log, (id) => this.achievementNotice.announce(id))
     this.achievementsList = new AchievementsList(container, { resetAsked: () => this.achievements.reset() })
+    this.guideBook = new GuideBook(container)
     this.youDied = new YouDiedScreen(container, () => {
       log('the player starts over after dying')
       location.reload()
@@ -769,6 +776,7 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   if ('isRoseBush' in tag) return { kind: 'roseBush' }
   if ('isMedal' in tag) return { kind: 'medal' }
   if ('isSettingsGear' in tag) return { kind: 'settingsGear' }
+  if ('isGuideBook' in tag) return { kind: 'guideBook' }
   const upwardNormal = hit.face?.normal.clone().transformDirection(hit.object.matrixWorld).y ?? 0
   if (upwardNormal < smallestUpwardNormalOfASurface) return { kind: 'furniture', furnitureId: tag.furnitureId }
   return { kind: 'surface', furnitureId: tag.furnitureId, point: { x: hit.point.x, y: hit.point.y, z: hit.point.z } }
