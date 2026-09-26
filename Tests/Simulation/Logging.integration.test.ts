@@ -76,6 +76,44 @@ test('worldReport_whileTheTapWashesLeavesOutOfAFullKettle_logsHowFastTheLeavesGo
   )
 })
 
+test('worldReport_whileTheClothCharsOnTheHeater_logsHowFastItChars', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  ritual.wait(6)
+
+  assertADebugLineMatches(ritual, /the room: cloth on the working heater: holds 0\.00 ml .*charring [0-9]+% \(\+[0-9.]+%\/s\)/)
+})
+
+test('worldReport_whileTheSpoonCharsOnTheHeater_logsHowFastItChars', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
+  ritual.do({ type: 'switchHeaterOn' })
+
+  ritual.wait(6)
+
+  assertADebugLineMatches(ritual, /the room: the spoon on the working heater with 0\.00 g of no tea on it: charring [0-9]+% \(\+[0-9.]+%\/s\)/)
+})
+
+test('worldReport_whileAPuddleDries_logsHowFastItDries', () => {
+  const ritual = new TestRitual()
+  ritual.pour('kettle', null, 2.5)
+
+  ritual.wait(6)
+
+  assertADebugLineMatches(ritual, /the room: the puddle on the table: [0-9.]+ ml \(-[0-9.]+ ml\/s\)/)
+})
+
+test('worldReport_whileTheTapRuns_logsWhereItsWaterGoes', () => {
+  const ritual = new TestRitual()
+  ritual.do({ type: 'turnTheTapOn' })
+
+  ritual.wait(6)
+
+  assertADebugLineMatches(ritual, /the room: the tap has been open for 5 s over the empty sink: [0-9]+ ml down the drain since it opened/)
+})
+
 test('worldReport_ofARoomWhereNothingChanges_saysTheRoomIsStill', () => {
   const ritual = new TestRitual()
 
@@ -83,3 +121,7 @@ test('worldReport_ofARoomWhereNothingChanges_saysTheRoomIsStill', () => {
 
   assert.ok(ritual.log.messagesAt('debug').some((message) => message.endsWith('the room: the room is still')), ritual.log.messagesAt('debug').join('\n'))
 })
+
+function assertADebugLineMatches(ritual: TestRitual, pattern: RegExp): void {
+  assert.ok(ritual.log.messagesAt('debug').some((message) => pattern.test(message)), ritual.log.messagesAt('debug').join('\n'))
+}
