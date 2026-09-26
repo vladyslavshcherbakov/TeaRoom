@@ -1,14 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { assertNear } from '../Support/Assertions.ts'
-import { catalogWithHeaterChanges, testCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
-import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
-
-const secondsTheFastBoilTakesToBoilTheKettleDryAndMore = 30
+import { testCatalog } from '../Support/TestCatalog.ts'
+import { eventsOfType, ritualWithTheKettleOnTheWorkingHeater, TestRitual } from '../Support/TestRitual.ts'
 
 test('heater_whenSwitchedOffAfterHeatingTheKettle_saysHowLongItHeatedIt', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(10)
 
   const events = ritual.do({ type: 'switchHeaterOff' })
@@ -17,7 +14,7 @@ test('heater_whenSwitchedOffAfterHeatingTheKettle_saysHowLongItHeatedIt', () => 
 })
 
 test('heater_whenSwitchedOffAfterTheKettleWasTakenOffAndTheSpoonPutOn_namesBothWithTheirSeconds', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(10)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'table', x: 2, y: 0, z: 0 } })
@@ -61,7 +58,7 @@ test('heater_withTheKettleOnIt_refusesTheThermos', () => {
 })
 
 test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
 
   ritual.wait(10)
 
@@ -69,7 +66,7 @@ test('kettleWater_whenHeatedForTenSeconds_warmsByFortyDegrees', () => {
 })
 
 test('kettleWater_withItsLidOpenForTenSecondsOnAWorkingHeater_warmsByTwentyDegrees', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
 
   ritual.wait(10)
@@ -78,7 +75,7 @@ test('kettleWater_withItsLidOpenForTenSecondsOnAWorkingHeater_warmsByTwentyDegre
 })
 
 test('kettleWater_whenLeftOnTheHeater_stopsAtBoiling', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
 
   ritual.wait(60)
 
@@ -86,7 +83,7 @@ test('kettleWater_whenLeftOnTheHeater_stopsAtBoiling', () => {
 })
 
 test('heater_whenSwitchedOffAfterTwoMinutes_saysItWasOnThatLongAndUsedATenthOfAKilowattHour', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(120)
 
   const events = ritual.do({ type: 'switchHeaterOff' })
@@ -97,7 +94,7 @@ test('heater_whenSwitchedOffAfterTwoMinutes_saysItWasOnThatLongAndUsedATenthOfAK
 })
 
 test('heater_whenSwitchedOffAfterHeatingOnlyTheKettle_hasWastedNothing', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(120)
 
   const events = ritual.do({ type: 'switchHeaterOff' })
@@ -120,7 +117,7 @@ test('heater_whenSwitchedOffAfterTwoMinutesWithNothingOnIt_hasWastedATenthOfAKil
 })
 
 test('heater_whenSwitchedOffAfterTheKettleAndThenTheThermos_hasWastedOnlyTheThermosSeconds', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(10)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'table', x: 2, y: 0, z: 0 } })
@@ -133,7 +130,7 @@ test('heater_whenSwitchedOffAfterTheKettleAndThenTheThermos_hasWastedOnlyTheTher
 })
 
 test('heater_whenSwitchedOnAgain_countsItsTimeFromTheNewSwitch', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(30)
   ritual.do({ type: 'switchHeaterOff' })
   ritual.wait(30)
@@ -146,7 +143,7 @@ test('heater_whenSwitchedOnAgain_countsItsTimeFromTheNewSwitch', () => {
 })
 
 test('kettle_whenLiftedOffAWorkingHeater_isTakenOff', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(14)
 
   const events = ritual.do({ type: 'pickUp', itemId: 'kettle' })
@@ -155,7 +152,7 @@ test('kettle_whenLiftedOffAWorkingHeater_isTakenOff', () => {
 })
 
 test('kettle_liftedOffAWorkingHeater_stopsWarming', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
+  const ritual = ritualWithTheKettleOnTheWorkingHeater()
   ritual.wait(14)
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
@@ -197,398 +194,10 @@ test('cup_whenPlacedOnTheHeater_isRefused', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'placeOnHeater', reason: 'cannotSitOnHeater' }])
 })
 
-test('cloth_onAWorkingHeater_charsThroughInAMinute', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  ritual.wait(30)
-
-  assertNear(ritual.cloth().charring, 0.5)
-})
-
-test('cloth_wetOnAWorkingHeater_steamsDryBeforeItChars', () => {
-  const ritual = new TestRitual()
-  ritual.pour('kettle', null, 2.5)
-  ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'wipeTable', clothId: 'cloth', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  ritual.wait(1)
-
-  assert.equal(ritual.cloth().charring, 0)
-})
-
-test('cloth_whenTakenOffTheHeater_saysHowCharredItIs', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
-
-  assertNear(eventsOfType(events, 'clothTakenOffTheHeater')[0]?.charring ?? 0, 0.5)
-})
-
-test('cloth_onAHeaterThatIsOff_doesNotChar', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
-
-  ritual.wait(30)
-
-  assert.equal(ritual.cloth().charring, 0)
-})
-
-test('charredCloth_whenWashedUnderTheTap_isAsGoodAsNew', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(60)
-  ritual.do({ type: 'switchHeaterOff' })
-  ritual.do({ type: 'pickUp', itemId: 'cloth' })
-
-  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
-  ritual.do({ type: 'turnTheTapOn' })
-  ritual.wait(5)
-
-  assert.equal(ritual.cloth().charring, 0)
-})
-
-test('washedBurntCloth_whenTakenOutOfTheSink_isNoticedAsNew', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(10)
-  ritual.do({ type: 'switchHeaterOff' })
-  ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
-  ritual.do({ type: 'turnTheTapOn' })
-  ritual.wait(5)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
-
-  assert.deepEqual(eventsOfType(events, 'burntClothWashedBackToNew'), [{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }])
-})
-
-test('clothThatNeverBurnt_whenTakenOutOfTheSink_isNotRemarkedOn', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'pickUp', itemId: 'cloth' })
-  ritual.do({ type: 'putInTheSink', itemId: 'cloth' })
-  ritual.wait(5)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'cloth' })
-
-  assert.deepEqual(eventsOfType(events, 'burntClothWashedBackToNew'), [])
-})
-
-test('spoon_onAWorkingHeater_charsThroughInTwentySeconds', () => {
-  const ritual = ritualWithTheSpoonOnAWorkingHeater()
-
-  ritual.wait(10)
-
-  assertNear(ritual.state.spoon.charring, 0.5)
-})
-
-test('spoon_onAHeaterThatIsOff_doesNotChar', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
-
-  ritual.wait(30)
-
-  assert.equal(ritual.state.spoon.charring, 0)
-})
-
-test('spoon_whenTakenBeforeItBurns_isSaved', () => {
-  const ritual = ritualWithTheSpoonOnAWorkingHeater()
-  ritual.wait(10)
-
-  ritual.do({ type: 'pickUp', itemId: 'spoon' })
-
-  assert.deepEqual(ritual.state.spoon.location, { kind: 'inHand', handIndex: 0 })
-})
-
-test('spoon_takenBeforeItBurns_staysAsCharredAsItWas', () => {
-  const ritual = ritualWithTheSpoonOnAWorkingHeater()
-  ritual.wait(10)
-  ritual.do({ type: 'pickUp', itemId: 'spoon' })
-
-  ritual.wait(10)
-
-  assertNear(ritual.state.spoon.charring, 0.5)
-})
-
-test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
-  const ritual = new TestRitual()
-  ritual.tipASpoonOfLeavesInto('cup1')
-  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
-  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(17)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'spoon' })
-
-  assert.deepEqual(eventsOfType(events, 'spoonCrumbled'), [{ type: 'spoonCrumbled', gramsLost: 5 }])
-  assert.deepEqual(ritual.state.spoon.location, { kind: 'gone' })
-  assert.deepEqual(ritual.state.keeper.hands, [null, null, null])
-  assert.equal(ritual.state.heater.itemIdOnTop, null)
-})
-
-test('spoon_afterItCrumbled_cannotBeTaken', () => {
-  const ritual = ritualWithACrumbledSpoon()
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'spoon' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'burntAway' }])
-})
-
-test('spoon_afterItCrumbled_cannotScoop', () => {
-  const ritual = ritualWithACrumbledSpoon()
-
-  const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'burntAway' }])
-})
-
-test('spoon_afterItCrumbled_cannotTipLeaves', () => {
-  const ritual = ritualWithACrumbledSpoon()
-
-  const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'burntAway' }])
-})
-
-test('spoon_afterItCrumbled_cannotBePutDown', () => {
-  const ritual = ritualWithACrumbledSpoon()
-
-  const events = ritual.do({ type: 'putDown', itemId: 'spoon', spot: { placeId: 'table', x: 7, y: 0, z: 0 } })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'putDown', reason: 'burntAway' }])
-})
-
-test('simulation_whenPlayedAt30And60FramesPerSecond_endsInTheSameState', () => {
-  const catalog = testCatalog({ kettle: 0.01, cup: 0.02 })
-  const at30 = ritualWithKettleOnWorkingHeater(new TestRitual(catalog))
-  const at60 = ritualWithKettleOnWorkingHeater(new TestRitual(catalog))
-
-  for (const [ritual, framesPerSecond] of [[at30, 30], [at60, 60]] as const) {
-    for (let frame = 0; frame < 12 * framesPerSecond; frame += 1) ritual.wait(1 / framesPerSecond)
-    ritual.do({ type: 'pickUp', itemId: 'kettle' })
-    ritual.do({ type: 'startPouring', sourceId: 'kettle', targetId: 'cup1' })
-    ritual.do({ type: 'adjustPour', tiltDegrees: 30, streamOnTargetFraction: 0.9, missedStreamLandsAt: null })
-    for (let frame = 0; frame < 6 * framesPerSecond; frame += 1) ritual.wait(1 / framesPerSecond)
-  }
-
-  assert.deepEqual(at30.state, at60.state)
-})
-
 test('kettleWater_whenCoolingWhileOnAWorkingHeater_stillReachesBoiling', () => {
-  const ritual = ritualWithKettleOnWorkingHeater(new TestRitual(testCatalog({ kettle: 0.01 })))
+  const ritual = ritualWithTheKettleOnTheWorkingHeater(new TestRitual(testCatalog({ kettle: 0.01 })))
 
   ritual.wait(120)
 
   assert.equal(ritual.vessel('kettle').liquid.temperatureC, 100)
 })
-
-test('water_boilingOnAWorkingHeater_boilsAwayAtTheHeatersRate', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-  ritual.waitUntil(() => ritual.vessel('kettle').liquid.temperatureC === 100)
-  const volumeAtTheBoil = ritual.vessel('kettle').liquid.volumeMl
-
-  ritual.wait(10)
-
-  assertNear(ritual.vessel('kettle').liquid.volumeMl, volumeAtTheBoil - 10)
-})
-
-test('water_liftedOffTheHeaterAtTheBoil_stopsBoilingAway', () => {
-  const ritual = ritualWithKettleOnWorkingHeater()
-  ritual.waitUntil(() => ritual.vessel('kettle').liquid.temperatureC === 100)
-  ritual.do({ type: 'pickUp', itemId: 'kettle' })
-  const volumeWhenLifted = ritual.vessel('kettle').liquid.volumeMl
-
-  ritual.wait(10)
-
-  assert.equal(ritual.vessel('kettle').liquid.volumeMl, volumeWhenLifted)
-})
-
-test('water_belowTheBoil_doesNotBoilAway', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  ritual.wait(10)
-
-  assert.equal(ritual.vessel('kettle').liquid.volumeMl, 500)
-})
-
-test('thermos_afterHalfAMinuteOnAWorkingHeater_isTooHotToPickUp', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'thermos' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'tooHotToHold' }])
-  assert.equal(ritual.state.heater.itemIdOnTop, 'thermos')
-})
-
-test('thermos_afterTenSecondsOnAWorkingHeater_canStillBePickedUp', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(10)
-
-  ritual.do({ type: 'pickUp', itemId: 'thermos' })
-
-  assert.equal(ritual.state.heater.itemIdOnTop, null)
-})
-
-test('thermosLid_whenTheThermosIsRedHot_staysClosed', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
-
-  const events = ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'openVesselLid', reason: 'tooHotToHold' }])
-  assert.equal(ritual.vessel('thermos').isLidOpen, false)
-})
-
-test('thermosLid_whenOpenAsTheThermosTurnsRedHot_staysOpen', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.do({ type: 'openVesselLid', vesselId: 'thermos' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
-
-  const events = ritual.do({ type: 'closeVesselLid', vesselId: 'thermos' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'closeVesselLid', reason: 'tooHotToHold' }])
-  assert.equal(ritual.vessel('thermos').isLidOpen, true)
-})
-
-test('thermos_aMinuteAfterTheHeaterIsSwitchedOff_canBePickedUpAgain', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
-  ritual.do({ type: 'switchHeaterOff' })
-  ritual.wait(60)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'thermos' })
-
-  assert.equal(events.some((event) => event.type === 'pickedUp'), true, JSON.stringify(events))
-})
-
-test('thermos_onAHeaterThatIsOff_staysCoolAndCanBePickedUp', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.wait(30)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'thermos' })
-
-  assert.equal(events.some((event) => event.type === 'pickedUp'), true, JSON.stringify(events))
-  assert.equal(ritual.vessel('thermos').shellHeat, 0)
-})
-
-test('thermos_onAWorkingHeater_announcesOnceThatItsMetalGlowsTooHotToHold', () => {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  const events = ritual.wait(30)
-
-  assert.deepEqual(eventsOfType(events, 'metalGlowsTooHotToHold'), [{ type: 'metalGlowsTooHotToHold', vesselId: 'thermos' }])
-})
-
-test('kettle_leftOnAWorkingHeaterUntilItsWaterIsGone_announcesOnceThatItBoiledDry', () => {
-  const ritual = ritualWithKettleOnWorkingHeater(new TestRitual(catalogWithAFastBoil()))
-
-  const events = ritual.wait(secondsTheFastBoilTakesToBoilTheKettleDryAndMore)
-
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }])
-})
-
-test('kettle_boilingAwayInStepsThatDoNotDivideItsWaterEvenly_stillBoilsDryAndSaysSo', () => {
-  const ritual = ritualWithKettleOnWorkingHeater(new TestRitual(catalogWithHeaterChanges({ boilingAwayMlPerSecond: 8 })))
-
-  const events = ritual.waitFor('boiledDry')
-
-  assert.equal(ritual.vessel('kettle').liquid.volumeMl, 0)
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }])
-})
-
-test('kettle_filledToTheBrimAndLeftToBoilDry_saysAllItsWaterBoiledAway', () => {
-  const ritual = new TestRitual(catalogWithAFastBoil())
-  ritual.do({ type: 'pickUp', itemId: 'kettle' })
-  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
-  ritual.fillInTheSink('kettle', 10)
-  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  const events = ritual.waitFor('boiledDry')
-
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: true }])
-})
-
-test('kettle_filledToTheBrimThenPouredFromAndLeftToBoilDry_saysSomeWaterWasTaken', () => {
-  const ritual = new TestRitual(catalogWithAFastBoil())
-  ritual.do({ type: 'pickUp', itemId: 'kettle' })
-  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
-  ritual.fillInTheSink('kettle', 10)
-  ritual.pour('kettle', 'cup1', 1)
-  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  const events = ritual.waitFor('boiledDry')
-
-  assert.deepEqual(eventsOfType(events, 'boiledDry'), [{ type: 'boiledDry', vesselId: 'kettle', wasFullAndOnlyBoiledDown: false }])
-})
-
-test('secondCloth_onAWorkingHeater_charsWhileTheFirstStaysWhole', () => {
-  const ritual = new TestRitual(withASecondCloth(testCatalog()))
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth2' })
-  ritual.do({ type: 'switchHeaterOn' })
-
-  ritual.wait(30)
-
-  assertNear(ritual.cloth('cloth2').charring, 0.5)
-  assert.equal(ritual.cloth('cloth').charring, 0)
-})
-
-test('secondCloth_takenOffTheHeaterBurning_isNamedInTheEvent', () => {
-  const ritual = new TestRitual(withASecondCloth(testCatalog()))
-  ritual.do({ type: 'placeOnHeater', itemId: 'cloth2' })
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(30)
-
-  const events = ritual.do({ type: 'pickUp', itemId: 'cloth2' })
-
-  assert.deepEqual(eventsOfType(events, 'clothTakenOffTheHeater').map((event) => event.clothId), ['cloth2'])
-})
-
-function ritualWithKettleOnWorkingHeater(ritual = new TestRitual()): TestRitual {
-  ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
-  ritual.do({ type: 'switchHeaterOn' })
-  return ritual
-}
-
-function catalogWithAFastBoil(): Catalog {
-  return catalogWithHeaterChanges({ degreesPerSecondPerLitre: 20, boilingAwayMlPerSecond: 100 })
-}
-
-function ritualWithACrumbledSpoon(): TestRitual {
-  const ritual = ritualWithTheSpoonOnAWorkingHeater()
-  ritual.wait(17)
-  ritual.do({ type: 'pickUp', itemId: 'spoon' })
-  return ritual
-}
-
-function ritualWithTheSpoonOnAWorkingHeater(): TestRitual {
-  const ritual = new TestRitual()
-  ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
-  ritual.do({ type: 'switchHeaterOn' })
-  return ritual
-}

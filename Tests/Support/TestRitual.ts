@@ -74,6 +74,10 @@ export class TestRitual {
     return events
   }
 
+  putOnTheWorkingHeater(itemId: string): readonly RitualEvent[] {
+    return [...this.doWithoutARefusal({ type: 'placeOnHeater', itemId }), ...this.doWithoutARefusal({ type: 'switchHeaterOn' })]
+  }
+
   fillInTheSink(vesselId: string, seconds: number): readonly RitualEvent[] {
     return [
       ...this.doWithoutARefusal({ type: 'putInTheSink', itemId: vesselId }),
@@ -179,6 +183,11 @@ export class TestRitual {
   }
 
 
+}
+
+export function ritualWithTheKettleOnTheWorkingHeater(ritual: TestRitual = new TestRitual()): TestRitual {
+  ritual.putOnTheWorkingHeater('kettle')
+  return ritual
 }
 
 export function ritualWithSpillOnTheTable(): TestRitual {
