@@ -1,6 +1,6 @@
 export const lowestKeeperHeightCentimetres = 70
 export const tallestKeeperHeightCentimetres = 200
-export const keeperHeightByDefaultCentimetres = 140
+export const keeperHeightByDefaultCentimetres = 165
 
 const standingEyeShareOfTheHeight = 0.93
 const seatedEyeShareOfTheHeight = 0.55

@@ -30,12 +30,12 @@ test('savedVisit_namingItsRoomByTheKitchenFacingTheWindow_keepsTheWindowAlongThe
   assert.deepEqual(found.kind === 'found' ? found.visit.arrangement : null, { ...rest, window: 'alongTheLeftWall', besideTheWindow: 'kitchen', table: 'byTheWindow' })
 })
 
-test('savedVisit_fromBeforeTheKeepersHeightCouldBeChosen_hasAKeeperOf140cm', () => {
+test('savedVisit_fromBeforeTheKeepersHeightCouldBeChosen_hasAKeeperOf165cm', () => {
   const store = storeHolding(aVisit)
 
   const found = store.find()
 
-  assert.equal(found.kind === 'found' ? found.visit.camera.keeperHeightCentimetres : null, 140)
+  assert.equal(found.kind === 'found' ? found.visit.camera.keeperHeightCentimetres : null, 165)
 })
 
 test('savedVisit_ofAnotherVersion_isBrokenByAnUpdate', () => {
