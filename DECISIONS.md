@@ -208,3 +208,8 @@ The plan is in `docs/roadmap.md`.
 - Whether a separate teapot joins the MVP, or the kettle stays the brewing vessel. The user answers it.
 - Whether the type-check refuses unused locals and parameters (`noUnusedLocals`, `noUnusedParameters`). The user answers it.
 - Whether the kettle, the caddy and the figurines get more detailed models. The user answers it.
+- Whether a vessel may hold the leaves of two teas that steep together, or the refusals `spoonHoldsAnotherTea`, `holdsLeavesOfAnotherTea` and `notACaddy` stay. They matter once a room has two caddies. The user answers it.
+- Whether the thermos's opening shrinks to its drawn mouth, so a stream on its lip no longer fills it. The user answers it.
+- Whether the thermos and the caddy get a forgiving touch area like the bowls. The user answers it.
+- Whether the WebKit UI test job runs in Playwright's container image, whether a failed UI test is retried once in CI, and whether TypeScript is pinned to an exact version. The user answers it.
+- Whether `docs/game-design.md` is marked as the vision rather than the game as it is, and whether the roadmap drops its done and rejected steps. The user answers it.
