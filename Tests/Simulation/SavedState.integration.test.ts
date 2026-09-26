@@ -4,7 +4,7 @@ import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { sessionStateVersion } from '../../Shared/Simulation/State/FittedSavedState.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
-import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
+import { catalogWithRoomChanges, testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
 import { TestRitual } from '../Support/TestRitual.ts'
 
 test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
@@ -293,6 +293,57 @@ test('savedState_whoseKeeperStandsAtAPlaceTheRoomDoesNotHave_doesNotFit', () => 
   const problems = problemsResuming(savedState)
 
   assert.equal(problems.filter((problem) => problem.includes('attic')).length, 1, problems.join('\n'))
+})
+
+test('savedState_ofARoomTheCatalogNoLongerHas_doesNotFit', () => {
+  const savedState = { ...(new TestRitual().savedState as object), roomId: 'attic' }
+
+  const problems = problemsResuming(savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('attic')).length, 1, problems.join('\n'))
+})
+
+test('savedState_withAPuddleOnAPlaceTheRoomLost_resumesWithoutThatPuddle', () => {
+  const ritual = new TestRitual(catalogWithRoomChanges({ places: ['table', 'window'] }))
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'standAt', placeId: 'window' })
+  ritual.pour('kettle', null, 2.5)
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  const resumed = TestRitual.resumedFrom(ritual.savedState, testCatalog())
+
+  assert.deepEqual(resumed.state.puddles, {})
+})
+
+test('savedState_withACupOnAPlaceTheRoomLost_doesNotFit', () => {
+  const ritual = new TestRitual(catalogWithRoomChanges({ places: ['table', 'window'] }))
+  ritual.do({ type: 'pickUp', itemId: 'cup1' })
+  ritual.do({ type: 'standAt', placeId: 'window' })
+  ritual.do({ type: 'putDown', itemId: 'cup1', spot: { placeId: 'window', x: 0, y: 0, z: 0 } })
+  ritual.do({ type: 'standAt', placeId: 'table' })
+
+  const problems = problemsResuming(ritual.savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('cup1') && problem.includes('window')).length, 1, problems.join('\n'))
+})
+
+test('savedState_whoseHandHoldsAnItemNoRoomHas_doesNotFit', () => {
+  const savedState = new TestRitual().savedState as { keeper: { hands: unknown[] } }
+  savedState.keeper.hands[1] = 'teapot'
+
+  const problems = problemsResuming(savedState)
+
+  assert.equal(problems.filter((problem) => problem.includes('teapot')).length, 1, problems.join('\n'))
+})
+
+test('savedState_whenTheRoomLostTheClothHeldInAHand_leavesItOutAndEmptiesTheHand', () => {
+  const ritual = new TestRitual(withASecondCloth(testCatalog()))
+  ritual.do({ type: 'pickUp', itemId: 'cloth2' })
+
+  const resumed = TestRitual.resumedFrom(ritual.savedState, testCatalog())
+
+  assert.deepEqual(Object.keys(resumed.state.cloths), ['cloth'])
+  assert.deepEqual(resumed.state.keeper.hands, [null, null, null])
 })
 
 function problemsResuming(savedState: unknown): readonly string[] {
