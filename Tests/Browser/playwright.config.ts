@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: '*.spec.ts',
   timeout: 60_000,
   fullyParallel: true,
+  forbidOnly: process.env['CI'] !== undefined,
   retries: 0,
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${previewPort}/` },
