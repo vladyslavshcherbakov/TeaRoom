@@ -26,7 +26,7 @@ Node.js 22.18 or newer. It runs TypeScript directly, so the tests need no build 
 ## Test
 
 ```sh
-npm install
+npm ci
 Scripts/test.sh
 ```
 
