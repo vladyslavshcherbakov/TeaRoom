@@ -94,6 +94,7 @@ export class RoomModel {
   private readonly arrangement: RoomArrangement
   private readonly log: RoomLog
   private readonly heaterPlate: THREE.Mesh
+  private readonly medal: THREE.Group
   private readonly settingsGear: SettingsGear
   private readonly heaterControls: HeaterControls
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
@@ -110,13 +111,21 @@ export class RoomModel {
     this.addFloor()
     const inscriptions = wallSides.flatMap((wall) => this.addWall(wall, layout.windows.filter((window) => window.wall === wall)))
     this.prophecyInscription = inscriptions[0] ?? null
-    this.addMedal(layout.medal)
+    this.medal = this.addMedal(layout.medal)
     this.settingsGear = this.addSettingsGear(layout.settingsGear)
     this.addGuideBook(layout.guideBook)
     for (const piece of layout.furniture) this.addFurniture(piece)
     for (const spot of layout.itemSpots) this.addItem(spot)
     this.heaterControls = new HeaterControls(materials, (object, tag) => this.tag(object, tag), log)
     this.heaterPlate = this.addHeater(heaterSpot)
+  }
+
+  showTheMedal(isShown: boolean): void {
+    this.medal.visible = isShown
+  }
+
+  shadowCastersPose(): string {
+    return `medal ${this.medal.visible ? 'shown' : 'hidden'}`
   }
 
   turnTheSettingsGearOneTooth(): void {
@@ -206,7 +215,7 @@ export class RoomModel {
     return plane
   }
 
-  private addMedal(spot: SpotOnAWall): void {
+  private addMedal(spot: SpotOnAWall): THREE.Group {
     const medal = new THREE.Group()
     for (const side of [-1, 1]) {
       const ribbon = this.plainBox('medalRibbon', medalRibbonWidthMetres, medalRibbonLengthMetres, 0.004, { x: side * medalRibbonWidthMetres * 0.45, y: medalRadiusMetres + medalRibbonLengthMetres * 0.42, z: 0.004 })
@@ -221,8 +230,10 @@ export class RoomModel {
     touchArea.position.set(0, medalRibbonLengthMetres * 0.4, 0.025)
     medal.add(disc, touchArea)
     placeOnTheWall(medal, spot, 0)
+    medal.visible = false
     this.root.add(medal)
     this.tag(medal, { isMedal: true })
+    return medal
   }
 
   private addSettingsGear(spot: SpotOnAWall): SettingsGear {

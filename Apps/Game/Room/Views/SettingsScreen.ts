@@ -5,6 +5,7 @@ import { cameraModes, coatColours, faceFeatures, objectDetails, stickLayouts, ty
 import { temperatureUnits, type TemperatureUnit } from '../Temperatures.ts'
 
 export type SettingsChoices = {
+  readonly achievementsShownChosen: (areShown: boolean) => void
   readonly coatColourChosen: (colour: CoatColour) => void
   readonly softShadowsInCornersChosen: (isOn: boolean) => void
   readonly glowChosen: (isOn: boolean) => void
@@ -33,6 +34,7 @@ export class SettingsScreen {
   private readonly cameraModeRow: ChoiceRow<CameraMode>
   private readonly controlSchemeRow: ChoiceRow<ControlScheme>
   private readonly stickLayoutRow: ChoiceRow<StickLayout>
+  private readonly achievementsToggle: HTMLInputElement
   private readonly nerdModeToggle: HTMLInputElement
   private readonly softShadowsToggle: HTMLInputElement
   private readonly glowToggle: HTMLInputElement
@@ -51,6 +53,7 @@ export class SettingsScreen {
     })
     const sheet = document.createElement('div')
     sheet.className = 'settings-sheet'
+    this.achievementsToggle = toggle(choices.achievementsShownChosen)
     const palette = document.createElement('div')
     palette.className = 'settings-palette'
     this.swatches = coatColours.map((colour) => this.swatch(colour, choices))
@@ -85,13 +88,14 @@ export class SettingsScreen {
     closeButton.className = 'settings-close'
     closeButton.textContent = text('settings.close')
     closeButton.addEventListener('click', () => this.hide())
-    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.camera'), this.cameraModeRow.element, paragraphOf('settings-note', 'settings.firstPersonNote'), heading('h3', 'settings.controls'), this.controlSchemeRow.element, heading('h3', 'settings.sticks'), this.stickLayoutRow.element, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.fullResolutionToggle, 'settings.fullResolution'), paragraphOf('settings-warning', 'settings.fullResolutionWarning'), toggleRow(this.smoothEdgesToggle, 'settings.smoothEdges'), paragraphOf('settings-warning', 'settings.smoothEdgesWarning'), paragraphOf('settings-choice-label', 'settings.objectDetail'), this.objectDetailRow.element, paragraphOf('settings-note', 'settings.objectDetailNote'), toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
+    sheet.append(heading('h2', 'settings.title'), toggleRow(this.achievementsToggle, 'settings.showAchievements'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.camera'), this.cameraModeRow.element, paragraphOf('settings-note', 'settings.firstPersonNote'), heading('h3', 'settings.controls'), this.controlSchemeRow.element, heading('h3', 'settings.sticks'), this.stickLayoutRow.element, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.fullResolutionToggle, 'settings.fullResolution'), paragraphOf('settings-warning', 'settings.fullResolutionWarning'), toggleRow(this.smoothEdgesToggle, 'settings.smoothEdges'), paragraphOf('settings-warning', 'settings.smoothEdgesWarning'), paragraphOf('settings-choice-label', 'settings.objectDetail'), this.objectDetailRow.element, paragraphOf('settings-note', 'settings.objectDetailNote'), toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
     this.element.append(sheet)
     container.append(this.element)
   }
 
   show(settings: RoomSettings, secondsPlayed: number): void {
     this.timePlayed.textContent = timePlayedText(secondsPlayed)
+    this.achievementsToggle.checked = settings.areAchievementsShown
     this.showTheChosenColour(settings.coatColour)
     this.showTheChosenFace(settings.faceFeature)
     this.softShadowsToggle.checked = settings.hasSoftShadowsInCorners

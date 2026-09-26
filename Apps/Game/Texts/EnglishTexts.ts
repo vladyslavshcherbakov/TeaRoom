@@ -191,6 +191,7 @@ export const englishTexts = {
   'heaterRanLong.3': '{kilowattHours} kWh to warm the air. The power plant sends its warmest regards.',
 
   'settings.title': 'Settings',
+  'settings.showAchievements': 'Show achievements',
   'settings.coatColour': 'Body colour',
   'settings.face': 'Face',
   'settings.face.nose': '1',

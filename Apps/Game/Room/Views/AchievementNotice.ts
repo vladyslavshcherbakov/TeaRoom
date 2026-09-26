@@ -20,6 +20,11 @@ export class AchievementNotice {
     if (this.element.hidden) this.showTheNext()
   }
 
+  dismissEveryNotice(): void {
+    this.waiting.length = 0
+    this.element.hidden = true
+  }
+
   advance(seconds: number): void {
     if (this.element.hidden) return
     this.secondsLeft -= seconds

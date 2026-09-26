@@ -34,6 +34,7 @@ export class TestRoom {
   mayGrowAMiddleHand = true
   temperatureUnit: TemperatureUnit = 'celsius'
   isNerdModeOn = false
+  areAchievementsShown = false
   deathsSeen = 0
 
   constructor(options: TestRoomOptions = {}) {
@@ -49,6 +50,7 @@ export class TestRoom {
       mayGrowAMiddleHand: () => this.mayGrowAMiddleHand,
       temperatureUnit: () => this.temperatureUnit,
       isNerdModeOn: () => this.isNerdModeOn,
+      areAchievementsShown: () => this.areAchievementsShown,
       keeperDied: () => (this.deathsSeen += 1),
       screenRightOnTheFloor: () => null,
     })

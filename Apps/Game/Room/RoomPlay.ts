@@ -91,6 +91,7 @@ export type RoomPlayListener = {
   readonly mayGrowAMiddleHand: () => boolean
   readonly temperatureUnit: () => TemperatureUnit
   readonly isNerdModeOn: () => boolean
+  readonly areAchievementsShown: () => boolean
   readonly keeperDied: () => void
   readonly screenRightOnTheFloor: () => FloorPoint | null
 }
@@ -394,6 +395,7 @@ export class RoomPlay {
   }
 
   private showTheAchievements(): void {
+    if (!this.listener.areAchievementsShown()) return this.log('the tap on the medal does nothing, because achievements are hidden in the settings and the medal with them')
     this.log('the medal on the wall shows the list of achievements')
     this.listener.achievementsAsked()
   }

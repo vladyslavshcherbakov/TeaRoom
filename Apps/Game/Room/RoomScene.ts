@@ -45,7 +45,7 @@ import { SettingsScreen } from './Views/SettingsScreen.ts'
 import { FrameRateCounter } from './Views/FrameRateCounter.ts'
 import { FullScreenButton } from './Views/FullScreenButton.ts'
 import { LeaveFirstPersonButton } from './Views/LeaveFirstPersonButton.ts'
-import { Achievements, achievementsOutOfReach } from './Achievements.ts'
+import { Achievements, achievementsOutOfReach, type AchievementId } from './Achievements.ts'
 import { AchievementStore } from './AchievementStore.ts'
 import { AimHintStore } from './AimHintStore.ts'
 import { AchievementNotice } from './Views/AchievementNotice.ts'
@@ -213,6 +213,7 @@ export class RoomScene {
       mayGrowAMiddleHand: () => !this.achievements.unlocked.has('shiva'),
       temperatureUnit: () => this.settings.temperatureUnit,
       isNerdModeOn: () => this.settings.isNerdModeOn,
+      areAchievementsShown: () => this.settings.areAchievementsShown,
       screenRightOnTheFloor: () => (this.settings.cameraMode === 'firstPerson' ? rightOnTheFloorOf(this.look.headingRadians) : null),
       keeperDied: () => {
         this.hasTheKeeperDied = true
@@ -240,7 +241,7 @@ export class RoomScene {
     }, new AimHintStore(log))
     this.caption = new RoomCaption(container)
     this.achievementNotice = new AchievementNotice(container)
-    this.achievements = new Achievements(new AchievementStore(log), log, (id) => this.achievementNotice.announce(id))
+    this.achievements = new Achievements(new AchievementStore(log), log, (id) => this.announceTheAchievementIfShown(id))
     this.achievementsList = new AchievementsList(container, {
       resetAsked: () => {
         this.achievements.reset()
@@ -282,6 +283,7 @@ export class RoomScene {
     this.debugSettingsStore = new DebugSettingsStore(log)
     this.debugSettings = this.debugSettingsStore.load()
     this.settingsScreen = new SettingsScreen(container, {
+      achievementsShownChosen: (areAchievementsShown) => this.settingChosen({ areAchievementsShown }),
       coatColourChosen: (coatColour) => this.settingChosen({ coatColour }),
       softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.settingChosen({ hasSoftShadowsInCorners }),
       glowChosen: (hasGlow) => this.settingChosen({ hasGlow }),
@@ -539,6 +541,7 @@ export class RoomScene {
   }
 
   private showTheSettings(): void {
+    this.showTheAchievementsOnTheWall(this.settings.areAchievementsShown)
     this.walker.paintTheBody(this.settings.coatColour)
     this.walker.showTheFace(this.settings.faceFeature)
     this.frameRateCounter.show(this.settings.isFrameRateShown)
@@ -547,6 +550,16 @@ export class RoomScene {
     this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
     this.showTheGlow(this.settings.hasGlow)
     this.garden.showDistantFlowers(this.settings.objectDetail)
+  }
+
+  private showTheAchievementsOnTheWall(areShown: boolean): void {
+    this.room.showTheMedal(areShown)
+    if (!areShown) this.achievementNotice.dismissEveryNotice()
+  }
+
+  private announceTheAchievementIfShown(id: AchievementId): void {
+    if (!this.settings.areAchievementsShown) return this.log(`achievement ${id} is not announced, because achievements are hidden in the settings`)
+    this.achievementNotice.announce(id)
   }
 
   private showTheResolution(isFull: boolean): void {
@@ -654,7 +667,7 @@ export class RoomScene {
   }
 
   private render(): void {
-    const shadowPose = `${this.roomLights.sunPose} | ${this.walker.shadowPose} | ${this.carried.shadowCastersPose()}`
+    const shadowPose = `${this.roomLights.sunPose} | ${this.walker.shadowPose} | ${this.carried.shadowCastersPose()} | ${this.room.shadowCastersPose()}`
     this.renderer.shadowMap.needsUpdate = shadowPose !== this.shadowPoseLastDrawn
     this.shadowPoseLastDrawn = shadowPose
     this.renderer.clear()
