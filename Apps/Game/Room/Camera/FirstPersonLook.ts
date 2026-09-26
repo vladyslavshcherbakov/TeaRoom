@@ -51,8 +51,8 @@ export function lookTurnedTowards(look: FirstPersonLook, headingRadians: number,
   return { ...look, headingRadians: look.headingRadians + difference * share }
 }
 
-export function stepFor(stick: StickDeflection, headingRadians: number, seconds: number, speedShare = 1): FloorPoint {
-  const metres = walkingSpeedMetresPerSecond * speedShare * seconds
+export function stepFor(stick: StickDeflection, headingRadians: number, seconds: number): FloorPoint {
+  const metres = walkingSpeedMetresPerSecond * seconds
   const forward = { x: Math.sin(headingRadians), z: Math.cos(headingRadians) }
   const right = rightOnTheFloorOf(headingRadians)
   return { x: (forward.x * stick.up + right.x * stick.right) * metres, z: (forward.z * stick.up + right.z * stick.right) * metres }

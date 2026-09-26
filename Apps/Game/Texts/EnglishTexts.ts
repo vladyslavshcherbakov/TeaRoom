@@ -99,8 +99,6 @@ export const englishTexts = {
   'visit.keys.pour': 'Tilt to pour',
   'visit.keys.walk.key': 'W A S D  or  ← ↑ ↓ →',
   'visit.keys.walk': 'Walk, in first person',
-  'visit.keys.hurry.key': 'Shift',
-  'visit.keys.hurry': 'Hurry, in first person',
   'visit.keys.mouse.key': 'Esc',
   'visit.keys.mouse': 'Free the mouse, in first person',
   'visit.lostToAnUpdate': 'The house was rebuilt while you were away. Your last visit did not survive the renovation.',

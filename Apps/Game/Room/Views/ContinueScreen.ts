@@ -11,7 +11,6 @@ const keyLines: readonly KeyLine[] = [
   { keyKey: 'visit.keys.sip.key', actionKey: 'visit.keys.sip' },
   { keyKey: 'visit.keys.pour.key', actionKey: 'visit.keys.pour' },
   { keyKey: 'visit.keys.walk.key', actionKey: 'visit.keys.walk' },
-  { keyKey: 'visit.keys.hurry.key', actionKey: 'visit.keys.hurry' },
   { keyKey: 'visit.keys.mouse.key', actionKey: 'visit.keys.mouse' },
 ]
 

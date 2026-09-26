@@ -20,16 +20,12 @@ test('sticks_withTheKeyboardAndTheLookStickOnTheLeft_showOnlyTheLookStickOnTheLe
 })
 
 test('walkFromTheKeys_withWHeld_goesForward', () => {
-  assert.deepEqual(walkFromTheKeys(new Set(['KeyW'])), { stick: { right: 0, up: 1 }, isHurrying: false })
+  assert.deepEqual(walkFromTheKeys(new Set(['KeyW'])), { right: 0, up: 1 })
 })
 
 test('walkFromTheKeys_withTheUpAndRightArrowsHeld_goesDiagonallyNoFasterThanStraight', () => {
   const walk = walkFromTheKeys(new Set(['ArrowUp', 'ArrowRight']))
 
-  assertNear(walk.stick.right, Math.SQRT1_2)
-  assertNear(walk.stick.up, Math.SQRT1_2)
-})
-
-test('walkFromTheKeys_withShiftHeld_hurries', () => {
-  assert.equal(walkFromTheKeys(new Set(['KeyS', 'ShiftLeft'])).isHurrying, true)
+  assertNear(walk.right, Math.SQRT1_2)
+  assertNear(walk.up, Math.SQRT1_2)
 })

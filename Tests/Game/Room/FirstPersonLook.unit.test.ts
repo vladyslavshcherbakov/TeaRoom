@@ -48,11 +48,6 @@ test('look_whenTurnedTowardsAWalkBehindItsLeft_turnsTheShortWay', () => {
   assert.ok(look.headingRadians > 3, `heading ${look.headingRadians}`)
 })
 
-test('step_whenHurrying_goesFurtherInTheSameTime', () => {
-  const step = stepFor({ right: 0, up: 1 }, 0, 1, 1.8)
-
-  assertNear(step.z, 2.88)
-})
 
 test('look_whenTheMouseMovesRight_turnsRight', () => {
   const look = lookTurnedByTheMouse({ headingRadians: 0, pitchRadians: 0 }, { x: 400, y: 0 })

@@ -24,7 +24,7 @@ import {
 import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, rightOnTheFloorOf, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { eyeHeightMetres, keeperHeightByDefaultCentimetres } from './Camera/KeeperHeight.ts'
-import { hurryingSpeedShare, sticksShownFor, usesTheKeyboard, usesTheMouse, walkFromTheKeys, type WalkFromTheKeys } from './Camera/FirstPersonControls.ts'
+import { sticksShownFor, usesTheKeyboard, usesTheMouse, walkFromTheKeys } from './Camera/FirstPersonControls.ts'
 import { KeyboardAndMouse } from './Views/KeyboardAndMouse.ts'
 import { KeyboardShortcuts } from './KeyboardShortcuts.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
@@ -345,9 +345,9 @@ export class RoomScene {
     if (isWalking(walk)) this.look = lookTurnedTowards(this.look, walk.headingRadians, seconds)
     this.look = this.lookTurnedByTheControls(seconds)
     const walking = this.walkingAsked()
-    if (walking.stick.right === 0 && walking.stick.up === 0) return this.play.stopWalkingFreely()
+    if (walking.right === 0 && walking.up === 0) return this.play.stopWalkingFreely()
     this.play.standUpToWalk()
-    this.play.walkFreely(stepFor(walking.stick, this.look.headingRadians, seconds, walking.isHurrying ? hurryingSpeedShare : 1), this.look.headingRadians)
+    this.play.walkFreely(stepFor(walking, this.look.headingRadians, seconds), this.look.headingRadians)
   }
 
   private lookTurnedByTheControls(seconds: number): FirstPersonLook {
@@ -356,12 +356,12 @@ export class RoomScene {
     return lookStick === null ? turnedByTheMouse : lookTurnedBy(turnedByTheMouse, lookStick, seconds)
   }
 
-  private walkingAsked(): WalkFromTheKeys {
+  private walkingAsked(): StickDeflection {
     const walkStick = this.stickWithRole('walk')
     const fromTheKeys = usesTheKeyboard(this.settings.controlScheme) ? walkFromTheKeys(this.keyboardAndMouse.keysHeld) : null
-    const areTheKeysUsed = fromTheKeys !== null && (fromTheKeys.stick.right !== 0 || fromTheKeys.stick.up !== 0)
-    if (areTheKeysUsed || walkStick === null) return fromTheKeys ?? { stick: { right: 0, up: 0 }, isHurrying: false }
-    return { stick: walkStick, isHurrying: false }
+    const areTheKeysUsed = fromTheKeys !== null && (fromTheKeys.right !== 0 || fromTheKeys.up !== 0)
+    if (areTheKeysUsed || walkStick === null) return fromTheKeys ?? { right: 0, up: 0 }
+    return walkStick
   }
 
   private stickWithRole(role: 'walk' | 'look'): StickDeflection | null {

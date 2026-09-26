@@ -10,19 +10,12 @@ export type SticksShown = {
   readonly right: StickRole | null
 }
 
-export type WalkFromTheKeys = {
-  readonly stick: StickDeflection
-  readonly isHurrying: boolean
-}
-
 export const controlSchemes: readonly ControlScheme[] = ['twoSticks', 'mouseAndKeyboard', 'mouseAndWalkStick', 'keyboardAndLookStick']
-export const hurryingSpeedShare = 1.8
 
 const forwardKeys = ['KeyW', 'ArrowUp']
 const backwardKeys = ['KeyS', 'ArrowDown']
 const leftKeys = ['KeyA', 'ArrowLeft']
 const rightKeys = ['KeyD', 'ArrowRight']
-const hurryKeys = ['ShiftLeft', 'ShiftRight']
 
 export function sticksShownFor(scheme: ControlScheme, layout: StickLayout): SticksShown {
   const walk: StickRole | null = usesAWalkStick(scheme) ? 'walk' : null
@@ -38,13 +31,13 @@ export function usesTheKeyboard(scheme: ControlScheme): boolean {
   return scheme === 'mouseAndKeyboard' || scheme === 'keyboardAndLookStick'
 }
 
-export function walkFromTheKeys(keysHeld: ReadonlySet<string>): WalkFromTheKeys {
+export function walkFromTheKeys(keysHeld: ReadonlySet<string>): StickDeflection {
   const isHeld = (keys: readonly string[]): number => (keys.some((key) => keysHeld.has(key)) ? 1 : 0)
   const right = isHeld(rightKeys) - isHeld(leftKeys)
   const up = isHeld(forwardKeys) - isHeld(backwardKeys)
   const length = Math.hypot(right, up)
   const scale = length > 1 ? 1 / length : 1
-  return { stick: { right: right * scale, up: up * scale }, isHurrying: isHeld(hurryKeys) === 1 }
+  return { right: right * scale, up: up * scale }
 }
 
 function usesAWalkStick(scheme: ControlScheme): boolean {
