@@ -107,7 +107,7 @@ test('achievement_ofAMiddleHandGrown_isShiva', () => {
 test('achievement_ofTheKeeperDying_isAnEnthusiast', () => {
   const room = new AchievementsInTheRoom()
 
-  room.achievements.keeperDied()
+  room.achievements.eventsHappened([{ type: 'keeperDied', cupId: 'caddy' }], room.ritual.state)
 
   assert.deepEqual(room.announced, ['died'])
 })
@@ -245,7 +245,7 @@ test('achievements_unlockedInAnEarlierVisit_areStillUnlocked', () => {
 
 test('achievements_afterAReset_areAllLocked', () => {
   const room = new AchievementsInTheRoom()
-  room.achievements.keeperDied()
+  room.achievements.eventsHappened([{ type: 'keeperDied', cupId: 'caddy' }], room.ritual.state)
 
   room.achievements.reset()
 

@@ -110,10 +110,6 @@ export class Achievements {
     this.unlock('delphicOracle', 'the whole prophecy on the beam was on the screen, facing the camera, with nothing in front of it')
   }
 
-  keeperDied(): void {
-    this.unlock('died', 'the keeper died of tea straight from the caddy')
-  }
-
   visitBegun(continuesAVisit: boolean): void {
     const earlierVisits = this.record.visitsBegun
     this.keep({ ...this.record, visitsBegun: earlierVisits + 1 })
@@ -217,6 +213,8 @@ function achievementsOf(event: RitualEvent, state: DeepReadonly<SessionState>): 
       return ['spoonBurnt']
     case 'middleHandGrown':
       return ['shiva']
+    case 'keeperDied':
+      return ['died']
     case 'metalGlowsTooHotToHold':
       return carriedShapeOf(state, event.vesselId) === 'thermos' ? ['thermosGlowing'] : []
     case 'boiledDry':

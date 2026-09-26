@@ -219,7 +219,6 @@ export class RoomScene {
         this.hasTheKeeperDied = true
         this.keyboardAndMouse.letGoOfTheMouse('the keeper died')
         this.playTime.keep('the keeper died, and the time on the last screen is not counted')
-        this.achievements.keeperDied()
         this.visitStore.forget('the keeper died, so the next visit starts anew')
         this.caption.hide()
         this.youDied.show(this.texts.lastWordsLine(), this.texts.obituaryLine(), this.settings.areAchievementsShown)
