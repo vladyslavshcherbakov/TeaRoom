@@ -59,7 +59,6 @@ test('cloth_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
   room.walkTo('teaTable')
   room.takeAndChoose('cloth')
   room.walkTo('counter')
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'heater' })
 
@@ -71,7 +70,6 @@ test('spoon_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
   room.walkTo('teaTable')
   room.takeAndChoose('spoon')
   room.walkTo('counter')
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'heater' })
 

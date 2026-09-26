@@ -135,17 +135,17 @@ test('bowl_whenTappedWithTheClothChosen_isTakenIntoTheOtherHand', () => {
   assert.deepEqual(room.state.keeper.hands, ['cloth', 'bowl1', null])
 })
 
-test('chosenHand_whenTheKeeperLeavesTheCloseUp_isLetGo', () => {
+test('chosenHand_whenTheKeeperLeavesTheCloseUp_staysChosen', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.takeAndChoose('kettle')
 
   room.tap({ kind: 'floor', point: { x: 1, z: 1 } })
 
-  assert.equal(room.play.chosenHandIndex, null)
+  assert.equal(room.play.chosenHandIndex, 0)
 })
 
-test('hand_whenTappedInTheRoomView_isNotChosen', () => {
+test('chosenHand_whenTappedInTheRoomView_staysChosen', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.takeAndChoose('kettle')
@@ -153,7 +153,7 @@ test('hand_whenTappedInTheRoomView_isNotChosen', () => {
 
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  assert.equal(room.play.chosenHandIndex, null)
+  assert.equal(room.play.chosenHandIndex, 0)
 })
 
 function bringABowlToTheCounterAndTakeTheKettle(room: TestRoom): void {

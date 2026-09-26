@@ -352,13 +352,7 @@ export class RoomPlay {
     if (targetFurnitureId !== null) this.navigator.tapped({ kind: 'furniture', furnitureId: targetFurnitureId })
     else if (target.kind === 'floor') this.navigator.tapped(target)
     else this.navigator.tapped({ kind: 'nothing' })
-    this.letGoOfTheChoiceOutsideACloseUp()
-  }
-
-  private letGoOfTheChoiceOutsideACloseUp(): void {
-    if (this.view.kind === 'closeUp' || this.choice === null) return
-    this.log(`hand ${this.choice} let go of the choice: the keeper left the close-up`)
-    this.choice = null
+    if (this.choice !== null) this.log(`hand ${this.choice} stays chosen while the keeper leaves the close-up`)
   }
 
   private actAtCloseUp(target: RoomTapTarget): void {

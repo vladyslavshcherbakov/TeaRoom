@@ -256,6 +256,17 @@ test('kettle_whenItsBodyIsTappedWithTheThermosChosen_isTakenIntoTheOtherHand', (
   assert.deepEqual(room.state.keeper.hands, ['thermos', 'kettle', null])
 })
 
+test('bowlOpening_whenTappedAfterWalkingToTheShelfWithTheThermosChosen_isAimedAt', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.walkTo('shelf')
+
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
+
+  assert.equal(room.play.aimedPourView?.targetId, 'bowl1')
+})
+
 test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
   const room = new TestRoom()
   room.walkTo('counter')

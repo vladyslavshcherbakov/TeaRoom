@@ -93,7 +93,6 @@ test('shelf_whenTheLastThingIsPutOnIt_isRemarkedOnOnce', () => {
   room.walkTo('teaTable')
   room.takeAndChoose('cloth')
   room.walkTo('shelf')
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'surface', furnitureId: 'shelf', point: { x: -2.75, y: 1.22, z: 1.05 } })
   room.takeAndChoose('cloth')
