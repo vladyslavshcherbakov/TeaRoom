@@ -74,7 +74,7 @@ The plan is in `docs/roadmap.md`. Its version in progress collects what is built
 
 ### Apps/Game/Texts/
 
-**Every text the player reads is one key and one value in one file.** `Apps/Game/Texts/EnglishTexts.ts` lists them all, so the whole of the game's wording can be reviewed in one place, and a second language is a second file with the same keys. A text named by its whole key is typed, so a missing one fails the type-check. A phrase with several lines, such as a remark, a sip's feeling or the last words, is named by its prefix, and its numbered lines are counted only when it is said, so the type-check does not see a missing phrase. A figurine's name falls back to its id when its text is missing. Placeholders such as `{figurine}` are filled by `textWith`.
+**Every text the player reads is one key and one value in one file.** `Apps/Game/Texts/EnglishTexts.ts` lists them all, so the whole of the game's wording can be reviewed in one place, and a second language is a second file with the same keys. A text named by its whole key is typed, so a missing one fails the type-check. A phrase with several lines, such as a remark, a sip's feeling or the last words, is a list of at least one line in `englishPhrases`, under a key typed the same way, so the type-check finds a missing phrase or one with no line. Numbered lines counted only when the phrase was said let a phrase with no lines throw in the middle of a frame. A figurine's name is keyed by its id and has no fallback, so a figurine without a name does not compile. Placeholders such as `{figurine}` are filled by `textWith`.
 
 ### Apps/Game/Room/
 
