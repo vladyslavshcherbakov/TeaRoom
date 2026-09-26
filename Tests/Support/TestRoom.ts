@@ -17,6 +17,7 @@ export type TestRoomOptions = {
 }
 
 const frameSeconds = 1 / 60
+const longestWaitSeconds = 600
 const longestWalkSeconds = 30
 
 export class TestRoom {
@@ -116,6 +117,11 @@ export class TestRoom {
 
   holdFor(seconds: number): void {
     for (let heldSeconds = 0; heldSeconds < seconds; heldSeconds += frameSeconds) this.gestures.advance(frameSeconds)
+  }
+
+  advanceUntil(isReached: () => boolean): void {
+    for (let elapsed = 0; elapsed < longestWaitSeconds && !isReached(); elapsed += frameSeconds) this.advance(frameSeconds)
+    assert.ok(isReached(), `not reached within ${longestWaitSeconds} s`)
   }
 
   advance(seconds: number): void {

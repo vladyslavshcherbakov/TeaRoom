@@ -5,6 +5,7 @@ import type { RoomTapTarget } from '../../../Apps/Game/Room/RoomPlay.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { onTopOf, TestRoom, withoutTheTurn } from '../../Support/TestRoom.ts'
 import { wetMlOnEveryPlace } from '../../../Shared/Simulation/Ritual/Puddles.ts'
+import { isThePourRunningOverItsTarget, isThePourStreamRunning } from '../../../Apps/Game/Room/Views/Carried/WaterStreams.ts'
 
 const onTheCounter = onTopOf('counter', 0.4, 0.05)
 const onTheCounterBesideTheBowl = onTopOf('counter', 1, 0.05)
@@ -297,6 +298,34 @@ test('emptyThermos_whenTheTiltIsHeldOverABowl_tiltsAndPoursNothing', () => {
   assert.ok((room.play.aimedPourView?.tiltDegrees ?? 0) > 0)
   assert.equal(room.state.pour, null)
   assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, 0)
+})
+
+test('overflowOfTheBowl_whilePouringOnIntoTheFullBowl_isShown', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+  room.moveTheSpout({ x: 0.22, z: 0 })
+  room.play.tiltPressed()
+
+  room.advanceUntil(() => room.state.pour?.hasOverflowed === true)
+
+  const pour = room.state.pour
+  assert.ok(pour !== null)
+  assert.equal(isThePourRunningOverItsTarget(pour), true)
+})
+
+test('streams_whenTheKettleRunsDryWhileTheFullBowlOverflows_stopBeingShown', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+  room.moveTheSpout({ x: 0.22, z: 0 })
+  room.play.tiltPressed()
+  room.advanceUntil(() => room.state.pour?.hasOverflowed === true)
+
+  room.advanceUntil(() => room.state.pour?.hasRunDry === true)
+
+  const pour = room.state.pour
+  assert.ok(pour !== null)
+  assert.equal(isThePourStreamRunning(pour), false)
+  assert.equal(isThePourRunningOverItsTarget(pour), false)
 })
 
 test('aimingFinger_whenMovedFurtherThanTwelvePixels_movesTheSpoutAndKeepsTheAim', () => {

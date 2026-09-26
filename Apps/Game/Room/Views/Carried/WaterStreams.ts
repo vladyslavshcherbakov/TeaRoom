@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 import type { Spot } from '../../../../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import type { DeepReadonly } from '../../../../../Shared/Simulation/State/DeepReadonly.ts'
+import type { PourState } from '../../../../../Shared/Simulation/State/SessionState.ts'
 import type { CarriedShape } from '../../CarriedShapes.ts'
 import type { WorldPoint } from '../../RoomLayout.ts'
 import type { RoomMaterials } from '../RoomMaterials.ts'
@@ -43,7 +45,7 @@ export class WaterStreams {
     const pour = scene.state.pour
     const source = models.find((model) => model.itemId === pour?.sourceId)
     const target = models.find((model) => model.itemId === pour?.targetId)
-    const isStreamShown = pour !== null && pour.tiltDegrees >= smallestVisibleTiltDegrees && source !== undefined && target !== undefined
+    const isStreamShown = pour !== null && isThePourStreamRunning(pour) && source !== undefined && target !== undefined
     if (!isStreamShown || source === undefined || target === undefined) return this.pourStream.show(null, scene.timeSeconds)
     const top = source.root.localToWorld(source.spoutTip.clone())
     this.pourStream.show({ top, bottomY: target.root.position.y + pourStreamEndsAboveTheTargetMetres }, scene.timeSeconds)
@@ -66,7 +68,7 @@ export class WaterStreams {
 
   private overfilledPourTarget(scene: CarriedItemsScene, models: readonly CarriedModel[]): CarriedModel | undefined {
     const pour = scene.state.pour
-    if (pour === null || !pour.hasOverflowed) return undefined
+    if (pour === null || !isThePourRunningOverItsTarget(pour)) return undefined
     return models.find((model) => model.itemId === pour.targetId)
   }
 
@@ -82,4 +84,12 @@ export class WaterStreams {
     this.overflowPathByShape.set(model.shape, path)
     return path
   }
+}
+
+export function isThePourStreamRunning(pour: DeepReadonly<PourState>): boolean {
+  return pour.tiltDegrees >= smallestVisibleTiltDegrees && !pour.hasRunDry
+}
+
+export function isThePourRunningOverItsTarget(pour: DeepReadonly<PourState>): boolean {
+  return pour.hasOverflowed && isThePourStreamRunning(pour) && pour.streamOnTargetFraction > 0
 }
