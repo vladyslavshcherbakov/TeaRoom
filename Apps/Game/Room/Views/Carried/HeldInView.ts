@@ -33,6 +33,7 @@ const sipRiseShareOfScreenHeight = 0.1
 const sipTowardTheMiddleShare = 0.35
 const sipNearerShare = 0.12
 const headInCamera = new THREE.Vector3(0, -0.1, 0.1)
+const mostSipTiltRadians = (40 * Math.PI) / 180
 
 export function holdInView(model: Pick<CarriedModel, 'root' | 'footprintRadius' | 'rimHeight'>, handIndex: HandIndex, heldInView: HeldInView): void {
   const { camera } = heldInView
@@ -50,9 +51,16 @@ export function raiseTowardTheEyes(model: Pick<CarriedModel, 'root'>, handIndex:
   const atTheLips = new THREE.Vector3(frame.baseInCamera.x * (1 - sipTowardTheMiddleShare), frame.baseInCamera.y + frame.screenHeight * sipRiseShareOfScreenHeight, frame.baseInCamera.z * (1 - sipNearerShare))
   model.root.position.copy(camera.localToWorld(frame.baseInCamera.clone().lerp(atTheLips, liftShare)))
   const openingAxis = new THREE.Vector3(0, 1, 0).applyQuaternion(model.root.quaternion)
-  const towardTheHead = headOf(camera).sub(model.root.position).normalize()
-  const openingFacingTheHead = new THREE.Quaternion().setFromUnitVectors(openingAxis, towardTheHead)
+  const openingTiltedTowardTheHead = sipAxisToward(headOf(camera).sub(model.root.position).normalize())
+  const openingFacingTheHead = new THREE.Quaternion().setFromUnitVectors(openingAxis, openingTiltedTowardTheHead)
   model.root.quaternion.premultiply(new THREE.Quaternion().slerp(openingFacingTheHead, liftShare))
+}
+
+function sipAxisToward(towardTheHead: THREE.Vector3): THREE.Vector3 {
+  const up = new THREE.Vector3(0, 1, 0)
+  const tiltToTheHead = up.angleTo(towardTheHead)
+  const tiltShown = Math.min(1, mostSipTiltRadians / Math.max(tiltToTheHead, Number.EPSILON))
+  return up.clone().applyQuaternion(new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(up, towardTheHead), tiltShown))
 }
 
 export function headOf(camera: THREE.Camera): THREE.Vector3 {
