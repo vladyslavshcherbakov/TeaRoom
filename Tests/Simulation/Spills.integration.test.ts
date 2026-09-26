@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { testHouseCatalog } from '../Support/TestCatalog.ts'
-import { TestRitual } from '../Support/TestRitual.ts'
+import { ritualWithSpillOnTheTable, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlAt, wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 const cupOnTheCounter = { placeId: 'counter', x: 5, y: 0, z: 0 }
@@ -71,9 +71,3 @@ test('overflow_ofWaterPouredOnABowlFullOfTea_leavesAPuddleOfTheMixtureThatRanOve
   assert.ok(puddleStrength > ritual.vessel('cup1').liquid.strength, `the puddle has strength ${puddleStrength}, the bowl ${ritual.vessel('cup1').liquid.strength}`)
   assert.ok(puddleStrength < strengthOfTheTea, `the puddle has strength ${puddleStrength}, the tea had ${strengthOfTheTea}`)
 })
-
-function ritualWithSpillOnTheTable(): TestRitual {
-  const ritual = new TestRitual()
-  ritual.pour('kettle', null, 2.5)
-  return ritual
-}

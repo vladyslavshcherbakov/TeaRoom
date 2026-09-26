@@ -156,26 +156,30 @@ export function testHouseCatalog(): Catalog {
 }
 
 export function withASecondCloth(catalog: Catalog): Catalog {
-  const room = catalog.rooms['testRoom']
-  if (room === undefined) throw new Error('the test catalog lost its room')
-  return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, cloths: [...room.cloths, { id: 'cloth2', startsAt: { placeId: 'table', x: 11, y: 0, z: 0 } }] } } }
+  return catalogWithRoomChanges({ cloths: [...testRoomOf(catalog).cloths, { id: 'cloth2', startsAt: onTheTable(11) }] }, catalog)
 }
 
 export function withMoreCaddies(catalog: Catalog, teaIdByCaddyId: Readonly<Record<string, string>>): Catalog {
-  const room = catalog.rooms['testRoom']
-  if (room === undefined) throw new Error('the test catalog lost its room')
   const caddies = Object.entries(teaIdByCaddyId).map(([id, teaId], index): RoomVessel => ({ id, definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId, grams: gramsInEveryCaddy }, startsAt: onTheTable(12 + index) }))
-  return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, vessels: [...room.vessels, ...caddies] } } }
+  return catalogWithRoomChanges({ vessels: [...testRoomOf(catalog).vessels, ...caddies] }, catalog)
+}
+
+export function withAFourthCup(catalog: Catalog): Catalog {
+  return catalogWithRoomChanges({ vessels: [...testRoomOf(catalog).vessels, { id: 'cup4', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: onTheTable(10) }] }, catalog)
 }
 
 export function catalogWithRoomChanges(changes: Partial<RoomDefinition>, catalog: Catalog = testCatalog()): Catalog {
-  const room = catalog.rooms['testRoom']
-  if (room === undefined) throw new Error('the test catalog lost its room')
-  return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, ...changes } } }
+  return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...testRoomOf(catalog), ...changes } } }
 }
 
 export function catalogWithHeaterChanges(changes: Partial<HeaterDefinition>, catalog: Catalog = testCatalog()): Catalog {
   const heater = catalog.heaters['testHeater']
   if (heater === undefined) throw new Error('the test catalog lost its heater')
   return { ...catalog, heaters: { ...catalog.heaters, testHeater: { ...heater, ...changes } } }
+}
+
+function testRoomOf(catalog: Catalog): RoomDefinition {
+  const room = catalog.rooms['testRoom']
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  return room
 }

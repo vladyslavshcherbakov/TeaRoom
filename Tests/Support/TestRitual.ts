@@ -181,6 +181,12 @@ export class TestRitual {
 
 }
 
+export function ritualWithSpillOnTheTable(): TestRitual {
+  const ritual = new TestRitual()
+  ritual.pour('kettle', null, 2.5)
+  return ritual
+}
+
 export function eventsOfType<Type extends RitualEvent['type']>(
   events: readonly RitualEvent[],
   type: Type,

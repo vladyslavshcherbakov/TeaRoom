@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
 import { testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
-import { fullFlowTiltDegrees, TestRitual } from '../Support/TestRitual.ts'
+import { fullFlowTiltDegrees, ritualWithSpillOnTheTable, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlAt, wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 test('table_whenWipedSlowly_driesMoreThanWhenWipedFast', () => {
@@ -123,9 +123,3 @@ test('puddle_ofHotWater_coolsToTheRoomWithinThreeMinutes', () => {
   const puddleTemperatureC = ritual.state.puddles['table']?.temperatureC
   assert.ok(puddleTemperatureC !== undefined && puddleTemperatureC < 21, `the puddle is at ${puddleTemperatureC} °C`)
 })
-
-function ritualWithSpillOnTheTable(): TestRitual {
-  const ritual = new TestRitual()
-  ritual.pour('kettle', null, 2.5)
-  return ritual
-}

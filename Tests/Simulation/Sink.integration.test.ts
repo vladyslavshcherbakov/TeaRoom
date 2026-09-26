@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { assertNear } from '../Support/Assertions.ts'
-import { testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
+import { catalogWithRoomChanges, testCatalog, testHouseCatalog } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
@@ -208,7 +207,7 @@ test('kettle_inTheSink_cannotBePouredFrom', () => {
 })
 
 test('sink_inARoomWithoutATap_isRefused', () => {
-  const ritual = new TestRitual(catalogWithoutATap())
+  const ritual = new TestRitual(catalogWithRoomChanges({ tap: null }))
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
 
   const events = ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
@@ -365,13 +364,6 @@ function openKettleInHandAtTheCounter(): TestRitual {
   ritual.do({ type: 'pickUp', itemId: 'kettle' })
   ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
   return ritual
-}
-
-function catalogWithoutATap(): Catalog {
-  const catalog = testCatalog()
-  const room = catalog.rooms.testRoom
-  if (room === undefined) throw new Error('the test catalog lost its room')
-  return { ...catalog, rooms: { testRoom: { ...room, tap: null } } }
 }
 
 function cupOfTeaInHand(): TestRitual {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
-import { TestRitual } from '../Support/TestRitual.ts'
+import { ritualWithSpillOnTheTable, TestRitual } from '../Support/TestRitual.ts'
 import { wetMlOnEveryPlace } from '../../Shared/Simulation/Ritual/Puddles.ts'
 
 test('cloth_whenLeftWet_driesByItself', () => {
@@ -166,12 +166,6 @@ test('puddle_whenTheTableIsDry_isNotSoakedUp', () => {
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'soakUpThePuddle', reason: 'tableIsDry' }])
 })
-
-function ritualWithSpillOnTheTable(): TestRitual {
-  const ritual = new TestRitual()
-  ritual.pour('kettle', null, 2.5)
-  return ritual
-}
 
 function ritualWithTeaSpilledOnTheTable(): TestRitual {
   const ritual = new TestRitual()

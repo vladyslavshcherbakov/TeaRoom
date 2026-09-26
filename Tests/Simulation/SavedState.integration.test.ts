@@ -4,7 +4,7 @@ import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import { RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { sessionStateVersion } from '../../Shared/Simulation/State/FittedSavedState.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
-import { catalogWithRoomChanges, testCatalog, testHouseCatalog, withASecondCloth } from '../Support/TestCatalog.ts'
+import { catalogWithRoomChanges, testCatalog, testHouseCatalog, withAFourthCup, withASecondCloth } from '../Support/TestCatalog.ts'
 import { TestRitual } from '../Support/TestRitual.ts'
 
 test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
@@ -35,13 +35,13 @@ test('savedState_ofAnotherVersion_doesNotFit', () => {
 test('savedState_whenTheRoomGainedAVessel_placesTheNewVesselAtItsStart', () => {
   const savedState = new TestRitual().savedState
 
-  const resumed = TestRitual.resumedFrom(savedState, catalogWithAFourthCup())
+  const resumed = TestRitual.resumedFrom(savedState, withAFourthCup(testCatalog()))
 
   assert.deepEqual(resumed.vessel('cup4').location, { kind: 'onSurface', spot: { placeId: 'table', x: 10, y: 0, z: 0 } })
 })
 
 test('savedState_whenTheRoomLostAVesselHeldInAHand_emptiesThatHand', () => {
-  const ritual = new TestRitual(catalogWithAFourthCup())
+  const ritual = new TestRitual(withAFourthCup(testCatalog()))
   ritual.do({ type: 'pickUp', itemId: 'cup4' })
 
   const resumed = TestRitual.resumedFrom(ritual.savedState, testCatalog())
@@ -353,16 +353,7 @@ function problemsResuming(savedState: unknown): readonly string[] {
 
 function catalogWithANewHeater(): Catalog {
   const catalog = testCatalog()
-  const room = catalog.rooms['testRoom']
   const heater = catalog.heaters['testHeater']
-  if (room === undefined || heater === undefined) throw new Error('the test catalog lost its room or its heater')
-  return { ...catalog, heaters: { newHeater: { ...heater, id: 'newHeater' } }, rooms: { testRoom: { ...room, heaterId: 'newHeater' } } }
-}
-
-function catalogWithAFourthCup(): Catalog {
-  const catalog = testCatalog()
-  const room = catalog.rooms['testRoom']
-  if (room === undefined) throw new Error('the test catalog lost its room')
-  const fourthCup = { id: 'cup4', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 10, y: 0, z: 0 } }
-  return { ...catalog, rooms: { testRoom: { ...room, vessels: [...room.vessels, fourthCup] } } }
+  if (heater === undefined) throw new Error('the test catalog lost its heater')
+  return catalogWithRoomChanges({ heaterId: 'newHeater' }, { ...catalog, heaters: { newHeater: { ...heater, id: 'newHeater' } } })
 }
