@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { LampDisplay, type LampReading } from './LampDisplay.ts'
 import type { TapTargetTag } from './RoomModel.ts'
-import { touchAreaOf } from './RoomLayers.ts'
+import { markAsGlowing, touchAreaOf } from './RoomLayers.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 
 export type HeaterControlsView = {
@@ -52,6 +52,7 @@ export class HeaterControls {
     this.buildThePlainPanel()
     this.display = new LampDisplay(displayInTheNerdPanel.width, displayInTheNerdPanel.height, materials.unsharedMaterialFor('lampDisplay'))
     this.lampLit = this.lamp('lampLit')
+    markAsGlowing(this.lampLit)
     this.lampDark = this.lamp('lampDark')
     this.buildTheNerdPanel()
     this.root.add(this.plain, this.nerd)

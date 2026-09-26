@@ -60,6 +60,7 @@ import { PourControls } from './Views/PourControls.ts'
 import { SipButton } from './Views/SipButton.ts'
 import { WalkerModel } from './Views/WalkerModel.ts'
 import { degreesShownIn } from './Temperatures.ts'
+import { RoomGlow } from './Views/RoomGlow.ts'
 
 const backgroundColour = '#f6e9d6'
 const longestFrameSeconds = 0.1
@@ -104,6 +105,7 @@ export class RoomScene {
   private readonly frameRateCounter: FrameRateCounter
   private settings: RoomSettings
   private softShadowsInCorners: EffectComposer | null = null
+  private glow: RoomGlow | null = null
   private readonly carried: CarriedItems
   private readonly sipButton: SipButton
   private readonly pourControls: PourControls
@@ -206,6 +208,7 @@ export class RoomScene {
     this.settingsScreen = new SettingsScreen(container, {
       coatColourChosen: (coatColour) => this.changeTheSettings({ coatColour }, 'from the settings'),
       softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.changeTheSettings({ hasSoftShadowsInCorners }, 'from the settings'),
+      glowChosen: (hasGlow) => this.changeTheSettings({ hasGlow }, 'from the settings'),
       frameRateShownChosen: (isFrameRateShown) => this.changeTheSettings({ isFrameRateShown }, 'from the settings'),
       faceFeatureChosen: (faceFeature) => this.changeTheSettings({ faceFeature }, 'from the settings'),
       nerdModeChosen: (isNerdModeOn) => this.changeTheSettings({ isNerdModeOn }, 'from the settings'),
@@ -353,12 +356,19 @@ export class RoomScene {
     this.walker.showTheFace(this.settings.faceFeature)
     this.frameRateCounter.show(this.settings.isFrameRateShown)
     this.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners)
+    this.showTheGlow(this.settings.hasGlow)
   }
 
   private showSoftShadowsInCorners(isOn: boolean): void {
     if ((this.softShadowsInCorners !== null) === isOn) return
     this.softShadowsInCorners?.dispose()
     this.softShadowsInCorners = isOn ? softShadowsInCornersOf(this.renderer, this.scene, this.camera) : null
+  }
+
+  private showTheGlow(isOn: boolean): void {
+    if ((this.glow !== null) === isOn) return
+    this.glow?.dispose()
+    this.glow = isOn ? new RoomGlow(this.renderer, this.scene, this.camera) : null
   }
 
   private stickLayoutChosen(layout: StickLayout): void {
@@ -403,6 +413,7 @@ export class RoomScene {
     this.camera.layers.enable(roomLayers.untappableRoom)
     if (this.softShadowsInCorners !== null) this.softShadowsInCorners.render()
     else this.renderer.render(this.scene, this.camera)
+    this.glow?.drawOver(this.renderer)
     this.renderer.clearDepth()
     this.camera.layers.set(roomLayers.heldInView)
     this.renderer.render(this.scene, this.camera)
@@ -474,6 +485,7 @@ export class RoomScene {
     const height = window.innerHeight
     this.renderer.setSize(width, height)
     this.softShadowsInCorners?.setSize(width, height)
+    this.glow?.setSize(width, height)
     this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
   }

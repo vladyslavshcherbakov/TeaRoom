@@ -13,13 +13,14 @@ export const faceFeaturesOfANewGame: readonly [FaceFeature, ...FaceFeature[]] = 
 export type RoomSettings = {
   readonly coatColour: CoatColour
   readonly hasSoftShadowsInCorners: boolean
+  readonly hasGlow: boolean
   readonly isFrameRateShown: boolean
   readonly faceFeature: FaceFeature
   readonly isNerdModeOn: boolean
   readonly temperatureUnit: TemperatureUnit
 }
 
-export const defaultRoomSettings: RoomSettings = { coatColour: coatColours[0], hasSoftShadowsInCorners: false, isFrameRateShown: false, faceFeature: 'nose', isNerdModeOn: false, temperatureUnit: 'celsius' }
+export const defaultRoomSettings: RoomSettings = { coatColour: coatColours[0], hasSoftShadowsInCorners: false, hasGlow: true, isFrameRateShown: false, faceFeature: 'nose', isNerdModeOn: false, temperatureUnit: 'celsius' }
 
 export function roomSettingsFrom(saved: unknown): RoomSettings {
   if (typeof saved !== 'object' || saved === null) return defaultRoomSettings
@@ -27,5 +28,5 @@ export function roomSettingsFrom(saved: unknown): RoomSettings {
   const coatColour = coatColours.find((colour) => colour === settings.coatColour) ?? defaultRoomSettings.coatColour
   const faceFeature = faceFeatures.find((feature) => feature === settings.faceFeature) ?? defaultRoomSettings.faceFeature
   const temperatureUnit = temperatureUnits.find((unit) => unit === settings.temperatureUnit) ?? defaultRoomSettings.temperatureUnit
-  return { coatColour, hasSoftShadowsInCorners: settings.hasSoftShadowsInCorners === true, isFrameRateShown: settings.isFrameRateShown === true, faceFeature, isNerdModeOn: settings.isNerdModeOn === true, temperatureUnit }
+  return { coatColour, hasSoftShadowsInCorners: settings.hasSoftShadowsInCorners === true, hasGlow: settings.hasGlow !== false, isFrameRateShown: settings.isFrameRateShown === true, faceFeature, isNerdModeOn: settings.isNerdModeOn === true, temperatureUnit }
 }

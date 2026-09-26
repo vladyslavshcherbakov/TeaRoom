@@ -5,6 +5,7 @@ import { temperatureUnits, type TemperatureUnit } from '../Temperatures.ts'
 export type SettingsChoices = {
   readonly coatColourChosen: (colour: CoatColour) => void
   readonly softShadowsInCornersChosen: (isOn: boolean) => void
+  readonly glowChosen: (isOn: boolean) => void
   readonly frameRateShownChosen: (isShown: boolean) => void
   readonly faceFeatureChosen: (feature: FaceFeature) => void
   readonly nerdModeChosen: (isOn: boolean) => void
@@ -18,6 +19,7 @@ export class SettingsScreen {
   private readonly unitChoices: readonly HTMLButtonElement[]
   private readonly nerdModeToggle: HTMLInputElement
   private readonly softShadowsToggle: HTMLInputElement
+  private readonly glowToggle: HTMLInputElement
   private readonly frameRateToggle: HTMLInputElement
 
   constructor(container: HTMLElement, choices: SettingsChoices) {
@@ -44,13 +46,15 @@ export class SettingsScreen {
     this.unitChoices = temperatureUnits.map((unit) => this.unitChoice(unit, choices))
     unitRow.append(...this.unitChoices)
     this.softShadowsToggle = toggle(choices.softShadowsInCornersChosen)
+    this.glowToggle = toggle(choices.glowChosen)
     this.frameRateToggle = toggle(choices.frameRateShownChosen)
     const warning = paragraphOf('settings-warning', 'settings.softShadowsInCornersWarning')
+    const glowWarning = paragraphOf('settings-warning', 'settings.glowWarning')
     const closeButton = document.createElement('button')
     closeButton.className = 'settings-close'
     closeButton.textContent = text('settings.close')
     closeButton.addEventListener('click', () => this.hide())
-    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.frameRateToggle, 'settings.showFrameRate'), closeButton)
+    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.frameRateToggle, 'settings.showFrameRate'), closeButton)
     this.element.append(sheet)
     container.append(this.element)
   }
@@ -59,6 +63,7 @@ export class SettingsScreen {
     this.showTheChosenColour(settings.coatColour)
     this.showTheChosenFace(settings.faceFeature)
     this.softShadowsToggle.checked = settings.hasSoftShadowsInCorners
+    this.glowToggle.checked = settings.hasGlow
     this.frameRateToggle.checked = settings.isFrameRateShown
     this.nerdModeToggle.checked = settings.isNerdModeOn
     this.showTheChosenUnit(settings.temperatureUnit)

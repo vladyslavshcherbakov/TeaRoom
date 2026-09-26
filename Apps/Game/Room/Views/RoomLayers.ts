@@ -28,3 +28,11 @@ export function putOnLayer(root: THREE.Object3D, layer: number): void {
     part.layers.set(roomLayers.touchAreas)
   })
 }
+
+export function markAsGlowing(object: THREE.Object3D): void {
+  object.userData = { ...object.userData, glows: true }
+}
+
+export function isMarkedAsGlowing(object: THREE.Object3D): boolean {
+  return object.userData['glows'] === true
+}

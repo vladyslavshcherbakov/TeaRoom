@@ -24,7 +24,7 @@ export class SettingsStore {
       return defaultRoomSettings
     }
     const settings = roomSettingsFrom(saved)
-    this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}, face ${settings.faceFeature}, nerd mode ${settings.isNerdModeOn ? 'on' : 'off'}, degrees ${settings.temperatureUnit}`)
+    this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, glow ${settings.hasGlow ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}, face ${settings.faceFeature}, nerd mode ${settings.isNerdModeOn ? 'on' : 'off'}, degrees ${settings.temperatureUnit}`)
     return settings
   }
 

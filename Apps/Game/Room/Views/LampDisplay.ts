@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { TemperatureUnit } from '../Temperatures.ts'
+import { markAsGlowing } from './RoomLayers.ts'
 
 export type LampReading = {
   readonly degrees: number | null
@@ -47,6 +48,7 @@ export class LampDisplay {
     this.pixelHeight = Math.round(heightMetres * pixelsPerMetre)
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(widthMetres, heightMetres), material)
     this.mesh.castShadow = false
+    markAsGlowing(this.mesh)
   }
 
   show(reading: LampReading): void {
