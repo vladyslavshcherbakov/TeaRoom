@@ -24,6 +24,7 @@ export type HeldInView = {
   readonly camera: THREE.PerspectiveCamera
   readonly chosenHandIndex: HandIndex | null
   readonly isFirstPerson: boolean
+  readonly screenHeightShareTakenByControls: number
 }
 
 export type InspectedInView = {

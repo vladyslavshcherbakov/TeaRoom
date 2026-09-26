@@ -96,6 +96,7 @@ export class RoomScene {
   private readonly renderer: THREE.WebGLRenderer
   private readonly scene = new THREE.Scene()
   private readonly camera = new THREE.PerspectiveCamera(cameraFieldOfViewDegrees, 1, 0.1, 100)
+  private readonly firstPersonHeldItemsCamera = new THREE.PerspectiveCamera(cameraFieldOfViewDegrees, 1, 0.05, 10)
   private readonly raycaster = newRaycasterSeeingEveryLayer()
   private readonly clock = new THREE.Clock()
   private readonly session: RitualSession
@@ -301,7 +302,8 @@ export class RoomScene {
     this.sky.show(daylight, isFirstPerson, this.camera.position)
     const state = this.session.state
     const table = tableViewState(state, this.catalog)
-    const heldInView = isWalkerShown ? null : { camera: this.camera, chosenHandIndex: this.play.chosenHandIndex, isFirstPerson }
+    const heldItemsCamera = this.heldItemsCamera()
+    const heldInView = isWalkerShown ? null : { camera: heldItemsCamera, chosenHandIndex: this.play.chosenHandIndex, isFirstPerson, screenHeightShareTakenByControls: isFirstPerson ? this.joysticks.screenHeightShareTakenFromTheBottom : 0 }
     const inspection = this.play.inspectionView
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
     this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null })
@@ -527,8 +529,9 @@ export class RoomScene {
     else this.renderer.render(this.scene, this.camera)
     this.glow?.drawOver(this.renderer)
     this.renderer.clearDepth()
-    this.camera.layers.set(roomLayers.heldInView)
-    this.renderer.render(this.scene, this.camera)
+    const heldItemsCamera = this.heldItemsCamera()
+    heldItemsCamera.layers.set(roomLayers.heldInView)
+    this.renderer.render(this.scene, heldItemsCamera)
     if (this.play.inspectionView !== null) this.drawTheInspectedItemOverTheDimmedRoom()
     this.camera.layers.set(roomLayers.room)
   }
@@ -598,11 +601,29 @@ export class RoomScene {
   }
 
   private tapTargetAt(point: ScreenPoint): RoomTapTarget {
-    this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes, ...this.garden.tappableMeshes]
-    const hits = this.raycaster.intersectObjects(tappable, true).filter((hit) => isShown(hit.object))
-    const nearestFirst = hits.map((hit) => ({ target: tapTargetOf(hit), isForgivingTouchArea: isAForgivingTouchArea(hit.object) }))
+    const heldHits = this.hitsSeenBy(this.heldItemsCamera(), point, tappable.filter((mesh) => this.carried.isHeldInView(mesh)))
+    const roomHits = this.hitsSeenBy(this.camera, point, tappable).filter((hit) => !this.carried.isHeldInView(hit.object))
+    const nearestFirst = [...heldHits, ...roomHits].map((hit) => ({ target: tapTargetOf(hit), isForgivingTouchArea: isAForgivingTouchArea(hit.object) }))
     return tapTargetAmong(nearestFirst, this.play.chosenHandIndex, (target) => this.play.doesATapReachPastTheChosenHand(target))
+  }
+
+  private hitsSeenBy(camera: THREE.PerspectiveCamera, point: ScreenPoint, meshes: readonly THREE.Object3D[]): THREE.Intersection[] {
+    this.raycaster.setFromCamera(this.pointerAt(point), camera)
+    return this.raycaster.intersectObjects([...meshes], true).filter((hit) => isShown(hit.object))
+  }
+
+  private heldItemsCamera(): THREE.PerspectiveCamera {
+    if (this.settings.cameraMode !== 'firstPerson') return this.camera
+    const heldItemsCamera = this.firstPersonHeldItemsCamera
+    heldItemsCamera.position.copy(this.camera.position)
+    heldItemsCamera.quaternion.copy(this.camera.quaternion)
+    if (heldItemsCamera.aspect !== this.camera.aspect) {
+      heldItemsCamera.aspect = this.camera.aspect
+      heldItemsCamera.updateProjectionMatrix()
+    }
+    heldItemsCamera.updateMatrixWorld()
+    return heldItemsCamera
   }
 
   private fitToWindow(): void {

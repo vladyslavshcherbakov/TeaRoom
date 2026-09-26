@@ -16,7 +16,7 @@ import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { tiltOfFullFlowDegrees } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
 import { carriedItemIdsIn } from '../../../Shared/Simulation/Ritual/Reach.ts'
-import { firstPersonFieldOfViewDegrees } from '../../../Apps/Game/Room/Camera/FirstPersonLook.ts'
+import { cameraFieldOfViewDegrees } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
 
@@ -28,8 +28,8 @@ const spoutDirections = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -0.6, z: -0.8 }]
 const portraitPhoneAspects = [375 / 667, 390 / 844, 412 / 915]
 const closeUpAndFirstPersonFieldsOfViewDegrees = [30, 70]
 const heldInViewCameras = [
-  ...closeUpAndFirstPersonFieldsOfViewDegrees.map((fieldOfViewDegrees) => ({ fieldOfViewDegrees, isFirstPerson: false, pitchRadians: 0 })),
-  ...[-1, 0, 1].map((pitchRadians) => ({ fieldOfViewDegrees: firstPersonFieldOfViewDegrees, isFirstPerson: true, pitchRadians })),
+  ...closeUpAndFirstPersonFieldsOfViewDegrees.map((fieldOfViewDegrees) => ({ fieldOfViewDegrees, isFirstPerson: false, pitchRadians: 0, screenHeightShareTakenByControls: 0 })),
+  ...[-1, 0, 1].flatMap((pitchRadians) => [0, 0.34].map((screenHeightShareTakenByControls) => ({ fieldOfViewDegrees: cameraFieldOfViewDegrees, isFirstPerson: true, pitchRadians, screenHeightShareTakenByControls }))),
 ]
 const inspectionTurnsRadians = [[0, 0.55], [Math.PI / 2, Math.PI / 2], [Math.PI / 4, Math.PI], [1, -1]] as const
 const undersideProbesMetres = [0, 0.02]
@@ -197,19 +197,19 @@ test('itemInTheSink_standsOnTheTopOfTheSinksFloorPlate', () => {
   assertNear(tap.sinkSpot.y, quietRoomLayout.sinkBasin.floorHeight + quietRoomLayout.sinkBasin.plateMetres)
 })
 
-test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDown_staysInsideAPortraitPhoneScreen', () => {
+test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDownAboveTheSticks_staysInsideAPortraitPhoneScreen', () => {
   for (const aspect of portraitPhoneAspects) {
-    for (const { fieldOfViewDegrees, isFirstPerson, pitchRadians } of heldInViewCameras) {
+    for (const { fieldOfViewDegrees, isFirstPerson, pitchRadians, screenHeightShareTakenByControls } of heldInViewCameras) {
       const camera = new THREE.PerspectiveCamera(fieldOfViewDegrees, aspect, 0.1, 100)
       camera.rotation.set(pitchRadians, 0, 0)
       camera.updateMatrixWorld(true)
       for (const model of modelsInTheQuietRoom()) {
         for (const handIndex of [0, 1] as const) {
           for (const chosenHandIndex of [null, handIndex]) {
-            holdInView(model, handIndex, { camera, chosenHandIndex, isFirstPerson })
+            holdInView(model, handIndex, { camera, chosenHandIndex, isFirstPerson, screenHeightShareTakenByControls })
 
             const farthest = farthestFromTheScreensCentre(model, camera)
-            assert.ok(farthest <= 1, `${model.itemId} in hand ${handIndex}, ${isFirstPerson ? 'in first person' : 'in a close-up'}, pitch ${pitchRadians}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
+            assert.ok(farthest <= 1, `${model.itemId} in hand ${handIndex}, ${isFirstPerson ? 'in first person' : 'in a close-up'}, pitch ${pitchRadians}, controls taking ${screenHeightShareTakenByControls}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
           }
         }
       }

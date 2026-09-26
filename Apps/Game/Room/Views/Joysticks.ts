@@ -26,6 +26,12 @@ export class Joysticks {
     return this.rightStick.deflection
   }
 
+  get screenHeightShareTakenFromTheBottom(): number {
+    const shownPads = [this.leftStick.pad, this.rightStick.pad].filter((pad) => !pad.hidden)
+    const pixelsFromTheBottom = shownPads.map((pad) => window.innerHeight - pad.getBoundingClientRect().top)
+    return Math.max(0, ...pixelsFromTheBottom) / window.innerHeight
+  }
+
   show(isTheLeftShown: boolean, isTheRightShown: boolean): void {
     showOrHide(this.leftStick, isTheLeftShown)
     showOrHide(this.rightStick, isTheRightShown)

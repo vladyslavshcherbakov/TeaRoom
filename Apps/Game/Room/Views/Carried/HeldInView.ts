@@ -20,6 +20,7 @@ const heldInViewDistanceMetres = 0.9
 const middleHeldInViewDistanceMetres = 0.8
 const middleHeldInViewShareOfScreenHeightFromBottom = 0.14
 const heldInViewShareOfScreenWidth = 0.24
+const heldInFirstPersonWidestShareOfScreenHeight = 0.3
 const heldInViewShareOfScreenHeightFromBottom = 0.07
 const chosenHeldLiftShareOfScreenHeight = 0.05
 const heldInViewTiltTowardsCameraRadians = 0.55
@@ -54,12 +55,12 @@ export function heldInViewFrame(heldInView: HeldInView, handIndex: HandIndex): H
   const distance = isMiddle ? middleHeldInViewDistanceMetres : heldInViewDistanceMetres
   const screenHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
   const screenWidth = screenHeight * camera.aspect
-  const itemWidth = screenWidth * heldInViewShareOfScreenWidth
+  const itemWidth = heldInView.isFirstPerson ? Math.min(screenWidth * heldInViewShareOfScreenWidth, screenHeight * heldInFirstPersonWidestShareOfScreenHeight) : screenWidth * heldInViewShareOfScreenWidth
   const side = handIndex === 0 ? -1 : 1
   const x = isMiddle ? 0 : side * (screenWidth / 2 - itemWidth * heldInViewInsetShareOfItemWidth)
   const lift = chosenHandIndex === handIndex ? screenHeight * chosenHeldLiftShareOfScreenHeight : 0
   const fromBottom = isMiddle ? middleHeldInViewShareOfScreenHeightFromBottom : heldInViewShareOfScreenHeightFromBottom
-  const bottom = -screenHeight / 2 + screenHeight * fromBottom + lift
+  const bottom = -screenHeight / 2 + screenHeight * (fromBottom + heldInView.screenHeightShareTakenByControls) + lift
   return {
     screenWidth,
     screenHeight,

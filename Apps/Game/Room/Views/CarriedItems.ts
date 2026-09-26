@@ -72,6 +72,13 @@ export class CarriedItems {
     this.chosenGlow.show(scene, this.models)
   }
 
+  isHeldInView(part: THREE.Object3D): boolean {
+    if (this.handTouchAreas.some(({ area }) => area === part)) return true
+    const rootsHeldInView = new Set<THREE.Object3D>(this.models.filter((model) => model.layer === roomLayers.heldInView).map((model) => model.root))
+    for (let current: THREE.Object3D | null = part; current !== null; current = current.parent) if (rootsHeldInView.has(current)) return true
+    return false
+  }
+
   shadowCastersPose(): string {
     return this.models
       .filter((model) => model.castsShadow && model.root.visible)
