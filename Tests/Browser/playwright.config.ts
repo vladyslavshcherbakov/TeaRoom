@@ -18,6 +18,6 @@ export default defineConfig({
   },
   projects: [
     { name: 'iphone-webkit', use: { ...devices['iPhone 15'] } },
-    { name: 'android-chromium', use: { ...devices['Pixel 7'] } },
+    { name: 'android-chromium', use: { ...devices['Pixel 7'], launchOptions: { args: ['--enable-unsafe-swiftshader'] } } },
   ],
 })
