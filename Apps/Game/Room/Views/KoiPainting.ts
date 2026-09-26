@@ -1,3 +1,5 @@
+import type { RoomLog } from '../RoomNavigator.ts'
+
 const canvasWidth = 1024
 const canvasHeight = 384
 const midline = canvasHeight / 2
@@ -57,12 +59,15 @@ export const orangeKoi: KoiMarkings = { centreColour: '#f58a24', edgeColour: '#d
 
 export const secondRedKoi: KoiMarkings = { centreColour: '#c9281c', edgeColour: '#a31d14', patches: secondKoiPatches }
 
-export function paintKoi(markings: KoiMarkings): HTMLCanvasElement {
+export function paintKoi(markings: KoiMarkings, log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('a koi cannot be painted, because the browser gives no 2D canvas, so it is missing from the pond')
+    return canvas
+  }
   for (const side of [-1, 1]) {
     paintFin(context, 760, side, 1)
     paintFin(context, 548, side, 0.62)

@@ -11,7 +11,6 @@ export class AchievementsList {
   private readonly resetButton: HTMLButtonElement
   private readonly actions: AchievementsListActions
   private isResetArmed = false
-  private outOfReach: ReadonlySet<AchievementId> = new Set()
 
   constructor(container: HTMLElement, actions: AchievementsListActions) {
     this.actions = actions
@@ -40,7 +39,6 @@ export class AchievementsList {
   }
 
   show(unlocked: ReadonlySet<AchievementId>, outOfReach: ReadonlySet<AchievementId>): void {
-    this.outOfReach = outOfReach
     this.items.replaceChildren(...achievementIds.map((id) => this.item(id, unlocked.has(id), outOfReach.has(id))))
     this.disarmTheReset()
     this.element.hidden = false
@@ -72,7 +70,6 @@ export class AchievementsList {
       return
     }
     this.actions.resetAsked()
-    this.show(new Set(), this.outOfReach)
   }
 
   private disarmTheReset(): void {

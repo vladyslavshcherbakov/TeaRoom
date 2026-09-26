@@ -1,4 +1,5 @@
 import { seededRandom } from '../SeededRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 type GinkgoLeaf = {
   readonly baseX: number
@@ -40,12 +41,15 @@ const leavesBackToFront: readonly GinkgoLeaf[] = [
 
 export const ginkgoPaintingAspect = 1
 
-export function paintGinkgoLeaves(): HTMLCanvasElement {
+export function paintGinkgoLeaves(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the ginkgo leaves cannot be painted, because the browser gives no 2D canvas, so the black bowl shows none')
+    return canvas
+  }
   paintSpeckles(context)
   for (const leaf of leavesBackToFront) {
     paintStalk(context, leaf)

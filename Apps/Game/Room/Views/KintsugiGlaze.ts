@@ -1,6 +1,7 @@
 import { bowlProfile } from './Carried/BowlProfile.ts'
 import { clampedToShare } from '../../../../Shared/Simulation/Physics/ClampedToShare.ts'
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const noisePhase = 4.1414
 const canvasWidth = 1024
@@ -77,16 +78,19 @@ const rimY = canvasPointAt(0, rimLength).y
 const footY = (1 - bareClayUpToProfileIndex / (bowlProfile.length - 1)) * canvasHeight
 const cloudLatticesByFrequency = new Map<number, NoiseLattice>()
 
-export function paintKintsugi(): KintsugiGlaze {
+export function paintKintsugi(log: RoomLog): KintsugiGlaze {
   const cracks = cracksOfTheBreak()
   const patch = lostChip(cracks)
   const columns = Array.from({ length: canvasWidth }, (_, x) => glazeColumnAt(x))
-  return { colours: paintColours(cracks, patch, columns), surface: paintSurface(cracks, patch, columns) }
+  return { colours: paintColours(cracks, patch, columns, log), surface: paintSurface(cracks, patch, columns, log) }
 }
 
-function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[], columns: readonly GlazeColumn[]): HTMLCanvasElement {
+function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[], columns: readonly GlazeColumn[], log: RoomLog): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
-  if (context === null) return canvas
+  if (context === null) {
+    log('the kintsugi glaze cannot be painted, because the browser gives no 2D canvas, so the dark blue bowl is blank')
+    return canvas
+  }
   paintEveryPixel(context, columns, (x, y, column) => (isBareClayAt(y, column) ? mixed(bareClay, darkClay, clouds(x, y, glazeCloudsAcross * 3)) : ruriGlazeAt(x, y, column)))
   fillSeams(context, cracks, seamWidthMetres, goldEdge)
   fillPatch(context, patch, goldMiddle, goldEdge)
@@ -94,9 +98,12 @@ function paintColours(cracks: readonly (readonly DiscPoint[])[], patch: readonly
   return canvas
 }
 
-function paintSurface(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[], columns: readonly GlazeColumn[]): HTMLCanvasElement {
+function paintSurface(cracks: readonly (readonly DiscPoint[])[], patch: readonly DiscPoint[], columns: readonly GlazeColumn[], log: RoomLog): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
-  if (context === null) return canvas
+  if (context === null) {
+    log('the shine of the kintsugi gold cannot be painted, because the browser gives no 2D canvas, so the dark blue bowl shines evenly')
+    return canvas
+  }
   paintEveryPixel(context, columns, (_, y, column) => (isBareClayAt(y, column) ? [0, Math.round(255 * clayRoughness), 0] : [255, Math.round(255 * glazeRoughness), 0]))
   fillSeams(context, cracks, seamWidthMetres, goldSurface)
   fillPatch(context, patch, goldSurface, goldSurface)

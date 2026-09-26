@@ -18,6 +18,7 @@ import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, h
 import { inspectInView } from './Carried/InspectedInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
 import type { Surroundings } from '../Placement.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 import type { ClothPattern } from '../RoomArrangement.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
 import { isATouchArea, putOnLayer, roomLayers, touchAreaOf } from './RoomLayers.ts'
@@ -43,14 +44,18 @@ export class CarriedItems {
   private readonly surroundings: Surroundings
   private readonly clothPatternsById: ReadonlyMap<string, ClothPattern>
   private readonly handTouchAreas: readonly { readonly handIndex: HandIndex; readonly area: THREE.Mesh }[]
+  private readonly log: RoomLog
+  private readonly itemIdsReportedWithoutALocation = new Set<string>()
+  private readonly targetIdsReportedWithoutAModel = new Set<string>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
-  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, surroundings: Surroundings, clothPatternsById: ReadonlyMap<string, ClothPattern>) {
+  constructor(materials: RoomMaterials, items: readonly ShapedItem[], sinkSpot: Spot | null, surroundings: Surroundings, clothPatternsById: ReadonlyMap<string, ClothPattern>, log: RoomLog) {
+    this.log = log
     this.surroundings = surroundings
     this.clothPatternsById = clothPatternsById
     this.materials = materials
-    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, { room: materials, cloth: this.clothMaterialFor(itemId, shape) }))
+    this.models = items.map(({ itemId, shape }) => newCarriedModel(itemId, shape, { room: materials, cloth: this.clothMaterialFor(itemId, shape), log }))
     for (const model of this.models) {
       this.root.add(model.root, ...model.puffs, ...model.sipPuffs)
       this.tappableMeshes.push(model.root)
@@ -102,7 +107,11 @@ export class CarriedItems {
 
   private place(model: CarriedModel, scene: CarriedItemsScene): void {
     const location = itemLocationIn(scene.state, model.itemId)
-    if (location === undefined) return
+    if (location === undefined) {
+      if (!this.itemIdsReportedWithoutALocation.has(model.itemId)) this.log(`${model.itemId} has no location in the ritual's state, so it stays where it was last drawn`)
+      this.itemIdsReportedWithoutALocation.add(model.itemId)
+      return
+    }
     if (location.kind === 'gone') {
       if (model.root.visible) this.ash.crumble(model.root, scene.timeSeconds)
       model.root.visible = false
@@ -139,7 +148,11 @@ export class CarriedItems {
 
   private aimOverItsTarget(model: CarriedModel, aim: AimedPourView, scene: CarriedItemsScene): void {
     const target = this.models.find((candidate) => candidate.itemId === aim.targetId)
-    if (target === undefined) return
+    if (target === undefined) {
+      if (!this.targetIdsReportedWithoutAModel.has(aim.targetId)) this.log(`${model.itemId} is not moved over ${aim.targetId}, because the room draws no ${aim.targetId}`)
+      this.targetIdsReportedWithoutAModel.add(aim.targetId)
+      return
+    }
     const standingBelow = this.models.filter((candidate) => candidate !== model && itemLocationIn(scene.state, candidate.itemId)?.kind === 'onSurface').map((candidate) => candidate.root)
     const targetLocation = itemLocationIn(scene.state, target.itemId)
     const ceiling = targetLocation?.kind === 'onSurface' ? undersideOfTheBoardAbove(this.surroundings.layout, targetLocation.spot) : null

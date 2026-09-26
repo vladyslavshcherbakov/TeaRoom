@@ -1,5 +1,6 @@
 import type { ClothPattern } from '../RoomArrangement.ts'
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const canvasWidth = 560
 const canvasHeight = 400
@@ -31,12 +32,15 @@ const paintGroundByPattern: Readonly<Record<ClothPattern, (context: CanvasRender
   redCheck: paintRedCheck,
 }
 
-export function weaveCloth(pattern: ClothPattern): HTMLCanvasElement {
+export function weaveCloth(pattern: ClothPattern, log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log(`the ${pattern} cloth cannot be woven, because the browser gives no 2D canvas, so it is blank`)
+    return canvas
+  }
   paintGroundByPattern[pattern](context)
   paintThreads(context)
   paintHem(context)

@@ -1,3 +1,5 @@
+import type { RoomLog } from '../RoomNavigator.ts'
+
 const canvasWidth = 1024
 const canvasHeight = 512
 const deepGreen = [10, 74, 54] as const
@@ -10,12 +12,15 @@ const turbulenceOctaves = 4
 
 type Rgb = readonly [number, number, number]
 
-export function paintGreenMarble(): HTMLCanvasElement {
+export function paintGreenMarble(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the green marble cannot be painted, because the browser gives no 2D canvas, so the green bowl is blank')
+    return canvas
+  }
   const image = context.createImageData(canvasWidth, canvasHeight)
   for (let row = 0; row < canvasHeight; row += 1) {
     for (let column = 0; column < canvasWidth; column += 1) {

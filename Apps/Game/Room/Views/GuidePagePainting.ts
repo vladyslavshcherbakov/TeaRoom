@@ -1,4 +1,5 @@
 import { seededRandom } from '../SeededRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const canvasWidth = 256
 const canvasHeight = 352
@@ -18,12 +19,15 @@ const initialSizePx = 42
 const linesBesideTheInitial = 2
 const lineLengthsShare: readonly number[] = [1, 0.92, 0.97, 0.7, 1, 0.88, 0.95, 0.6, 1, 0.9, 0.85, 0.98, 0.5]
 
-export function paintGuidePage(): HTMLCanvasElement {
+export function paintGuidePage(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the pages of the book on the wall cannot be painted, because the browser gives no 2D canvas, so they are blank')
+    return canvas
+  }
   paintParchment(context)
   paintHeading(context)
   paintInitial(context)

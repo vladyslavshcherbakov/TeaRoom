@@ -1,4 +1,5 @@
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const canvasSize = 768
 const centre = canvasSize / 2
@@ -86,12 +87,15 @@ const hindLeg: Limb = {
 
 export const toadPaintingAspect = 1
 
-export function paintToad(): HTMLCanvasElement {
+export function paintToad(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the toad under the bowl cannot be painted, because the browser gives no 2D canvas, so the bowl shows none')
+    return canvas
+  }
   context.lineCap = 'round'
   context.lineJoin = 'round'
   paintCoin(context)

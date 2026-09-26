@@ -1,4 +1,5 @@
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const noisePhase = 3.3
 const canvasSize = 512
@@ -15,12 +16,15 @@ const clayShowingThroughCount = 900
 
 export const teaCharacterPaintingAspect = 1
 
-export function paintTeaCharacter(): HTMLCanvasElement {
+export function paintTeaCharacter(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the character for tea cannot be painted, because the browser gives no 2D canvas, so the Yixing bowl shows none')
+    return canvas
+  }
   context.font = brushFont
   context.textAlign = 'center'
   context.textBaseline = 'middle'

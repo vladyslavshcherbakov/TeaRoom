@@ -24,6 +24,7 @@ import {
 } from '../RoomLayout.ts'
 import { facingDirection, shelfBoards, type Facing } from '../../../../Shared/Content/Rooms.ts'
 import type { RoomArrangement } from '../RoomArrangement.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 import { surfaceByCushionColour, surfaceByFigurineId, type RoomMaterials, type Surface } from './RoomMaterials.ts'
 import { HeaterControls, type HeaterControlsView } from './HeaterControls.ts'
 import { guideBookModel } from './GuideBookModel.ts'
@@ -91,18 +92,21 @@ export class RoomModel {
   private readonly materials: RoomMaterials
   private readonly layout: RoomLayout
   private readonly arrangement: RoomArrangement
+  private readonly log: RoomLog
   private readonly heaterPlate: THREE.Mesh
   private readonly settingsGear: SettingsGear
   private readonly heaterControls: HeaterControls
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
+  private readonly placesReportedWithoutAPuddleCentre = new Set<string>()
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
   readonly prophecyInscription: THREE.Mesh | null
 
-  constructor(materials: RoomMaterials, layout: RoomLayout, arrangement: RoomArrangement, heaterSpot: WorldPoint) {
+  constructor(materials: RoomMaterials, layout: RoomLayout, arrangement: RoomArrangement, heaterSpot: WorldPoint, log: RoomLog) {
     this.materials = materials
     this.layout = layout
     this.arrangement = arrangement
+    this.log = log
     this.addFloor()
     const inscriptions = wallSides.flatMap((wall) => this.addWall(wall, layout.windows.filter((window) => window.wall === wall)))
     this.prophecyInscription = inscriptions[0] ?? null
@@ -111,7 +115,7 @@ export class RoomModel {
     this.addGuideBook(layout.guideBook)
     for (const piece of layout.furniture) this.addFurniture(piece)
     for (const spot of layout.itemSpots) this.addItem(spot)
-    this.heaterControls = new HeaterControls(materials, (object, tag) => this.tag(object, tag))
+    this.heaterControls = new HeaterControls(materials, (object, tag) => this.tag(object, tag), log)
     this.heaterPlate = this.addHeater(heaterSpot)
   }
 
@@ -135,7 +139,12 @@ export class RoomModel {
     for (const mesh of this.puddlesByPlace.values()) mesh.visible = false
     for (const puddle of puddles) {
       const centre = puddleCentreOn(this.layout, puddle.placeId, puddle.spilledAround)
-      if (centre === null || puddle.share === 0) continue
+      if (centre === null) {
+        if (!this.placesReportedWithoutAPuddleCentre.has(puddle.placeId)) this.log(`the puddle on the ${puddle.placeId} is not drawn, because the room has no furniture for that place`)
+        this.placesReportedWithoutAPuddleCentre.add(puddle.placeId)
+        continue
+      }
+      if (puddle.share === 0) continue
       const mesh = this.puddlesByPlace.get(puddle.placeId) ?? this.addPuddle(puddle.placeId)
       mesh.position.set(centre.x, centre.y, centre.z)
       this.shapeThePuddle(mesh, puddleOutlineOn(this.layout, puddle.placeId, centre, puddleRadiusMetres(puddle.share), puddleSegments))

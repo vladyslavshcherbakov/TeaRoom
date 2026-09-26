@@ -1,4 +1,5 @@
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const noisePhase = 78.233
 const canvasWidth = 1024
@@ -17,13 +18,16 @@ export type YixingClay = {
   readonly pores: HTMLCanvasElement
 }
 
-export function paintYixingClay(): YixingClay {
-  return { colours: paintColours(), pores: paintPores() }
+export function paintYixingClay(log: RoomLog): YixingClay {
+  return { colours: paintColours(log), pores: paintPores(log) }
 }
 
-function paintColours(): HTMLCanvasElement {
+function paintColours(log: RoomLog): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
-  if (context === null) return canvas
+  if (context === null) {
+    log('the Yixing clay cannot be painted, because the browser gives no 2D canvas, so the clay bowl is blank')
+    return canvas
+  }
   context.fillStyle = clayBrown
   context.fillRect(0, 0, canvasWidth, canvasHeight)
   for (let blotch = 0; blotch < blotchCount; blotch += 1) {
@@ -43,9 +47,12 @@ function paintColours(): HTMLCanvasElement {
   return canvas
 }
 
-function paintPores(): HTMLCanvasElement {
+function paintPores(log: RoomLog): HTMLCanvasElement {
   const { canvas, context } = newCanvas()
-  if (context === null) return canvas
+  if (context === null) {
+    log('the pores of the Yixing clay cannot be painted, because the browser gives no 2D canvas, so the clay bowl is smooth')
+    return canvas
+  }
   context.fillStyle = '#ffffff'
   context.fillRect(0, 0, canvasWidth, canvasHeight)
   scatterDots(context, poreCount, '#000000', widestPorePx, 11)

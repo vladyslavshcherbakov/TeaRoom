@@ -1,4 +1,5 @@
 import { clampedToShare } from '../../../../Shared/Simulation/Physics/ClampedToShare.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const canvasSize = 256
 const bandsFromFootToRim = 2.4
@@ -7,12 +8,15 @@ const swirlStrength = 0.9
 const bandDepth = 0.42
 const grainStrength = 0.06
 
-export function paintTemperBands(): HTMLCanvasElement {
+export function paintTemperBands(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the temper bands cannot be painted, because the browser gives no 2D canvas, so the temper-coloured bowl shows one colour')
+    return canvas
+  }
   const image = context.createImageData(canvasSize, canvasSize)
   for (let row = 0; row < canvasSize; row += 1) {
     for (let column = 0; column < canvasSize; column += 1) {

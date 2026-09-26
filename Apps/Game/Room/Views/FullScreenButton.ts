@@ -23,7 +23,7 @@ export class FullScreenButton {
   private toggle(): void {
     if (document.fullscreenElement !== null) {
       this.log('leaving full screen from the button')
-      void document.exitFullscreen()
+      document.exitFullscreen().catch((error: unknown) => this.log(`the page could not leave full screen: ${String(error)}`))
       return
     }
     this.log('going full screen from the button')

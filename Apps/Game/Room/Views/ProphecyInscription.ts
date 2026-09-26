@@ -1,3 +1,5 @@
+import type { RoomLog } from '../RoomNavigator.ts'
+
 const canvasWidth = 1600
 const canvasHeight = 300
 const largestFontPixels = 104
@@ -10,12 +12,15 @@ const tiltRadians = -0.025
 
 export const prophecyInscriptionPixelsPerMetre = canvasWidth / 0.95
 
-export function paintProphecyInscription(lines: readonly string[]): HTMLCanvasElement {
+export function paintProphecyInscription(lines: readonly string[], log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the prophecy on the beam cannot be painted, because the browser gives no 2D canvas, so the beam shows none')
+    return canvas
+  }
   const fontPixels = largestFontThatFits(context, lines)
   context.font = `${fontPixels}px ${playfulFonts}`
   context.fillStyle = inkColour

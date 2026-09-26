@@ -3,6 +3,7 @@ import { LampDisplay, type LampReading } from './LampDisplay.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 import { markAsGlowing, touchAreaOf } from './RoomLayers.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 export type HeaterControlsView = {
   readonly isNerdModeOn: boolean
@@ -47,11 +48,11 @@ export class HeaterControls {
   private readonly lampLit: THREE.Mesh
   private readonly lampDark: THREE.Mesh
 
-  constructor(materials: RoomMaterials, tag: Tagger) {
+  constructor(materials: RoomMaterials, tag: Tagger, log: RoomLog) {
     this.materials = materials
     this.tag = tag
     this.buildThePlainPanel()
-    this.display = new LampDisplay(displayInTheNerdPanel.width, displayInTheNerdPanel.height, materials.unsharedMaterialFor('heaterLampDisplay'))
+    this.display = new LampDisplay(displayInTheNerdPanel.width, displayInTheNerdPanel.height, materials.unsharedMaterialFor('heaterLampDisplay'), log)
     markAsGlowing(this.display.mesh, nixieGlowStrength)
     this.lampLit = this.lamp('lampLit')
     markAsGlowing(this.lampLit)

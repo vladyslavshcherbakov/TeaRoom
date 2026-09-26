@@ -225,13 +225,13 @@ export class RoomScene {
       },
     }, arrival.place)
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
-    const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer), bowlPaintings)
+    const materials = new RoomMaterials(reflectionsOfTheRoom(this.renderer), bowlPaintings, log)
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
-    this.room = new RoomModel(materials, layout, arrival.arrangement, roomDefinition.heaterSpot)
+    this.room = new RoomModel(materials, layout, arrival.arrangement, roomDefinition.heaterSpot, log)
     this.walker = new WalkerModel(materials)
     this.sky = new Sky(materials)
     this.inspectionStage = new InspectionStage(materials)
-    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot }, clothPatternsByIdIn(roomDefinition, arrival.arrangement))
+    this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot }, clothPatternsByIdIn(roomDefinition, arrival.arrangement), log)
     this.sipButton = new SipButton(container, () => this.play.sipTapped())
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),
@@ -241,7 +241,12 @@ export class RoomScene {
     this.caption = new RoomCaption(container)
     this.achievementNotice = new AchievementNotice(container)
     this.achievements = new Achievements(new AchievementStore(log), log, (id) => this.achievementNotice.announce(id))
-    this.achievementsList = new AchievementsList(container, { resetAsked: () => this.achievements.reset() })
+    this.achievementsList = new AchievementsList(container, {
+      resetAsked: () => {
+        this.achievements.reset()
+        this.showTheAchievements()
+      },
+    })
     this.guideBook = new GuideBook(container)
     this.youDied = new YouDiedScreen(container, () => {
       log('the player starts over after dying')

@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { touchAreaOf } from '../RoomLayers.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
+import type { RoomLog } from '../../RoomNavigator.ts'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { CarriedShapeLook } from './CarriedShapeLook.ts'
 import { LampDisplay } from '../LampDisplay.ts'
@@ -60,7 +61,7 @@ function kettleParts(materials: CarriedModelMaterials): ItemParts {
   lid.position.y = 0.215
   const gauge = waterGauge(materials.room)
   const kettleWater = waterInsideTheKettle(materials.room)
-  const thermometer = thermometerOnTheBody(materials.room)
+  const thermometer = thermometerOnTheBody(materials.room, materials.log)
   const meshes = [body, spout, gauge.frame.mesh, gauge.water.mesh, kettleWater, thermometer.mesh]
   return {
     meshes,
@@ -99,9 +100,9 @@ function waterInsideTheKettle(materials: SurfaceMaterials): THREE.Mesh {
   return water
 }
 
-function thermometerOnTheBody(materials: SurfaceMaterials): LampDisplay {
+function thermometerOnTheBody(materials: SurfaceMaterials, log: RoomLog): LampDisplay {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
-  const thermometer = new LampDisplay(thermometerWidthMetres, thermometerHeightMetres, materials.unsharedMaterialFor('lampDisplay'), thermometerFilamentWeight)
+  const thermometer = new LampDisplay(thermometerWidthMetres, thermometerHeightMetres, materials.unsharedMaterialFor('lampDisplay'), log, thermometerFilamentWeight)
   const height = thermometerHeightOnTheBodyMetres
   const radius = kettleRadiusAt(height)
   const onTheBody = new THREE.Vector3(Math.sin(thermometerTurnFromTheGaugeRadians) * radius, height, Math.cos(thermometerTurnFromTheGaugeRadians) * radius)

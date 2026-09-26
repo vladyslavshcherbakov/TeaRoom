@@ -3,6 +3,7 @@ import { text } from '../../Texts/Texts.ts'
 import { weaveCloth } from './ClothWeave.ts'
 import type { ClothPattern, CushionColour } from '../RoomArrangement.ts'
 import type { FigurineId } from '../../../../Shared/Content/Rooms.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 import { paintCrackle } from './CrackleGlaze.ts'
 import { paintHeron } from './HeronPainting.ts'
 import { paintKintsugi } from './KintsugiGlaze.ts'
@@ -134,8 +135,8 @@ type SurfaceLook = { readonly colour: string; readonly isSeenFromBothSides?: tru
   | { readonly kind: 'skyDome' }
   | { readonly kind: 'cloud'; readonly emissive: string }
   | { readonly kind: 'heated'; readonly glowColour: string; readonly glowIntensity: number }
-  | { readonly kind: 'glaze'; readonly paint: (() => HTMLCanvasElement) | null }
-  | { readonly kind: 'painting'; readonly paint: () => HTMLCanvasElement }
+  | { readonly kind: 'glaze'; readonly paint: ((log: RoomLog) => HTMLCanvasElement) | null }
+  | { readonly kind: 'painting'; readonly paint: (log: RoomLog) => HTMLCanvasElement }
   | { readonly kind: 'wovenCloth'; readonly pattern: ClothPattern }
 )
 
@@ -299,10 +300,12 @@ export class RoomMaterials {
   private readonly materialsByPlantSurface = new Map<PlantSurface, THREE.MeshLambertMaterial>()
   private readonly reflections: THREE.Texture | null
   private readonly koiPond: KoiPond
+  private readonly log: RoomLog
   private prophecyPainting: HTMLCanvasElement | null = null
   readonly bowlIdWithTheToadUnderneath: string
 
-  constructor(reflections: THREE.Texture | null, bowlPaintings: BowlPaintings) {
+  constructor(reflections: THREE.Texture | null, bowlPaintings: BowlPaintings, log: RoomLog) {
+    this.log = log
     this.reflections = reflections
     this.koiPond = bowlPaintings.koiPond
     this.bowlIdWithTheToadUnderneath = bowlPaintings.bowlIdWithTheToadUnderneath
@@ -370,7 +373,7 @@ export class RoomMaterials {
       case 'pearly':
         return new THREE.MeshPhysicalMaterial({ color, roughness: 0.25, clearcoat: 0.8, iridescence: 1, iridescenceIOR: 1.4 })
       case 'glaze':
-        return glazeMaterial(look.paint, color)
+        return glazeMaterial(look.paint, color, this.log)
       case 'pouredLiquid':
         return new THREE.MeshStandardMaterial({ color, transparent: true, opacity: pouredLiquidOpacity })
       case 'liquidSurface':
@@ -390,25 +393,25 @@ export class RoomMaterials {
       case 'thermosPainting':
         return this.thermosPaintingMaterial()
       case 'yixingClay':
-        return yixingClayMaterial()
+        return yixingClayMaterial(this.log)
       case 'koiPainting':
-        return paintingMaterial(paintKoiPond(this.koiPond))
+        return paintingMaterial(paintKoiPond(this.koiPond, this.log))
       case 'prophecy':
         return paintingMaterial(this.paintedProphecy())
       case 'painting':
-        return paintingMaterial(look.paint())
+        return paintingMaterial(look.paint(this.log))
       case 'wovenCloth':
-        return wovenClothMaterial(look.pattern)
+        return wovenClothMaterial(look.pattern, this.log)
     }
   }
 
   private paintedProphecy(): HTMLCanvasElement {
-    this.prophecyPainting ??= paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')])
+    this.prophecyPainting ??= paintProphecyInscription([text('wall.prophecy.firstLine'), text('wall.prophecy.secondLine')], this.log)
     return this.prophecyPainting
   }
 
   private kintsugiMaterial(): THREE.MeshPhysicalMaterial {
-    const kintsugi = paintKintsugi()
+    const kintsugi = paintKintsugi(this.log)
     const colours = paintedTexture(kintsugi.colours, { holdsColours: true, wrapsAround: true })
     const surface = paintedTexture(kintsugi.surface, { holdsColours: false, wrapsAround: true })
     return new THREE.MeshPhysicalMaterial({
@@ -426,7 +429,7 @@ export class RoomMaterials {
   }
 
   private temperGlazeMaterial(color: string): THREE.MeshPhysicalMaterial {
-    const thicknessMap = new THREE.CanvasTexture(paintTemperBands())
+    const thicknessMap = new THREE.CanvasTexture(paintTemperBands(this.log))
     return new THREE.MeshPhysicalMaterial({
       color,
       metalness: 0.85,
@@ -462,7 +465,7 @@ export class RoomMaterials {
   }
 
   private thermosPaintingMaterial(): THREE.MeshPhysicalMaterial {
-    const texture = paintedTexture(paintSakuraOverFuji(), { holdsColours: true, wrapsAround: false })
+    const texture = paintedTexture(paintSakuraOverFuji(this.log), { holdsColours: true, wrapsAround: false })
     return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.35, clearcoat: 0.8, envMap: this.reflections, envMapIntensity: 0.8 })
   }
 
@@ -506,19 +509,19 @@ function paintingMaterial(painting: HTMLCanvasElement): THREE.MeshStandardMateri
   })
 }
 
-function wovenClothMaterial(pattern: ClothPattern): THREE.MeshStandardMaterial {
-  const texture = paintedTexture(weaveCloth(pattern), { holdsColours: true, wrapsAround: false })
+function wovenClothMaterial(pattern: ClothPattern, log: RoomLog): THREE.MeshStandardMaterial {
+  const texture = paintedTexture(weaveCloth(pattern, log), { holdsColours: true, wrapsAround: false })
   return new THREE.MeshStandardMaterial({ map: texture, color: lookBySurface.cloth.colour, roughness: clothRoughness, metalness: 0, side: THREE.DoubleSide, vertexColors: true })
 }
 
-function glazeMaterial(paintGlaze: (() => HTMLCanvasElement) | null, color: string): THREE.MeshPhysicalMaterial {
+function glazeMaterial(paintGlaze: ((log: RoomLog) => HTMLCanvasElement) | null, color: string, log: RoomLog): THREE.MeshPhysicalMaterial {
   if (paintGlaze === null) return new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })
-  const texture = paintedTexture(paintGlaze(), { holdsColours: true, wrapsAround: true })
+  const texture = paintedTexture(paintGlaze(log), { holdsColours: true, wrapsAround: true })
   return new THREE.MeshPhysicalMaterial({ map: texture, roughness: 0.3, clearcoat: 0.7 })
 }
 
-function yixingClayMaterial(): THREE.MeshStandardMaterial {
-  const clay = paintYixingClay()
+function yixingClayMaterial(log: RoomLog): THREE.MeshStandardMaterial {
+  const clay = paintYixingClay(log)
   const colours = paintedTexture(clay.colours, { holdsColours: true, wrapsAround: true })
   const pores = paintedTexture(clay.pores, { holdsColours: false, wrapsAround: true })
   return new THREE.MeshStandardMaterial({ map: colours, bumpMap: pores, bumpScale: clayPoreDepth, roughness: 0.9, metalness: 0 })

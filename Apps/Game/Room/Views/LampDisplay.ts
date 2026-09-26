@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { RoomLog } from '../RoomNavigator.ts'
 import type { TemperatureUnit } from '../Temperatures.ts'
 import type { SurfaceMaterial } from './RoomMaterials.ts'
 
@@ -37,11 +38,14 @@ export class LampDisplay {
   private readonly pixelWidth: number
   private readonly pixelHeight: number
   private readonly filamentWeight: number
+  private readonly log: RoomLog
   private painting: { readonly canvas: HTMLCanvasElement; readonly texture: THREE.CanvasTexture } | null = null
   private shownCharacters = ''
+  private hasReportedTheMissingCanvas = false
 
-  constructor(widthMetres: number, heightMetres: number, material: SurfaceMaterial, filamentWeight = 1) {
+  constructor(widthMetres: number, heightMetres: number, material: SurfaceMaterial, log: RoomLog, filamentWeight = 1) {
     this.material = material
+    this.log = log
     this.filamentWeight = filamentWeight
     this.material.toneMapped = false
     this.pixelWidth = Math.round(widthMetres * pixelsPerMetre)
@@ -56,7 +60,13 @@ export class LampDisplay {
     if (shown === this.shownCharacters) return
     this.shownCharacters = shown
     const painting = this.painting ?? this.startThePainting()
-    paintTubes(painting.canvas, [...digits], unitSymbols[reading.unit], this.filamentWeight)
+    const context = painting.canvas.getContext('2d')
+    if (context === null) {
+      if (!this.hasReportedTheMissingCanvas) this.log(`the nixie tubes cannot show ${shown}, because the browser gives no 2D canvas, so they stay dark`)
+      this.hasReportedTheMissingCanvas = true
+      return
+    }
+    paintTubes(context, [...digits], unitSymbols[reading.unit], this.filamentWeight)
     painting.texture.needsUpdate = true
   }
 
@@ -73,10 +83,8 @@ export class LampDisplay {
   }
 }
 
-function paintTubes(canvas: HTMLCanvasElement, digits: readonly string[], unitSymbol: string, filamentWeight: number): void {
-  const context = canvas.getContext('2d')
-  if (context === null) return
-  const { width, height } = canvas
+function paintTubes(context: CanvasRenderingContext2D, digits: readonly string[], unitSymbol: string, filamentWeight: number): void {
+  const { width, height } = context.canvas
   context.fillStyle = backgroundColour
   context.fillRect(0, 0, width, height)
   tubesAcross(width, height).forEach((tube, index) => {

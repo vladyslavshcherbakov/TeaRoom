@@ -1,4 +1,5 @@
 import { orangeKoi, paintKoi, redKoi, secondRedKoi, type KoiMarkings } from './KoiPainting.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const canvasSize = 840
 
@@ -34,18 +35,21 @@ export const koiPondAspect = 1
 
 export const koiPondWidthMetres = 0.098
 
-export function paintKoiPond(pond: KoiPond): HTMLCanvasElement {
+export function paintKoiPond(pond: KoiPond, log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
-  for (const koi of koiByPond[pond]) paintSwimmingKoi(context, koi)
+  if (context === null) {
+    log('the koi pond cannot be painted, because the browser gives no 2D canvas, so the white bowl shows no koi')
+    return canvas
+  }
+  for (const koi of koiByPond[pond]) paintSwimmingKoi(context, koi, log)
   return canvas
 }
 
-function paintSwimmingKoi(context: CanvasRenderingContext2D, koi: SwimmingKoi): void {
-  const painting = paintKoi(koi.markings)
+function paintSwimmingKoi(context: CanvasRenderingContext2D, koi: SwimmingKoi, log: RoomLog): void {
+  const painting = paintKoi(koi.markings, log)
   const height = (koi.length * painting.height) / painting.width
   context.save()
   context.translate(canvasSize / 2 + koi.x, canvasSize / 2 + koi.y)

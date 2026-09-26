@@ -1,4 +1,5 @@
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const noisePhase = 5.1
 const canvasWidth = 1024
@@ -45,13 +46,16 @@ const blossoms: readonly (readonly [number, number])[] = [
 
 const buds: readonly (readonly [number, number])[] = [[160, 30], [500, 30], [740, 205], [880, 120], [380, 140], [620, 120]]
 
-export function paintSakuraOverFuji(): HTMLCanvasElement {
+export function paintSakuraOverFuji(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
-  const mountain = paintMountainAlone()
+  if (context === null) {
+    log('the sakura over Fuji cannot be painted, because the browser gives no 2D canvas, so the thermos is blank')
+    return canvas
+  }
+  const mountain = paintMountainAlone(log)
   paintSky(context)
   context.drawImage(mountain, 0, 0)
   paintLake(context, mountain)
@@ -69,12 +73,15 @@ function paintSky(context: CanvasRenderingContext2D): void {
   context.fillRect(0, 0, canvasWidth, fujiBaseY)
 }
 
-function paintMountainAlone(): HTMLCanvasElement {
+function paintMountainAlone(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('Fuji for its reflection cannot be painted, because the browser gives no 2D canvas, so the lake on the thermos reflects nothing')
+    return canvas
+  }
   paintFuji(context)
   paintTreeline(context)
   return canvas

@@ -1,3 +1,5 @@
+import type { RoomLog } from '../RoomNavigator.ts'
+
 const canvasSize = 768
 const centre = canvasSize / 2
 const podRadius = 58
@@ -38,12 +40,15 @@ const petalRingsOutsideIn: readonly PetalRing[] = [
   { count: 5, lengthPx: 128, widthPx: 78, turnRadians: 0.6, rootColour: '#ffffff', tipColour: '#f7b6c9', curl: 0.4 },
 ]
 
-export function paintLotus(): HTMLCanvasElement {
+export function paintLotus(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the lotus cannot be painted, because the browser gives no 2D canvas, so the pearl bowl shows none')
+    return canvas
+  }
   context.translate(centre, centre)
   for (const ring of petalRingsOutsideIn) paintPetalRing(context, ring)
   paintStamens(context)

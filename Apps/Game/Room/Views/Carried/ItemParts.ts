@@ -1,4 +1,5 @@
 import type * as THREE from 'three'
+import type { RoomLog } from '../../RoomNavigator.ts'
 import type { SurfaceMaterials } from '../RoomMaterials.ts'
 import type { LampDisplay } from '../LampDisplay.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
@@ -53,6 +54,7 @@ export type HeldInViewLook = {
 export type CarriedModelMaterials = {
   readonly room: SurfaceMaterials
   readonly cloth: THREE.Material
+  readonly log: RoomLog
 }
 
 export const overflowOverTheLipMetres = 0.003

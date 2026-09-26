@@ -1,3 +1,5 @@
+import type { RoomLog } from '../RoomNavigator.ts'
+
 const canvasSize = 768
 const featherGrey = '#9aa3aa'
 const darkGrey = '#5d666e'
@@ -11,12 +13,15 @@ const waterLine = 'rgba(90, 140, 170, 0.45)'
 
 export const heronPaintingAspect = 1
 
-export function paintHeron(): HTMLCanvasElement {
+export function paintHeron(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasSize
   canvas.height = canvasSize
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the heron cannot be painted, because the browser gives no 2D canvas, so the yellow bowl shows none')
+    return canvas
+  }
   paintReeds(context)
   paintWater(context)
   paintLegs(context)

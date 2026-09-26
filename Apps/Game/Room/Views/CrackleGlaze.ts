@@ -1,4 +1,5 @@
 import { pseudoRandom } from './PseudoRandom.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
 
 const canvasWidth = 1024
 const canvasHeight = 512
@@ -23,12 +24,15 @@ type SeedsByCell = readonly (readonly Seed[])[]
 
 type Rgb = readonly [number, number, number]
 
-export function paintCrackle(): HTMLCanvasElement {
+export function paintCrackle(log: RoomLog): HTMLCanvasElement {
   const canvas = document.createElement('canvas')
   canvas.width = canvasWidth
   canvas.height = canvasHeight
   const context = canvas.getContext('2d')
-  if (context === null) return canvas
+  if (context === null) {
+    log('the crackle glaze cannot be painted, because the browser gives no 2D canvas, so the sky blue bowl is blank')
+    return canvas
+  }
   const largeSeedsByCell = seedsThatCanBeNearestByCell(seedsFor(largeCells, 11))
   const smallSeedsByCell = seedsThatCanBeNearestByCell(seedsFor(smallCells, 23))
   const image = context.createImageData(canvasWidth, canvasHeight)
