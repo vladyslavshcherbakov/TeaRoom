@@ -36,6 +36,7 @@ import type { ClothPattern, RoomArrangement } from './RoomArrangement.ts'
 import type { RoomLog, RoomPlace } from './RoomNavigator.ts'
 import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
+import { text } from '../Texts/Texts.ts'
 import type { FaceFeature, RoomSettings } from './RoomSettings.ts'
 import { SettingsStore } from './SettingsStore.ts'
 import { PlayTime } from './PlayTime.ts'
@@ -232,6 +233,7 @@ export class RoomScene {
     this.pourControls = new PourControls(container, {
       tiltPressed: () => this.play.tiltPressed(),
       tiltReleased: () => this.play.tiltReleased(),
+      whyPouringAsked: () => this.explainThePour(),
     })
     this.caption = new RoomCaption(container)
     this.achievementNotice = new AchievementNotice(container)
@@ -388,6 +390,11 @@ export class RoomScene {
 
   private frameBudgetShownChosen(isShown: boolean): void {
     this.changeTheDebugSettings({ isFrameBudgetShown: isShown }, isShown ? 'the frame budget is shown from the debug menu, every 2 s' : 'the frame budget is hidden from the debug menu')
+  }
+
+  private explainThePour(): void {
+    this.log('the player asks why a pour is being aimed, and the caption explains it')
+    this.caption.show([text('aim.why')])
   }
 
   private googlyEyesChosen(areGoogly: boolean): void {

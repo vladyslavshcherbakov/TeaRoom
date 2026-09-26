@@ -39,19 +39,34 @@
         color: #fbf4e8;
         font: 600 16px/1 system-ui, sans-serif;
       }
-      .tilt {
+      .tilt,
+      .why-pouring {
         position: fixed;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        padding: 0;
+        filter: drop-shadow(0 4px 8px rgba(40, 20, 10, 0.45));
+        touch-action: none;
+      }
+      .tilt {
         right: 24px;
         bottom: calc(24px + env(safe-area-inset-bottom));
         width: 88px;
         height: 88px;
-        border-radius: 50%;
-        border: 2px solid #8f5a3a;
-        background: #fbf4e8;
-        padding: 12px;
-        touch-action: none;
       }
-      .tilt svg {
+      .why-pouring {
+        right: 40px;
+        bottom: calc(126px + env(safe-area-inset-bottom));
+        width: 56px;
+        height: 56px;
+      }
+      .tilt:active,
+      .why-pouring:active {
+        transform: scale(0.95);
+      }
+      .tilt svg,
+      .why-pouring svg {
         display: block;
         width: 100%;
         height: 100%;

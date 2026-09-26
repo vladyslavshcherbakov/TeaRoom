@@ -36,6 +36,8 @@ export const englishTexts = {
   'frameBudget.phase.smoothingPass': 'smoothing pass',
 
   'aim.tiltButton': 'Tilt to pour',
+  'aim.whyButton': 'Why am I pouring?',
+  'aim.why': 'You are pouring because you tapped the opening of a vessel while another vessel was chosen in your hand. Drag to move it, hold the pour button to tilt it, and tap anywhere else to stop.',
   'aim.hint': 'Drag to move what you pour from. Hold the pour button with another finger to tilt it. Tap anywhere to stop.',
 
   'sip.noTea.1': 'Hmm… no smell of tea in here at all.',
