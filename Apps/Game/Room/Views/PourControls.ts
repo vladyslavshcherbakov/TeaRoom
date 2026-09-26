@@ -22,7 +22,7 @@ const porcelainLight = '#fbf7ef'
 const porcelainShade = '#d8cfc0'
 const streamLight = '#f3fbff'
 const streamShade = '#e3f3fb'
-const teaColour = '#c8922e'
+const teaColour = '#c7dd92'
 
 export class PourControls {
   private readonly tiltButton: HTMLButtonElement
@@ -93,7 +93,7 @@ function pouringIcon(): SVGSVGElement {
     shape('path', { d: 'M44.6 30.5 Q45.4 38 45.4 46.5', fill: 'none', stroke: 'url(#pour-stream)', 'stroke-width': '2.4', 'stroke-linecap': 'round' }),
     tiltedKettle,
     shape('path', { d: 'M31.5 47 H59.3 Q57 57.8 45.4 57.8 Q33.8 57.8 31.5 47 Z', fill: 'url(#pour-porcelain)', stroke: crackColour, 'stroke-width': '0.7', 'stroke-opacity': '0.5' }),
-    shape('ellipse', { cx: '45.4', cy: '47', rx: '13.9', ry: '2.3', fill: teaColour, stroke: 'url(#pour-kintsugi)', 'stroke-width': '0.9' }),
+    shape('ellipse', { cx: '45.4', cy: '47', rx: '13.9', ry: '2.3', fill: teaColour, stroke: crackColour, 'stroke-width': '0.7', 'stroke-opacity': '0.5' }),
     shape('path', { d: 'M35 51 Q37.5 55.3 42.5 56.4', fill: 'none', stroke: '#ffffff', 'stroke-width': '1.2', 'stroke-linecap': 'round', opacity: '0.85' }),
   )
   icon.append(gloss('pour'))
@@ -127,7 +127,7 @@ function glazedDisc(name: 'pour' | 'why'): SVGSVGElement {
     definitions,
     shape('circle', { cx: '32', cy: '32', r: '30.6', fill: `url(#${name}-glaze)` }),
     shape('path', { d: crackleLines, fill: 'none', stroke: crackColour, 'stroke-width': '0.55', 'stroke-linejoin': 'round', opacity: '0.35', 'clip-path': `url(#${name}-disc)` }),
-    shape('circle', { cx: '32', cy: '32', r: '30.6', fill: 'none', stroke: `url(#${name}-kintsugi)`, 'stroke-width': '2' }),
+    shape('circle', { cx: '32', cy: '32', r: '30.4', fill: 'none', stroke: '#ffffff', 'stroke-width': '1.2', opacity: '0.6' }),
     shape('circle', { cx: '32', cy: '32', r: '28.6', fill: 'none', stroke: '#ffffff', 'stroke-width': '0.6', opacity: '0.25' }),
   )
   return icon
