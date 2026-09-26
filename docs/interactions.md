@@ -129,4 +129,4 @@ The pour gesture maps tilt to flow: below 10° nothing pours, and the flow grows
 
 ## Protocols still to be written in full
 
-The protocols below are specified by the GDD and wait for their presentation version: pick up and place (0.4), open lid as a physical object (0.4), hot vessel touch — "oh, hot" — with the hand pulling back (0.4), pet the animal (0.8), change the time of day with a slow light transition (0.7), remain (0.6).
+The protocols below are specified by the GDD and wait for their presentation version: pick up and place (0.5), open lid as a physical object (0.5), hot vessel touch — "oh, hot" — with the hand pulling back (0.5), pet the animal (0.9), change the time of day with a slow light transition (0.8), remain (0.7).
