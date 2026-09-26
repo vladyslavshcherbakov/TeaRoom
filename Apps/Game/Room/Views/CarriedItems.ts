@@ -17,7 +17,7 @@ import { ItemFire } from './Carried/ItemFire.ts'
 import { handTouchAreaShareOfScreenHeight, handTouchAreaShareOfScreenWidthFor, heldInViewFrame, holdInView, raiseTowardTheEyes } from './Carried/HeldInView.ts'
 import { inspectInView } from './Carried/InspectedInView.ts'
 import { showContentsOf } from './Carried/ItemContents.ts'
-import type { Surroundings } from '../Placement.ts'
+import { lidsLyingOpen, type Surroundings } from '../Placement.ts'
 import type { RoomLog } from '../RoomNavigator.ts'
 import type { ClothPattern } from '../RoomArrangement.ts'
 import { WaterStreams } from './Carried/WaterStreams.ts'
@@ -70,7 +70,8 @@ export class CarriedItems {
   show(scene: CarriedItemsScene): void {
     for (const model of this.models) this.place(model, scene)
     const sceneOfTheContents = withTheSipStillInTheCup(scene)
-    for (const model of this.models) showContentsOf(model, sceneOfTheContents, this.surroundings)
+    const lidsLying = lidsLyingOpen(scene.state, this.surroundings)
+    for (const model of this.models) showContentsOf(model, sceneOfTheContents, lidsLying)
     for (const model of this.models) drawInTheDetailItsSizeNeeds(model, scene.distantDetail)
     for (const [clothId, material] of this.clothMaterialsByClothId) {
       const cloth = scene.table.cloths[clothId]

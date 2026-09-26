@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
 import { carriedShapeOf, footprintCirclesOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
+import { lidsLyingOpen } from '../../../Apps/Game/Room/Placement.ts'
 import { quietRoomLayout, turnOfItemAt, type FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { standingAt } from '../../../Apps/Game/Room/Walking/Walk.ts'
 import { aimOver } from '../../../Apps/Game/Room/Views/Carried/AimedVessel.ts'
@@ -397,7 +398,7 @@ function showStandingWhereItIs(model: CarriedModel, state: DeepReadonly<SessionS
   if (location?.kind !== 'onSurface') throw new Error(`${model.itemId} does not stand on a surface`)
   model.root.position.set(location.spot.x, location.spot.y, location.spot.z)
   model.root.rotation.y = turnOfItemAt(quietRoomLayout, location.spot)
-  showContentsOf(model, sceneOf(state), quietRoomSurroundings)
+  showContentsOf(model, sceneOf(state), lidsLyingOpen(state, quietRoomSurroundings))
 }
 
 function sceneOf(state: DeepReadonly<SessionState>): CarriedItemsScene {

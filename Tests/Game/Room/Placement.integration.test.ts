@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { openLidOffsetBeside, whyThereIsNoRoomFor } from '../../../Apps/Game/Room/Placement.ts'
+import { lidsLyingOpen, whyThereIsNoRoomFor, type LyingLid } from '../../../Apps/Game/Room/Placement.ts'
 import { quietRoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { definitionIn } from '../../../Shared/Simulation/Definitions/Catalog.ts'
@@ -9,6 +9,7 @@ import { onTopOf, spotOn, TestRoom } from '../../Support/TestRoom.ts'
 
 const onTheTeaTable = onTopOf('teaTable', 0, 0.05)
 const behindTheKettle = onTopOf('counter', -0.1, -0.21)
+const kettleAndCaddyLidsTouchWithinMetres = 0.17
 const quietRoomSurroundings = { layout: quietRoomLayout, heaterSpot: definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot }
 
 test('openKettleLid_withTheHeaterOnItsLeftTheSinkOnItsRightAndTheEdgeInFront_liesBehindTheKettle', () => {
@@ -17,9 +18,29 @@ test('openKettleLid_withTheHeaterOnItsLeftTheSinkOnItsRightAndTheEdgeInFront_lie
 
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
 
-  const offset = openLidOffsetBeside('kettle', room.state, quietRoomSurroundings)
+  const offset = lidLyingOpen('kettle', room.state)?.offset
   assertNear(offset?.x ?? Number.NaN, 0, 1e-9)
   assert.ok((offset?.z ?? 0) < 0, `lid offset ${JSON.stringify(offset)}`)
+})
+
+test('openLids_ofACaddyPutDownBesideTheKettle_lieApart', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.walkTo('teaTable')
+  room.putDown(0, onTopOf('teaTable', 0, 0))
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+  room.carryFromTheShelf('caddy')
+  room.walkTo('teaTable')
+  room.putDown(0, onTopOf('teaTable', -0.44, 0))
+
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
+
+  const kettleLid = lidLyingOpen('kettle', room.state)
+  const caddyLid = lidLyingOpen('caddy', room.state)
+  assert.ok(kettleLid !== undefined && caddyLid !== undefined, JSON.stringify(lidsLyingOpen(room.state, quietRoomSurroundings)))
+  const lidsApartMetres = Math.hypot(kettleLid.spot.x - caddyLid.spot.x, kettleLid.spot.z - caddyLid.spot.z)
+  assert.ok(lidsApartMetres >= kettleAndCaddyLidsTouchWithinMetres, `the lids lie ${lidsApartMetres.toFixed(3)} m apart`)
 })
 
 test('bowl_whenPutDownOnTheKettlesOpenLid_staysInHand', () => {
@@ -100,3 +121,7 @@ test('bowl_overACornerOfTheHeaterPlate_hasNoRoom', () => {
 
   assert.equal(refusal, 'theHeaterIsThere')
 })
+
+function lidLyingOpen(itemId: string, state: TestRoom['state']): LyingLid | undefined {
+  return lidsLyingOpen(state, quietRoomSurroundings).find((lid) => lid.itemId === itemId)
+}

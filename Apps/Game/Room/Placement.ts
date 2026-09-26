@@ -18,23 +18,26 @@ export type Surroundings = {
 
 export type PlacementRefusal = 'offTheEdge' | 'theTopTakesNoItems' | 'somethingIsThere' | 'theHeaterIsThere' | 'theSinkIsThere'
 
+export type LyingLid = {
+  readonly itemId: string
+  readonly offset: FloorPoint
+  readonly spot: Spot
+  readonly radius: number
+}
+
 export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReadonly<SessionState>, surroundings: Surroundings): PlacementRefusal | null {
   const circles = footprintOf(state, itemId, spot, surroundings.layout)
   const refusal = whyThereIsNoRoomForCircles(circles, itemId, state, surroundings)
   if (refusal !== null) return refusal
-  const lidsLying = lidsLyingBesideTheirItems(state, surroundings).filter((lid) => lid.itemId !== itemId)
-  return lidsLying.some((lid) => circles.some((circle) => isNear(circle.spot, lid.spot, circle.radius + lid.radius))) ? 'somethingIsThere' : null
+  const lidsOfOtherItems = lidsLyingOpen(state, surroundings).filter((lid) => lid.itemId !== itemId)
+  return lidsOfOtherItems.some((lid) => circles.some((circle) => isNear(circle.spot, lid.spot, circle.radius + lid.radius))) ? 'somethingIsThere' : null
 }
 
-export function openLidOffsetBeside(itemId: string, state: DeepReadonly<SessionState>, surroundings: Surroundings): FloorPoint | null {
-  const location = itemLocationIn(state, itemId)
-  const layout = layoutOf(state, itemId)
-  if (location?.kind !== 'onSurface' || layout === undefined || layout.lid === null) return null
-  const lidRadius = layout.lid.lyingRadiusMetres
-  const distance = layout.footprintRadiusMetres + lidRadius + openLidGapMetres
-  const turn = turnOfItemAt(surroundings.layout, location.spot)
-  const offsets = openLidDirectionsRadians.map((direction) => turnedBy({ x: Math.cos(direction) * distance, z: Math.sin(direction) * distance }, turn))
-  return offsets.find((offset) => whyThereIsNoRoomForCircles([{ spot: offsetSpot(location.spot, offset), radius: lidRadius, restsOnTheSurface: true }], null, state, surroundings) === null) ?? null
+export function lidsLyingOpen(state: DeepReadonly<SessionState>, surroundings: Surroundings): readonly LyingLid[] {
+  return itemsOnSurfaces(state).reduce<readonly LyingLid[]>((lidsLaidBefore, { itemId, spot }) => {
+    const lid = openLidBeside(itemId, spot, lidsLaidBefore, state, surroundings)
+    return lid === null ? lidsLaidBefore : [...lidsLaidBefore, lid]
+  }, [])
 }
 
 function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: string | null, state: DeepReadonly<SessionState>, surroundings: Surroundings): PlacementRefusal | null {
@@ -61,13 +64,22 @@ function footprintOf(state: DeepReadonly<SessionState>, itemId: string, spot: Sp
   return footprintCirclesOf(shapeLayout).map((circle) => ({ spot: offsetSpot(spot, turnedBy(circle, turn)), radius: circle.radius, restsOnTheSurface: circle.restsOnTheSurface }))
 }
 
-function lidsLyingBesideTheirItems(state: DeepReadonly<SessionState>, surroundings: Surroundings): { itemId: string; spot: Spot; radius: number }[] {
-  return itemsOnSurfaces(state).flatMap(({ itemId, spot }) => {
-    const lid = layoutOf(state, itemId)?.lid ?? null
-    if (lid === null || !isTheLidOpen(state, itemId) || state.sink.itemIdInside === itemId) return []
-    const offset = openLidOffsetBeside(itemId, state, surroundings)
-    return offset === null ? [] : [{ itemId, spot: offsetSpot(spot, offset), radius: lid.lyingRadiusMetres }]
+function openLidBeside(itemId: string, spot: Spot, lidsLaidBefore: readonly LyingLid[], state: DeepReadonly<SessionState>, surroundings: Surroundings): LyingLid | null {
+  const layout = layoutOf(state, itemId)
+  if (layout === undefined || layout.lid === null || !isTheLidOpen(state, itemId) || state.sink.itemIdInside === itemId) return null
+  const radius = layout.lid.lyingRadiusMetres
+  const distance = layout.footprintRadiusMetres + radius + openLidGapMetres
+  const turn = turnOfItemAt(surroundings.layout, spot)
+  const lidsInEveryDirection = openLidDirectionsRadians.map((direction) => {
+    const offset = turnedBy({ x: Math.cos(direction) * distance, z: Math.sin(direction) * distance }, turn)
+    return { itemId, offset, spot: offsetSpot(spot, offset), radius }
   })
+  return lidsInEveryDirection.find((lid) => hasRoomForTheLid(lid, lidsLaidBefore, state, surroundings)) ?? null
+}
+
+function hasRoomForTheLid(lid: LyingLid, lidsLaidBefore: readonly LyingLid[], state: DeepReadonly<SessionState>, surroundings: Surroundings): boolean {
+  const isClearOfTheRoom = whyThereIsNoRoomForCircles([{ spot: lid.spot, radius: lid.radius, restsOnTheSurface: true }], null, state, surroundings) === null
+  return isClearOfTheRoom && !lidsLaidBefore.some((laid) => isNear(lid.spot, laid.spot, lid.radius + laid.radius))
 }
 
 function offsetSpot(spot: Spot, offset: FloorPoint): Spot {
