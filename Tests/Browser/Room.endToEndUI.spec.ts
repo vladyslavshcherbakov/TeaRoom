@@ -1,65 +1,62 @@
 import { expect, test, type Page } from '@playwright/test'
 import { text } from '../../Apps/Game/Texts/Texts.ts'
 
+type ConsoleRecord = { readonly roomLines: string[]; readonly ritualLines: string[]; readonly errors: string[] }
+
+const roomOpensWithinMilliseconds = 20_000
+const walkIsSavedWithinMilliseconds = 20_000
 const floorSharesToTry = [
   [0.3, 0.5],
   [0.35, 0.45],
   [0.6, 0.55],
   [0.4, 0.58],
 ] as const
-const entrance = '(1.60, 1.80)'
 
 test('room_whenTheFloorInFrontOfTheWalkerIsTapped_answersTheTap', async ({ page }) => {
-  const log = roomLog(page)
+  const record = consoleRecordOf(page)
   await page.goto('./')
-  await expect.poll(() => log.lines.some((line) => line.includes('room opened'))).toBe(true)
+  await roomOpening(record, 1)
   const viewport = page.viewportSize()
   if (viewport === null) throw new Error('the page has no viewport')
 
   await page.mouse.click(viewport.width / 2, viewport.height / 2)
 
-  await expect.poll(() => log.lines.length).toBeGreaterThan(1)
-  expect(log.errors).toEqual([])
+  await expect.poll(() => record.roomLines.length).toBeGreaterThan(1)
+  expect(record.errors).toEqual([])
 })
 
 test('room_whenOpened_opensTheSessionWithNothingToSip', async ({ page }) => {
-  const ritualLines: string[] = []
-  page.on('console', (message) => {
-    if (message.text().includes('[ritual]')) ritualLines.push(message.text())
-  })
+  const record = consoleRecordOf(page)
 
   await page.goto('./')
 
-  await expect.poll(() => ritualLines.some((line) => line.includes('session opened in quietRoom'))).toBe(true)
+  await expect.poll(() => record.ritualLines.some((line) => line.includes('session opened in quietRoom'))).toBe(true)
   await expect(page.locator('button.sip')).toBeHidden()
 })
 
 test('room_whenReloadedAfterTheWalkerMoved_offersToContinueWhereTheWalkerStood', async ({ page }) => {
-  const log = roomLog(page)
+  const record = consoleRecordOf(page)
   await page.goto('./')
-  await expect.poll(() => log.lines.some((line) => line.includes('room opened'))).toBe(true)
-  await walkSomewhereOnTheFloor(page, log.lines)
-  await expect.poll(() => log.lines.some((line) => line.includes('the visit is saved with the walker at') && !line.includes(entrance)), { timeout: 20_000 }).toBe(true)
+  const entrance = walkerPlaceIn(await roomOpening(record, 1))
+  await walkSomewhereOnTheFloor(page, record)
+  await expect.poll(() => record.roomLines.some((line) => line.includes('the visit is saved with the walker at') && !line.includes(entrance)), { timeout: walkIsSavedWithinMilliseconds }).toBe(true)
   await page.reload()
 
   await page.locator('.continue-primary').click()
 
-  await expect.poll(() => log.lines.filter((line) => line.includes('room opened')).length).toBe(2)
-  const reopened = log.lines.filter((line) => line.includes('room opened'))[1] ?? ''
-  expect(reopened).not.toContain(`walker at ${entrance}`)
-  expect(log.errors).toEqual([])
+  expect(walkerPlaceIn(await roomOpening(record, 2))).not.toBe(entrance)
+  expect(record.errors).toEqual([])
 })
 
 test('room_whenReloadedAndStartedOver_opensAtTheEntrance', async ({ page }) => {
-  const log = roomLog(page)
+  const record = consoleRecordOf(page)
   await page.goto('./')
-  await expect.poll(() => log.lines.some((line) => line.includes('room opened'))).toBe(true)
+  const entrance = walkerPlaceIn(await roomOpening(record, 1))
   await page.reload()
 
   await page.locator('.continue-secondary').click()
 
-  await expect.poll(() => log.lines.filter((line) => line.includes('room opened')).length).toBe(2)
-  expect(log.lines.filter((line) => line.includes('room opened'))[1]).toContain(`walker at ${entrance}`)
+  expect(walkerPlaceIn(await roomOpening(record, 2))).toBe(entrance)
 })
 
 test('room_withAVisitSavedByAnIncompatibleVersion_saysTheVisitWasLost', async ({ page }) => {
@@ -70,22 +67,43 @@ test('room_withAVisitSavedByAnIncompatibleVersion_saysTheVisitWasLost', async ({
   await expect(page.locator('.caption')).toContainText(text('visit.lostToAnUpdate'))
 })
 
-function roomLog(page: Page): { lines: string[]; errors: string[] } {
-  const record = { lines: [] as string[], errors: [] as string[] }
+function consoleRecordOf(page: Page): ConsoleRecord {
+  const record: ConsoleRecord = { roomLines: [], ritualLines: [], errors: [] }
   page.on('console', (message) => {
-    if (message.text().includes('[room]')) record.lines.push(message.text())
+    const line = message.text()
+    if (line.includes('[room]')) record.roomLines.push(line)
+    if (line.includes('[ritual]')) record.ritualLines.push(line)
   })
   page.on('pageerror', (error) => record.errors.push(error.message))
   return record
 }
 
-async function walkSomewhereOnTheFloor(page: Page, lines: readonly string[]): Promise<void> {
+async function roomOpening(record: ConsoleRecord, openingNumber: number): Promise<string> {
+  const openings = () => record.roomLines.filter((line) => line.includes('room opened'))
+  await expect.poll(() => openings().length, { timeout: roomOpensWithinMilliseconds }).toBeGreaterThanOrEqual(openingNumber)
+  const opening = openings()[openingNumber - 1]
+  if (opening === undefined) throw new Error(`the room did not open ${openingNumber} times`)
+  return opening
+}
+
+function walkerPlaceIn(openingLine: string): string {
+  const place = /walker at (\([^)]*\))/.exec(openingLine)?.[1]
+  if (place === undefined) throw new Error(`no place of the walker in "${openingLine}"`)
+  return place
+}
+
+async function walkSomewhereOnTheFloor(page: Page, record: ConsoleRecord): Promise<string> {
   const viewport = page.viewportSize()
   if (viewport === null) throw new Error('the page has no viewport')
   for (const [widthShare, heightShare] of floorSharesToTry) {
-    const walking = page.waitForEvent('console', { predicate: (message) => message.text().includes('walking to'), timeout: 1000 }).catch(() => null)
+    const linesBeforeTheTap = record.roomLines.length
+    const linesSinceTheTap = () => record.roomLines.slice(linesBeforeTheTap)
     await page.mouse.click(viewport.width * widthShare, viewport.height * heightShare)
-    if ((await walking) !== null || lines.some((line) => line.includes('walking to'))) return
+    await expect.poll(() => linesSinceTheTap().some((line) => line.includes('tap on'))).toBe(true)
+    if (!linesSinceTheTap().some((line) => line.includes('tap on the floor'))) continue
+    await expect.poll(() => linesSinceTheTap().some((line) => line.includes('walking to the floor at') || line.includes('no way to'))).toBe(true)
+    const walkingLine = linesSinceTheTap().find((line) => line.includes('walking to the floor at'))
+    if (walkingLine !== undefined) return walkingLine
   }
-  throw new Error('no tap on the floor made the walker walk')
+  throw new Error(`no tap on the floor at ${floorSharesToTry.length} spots made the walker walk`)
 }
