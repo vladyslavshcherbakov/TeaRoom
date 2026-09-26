@@ -63,7 +63,7 @@ function sipAxisToward(towardTheHead: THREE.Vector3): THREE.Vector3 {
   return up.clone().applyQuaternion(new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(up, towardTheHead), tiltShown))
 }
 
-export function headOf(camera: THREE.Camera): THREE.Vector3 {
+function headOf(camera: THREE.Camera): THREE.Vector3 {
   return camera.localToWorld(headInCamera.clone())
 }
 

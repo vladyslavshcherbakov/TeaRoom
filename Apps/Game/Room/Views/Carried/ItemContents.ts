@@ -11,15 +11,14 @@ import type { TableViewState } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
 import { mostPuffsFromOneSource, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
-import { headOf } from './HeldInView.ts'
 import type { GlowingShell } from './ItemParts.ts'
 import type { GaugeStrip } from './GaugeStrip.ts'
 import { kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
 import { LeafPile } from './LeafPile.ts'
 import { roomLayers } from '../RoomLayers.ts'
 
-type SteamDrawnToTheHead = {
-  readonly head: THREE.Vector3
+type SteamDrawnToTheEyes = {
+  readonly eyes: THREE.Vector3
   readonly share: number
 }
 
@@ -36,7 +35,8 @@ const steamColumnMetres = 0.18
 const steamStartsAboveTheOpeningMetres = 0.04
 const steamStartsAboveTheSpoutMetres = 0.02
 const smallestPuffScale = 0.6
-const sipPuffCrossingsPerSecond = 0.5
+const sipPuffCrossingsPerSecond = 0.38
+const sipPuffFadesOverShareOfItsWay = 0.3
 const leftBehindPuffFadesInSeconds = 0.8
 const tiltAcrossPaceShareOfTheRise = 0.8
 const tiltAlongPaceShareOfTheRise = 1.3
@@ -74,12 +74,12 @@ export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, su
   if (model.glowingShell !== null && vessel !== undefined) showRedHeat(model.glowingShell, vessel.shellGlow)
   const puffsPerSource = vessel === undefined || !model.root.visible || model.layer === roomLayers.inspected ? 0 : puffsBySteam[vessel.steam]
   const sip = scene.sipGesture?.cupId === model.itemId ? scene.sipGesture : null
-  const toTheHead = sip === null || scene.heldInView === null ? null : { head: headOf(scene.heldInView.camera), share: sip.liftShare }
+  const toTheEyes = sip === null || scene.heldInView === null ? null : { eyes: scene.heldInView.camera.getWorldPosition(new THREE.Vector3()), share: sip.liftShare }
   const isOpenToTheAir = model.lid === null || isOpen
   const whereTheVesselIs = whereIsTheVessel(model, scene)
   model.root.updateMatrixWorld()
   showSteam(model, steamSourcesOf(model, isOpenToTheAir), puffsPerSource, scene.timeSeconds, whereTheVesselIs)
-  showSipSteam(model, isOpenToTheAir ? puffsPerSource : 0, scene.timeSeconds, toTheHead, whereTheVesselIs)
+  showSipSteam(model, isOpenToTheAir ? puffsPerSource : 0, scene.timeSeconds, toTheEyes, whereTheVesselIs)
 }
 
 function whereIsTheVessel(model: CarriedModel, scene: CarriedItemsScene): string {
@@ -103,8 +103,8 @@ function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], 
   })
 }
 
-function showSipSteam(model: CarriedModel, sipPuffCount: number, timeSeconds: number, toTheHead: SteamDrawnToTheHead | null, whereTheVesselIs: string): void {
-  if (toTheHead !== null && model.sipSteamStartedAtSeconds === null) model.sipSteamStartedAtSeconds = timeSeconds
+function showSipSteam(model: CarriedModel, sipPuffCount: number, timeSeconds: number, toTheEyes: SteamDrawnToTheEyes | null, whereTheVesselIs: string): void {
+  if (toTheEyes !== null && model.sipSteamStartedAtSeconds === null) model.sipSteamStartedAtSeconds = timeSeconds
   const startedAtSeconds = model.sipSteamStartedAtSeconds
   if (startedAtSeconds === null) return
   const crossings = (timeSeconds - startedAtSeconds) * sipPuffCrossingsPerSecond
@@ -115,13 +115,15 @@ function showSipSteam(model: CarriedModel, sipPuffCount: number, timeSeconds: nu
     const crossingsOfThePuff = crossings - index / Math.max(1, sipPuffCount)
     const rise = Math.max(0, crossingsOfThePuff) % 1
     const isDue = !trail.isOut || rise < trail.lastRise
-    if (!isDue) return showThePuff(model, puff, trail, rise, timeSeconds, whereTheVesselIs)
-    if (toTheHead === null || index >= sipPuffCount || crossingsOfThePuff < 0) return hideThePuff(puff, trail)
-    const reachMetres = THREE.MathUtils.lerp(steamColumnMetres * model.root.scale.x, opening.distanceTo(toTheHead.head), toTheHead.share)
-    releaseThePuff(model, puff, trail, opening, steamRisingTo(opening, toTheHead), reachMetres, model.steamLook.drawnToTheEyes, whereTheVesselIs)
+    if (isDue) {
+      if (toTheEyes === null || index >= sipPuffCount || crossingsOfThePuff < 0) return hideThePuff(puff, trail)
+      const reachMetres = THREE.MathUtils.lerp(steamColumnMetres * model.root.scale.x, opening.distanceTo(toTheEyes.eyes), toTheEyes.share)
+      releaseThePuff(model, puff, trail, opening, steamRisingTo(opening, toTheEyes), reachMetres, model.steamLook.drawnToTheEyes, whereTheVesselIs)
+    }
     showThePuff(model, puff, trail, rise, timeSeconds, whereTheVesselIs)
+    trail.material.opacity *= Math.min(1, (1 - rise) / sipPuffFadesOverShareOfItsWay)
   })
-  if (toTheHead === null && model.sipPuffTrails.every((trail) => !trail.isOut)) model.sipSteamStartedAtSeconds = null
+  if (toTheEyes === null && model.sipPuffTrails.every((trail) => !trail.isOut)) model.sipSteamStartedAtSeconds = null
 }
 
 function releaseThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail, source: THREE.Vector3, direction: THREE.Vector3, reachMetres: number, look: THREE.Material, whereTheVesselIs: string): void {
@@ -151,9 +153,9 @@ function hideThePuff(puff: THREE.Mesh, trail: PuffTrail | undefined): void {
   if (trail !== undefined) trail.isOut = false
 }
 
-function steamRisingTo(source: THREE.Vector3, toTheHead: SteamDrawnToTheHead): THREE.Vector3 {
-  const towardTheHead = toTheHead.head.clone().sub(source).normalize()
-  return new THREE.Vector3(0, 1, 0).lerp(towardTheHead, toTheHead.share).normalize()
+function steamRisingTo(source: THREE.Vector3, toTheEyes: SteamDrawnToTheEyes): THREE.Vector3 {
+  const towardTheEyes = toTheEyes.eyes.clone().sub(source).normalize()
+  return new THREE.Vector3(0, 1, 0).lerp(towardTheEyes, toTheEyes.share).normalize()
 }
 
 function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
