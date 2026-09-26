@@ -239,7 +239,7 @@ export const englishTexts = {
   'wall.prophecy.secondLine': 'this tea room, and it will live a life of its own. Or not.',
   'guide.title': 'How it works',
   'guide.taking.title': 'Taking things',
-  'guide.taking.text': 'Tap a thing on a table, the counter or the shelf to take it. It goes into a free hand and glows softly: that hand is chosen. It stays chosen when you walk away. Tap it again to let go. You can choose a hand while you stand at a table, the counter or the shelf, or in first person.',
+  'guide.taking.text': 'Tap a thing on a table, the counter or the shelf to take it. It goes into a free hand and becomes active, so you see a soft glow around it. The hand stays active even when you walk away. Tap it again to let go. You can choose a hand while you stand at a table, the counter or the shelf, or in first person.',
   'guide.pouring.title': 'Pouring',
   'guide.pouring.text': 'Choose what you pour from: the kettle, the thermos or a bowl. Tap the neck or the lid of what you pour into. Drag your vessel until its spout is over the other one, and hold the pour button in the bottom right corner to tilt it. Let go to stop the stream. Tap anywhere else when you are done.',
   'guide.looking.title': 'Looking closely',
