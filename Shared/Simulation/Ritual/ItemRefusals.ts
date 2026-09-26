@@ -7,30 +7,42 @@ import type { RefusalReason } from './RitualEvent.ts'
 
 export type Refusal = { readonly reason: RefusalReason; readonly values: string }
 
-export type ItemCheck = (draft: Draft, itemId: string) => Refusal | null
+export type Check = (draft: Draft) => Refusal | null
 
-export const isKnown: ItemCheck = (draft, itemId) => (locationOfItem(draft, itemId) === undefined ? { reason: 'unknownItem', values: '' } : null)
-
-export const isNotInAHand: ItemCheck = (draft, itemId) => (locationOfItem(draft, itemId)?.kind === 'inHand' ? { reason: 'alreadyInHand', values: '' } : null)
-
-export const isNotBurntAway: ItemCheck = (draft, itemId) => (locationOfItem(draft, itemId)?.kind === 'gone' ? { reason: 'burntAway', values: '' } : null)
-
-export const isWithinTheKeepersReach: ItemCheck = (draft, itemId) => {
-  const location = locationOfItem(draft, itemId)
-  if (location !== undefined && isWithinReach(draft, location)) return null
-  return { reason: 'outOfReach', values: `${itemId} is ${whereIs(location)}, ${whereTheKeeperStands(draft)}` }
+export function isKnown(itemId: string): Check {
+  return (draft) => (locationOfItem(draft, itemId) === undefined ? { reason: 'unknownItem', values: '' } : null)
 }
 
-export const isNotBeingPoured: ItemCheck = (draft, itemId) => (isInvolvedInPour(draft, itemId) ? { reason: 'vesselIsBeingPoured', values: '' } : null)
-
-export const isCoolEnoughToHold: ItemCheck = (draft, itemId) => {
-  const shellHeat = draft.state.vessels[itemId]?.shellHeat ?? 0
-  return isTooHotToHold(shellHeat) ? { reason: 'tooHotToHold', values: `${itemId}'s metal is at ${percent(shellHeat)} of red heat` } : null
+export function isNotInAHand(itemId: string): Check {
+  return (draft) => (locationOfItem(draft, itemId)?.kind === 'inHand' ? { reason: 'alreadyInHand', values: '' } : null)
 }
 
-export function wasRefusedByAnyOf(draft: Draft, command: Command, itemId: string, checks: readonly ItemCheck[]): boolean {
+export function isNotBurntAway(itemId: string): Check {
+  return (draft) => (locationOfItem(draft, itemId)?.kind === 'gone' ? { reason: 'burntAway', values: '' } : null)
+}
+
+export function isWithinTheKeepersReach(itemId: string): Check {
+  return (draft) => {
+    const location = locationOfItem(draft, itemId)
+    if (location !== undefined && isWithinReach(draft, location)) return null
+    return { reason: 'outOfReach', values: `${itemId} is ${whereIs(location)}, ${whereTheKeeperStands(draft)}` }
+  }
+}
+
+export function isNotBeingPoured(itemId: string): Check {
+  return (draft) => (isInvolvedInPour(draft, itemId) ? { reason: 'vesselIsBeingPoured', values: '' } : null)
+}
+
+export function isCoolEnoughToHold(itemId: string): Check {
+  return (draft) => {
+    const shellHeat = draft.state.vessels[itemId]?.shellHeat ?? 0
+    return isTooHotToHold(shellHeat) ? { reason: 'tooHotToHold', values: `${itemId}'s metal is at ${percent(shellHeat)} of red heat` } : null
+  }
+}
+
+export function wasRefusedByAnyOf(draft: Draft, command: Command, checks: readonly Check[]): boolean {
   for (const check of checks) {
-    const refusal = check(draft, itemId)
+    const refusal = check(draft)
     if (refusal === null) continue
     refuse(draft, command, refusal.reason, refusal.values)
     return true

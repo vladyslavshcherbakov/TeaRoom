@@ -9,7 +9,7 @@ export function moveVesselLid(
   const vessel = draft.state.vessels[command.vesselId]
   if (vessel === undefined) return refuse(draft, command, 'unknownVessel')
   if (vesselDefinitionOf(draft, vessel).lid === null) return refuse(draft, command, 'vesselHasNoLid')
-  if (wasRefusedByAnyOf(draft, command, vessel.id, [isWithinTheKeepersReach, isCoolEnoughToHold])) return
+  if (wasRefusedByAnyOf(draft, command, [isWithinTheKeepersReach(vessel.id), isCoolEnoughToHold(vessel.id)])) return
   const shouldOpen = command.type === 'openVesselLid'
   if (vessel.isLidOpen === shouldOpen) return refuse(draft, command, shouldOpen ? 'lidAlreadyOpen' : 'lidAlreadyClosed')
   vessel.isLidOpen = shouldOpen

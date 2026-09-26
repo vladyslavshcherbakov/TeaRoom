@@ -7,7 +7,7 @@ import type { HeaterState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { chosenTea, describeLiquid, note, refuse, type Draft } from './Draft.ts'
 import { rulesFor } from './ItemKinds.ts'
-import { isKnown, isNotBeingPoured, isNotBurntAway, isWithinTheKeepersReach, wasRefusedByAnyOf, type ItemCheck } from './ItemRefusals.ts'
+import { isKnown, isNotBeingPoured, isNotBurntAway, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
 import { liftOutOfTheSink } from './SinkCommands.ts'
 import { emptyTheHand, heaterSpotOf, isKeeperAt, locationOfItem, moveItem, whereTheKeeperStands } from './Reach.ts'
 
@@ -17,7 +17,7 @@ const switchedOffWords: Readonly<Record<HeaterSwitchedOffBy, string>> = { byTheK
 
 export function placeOnHeater(draft: Draft, command: CommandOfType<'placeOnHeater'>): void {
   const itemId = command.itemId
-  if (wasRefusedByAnyOf(draft, command, itemId, [isKnown, isNotBurntAway, canSitOnTheHeater, isTheHeaterFree, isNotBeingPoured, isTheKeeperAtTheHeater, isWithinTheKeepersReach])) return
+  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotBurntAway(itemId), canSitOnTheHeater(itemId), isTheHeaterFree, isNotBeingPoured(itemId), isTheKeeperAtTheHeater, isWithinTheKeepersReach(itemId)])) return
   const heaterSpot = heaterSpotOf(draft)
   const location = locationOfItem(draft, itemId)
   if (location?.kind === 'inHand') emptyTheHand(draft, location.handIndex)
@@ -154,14 +154,16 @@ function judgementOfWaterOnHeater(draft: Draft): WaterJudgement | null {
   return judgement
 }
 
-const canSitOnTheHeater: ItemCheck = (draft, itemId) => (rulesFor(draft.state, itemId)?.canSitOnTheHeater(draft, itemId) === true ? null : { reason: 'cannotSitOnHeater', values: '' })
+function canSitOnTheHeater(itemId: string): Check {
+  return (draft) => (rulesFor(draft.state, itemId)?.canSitOnTheHeater(draft, itemId) === true ? null : { reason: 'cannotSitOnHeater', values: '' })
+}
 
-const isTheHeaterFree: ItemCheck = (draft) => {
+const isTheHeaterFree: Check = (draft) => {
   const occupant = draft.state.heater.itemIdOnTop
   return occupant === null ? null : { reason: 'heaterOccupied', values: `${occupant} is on it` }
 }
 
-const isTheKeeperAtTheHeater: ItemCheck = (draft) => {
+const isTheKeeperAtTheHeater: Check = (draft) => {
   const heaterPlaceId = heaterSpotOf(draft).placeId
   return isKeeperAt(draft, heaterPlaceId) ? null : { reason: 'notAtThatPlace', values: `${whereTheKeeperStands(draft)}, the heater is at the ${heaterPlaceId}` }
 }

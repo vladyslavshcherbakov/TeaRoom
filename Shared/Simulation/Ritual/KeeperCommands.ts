@@ -22,18 +22,19 @@ export function standAt(draft: Draft, command: CommandOfType<'standAt'>): void {
 }
 
 export function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
-  if (wasRefusedByAnyOf(draft, command, command.itemId, [isKnown, isNotInAHand, isNotBurntAway, isWithinTheKeepersReach, isNotBeingPoured, isCoolEnoughToHold])) return
-  const whereItWas = whereIs(locationOfItem(draft, command.itemId))
+  const itemId = command.itemId
+  if (wasRefusedByAnyOf(draft, command, [isKnown(itemId), isNotInAHand(itemId), isNotBurntAway(itemId), isWithinTheKeepersReach(itemId), isNotBeingPoured(itemId), isCoolEnoughToHold(itemId)])) return
+  const whereItWas = whereIs(locationOfItem(draft, itemId))
   const handIndex = freeHandOf(draft)
-  if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((itemId) => itemId !== null).join(' and ')}`)
-  if (draft.state.heater.itemIdOnTop === command.itemId) liftOffTheHeater(draft, command.itemId)
-  if (rulesFor(draft.state, command.itemId)?.takeIntoAHand(draft, command.itemId) === 'crumbled') return
-  draft.state.keeper.hands[handIndex] = command.itemId
-  liftOutOfTheSink(draft, command.itemId)
-  moveItem(draft, command.itemId, { kind: 'inHand', handIndex })
-  note(draft, `picked up ${command.itemId}, which was ${whereItWas}, into hand ${handIndex}`)
-  draft.events.push({ type: 'pickedUp', itemId: command.itemId, handIndex })
-  closeTheLidAsItIsLifted(draft, command.itemId, 'it was picked up')
+  if (handIndex === null) return refuse(draft, command, 'handsFull', `holding ${draft.state.keeper.hands.filter((heldItemId) => heldItemId !== null).join(' and ')}`)
+  if (draft.state.heater.itemIdOnTop === itemId) liftOffTheHeater(draft, itemId)
+  if (rulesFor(draft.state, itemId)?.takeIntoAHand(draft, itemId) === 'crumbled') return
+  draft.state.keeper.hands[handIndex] = itemId
+  liftOutOfTheSink(draft, itemId)
+  moveItem(draft, itemId, { kind: 'inHand', handIndex })
+  note(draft, `picked up ${itemId}, which was ${whereItWas}, into hand ${handIndex}`)
+  draft.events.push({ type: 'pickedUp', itemId, handIndex })
+  closeTheLidAsItIsLifted(draft, itemId, 'it was picked up')
 }
 
 export function pickUpWithAMiddleHand(draft: Draft, command: CommandOfType<'pickUpWithAMiddleHand'>): void {
