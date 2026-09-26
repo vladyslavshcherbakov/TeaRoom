@@ -185,6 +185,7 @@ export const englishTexts = {
   'settings.camera': 'Camera',
   'settings.camera.room': 'Room view',
   'settings.camera.firstPerson': 'First person',
+  'settings.firstPersonNote': 'First person is new and not well tested yet.',
   'settings.controls': 'First-person controls',
   'settings.controls.twoSticks': 'Two sticks',
   'settings.controls.mouseAndKeyboard': 'Mouse and keyboard',
