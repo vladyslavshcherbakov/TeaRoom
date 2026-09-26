@@ -60,6 +60,22 @@ test('worldReport_whileTheKettleHeats_logsItsWaterAndHowFastItWarms', () => {
   )
 })
 
+test('worldReport_whileTheTapWashesLeavesOutOfAFullKettle_logsHowFastTheLeavesGo', () => {
+  const ritual = TestRitual.begun()
+  ritual.addLeavesToKettle(5)
+  ritual.do({ type: 'pickUp', itemId: 'kettle' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'kettle' })
+  ritual.do({ type: 'putInTheSink', itemId: 'kettle' })
+  ritual.do({ type: 'turnTheTapOn' })
+
+  ritual.wait(11)
+
+  assert.ok(
+    ritual.log.messagesAt('debug').some((message) => /the room: kettle in the sink, lid open: 1000\.0 ml .* g \(-[0-9.]+ g\/s\) of testGreen/.test(message)),
+    ritual.log.messagesAt('debug').join('\n'),
+  )
+})
+
 test('worldReport_ofARoomWhereNothingChanges_saysTheRoomIsStill', () => {
   const ritual = TestRitual.begun()
 

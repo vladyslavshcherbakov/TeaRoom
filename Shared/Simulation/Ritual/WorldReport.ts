@@ -49,11 +49,12 @@ function vesselLines(draft: Draft, vessel: VesselState, ahead: VesselState | und
   const strengthRate = next.strength - liquid.strength
   const bitternessRate = next.bitterness - liquid.bitterness
   const shellRate = ahead.shellHeat - vessel.shellHeat
-  const isChanging = [temperatureRate, volumeRate, strengthRate, bitternessRate, shellRate].some((rate) => Math.abs(rate) > smallestReportedChange)
+  const leavesRate = (ahead.leaves?.grams ?? 0) - (vessel.leaves?.grams ?? 0)
+  const isChanging = [temperatureRate, volumeRate, strengthRate, bitternessRate, shellRate, leavesRate].some((rate) => Math.abs(rate) > smallestReportedChange)
   if (!isChanging) return []
   const definition = vesselDefinitionOf(draft, vessel)
   const lid = definition.lid === null ? 'no lid' : vessel.isLidOpen ? 'lid open' : 'lid closed'
-  const leaves = vessel.leaves === null ? 'no leaves' : `${vessel.leaves.grams.toFixed(2)} g of ${vessel.leaves.teaId}${vessel.leaves.isSteeping ? ` steeping for ${vessel.leaves.steepedSeconds.toFixed(0)} s${vessel.leaves.isStirredByTheBoil ? ', stirred by the boil' : ''}` : ', dry'}`
+  const leaves = vessel.leaves === null ? 'no leaves' : `${vessel.leaves.grams.toFixed(2)} g (${signed(leavesRate, 3)} g/s) of ${vessel.leaves.teaId}${vessel.leaves.isSteeping ? ` steeping for ${vessel.leaves.steepedSeconds.toFixed(0)} s${vessel.leaves.isStirredByTheBoil ? ', stirred by the boil' : ''}` : ', dry'}`
   const shell = definition.hasAMetalShell ? `, its metal at ${percent(vessel.shellHeat)} of red heat (${signedPercent(shellRate)}/s)` : ''
   const contents =
     isEmpty(liquid) && isEmpty(next)
