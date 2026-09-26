@@ -112,6 +112,18 @@ export class RoomGestures {
     this.play.pressEnded()
   }
 
+  fingerCancelled(pointerId: number): void {
+    const touch = this.touch
+    if (touch.kind === 'aiming' && pointerId === touch.finger.pointerId) return this.aimingFingerCancelled()
+    if (this.fingersOnTheInspectedItem.has(pointerId)) return this.inspectingFingerCancelled(pointerId)
+    if (!this.fingersOnTheRoom.delete(pointerId)) return this.log(`finger ${pointerId} was cancelled by the browser, and no gesture followed it`)
+    this.log(`finger ${pointerId} was cancelled by the browser, so it is forgotten and does not tap`)
+    if (touch.kind === 'pinching' && this.fingersOnTheRoom.size < 2) this.stopPinching()
+    if (touch.kind === 'pressing') this.cancelTheHold(touch, 'the browser cancelled the finger')
+    if (touch.kind === 'pressing' || touch.kind === 'pinching') this.touch = noTouch
+    this.play.pressCancelled()
+  }
+
   crosshairSwept(pixels: number): void {
     const touch = this.touch
     if (touch.kind !== 'pressing' || pixels === 0) return
@@ -182,6 +194,12 @@ export class RoomGestures {
     this.play.inspectionTapped(this.screen.tapTargetAt(finger.start))
   }
 
+  private inspectingFingerCancelled(pointerId: number): void {
+    this.fingersOnTheInspectedItem.delete(pointerId)
+    this.log(`finger ${pointerId} on the inspected item was cancelled by the browser, so it does not tap`)
+    if (this.touch.kind === 'pinchingTheInspectedItem' && this.fingersOnTheInspectedItem.size < 2) this.stopPinchingTheInspectedItem()
+  }
+
   private startPinchingTheInspectedItem(): void {
     for (const finger of this.fingersOnTheInspectedItem.values()) finger.mayBeATap = false
     const magnificationAtStart = this.play.inspectionView?.magnification ?? 1
@@ -225,6 +243,12 @@ export class RoomGestures {
   private aimingFingerMoved(finger: AimingFinger, point: ScreenPoint): void {
     if (distanceBetween(finger.start, point) > tapSlopPixels) finger.hasMoved = true
     this.play.pourFingerMoved(this.screen.aimPointAt(point))
+  }
+
+  private aimingFingerCancelled(): void {
+    this.touch = noTouch
+    this.log('the finger aiming the pour was cancelled by the browser, so the vessel returns to its hand')
+    this.play.pourDone()
   }
 
   private aimingFingerUp(finger: AimingFinger): void {

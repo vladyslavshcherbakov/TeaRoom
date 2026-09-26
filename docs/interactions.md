@@ -61,7 +61,7 @@ The simulation core receives one command per player decision and answers with ev
 
 ## Gestures in the room
 
-A press that moves less than 12 px is a tap when the finger lifts, unless it started a pour or became a hold. A press that moves further does nothing. A press on an item the keeper holds, or on its lid, that stays within 12 px for a second is a hold: it shows the item up close, and its finger lifting is not a tap. Moving further, or a second finger, turns it back into an ordinary press, and a finger lifted earlier is a tap.
+A press that moves less than 12 px is a tap when the finger lifts, unless it started a pour or became a hold. A press that moves further does nothing. A press on an item the keeper holds, or on its lid, that stays within 12 px for a second is a hold: it shows the item up close, and its finger lifting is not a tap. Moving further, or a second finger, turns it back into an ordinary press, and a finger lifted earlier is a tap. A finger that the browser takes away, for a system gesture or an alert, is forgotten and never taps. If it aimed a pour, the vessel returns to its hand, and that hand is no longer chosen.
 
 | Gesture | What it does |
 |---|---|

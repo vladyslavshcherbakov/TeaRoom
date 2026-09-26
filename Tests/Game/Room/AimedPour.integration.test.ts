@@ -429,6 +429,18 @@ test('aimingFinger_whenLiftedWithoutMoving_putsTheKettleDownWhereItTouched', () 
   assert.deepEqual(withoutTheTurn(room.state.vessels['kettle']?.location), { kind: 'onSurface', spot: { placeId: 'counter', ...counterLeftOfTheHeater } })
 })
 
+test('aimingFinger_whenTheBrowserCancelsIt_returnsTheKettleToItsHandThatIsNoLongerChosen', () => {
+  const room = roomWithAScreen()
+  aimTheKettleAtTheBowl(room)
+  room.gestures.fingerDown(1, onTheCounterLeftOfTheHeater)
+
+  room.gestures.fingerCancelled(1)
+
+  assert.equal(room.play.aimedPourView, null)
+  assert.equal(room.state.keeper.hands[0], 'kettle')
+  assert.equal(room.play.chosenHandIndex, null)
+})
+
 test('secondFinger_whileAFingerAims_isIgnored', () => {
   const room = roomWithAScreen()
   aimTheKettleAtTheBowl(room)

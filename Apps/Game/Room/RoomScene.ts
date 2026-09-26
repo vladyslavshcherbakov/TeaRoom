@@ -717,7 +717,7 @@ export class RoomScene {
     })
     canvas.addEventListener('pointermove', (event) => this.gestures.fingerMoved(event.pointerId, this.pointOfThe(event)))
     canvas.addEventListener('pointerup', (event) => this.gestures.fingerUp(event.pointerId))
-    canvas.addEventListener('pointercancel', (event) => this.gestures.fingerUp(event.pointerId))
+    canvas.addEventListener('pointercancel', (event) => this.gestures.fingerCancelled(event.pointerId))
     canvas.addEventListener('wheel', (event) => {
       event.preventDefault()
       this.gestures.wheelTurned(event.deltaY)

@@ -206,6 +206,13 @@ export class RoomPlay {
     if (!press.hasMovedAway) this.tapped(press.target)
   }
 
+  pressCancelled(): void {
+    const press = this.press
+    this.press = null
+    if (press === null) return
+    this.log(`press on ${describeTarget(press.target)} was cancelled, so it is not a tap${press.stroke !== null && press.hasMovedAway ? ', and its stroke wipes no further' : ''}`)
+  }
+
   pourFingerDown(point: FloorPoint | null): void {
     this.aimedPour?.fingerDown(point)
   }

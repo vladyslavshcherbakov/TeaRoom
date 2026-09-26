@@ -43,6 +43,18 @@ test('heldItem_whenReleasedBeforeOneSecond_isNotInspectedAndItsHandIsChosenAsByA
   assert.equal(room.play.chosenHandIndex, 0)
 })
 
+test('heldItem_whenTheBrowserCancelsThePressBeforeOneSecond_isNotInspectedAndNoHandIsChosen', () => {
+  const room = new InspectingRoom()
+  room.gestures.fingerDown(1, onTheFirstHand)
+  room.holdFor(0.875)
+
+  room.gestures.fingerCancelled(1)
+  room.holdFor(0.25)
+
+  assert.equal(room.play.inspectionView, null)
+  assert.equal(room.play.chosenHandIndex, null)
+})
+
 test('heldItem_whenTheFingerDriftsTwelvePixelsWhileHeld_isInspected', () => {
   const room = new InspectingRoom()
   room.gestures.fingerDown(1, onTheFirstHand)
