@@ -1,5 +1,8 @@
 import * as THREE from 'three'
 import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
+import { roomHalfSize } from '../RoomLayout.ts'
+import type { RoomLog } from '../RoomNavigator.ts'
+import { paintingOfPlantsOnTheLawn } from './LawnPainting.ts'
 import type { PlantSurface, RoomMaterials } from './RoomMaterials.ts'
 import type { TapTargetTag } from './RoomModel.ts'
 
@@ -11,6 +14,9 @@ type PlantPart = {
 
 const groundSizeMetres = 60
 const groundBelowTheFloorMetres = 0.1
+const isTheDistantGardenPaintedOnTheLawn = true
+const standingGardenBeyondTheWallsMetres = 3
+const paintedGardenHalfSizeMetres = 12.5
 const kindsThatOpenTheDebugMenu: ReadonlySet<PlantKind> = new Set(['roseBush', 'rose'])
 const roseBushTag: TapTargetTag = { isRoseBush: true }
 
@@ -35,17 +41,15 @@ export class Garden {
   readonly root = new THREE.Group()
   readonly tappableMeshes: THREE.Object3D[] = []
 
-  constructor(materials: RoomMaterials) {
-    this.root.add(ground(materials))
-    const plantsByKind = new Map<PlantKind, Plant[]>()
-    for (const plant of gardenPlants()) {
-      const plantsOfTheKind = plantsByKind.get(plant.kind) ?? []
-      plantsOfTheKind.push(plant)
-      plantsByKind.set(plant.kind, plantsOfTheKind)
+  constructor(materials: RoomMaterials, renderer: THREE.WebGLRenderer, log: RoomLog) {
+    const plants = gardenPlants()
+    const plantsPaintedOnTheLawn = new Set(isTheDistantGardenPaintedOnTheLawn ? plants.filter(isPaintedOnTheLawn) : [])
+    const standingPlants = plants.filter((plant) => !plantsPaintedOnTheLawn.has(plant))
+    this.root.add(plantsPaintedOnTheLawn.size === 0 ? ground(materials.materialFor('lawn')) : paintedGround([...plantsPaintedOnTheLawn], materials, renderer))
+    for (const [kind, plantsOfTheKind] of plantsByKind(standingPlants)) {
+      for (const plantPart of partsByKind[kind]) this.addInstances(kind, instancesOf(plantPart, plantsOfTheKind, materials.plantMaterialFor(plantPart.surface)))
     }
-    for (const [kind, plantsOfTheKind] of plantsByKind) {
-      for (const plantPart of partsByKind[kind]) this.addInstances(kind, instancesOf(plantPart, plantsOfTheKind, materials))
-    }
+    log(`the garden has ${standingPlants.length} standing plants and ${plantsPaintedOnTheLawn.size} painted on the lawn beyond ${standingGardenBeyondTheWallsMetres} m from the walls`)
   }
 
   private addInstances(kind: PlantKind, instances: THREE.InstancedMesh): void {
@@ -56,16 +60,42 @@ export class Garden {
   }
 }
 
-function ground(materials: RoomMaterials): THREE.Mesh {
-  const lawn = new THREE.Mesh(new THREE.PlaneGeometry(groundSizeMetres, groundSizeMetres), materials.materialFor('lawn'))
+function ground(material: THREE.Material): THREE.Mesh {
+  const lawn = new THREE.Mesh(new THREE.PlaneGeometry(groundSizeMetres, groundSizeMetres), material)
   lawn.rotation.x = -Math.PI / 2
   lawn.position.y = -groundBelowTheFloorMetres
   lawn.receiveShadow = true
   return lawn
 }
 
-function instancesOf(plantPart: PlantPart, plants: readonly Plant[], materials: RoomMaterials): THREE.InstancedMesh {
-  const material = materials.plantMaterialFor(plantPart.surface)
+function paintedGround(plants: readonly Plant[], materials: RoomMaterials, renderer: THREE.WebGLRenderer): THREE.Mesh {
+  const plantMeshes = [...plantsByKind(plants)].flatMap(([kind, plantsOfTheKind]) => partsByKind[kind].map((plantPart) => instancesOf(plantPart, plantsOfTheKind, new THREE.MeshBasicMaterial({ color: materials.plantColourOf(plantPart.surface) }))))
+  const painting = paintingOfPlantsOnTheLawn(renderer, plantMeshes, paintedGardenHalfSizeMetres, materials.colourOf('lawn'))
+  for (const plantMesh of plantMeshes) {
+    plantMesh.dispose()
+    if (plantMesh.material instanceof THREE.Material) plantMesh.material.dispose()
+  }
+  const paintingsAcrossTheGround = groundSizeMetres / (2 * paintedGardenHalfSizeMetres)
+  painting.repeat.setScalar(paintingsAcrossTheGround)
+  painting.offset.setScalar((1 - paintingsAcrossTheGround) / 2)
+  return ground(materials.lawnMaterialPaintedWith(painting))
+}
+
+function isPaintedOnTheLawn(plant: Plant): boolean {
+  return !kindsThatOpenTheDebugMenu.has(plant.kind) && Math.max(Math.abs(plant.x), Math.abs(plant.z)) > roomHalfSize + standingGardenBeyondTheWallsMetres
+}
+
+function plantsByKind(plants: readonly Plant[]): Map<PlantKind, Plant[]> {
+  const plantsOfEachKind = new Map<PlantKind, Plant[]>()
+  for (const plant of plants) {
+    const plantsOfTheKind = plantsOfEachKind.get(plant.kind) ?? []
+    plantsOfTheKind.push(plant)
+    plantsOfEachKind.set(plant.kind, plantsOfTheKind)
+  }
+  return plantsOfEachKind
+}
+
+function instancesOf(plantPart: PlantPart, plants: readonly Plant[], material: THREE.Material): THREE.InstancedMesh {
   const mesh = new THREE.InstancedMesh(plantPart.geometry, material, plants.length)
   const placement = new THREE.Matrix4()
   const turn = new THREE.Quaternion()

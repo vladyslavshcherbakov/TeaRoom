@@ -237,9 +237,17 @@ export class RoomMaterials {
   plantMaterialFor(surface: PlantSurface): THREE.MeshLambertMaterial {
     const existing = this.materialsByPlantSurface.get(surface)
     if (existing !== undefined) return existing
-    const material = new THREE.MeshLambertMaterial({ color: colourByPlantSurface[surface], flatShading: true })
+    const material = new THREE.MeshLambertMaterial({ color: this.plantColourOf(surface), flatShading: true })
     this.materialsByPlantSurface.set(surface, material)
     return material
+  }
+
+  plantColourOf(surface: PlantSurface): THREE.Color {
+    return new THREE.Color(colourByPlantSurface[surface])
+  }
+
+  lawnMaterialPaintedWith(painting: THREE.Texture): THREE.MeshStandardMaterial {
+    return matteMaterial({ map: painting })
   }
 
   prophecySizeMetres(): { readonly width: number; readonly height: number } {
@@ -256,7 +264,7 @@ export class RoomMaterials {
     const color = look.colour
     switch (look.kind) {
       case 'matte':
-        return new THREE.MeshStandardMaterial({ color, roughness: 0.92, metalness: 0, flatShading: true })
+        return matteMaterial({ color })
       case 'unlit':
         return new THREE.MeshBasicMaterial({ color })
       case 'mist':
@@ -385,6 +393,10 @@ export class RoomMaterials {
       envMapIntensity: 1,
     })
   }
+}
+
+function matteMaterial(parameters: THREE.MeshStandardMaterialParameters): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0, flatShading: true, ...parameters })
 }
 
 function paintingMaterial(painting: HTMLCanvasElement): THREE.MeshStandardMaterial {

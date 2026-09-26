@@ -251,7 +251,7 @@ export class RoomScene {
       keeperHeightChosen: (heightCentimetres) => this.keeperHeightChosen(heightCentimetres),
       frameBudgetShownChosen: (isShown) => this.frameBudgetShownChosen(isShown),
     })
-    this.garden = new Garden(materials)
+    this.garden = new Garden(materials, this.renderer, log)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
     this.settingsStore = new SettingsStore(log, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
     this.playTime = new PlayTime(new PlayTimeStore(log), log)
