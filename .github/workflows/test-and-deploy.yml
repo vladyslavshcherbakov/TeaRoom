@@ -46,12 +46,21 @@ jobs:
           cache: npm
       - name: Install dependencies from the lockfile
         run: npm ci --no-audit --no-fund
+      - name: Find the revision of the browser for the UI tests
+        id: browser-revision
+        run: |
+          revision=$(node -e "
+            const { browsers } = JSON.parse(require('fs').readFileSync('node_modules/playwright-core/browsers.json', 'utf8'))
+            console.log(browsers.filter((browser) => browser.installByDefault && browser.name.startsWith(process.argv[1])).map((browser) => browser.name + '-' + browser.revision).join('-'))
+          " ${{ matrix.browser }})
+          echo "Playwright installs $revision for ${{ matrix.browser }}"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
       - name: Restore the browser for the UI tests
         id: browser-cache
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+          key: playwright-${{ runner.os }}-${{ steps.browser-revision.outputs.revision }}
       - name: Install the browser for the UI tests
         if: steps.browser-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps ${{ matrix.browser }}
