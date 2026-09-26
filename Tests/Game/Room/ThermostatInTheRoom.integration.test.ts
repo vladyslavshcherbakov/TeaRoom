@@ -47,6 +47,17 @@ test('downArrow_heldForOneSecond_stepsTheThermostatSixDegreesLowerAndNoMoreWhenL
   assert.equal(room.state.heater.thermostat.targetC, 94)
 })
 
+test('downArrow_heldThroughFourFramesOfAQuarterSecond_stepsTheThermostatSixDegreesLower', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.play.pressStarted(down)
+  for (let frame = 0; frame < 4; frame += 1) room.play.advance({ worldSeconds: 0.1, realSeconds: 0.25 })
+
+  room.play.pressEnded()
+
+  assert.equal(room.state.heater.thermostat.targetC, 94)
+})
+
 test('thermostatButton_whenTapped_startsTheThermostat', () => {
   const room = new TestRoom()
   room.walkTo('counter')

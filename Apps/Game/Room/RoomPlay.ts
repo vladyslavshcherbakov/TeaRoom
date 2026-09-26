@@ -58,6 +58,11 @@ export type ClothWiping = {
   readonly at: WorldPoint
 }
 
+export type FrameSeconds = {
+  readonly worldSeconds: number
+  readonly realSeconds: number
+}
+
 type Press = {
   readonly target: RoomTapTarget
   heldSeconds: number
@@ -332,12 +337,12 @@ export class RoomPlay {
     this.navigator.stopWalkingFreely()
   }
 
-  advance(seconds: number): void {
-    this.navigator.advance(seconds)
-    this.aimedPour?.advance(seconds)
-    this.advanceTheSipGesture(seconds)
+  advance(frame: FrameSeconds): void {
+    this.navigator.advance(frame.worldSeconds)
+    this.aimedPour?.advance(frame.worldSeconds)
+    this.advanceTheSipGesture(frame.worldSeconds)
     if (this.press === null) return
-    this.press.heldSeconds += seconds
+    this.press.heldSeconds += frame.realSeconds
     this.repeatTheHeldArrow(this.press)
   }
 

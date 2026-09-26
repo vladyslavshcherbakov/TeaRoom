@@ -131,7 +131,7 @@ export class TestRoom {
 
   advance(seconds: number): void {
     for (let elapsed = 0; elapsed < seconds - 1e-9; elapsed += frameSeconds) {
-      this.play.advance(frameSeconds)
+      this.play.advance({ worldSeconds: frameSeconds, realSeconds: frameSeconds })
       this.session.advance(frameSeconds)
     }
   }
