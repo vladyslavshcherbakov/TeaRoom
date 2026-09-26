@@ -1,7 +1,7 @@
 import { text, textWith, type TextKey } from '../../Texts/Texts.ts'
 import { playTimeShownFor } from '../PlayTime.ts'
 import { controlSchemes, type ControlScheme } from '../Camera/FirstPersonControls.ts'
-import { cameraModes, coatColours, faceFeatures, stickLayouts, type CameraMode, type CoatColour, type FaceFeature, type RoomSettings, type StickLayout } from '../RoomSettings.ts'
+import { cameraModes, coatColours, faceFeatures, objectDetails, stickLayouts, type CameraMode, type CoatColour, type FaceFeature, type ObjectDetail, type RoomSettings, type StickLayout } from '../RoomSettings.ts'
 import { temperatureUnits, type TemperatureUnit } from '../Temperatures.ts'
 
 export type SettingsChoices = {
@@ -11,7 +11,7 @@ export type SettingsChoices = {
   readonly frameRateShownChosen: (isShown: boolean) => void
   readonly fullResolutionChosen: (isOn: boolean) => void
   readonly smoothEdgesChosen: (isOn: boolean) => void
-  readonly simplerDistantItemsChosen: (isOn: boolean) => void
+  readonly objectDetailChosen: (detail: ObjectDetail) => void
   readonly faceFeatureChosen: (feature: FaceFeature) => void
   readonly nerdModeChosen: (isOn: boolean) => void
   readonly temperatureUnitChosen: (unit: TemperatureUnit) => void
@@ -39,7 +39,7 @@ export class SettingsScreen {
   private readonly frameRateToggle: HTMLInputElement
   private readonly fullResolutionToggle: HTMLInputElement
   private readonly smoothEdgesToggle: HTMLInputElement
-  private readonly simplerDistantItemsToggle: HTMLInputElement
+  private readonly objectDetailRow: ChoiceRow<ObjectDetail>
   private readonly timePlayed: HTMLElement
 
   constructor(container: HTMLElement, choices: SettingsChoices) {
@@ -73,7 +73,7 @@ export class SettingsScreen {
     this.frameRateToggle = toggle(choices.frameRateShownChosen)
     this.fullResolutionToggle = toggle(choices.fullResolutionChosen)
     this.smoothEdgesToggle = toggle(choices.smoothEdgesChosen)
-    this.simplerDistantItemsToggle = toggle(choices.simplerDistantItemsChosen)
+    this.objectDetailRow = choiceRow(objectDetails, (detail) => `settings.objectDetail.${detail}`, choices.objectDetailChosen)
     const warning = paragraphOf('settings-warning', 'settings.softShadowsInCornersWarning')
     const glowWarning = paragraphOf('settings-warning', 'settings.glowWarning')
     this.timePlayed = document.createElement('span')
@@ -85,7 +85,7 @@ export class SettingsScreen {
     closeButton.className = 'settings-close'
     closeButton.textContent = text('settings.close')
     closeButton.addEventListener('click', () => this.hide())
-    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.camera'), this.cameraModeRow.element, paragraphOf('settings-note', 'settings.firstPersonNote'), heading('h3', 'settings.controls'), this.controlSchemeRow.element, heading('h3', 'settings.sticks'), this.stickLayoutRow.element, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.fullResolutionToggle, 'settings.fullResolution'), paragraphOf('settings-warning', 'settings.fullResolutionWarning'), toggleRow(this.smoothEdgesToggle, 'settings.smoothEdges'), paragraphOf('settings-warning', 'settings.smoothEdgesWarning'), toggleRow(this.simplerDistantItemsToggle, 'settings.simplerDistantItems'), paragraphOf('settings-note', 'settings.simplerDistantItemsNote'), toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
+    sheet.append(heading('h2', 'settings.title'), heading('h3', 'settings.coatColour'), palette, heading('h3', 'settings.face'), faceRow, heading('h3', 'settings.camera'), this.cameraModeRow.element, paragraphOf('settings-note', 'settings.firstPersonNote'), heading('h3', 'settings.controls'), this.controlSchemeRow.element, heading('h3', 'settings.sticks'), this.stickLayoutRow.element, heading('h3', 'settings.temperature'), toggleRow(this.nerdModeToggle, 'settings.nerdMode'), nerdModeNote, unitRow, heading('h3', 'settings.advanced'), toggleRow(this.softShadowsToggle, 'settings.softShadowsInCorners'), warning, toggleRow(this.glowToggle, 'settings.glow'), glowWarning, toggleRow(this.fullResolutionToggle, 'settings.fullResolution'), paragraphOf('settings-warning', 'settings.fullResolutionWarning'), toggleRow(this.smoothEdgesToggle, 'settings.smoothEdges'), paragraphOf('settings-warning', 'settings.smoothEdgesWarning'), paragraphOf('settings-choice-label', 'settings.objectDetail'), this.objectDetailRow.element, paragraphOf('settings-note', 'settings.objectDetailNote'), toggleRow(this.frameRateToggle, 'settings.showFrameRate'), heading('h3', 'settings.statistics'), timePlayedRow, closeButton)
     this.element.append(sheet)
     container.append(this.element)
   }
@@ -99,7 +99,7 @@ export class SettingsScreen {
     this.frameRateToggle.checked = settings.isFrameRateShown
     this.fullResolutionToggle.checked = settings.hasFullResolution
     this.smoothEdgesToggle.checked = settings.hasSmoothEdges
-    this.simplerDistantItemsToggle.checked = settings.hasSimplerDistantItems
+    this.objectDetailRow.showTheChosen(settings.objectDetail)
     this.nerdModeToggle.checked = settings.isNerdModeOn
     this.showTheChosenUnit(settings.temperatureUnit)
     this.cameraModeRow.showTheChosen(settings.cameraMode)

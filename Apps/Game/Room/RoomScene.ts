@@ -263,7 +263,7 @@ export class RoomScene {
       frameRateShownChosen: (isFrameRateShown) => this.settingChosen({ isFrameRateShown }),
       fullResolutionChosen: (hasFullResolution) => this.settingChosen({ hasFullResolution }),
       smoothEdgesChosen: (hasSmoothEdges) => this.settingChosen({ hasSmoothEdges }),
-      simplerDistantItemsChosen: (hasSimplerDistantItems) => this.settingChosen({ hasSimplerDistantItems }),
+      objectDetailChosen: (objectDetail) => this.settingChosen({ objectDetail }),
       faceFeatureChosen: (faceFeature) => this.settingChosen({ faceFeature }),
       nerdModeChosen: (isNerdModeOn) => this.settingChosen({ isNerdModeOn }),
       temperatureUnitChosen: (temperatureUnit) => this.settingChosen({ temperatureUnit }),
@@ -330,7 +330,7 @@ export class RoomScene {
     const heldInView = isWalkerShown ? null : { camera: heldItemsCamera, chosenHandIndex: this.play.chosenHandIndex, isFirstPerson, screenHeightShareTakenByControls: isFirstPerson ? this.joysticks.screenHeightShareTakenFromTheBottom : 0 }
     const inspection = this.play.inspectionView
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
-    this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null, distantDetail: this.settings.hasSimplerDistantItems ? { camera: this.camera, screenHeightPixels: window.innerHeight } : null })
+    this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null, distantDetail: this.settings.objectDetail === 'reduced' ? { camera: this.camera, screenHeightPixels: window.innerHeight } : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.frameBudget.phaseEnded('carriedItems', performance.now())
     this.room.showHeater(table.isHeaterOn)

@@ -28,7 +28,7 @@ export class SettingsStore {
       return defaultRoomSettings
     }
     const settings = roomSettingsFrom(saved, this.controlSchemeByDefault)
-    this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, glow ${settings.hasGlow ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}, full resolution ${settings.hasFullResolution ? 'on' : 'off'}, smooth edges ${settings.hasSmoothEdges ? 'on' : 'off'}, simpler distant items ${settings.hasSimplerDistantItems ? 'on' : 'off'}, face ${settings.faceFeature}, nerd mode ${settings.isNerdModeOn ? 'on' : 'off'}, degrees ${settings.temperatureUnit}, camera ${settings.cameraMode}, first-person controls ${settings.controlScheme}, sticks ${settings.stickLayout}`)
+    this.log(`the settings are read: coat ${settings.coatColour}, soft shadows in corners ${settings.hasSoftShadowsInCorners ? 'on' : 'off'}, glow ${settings.hasGlow ? 'on' : 'off'}, frame rate ${settings.isFrameRateShown ? 'shown' : 'hidden'}, full resolution ${settings.hasFullResolution ? 'on' : 'off'}, smooth edges ${settings.hasSmoothEdges ? 'on' : 'off'}, object detail ${settings.objectDetail}, face ${settings.faceFeature}, nerd mode ${settings.isNerdModeOn ? 'on' : 'off'}, degrees ${settings.temperatureUnit}, camera ${settings.cameraMode}, first-person controls ${settings.controlScheme}, sticks ${settings.stickLayout}`)
     return settings
   }
 

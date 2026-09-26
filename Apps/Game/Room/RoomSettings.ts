@@ -17,6 +17,10 @@ export const stickLayouts = ['walkOnTheLeft', 'lookOnTheLeft'] as const
 
 export type StickLayout = (typeof stickLayouts)[number]
 
+export const objectDetails = ['full', 'reduced'] as const
+
+export type ObjectDetail = (typeof objectDetails)[number]
+
 export const faceFeaturesOfANewGame: readonly [FaceFeature, ...FaceFeature[]] = ['nose', 'eyes', 'ears']
 
 export type RoomSettings = {
@@ -26,7 +30,7 @@ export type RoomSettings = {
   readonly isFrameRateShown: boolean
   readonly hasFullResolution: boolean
   readonly hasSmoothEdges: boolean
-  readonly hasSimplerDistantItems: boolean
+  readonly objectDetail: ObjectDetail
   readonly faceFeature: FaceFeature
   readonly isNerdModeOn: boolean
   readonly temperatureUnit: TemperatureUnit
@@ -36,7 +40,7 @@ export type RoomSettings = {
 }
 
 export function defaultRoomSettingsWith(controlScheme: ControlScheme): RoomSettings {
-  return { coatColour: coatColours[0], hasSoftShadowsInCorners: false, hasGlow: true, isFrameRateShown: false, hasFullResolution: false, hasSmoothEdges: false, hasSimplerDistantItems: true, faceFeature: 'nose', isNerdModeOn: false, temperatureUnit: 'celsius', cameraMode: 'room', controlScheme, stickLayout: 'walkOnTheLeft' }
+  return { coatColour: coatColours[0], hasSoftShadowsInCorners: false, hasGlow: true, isFrameRateShown: false, hasFullResolution: false, hasSmoothEdges: false, objectDetail: 'reduced', faceFeature: 'nose', isNerdModeOn: false, temperatureUnit: 'celsius', cameraMode: 'room', controlScheme, stickLayout: 'walkOnTheLeft' }
 }
 
 export function roomSettingsFrom(saved: unknown, controlSchemeByDefault: ControlScheme): RoomSettings {
@@ -49,5 +53,5 @@ export function roomSettingsFrom(saved: unknown, controlSchemeByDefault: Control
   const cameraMode = cameraModes.find((mode) => mode === settings.cameraMode) ?? defaultRoomSettings.cameraMode
   const controlScheme = controlSchemes.find((scheme) => scheme === settings.controlScheme) ?? defaultRoomSettings.controlScheme
   const stickLayout = stickLayouts.find((layout) => layout === settings.stickLayout) ?? defaultRoomSettings.stickLayout
-  return { coatColour, hasSoftShadowsInCorners: settings.hasSoftShadowsInCorners === true, hasGlow: settings.hasGlow !== false, isFrameRateShown: settings.isFrameRateShown === true, hasFullResolution: settings.hasFullResolution === true, hasSmoothEdges: settings.hasSmoothEdges === true, hasSimplerDistantItems: settings.hasSimplerDistantItems !== false, faceFeature, isNerdModeOn: settings.isNerdModeOn === true, temperatureUnit, cameraMode, controlScheme, stickLayout }
+  return { coatColour, hasSoftShadowsInCorners: settings.hasSoftShadowsInCorners === true, hasGlow: settings.hasGlow !== false, isFrameRateShown: settings.isFrameRateShown === true, hasFullResolution: settings.hasFullResolution === true, hasSmoothEdges: settings.hasSmoothEdges === true, objectDetail: objectDetails.find((detail) => detail === settings.objectDetail) ?? defaultRoomSettings.objectDetail, faceFeature, isNerdModeOn: settings.isNerdModeOn === true, temperatureUnit, cameraMode, controlScheme, stickLayout }
 }
