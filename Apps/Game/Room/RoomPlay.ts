@@ -7,7 +7,7 @@ import { caddyItemId, carriedItemIdsIn, isACloth, itemLocationIn, middleHandInde
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { AimedPour, type AimedPourView, type PourTarget } from './AimedPour.ts'
+import { AimedPour, type AimedPourView, type PourTarget, type SpoutArea } from './AimedPour.ts'
 import { ItemInspection, type ItemInspectionView } from './ItemInspection.ts'
 import { whyThereIsNoRoomFor } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
@@ -16,7 +16,7 @@ import { RoomRemarks, type RoomRemark } from './RoomRemarks.ts'
 import { TapsInARow } from './TapsInARow.ts'
 import { WipeStroke } from './WipeStroke.ts'
 import { carriedShapeOf, layoutOf } from './CarriedShapes.ts'
-import { puddleCentreOn, puddleRadiusMetres, turnFacingTheCameraOf, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
+import { puddleCentreOn, puddleRadiusMetres, roomHalfSize, turnFacingTheCameraOf, type CloseUp, type FloorPoint, type FurnitureId, type RoomLayout, type WorldPoint } from './RoomLayout.ts'
 import { RoomNavigator, roomEntrance, type RoomLog, type RoomPlace, type RoomView } from './RoomNavigator.ts'
 import type { ScreenPoint } from './RoomGestures.ts'
 import { degreesShownIn, targetOneDegreeAway, type TemperatureUnit } from './Temperatures.ts'
@@ -74,6 +74,8 @@ const secondsBetweenRepeatedSteps = 0.1
 const clothHalfWidthMetres = 0.1
 const roseBushTapsThatOpenTheDebugMenu = 10
 const sameBoardWithinMetres = 0.15
+const aimedVesselReachMetres = 0.3
+const aimedVesselAwayFromTheWallsMetres = 0.05
 const tapsWithFullHandsThatGrowAMiddleHand = 10
 const fullTurnDegrees = 360
 const roseBushKey = 'roseBush'
@@ -475,7 +477,7 @@ export class RoomPlay {
     this.openTheLidsThePourNeeds(source, target)
     const spoutDirection = screenRightOnTheFloor(closeUp)
     const pourTarget = { id: targetId, spot: target.location.spot, openingRadiusMetres: targetLayout.openingRadiusMetres, tiltWhereTheStreamSplashesDegrees: this.tiltWhereTheStreamSplashes(source, target) }
-    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection)
+    this.aimedPour = new AimedPour(this.ritual, this.log, source.id, pourTarget, this.pourTargetsBeside(source, target.location.spot), spoutDirection, this.spoutAreaOver(target.location.spot.placeId, spoutDirection))
   }
 
   private openTheLidsThePourNeeds(source: DeepReadonly<VesselState>, target: DeepReadonly<VesselState>): void {
@@ -486,6 +488,18 @@ export class RoomPlay {
     for (const { vessel } of lidsToOpen) {
       this.log(`opening the lid of ${vessel.id} for the pour from ${source.id} into ${target.id}`)
       this.ritual.dispatch({ type: 'openVesselLid', vesselId: vessel.id })
+    }
+  }
+
+  private spoutAreaOver(placeId: string, spoutDirection: FloorPoint): SpoutArea {
+    const insideTheWalls = roomHalfSize - aimedVesselAwayFromTheWallsMetres
+    const footprint = this.layout.furniture.find((piece) => piece.id === placeId)?.footprint ?? { x: 0, z: 0, width: roomHalfSize * 2, depth: roomHalfSize * 2 }
+    const bodyBehindTheSpout = { x: -spoutDirection.x * aimedVesselReachMetres, z: -spoutDirection.z * aimedVesselReachMetres }
+    return {
+      minX: Math.max(-insideTheWalls, -insideTheWalls - bodyBehindTheSpout.x, footprint.x - footprint.width / 2),
+      maxX: Math.min(insideTheWalls, insideTheWalls - bodyBehindTheSpout.x, footprint.x + footprint.width / 2),
+      minZ: Math.max(-insideTheWalls, -insideTheWalls - bodyBehindTheSpout.z, footprint.z - footprint.depth / 2),
+      maxZ: Math.min(insideTheWalls, insideTheWalls - bodyBehindTheSpout.z, footprint.z + footprint.depth / 2),
     }
   }
 

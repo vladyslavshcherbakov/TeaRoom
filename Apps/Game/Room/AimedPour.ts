@@ -12,6 +12,13 @@ export type AimedPourView = {
   readonly tiltDegrees: number
 }
 
+export type SpoutArea = {
+  readonly minX: number
+  readonly maxX: number
+  readonly minZ: number
+  readonly maxZ: number
+}
+
 export type PourTarget = {
   readonly id: string
   readonly spot: Spot
@@ -37,6 +44,7 @@ export class AimedPour {
   private readonly candidates: readonly PourTarget[]
   private target: PourTarget
   private readonly spoutDirection: FloorPoint
+  private readonly spoutArea: SpoutArea
   private spout: FloorPoint
   private tiltDegrees = 0
   private isTiltHeld = false
@@ -45,14 +53,15 @@ export class AimedPour {
   private lastFingerPoint: FloorPoint | null = null
   private lastSentPour: SentPour = unsentPour
 
-  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, target: PourTarget, candidates: readonly PourTarget[], spoutDirection: FloorPoint) {
+  constructor(ritual: RitualPort, log: RoomLog, sourceId: string, target: PourTarget, candidates: readonly PourTarget[], spoutDirection: FloorPoint, spoutArea: SpoutArea) {
     this.ritual = ritual
     this.log = log
     this.sourceId = sourceId
     this.target = target
     this.candidates = candidates
     this.spoutDirection = spoutDirection
-    this.spout = { x: target.spot.x - spoutDirection.x * firstSpoutOffsetFromTargetMetres, z: target.spot.z - spoutDirection.z * firstSpoutOffsetFromTargetMetres }
+    this.spoutArea = spoutArea
+    this.spout = insideTheArea({ x: target.spot.x - spoutDirection.x * firstSpoutOffsetFromTargetMetres, z: target.spot.z - spoutDirection.z * firstSpoutOffsetFromTargetMetres }, spoutArea)
     log(`aiming ${sourceId} at ${target.id}, the spout starts ${firstSpoutOffsetFromTargetMetres} m to its left on the screen, pointing (${spoutDirection.x.toFixed(2)}, ${spoutDirection.z.toFixed(2)}), ${candidates.map((candidate) => candidate.id).join(', ')} can be poured into here`)
   }
 
@@ -67,7 +76,7 @@ export class AimedPour {
   fingerMoved(point: FloorPoint): void {
     const last = this.lastFingerPoint
     if (last === null) return
-    this.spout = { x: this.spout.x + point.x - last.x, z: this.spout.z + point.z - last.z }
+    this.spout = insideTheArea({ x: this.spout.x + point.x - last.x, z: this.spout.z + point.z - last.z }, this.spoutArea)
     this.lastFingerPoint = point
     this.followTheSpout()
   }
@@ -154,4 +163,8 @@ function hasChangedSince(pour: SentPour, sent: SentPour): boolean {
   if (pour.tiltDegrees !== sent.tiltDegrees || pour.streamOnTargetFraction !== sent.streamOnTargetFraction) return true
   if (pour.missedStreamLandsAt === null || sent.missedStreamLandsAt === null) return pour.missedStreamLandsAt !== sent.missedStreamLandsAt
   return Math.hypot(pour.missedStreamLandsAt.x - sent.missedStreamLandsAt.x, pour.missedStreamLandsAt.z - sent.missedStreamLandsAt.z) >= spoutMovesThePuddleFromMetres
+}
+
+function insideTheArea(point: FloorPoint, area: SpoutArea): FloorPoint {
+  return { x: Math.min(area.maxX, Math.max(area.minX, point.x)), z: Math.min(area.maxZ, Math.max(area.minZ, point.z)) }
 }

@@ -148,6 +148,26 @@ test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehi
   assertNear(spout?.z ?? 0, 0.319, 0.001)
 })
 
+test('spout_whenDraggedFarPastTheCornerOfTheRoom_keepsTheKettleFiveCentimetresFromBothWalls', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+
+  room.moveTheSpout({ x: -10, z: -10 })
+
+  const spout = room.play.aimedPourView?.spout
+  assertNear(spout?.x ?? 0, -2.656, 0.001)
+  assertNear(spout?.z ?? 0, -2.95, 0.001)
+})
+
+test('spout_whenDraggedFarPastTheFrontOfTheCounter_staysOverItsFrontEdge', () => {
+  const room = new TestRoom()
+  aimTheKettleAtTheBowl(room)
+
+  room.moveTheSpout({ x: 0, z: 10 })
+
+  assertNear(room.play.aimedPourView?.spout.z ?? 0, -2.3, 0.001)
+})
+
 test('pour_whenTheSpoutMovesOverBowlsOnTwoShelfBoards_staysOnTheBoardOfItsTarget', () => {
   const room = new TestRoom()
   room.walkTo('counter')
