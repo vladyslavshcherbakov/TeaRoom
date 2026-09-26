@@ -2,7 +2,7 @@ import type { HeaterDefinition } from '../Definitions/HeaterDefinition.ts'
 import type { VesselDefinition } from '../Definitions/VesselDefinition.ts'
 import { isEmpty, smallestMeaningfulVolumeMl, type Liquid } from './Liquid.ts'
 
-const boilingPointC = 100
+export const boilingPointC = 100
 const shellHeatsThroughSeconds = 60
 const shellCoolsDownSeconds = 60
 const shellTooHotToHoldFrom = 0.2

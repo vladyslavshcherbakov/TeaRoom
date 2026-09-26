@@ -1,3 +1,4 @@
+import { fillWithBoilingWater } from './DebugCommands.ts'
 import type { Catalog } from '../Definitions/Catalog.ts'
 import type { SessionState } from '../State/SessionState.ts'
 import { startOrEndBrews } from './Brews.ts'
@@ -80,6 +81,8 @@ function carryOut(draft: Draft, command: Command): void {
       return wipeTable(draft, command)
     case 'soakUpThePuddle':
       return soakUpThePuddle(draft, command)
+    case 'fillWithBoilingWater':
+      return fillWithBoilingWater(draft, command)
     case 'finishRitual':
       return finishRitual(draft)
     case 'leaveRoom':

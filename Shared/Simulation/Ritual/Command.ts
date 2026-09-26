@@ -28,6 +28,7 @@ export type Command =
   | { readonly type: 'offerCup'; readonly cupId: string; readonly figurineId: string }
   | { readonly type: 'wipeTable'; readonly clothId: string; readonly strokeSpeedCmPerSecond: number; readonly coveredFraction: number }
   | { readonly type: 'soakUpThePuddle'; readonly clothId: string }
+  | { readonly type: 'fillWithBoilingWater'; readonly vesselId: string }
   | { readonly type: 'finishRitual' }
   | { readonly type: 'leaveRoom' }
 

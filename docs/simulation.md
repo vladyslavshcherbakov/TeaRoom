@@ -96,7 +96,11 @@ The spoon may lie on the heater too. On a working heater it chars, fully in 20 s
 
 ## Phases
 
-`settingUp` accepts only choosing the mood and beginning. `ritual` accepts everything except beginning again and leaving. Finishing ends any pour, switches the heater off and moves to `resting`, where the room keeps cooling and drying, and the keeper can still walk, take and put down items, change the mood and leave. Leaving moves to `ended`, where time stops and every command is refused.
+`settingUp` accepts only choosing the mood, beginning and filling a vessel with boiling water. `ritual` accepts everything except beginning again and leaving. Finishing ends any pour, switches the heater off and moves to `resting`, where the room keeps cooling and drying, and the keeper can still walk, take and put down items, change the mood, fill a vessel with boiling water and leave. Leaving moves to `ended`, where time stops and every command is refused.
+
+## Shortcuts for building the game
+
+`fillWithBoilingWater` fills a vessel to its capacity with clean water at 100 °C, wherever it is: in a hand, on a surface, on the heater or in the sink. Leaves in it are gone, and so is any tea. It takes no reach and no open lid, and it works in every phase but `ended`, because the debug menu uses it to skip boiling while the game is tested.
 
 ## Returning
 
