@@ -186,3 +186,13 @@ function farSideOfTheTeaTable(): FloorPoint {
   if (farSide === undefined) throw new Error('the quiet room has a tea table with one side')
   return farSide.standingPoint
 }
+
+test('hand_whenItsKeyIsPressedAtTheCounter_isChosen', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+
+  room.play.handKeyTapped(0)
+
+  assert.equal(room.play.chosenHandIndex, 0)
+})

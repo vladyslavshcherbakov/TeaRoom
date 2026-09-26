@@ -283,6 +283,10 @@ export class RoomPlay {
     this.navigator.walkFreely(step, headingRadians)
   }
 
+  handKeyTapped(handIndex: HandIndex): void {
+    this.tapped({ kind: 'hand', handIndex })
+  }
+
   standUpToWalk(): void {
     this.navigator.standUpToWalk()
   }

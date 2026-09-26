@@ -24,6 +24,7 @@ import { CameraZoom } from './Camera/CameraZoom.ts'
 import { firstPersonFieldOfViewDegrees, firstPersonPose, lookAt, lookTurnedBy, lookTurnedByTheMouse, lookTurnedTowards, seatedEyeHeightMetres, stepFor, type FirstPersonLook, type StickDeflection } from './Camera/FirstPersonLook.ts'
 import { hurryingSpeedShare, sticksShownFor, usesTheKeyboard, usesTheMouse, walkFromTheKeys, type ControlScheme, type WalkFromTheKeys } from './Camera/FirstPersonControls.ts'
 import { KeyboardAndMouse } from './Views/KeyboardAndMouse.ts'
+import { KeyboardShortcuts } from './KeyboardShortcuts.ts'
 import { RoomGestures, type ScreenPoint } from './RoomGestures.ts'
 import { carriedShapeOf, type ShapedItem } from './CarriedShapes.ts'
 import { roomLayoutFor, type CameraPose, type FloorPoint, type RoomLayout } from './RoomLayout.ts'
@@ -122,6 +123,7 @@ export class RoomScene {
   private readonly youDied: YouDiedScreen
   private readonly joysticks: Joysticks
   private readonly keyboardAndMouse: KeyboardAndMouse
+  private readonly shortcuts: KeyboardShortcuts
   private readonly garden: Garden
   private readonly sky = new Sky()
   private readonly zoom = new CameraZoom()
@@ -217,7 +219,21 @@ export class RoomScene {
       location.reload()
     })
     this.joysticks = new Joysticks(container)
-    this.keyboardAndMouse = new KeyboardAndMouse(container, this.renderer.domElement, log)
+    this.shortcuts = new KeyboardShortcuts({
+      isInspecting: () => this.play.inspectionView !== null,
+      handTapped: (handIndex) => this.play.handKeyTapped(handIndex),
+      handHeld: (handIndex, heldSeconds) => this.play.handPressHeld(handIndex, heldSeconds),
+      inspectionClosed: () => this.play.inspectionTapped({ kind: 'nothing' }),
+      sipped: () => this.play.sipTapped(),
+      tiltPressed: () => this.play.tiltPressed(),
+      tiltReleased: () => this.play.tiltReleased(),
+    }, log)
+    this.keyboardAndMouse = new KeyboardAndMouse(container, this.renderer.domElement, {
+      keyPressed: (code) => {
+        if (this.cameraMode === 'firstPerson' && usesTheKeyboard(this.controlScheme)) this.shortcuts.keyPressed(code)
+      },
+      keyReleased: (code) => this.shortcuts.keyReleased(code),
+    }, log)
     this.debugMenu = new DebugMenu(container, { cameraModeChosen: (mode) => this.cameraModeChosen(mode), stickLayoutChosen: (layout) => this.stickLayoutChosen(layout), controlSchemeChosen: (scheme) => this.controlSchemeChosen(scheme) })
     this.garden = new Garden(materials)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
@@ -253,6 +269,7 @@ export class RoomScene {
     this.frameRateCounter.frameDrawn(secondsSinceTheLastFrame)
     const seconds = Math.min(secondsSinceTheLastFrame, longestFrameSeconds)
     this.walkAndLookInFirstPerson(seconds)
+    this.shortcuts.advance(seconds)
     this.gestures.advance(secondsSinceTheLastFrame)
     this.play.advance(seconds)
     this.reactTo(this.session.advance(seconds))

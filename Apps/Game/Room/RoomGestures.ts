@@ -54,7 +54,7 @@ type Touch =
 const noTouch: Touch = { kind: 'none' }
 
 const tapSlopPixels = 12
-const holdSecondsThatInspectAnItem = 1
+export const holdSecondsThatInspectAnItem = 1
 
 export class RoomGestures {
   private readonly play: RoomPlay

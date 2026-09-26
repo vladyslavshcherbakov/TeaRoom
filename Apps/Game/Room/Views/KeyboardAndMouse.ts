@@ -1,6 +1,11 @@
 import type { MouseMovement } from '../Camera/FirstPersonLook.ts'
 import type { RoomLog } from '../RoomNavigator.ts'
 
+export type KeyListener = {
+  readonly keyPressed: (code: string) => void
+  readonly keyReleased: (code: string) => void
+}
+
 const noMovement: MouseMovement = { x: 0, y: 0 }
 const largestMouseStepPixels = 150
 
@@ -12,15 +17,21 @@ export class KeyboardAndMouse {
   private movement: MouseMovement = noMovement
   private wasRefused = false
 
-  constructor(container: HTMLElement, canvas: HTMLCanvasElement, log: RoomLog) {
+  constructor(container: HTMLElement, canvas: HTMLCanvasElement, keys: KeyListener, log: RoomLog) {
     this.canvas = canvas
     this.log = log
     this.crosshair = document.createElement('div')
     this.crosshair.className = 'crosshair'
     this.crosshair.hidden = true
     container.append(this.crosshair)
-    window.addEventListener('keydown', (event) => this.heldKeys.add(event.code))
-    window.addEventListener('keyup', (event) => this.heldKeys.delete(event.code))
+    window.addEventListener('keydown', (event) => {
+      this.heldKeys.add(event.code)
+      if (!event.repeat) keys.keyPressed(event.code)
+    })
+    window.addEventListener('keyup', (event) => {
+      this.heldKeys.delete(event.code)
+      keys.keyReleased(event.code)
+    })
     window.addEventListener('blur', () => this.heldKeys.clear())
     document.addEventListener('mousemove', (event) => {
       const isAJumpOfTheBrowser = Math.abs(event.movementX) > largestMouseStepPixels || Math.abs(event.movementY) > largestMouseStepPixels
