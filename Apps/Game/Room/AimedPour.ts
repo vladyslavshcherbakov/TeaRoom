@@ -71,15 +71,17 @@ export class AimedPour {
     return { sourceId: this.sourceId, targetId: this.target.id, spout: this.spout, spoutDirection: this.spoutDirection, tiltDegrees: this.tiltDegrees }
   }
 
-  fingerDown(point: FloorPoint): void {
+  fingerDown(point: FloorPoint | null): void {
     this.lastFingerPoint = point
+    if (point === null) this.log(`the finger aiming ${this.sourceId} touched off the aim plane, so it moves the vessel once it is over the plane`)
   }
 
-  fingerMoved(point: FloorPoint): void {
+  fingerMoved(point: FloorPoint | null): void {
     const last = this.lastFingerPoint
+    if (point === null) return this.forgetTheFingerOffTheAimPlane()
+    this.lastFingerPoint = point
     if (last === null) return
     this.spout = insideTheArea({ x: this.spout.x + point.x - last.x, z: this.spout.z + point.z - last.z }, this.spoutArea)
-    this.lastFingerPoint = point
     this.followTheSpout()
   }
 
@@ -116,6 +118,12 @@ export class AimedPour {
   finish(): void {
     if (this.isPouring) this.stopPouring()
     this.log(`stopped aiming ${this.sourceId} at ${this.target.id}`)
+  }
+
+  private forgetTheFingerOffTheAimPlane(): void {
+    if (this.lastFingerPoint === null) return
+    this.lastFingerPoint = null
+    this.log(`the finger aiming ${this.sourceId} left the aim plane, so the vessel stays and the finger's next point on the plane starts a new drag`)
   }
 
   private startPouring(): void {

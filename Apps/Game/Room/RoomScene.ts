@@ -735,11 +735,11 @@ export class RoomScene {
     return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 }
   }
 
-  private aimPlanePointAt(point: ScreenPoint): FloorPoint {
+  private aimPlanePointAt(point: ScreenPoint): FloorPoint | null {
     this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
     const aimPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -this.aimPlaneHeight())
     const hit = this.raycaster.ray.intersectPlane(aimPlane, new THREE.Vector3())
-    return hit === null ? { x: 0, z: 0 } : { x: hit.x, z: hit.z }
+    return hit === null ? null : { x: hit.x, z: hit.z }
   }
 
   private aimPlaneHeight(): number {

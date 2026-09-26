@@ -13,7 +13,7 @@ export type ScreenPoint = {
 
 export type ScreenReader = {
   readonly tapTargetAt: (point: ScreenPoint) => RoomTapTarget
-  readonly aimPointAt: (point: ScreenPoint) => FloorPoint
+  readonly aimPointAt: (point: ScreenPoint) => FloorPoint | null
 }
 
 type Pinch = {

@@ -206,11 +206,11 @@ export class RoomPlay {
     if (!press.hasMovedAway) this.tapped(press.target)
   }
 
-  pourFingerDown(point: FloorPoint): void {
+  pourFingerDown(point: FloorPoint | null): void {
     this.aimedPour?.fingerDown(point)
   }
 
-  pourFingerMoved(point: FloorPoint): void {
+  pourFingerMoved(point: FloorPoint | null): void {
     this.aimedPour?.fingerMoved(point)
   }
 

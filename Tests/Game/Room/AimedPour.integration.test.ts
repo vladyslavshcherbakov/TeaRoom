@@ -12,6 +12,7 @@ const onTheCounterBesideTheBowl = onTopOf('counter', 1, 0.05)
 const pixelsPerMetre = 100
 const whereTheFingerStarts: ScreenPoint = { x: 0, y: 0 }
 const onTheCounterLeftOfTheHeater: ScreenPoint = { x: 40, y: 700 }
+const aboveTheHorizon: ScreenPoint = { x: 0, y: -300 }
 const counterLeftOfTheHeater = onTopOf('counter', -0.2, 0.15)
 
 test('bowlOpening_whenTappedWithTheKettleChosen_isAimedAtWithoutPouring', () => {
@@ -403,6 +404,20 @@ test('aimingFinger_whenMovedFurtherThanTwelvePixels_movesTheSpoutAndKeepsTheAim'
   assert.equal(room.state.keeper.hands[0], 'kettle')
 })
 
+test('aimingFinger_whenItLeavesTheAimPlaneAndComesBackFarAway_movesTheSpoutOnlyByItsDragAfterComingBack', () => {
+  const room = roomWithAScreen()
+  aimTheKettleAtTheBowl(room)
+  const spoutBefore = room.play.aimedPourView?.spout ?? { x: Number.NaN, z: Number.NaN }
+  room.gestures.fingerDown(1, whereTheFingerStarts)
+  room.gestures.fingerMoved(1, aboveTheHorizon)
+
+  room.gestures.fingerMoved(1, { x: 100, y: 0 })
+  room.gestures.fingerMoved(1, { x: 110, y: 0 })
+
+  assertNear(room.play.aimedPourView?.spout.x ?? Number.NaN, spoutBefore.x + 0.1)
+  assertNear(room.play.aimedPourView?.spout.z ?? Number.NaN, spoutBefore.z)
+})
+
 test('aimingFinger_whenLiftedWithoutMoving_putsTheKettleDownWhereItTouched', () => {
   const room = roomWithAScreen()
   aimTheKettleAtTheBowl(room)
@@ -465,7 +480,7 @@ function aimTheKettleAtTheBowl(room: TestRoom): void {
 }
 
 function roomWithAScreen(): TestRoom {
-  return new TestRoom({ screen: () => ({ tapTargetAt: targetOnTheScreenAt, aimPointAt: (point) => ({ x: point.x / pixelsPerMetre, z: point.y / pixelsPerMetre }) }) })
+  return new TestRoom({ screen: () => ({ tapTargetAt: targetOnTheScreenAt, aimPointAt: (point) => (point.y < 0 ? null : { x: point.x / pixelsPerMetre, z: point.y / pixelsPerMetre }) }) })
 }
 
 function targetOnTheScreenAt(point: ScreenPoint): RoomTapTarget {
