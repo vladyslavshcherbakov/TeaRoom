@@ -28,7 +28,7 @@ The plan is in `docs/roadmap.md`. Its version in progress collects what is built
 
 **Player decisions are commands, consequences are events.** One command per decision, one event per thing the presentation or the world memory must react to. This gives replays, logs for debugging, and the ritual history the world memory will be built from. Rejected: an event bus where objects call each other, because one action has many consequences and the order would be decided by subscription order.
 
-**Fixed simulation step of 0.05 s.** Cooling and brewing are not linear in time, so integrating once per frame gives different results at 30 and 60 frames per second. Twenty steps a second is well below what a phone can compute and fine enough for the curves. Rejected: variable steps, because the same ritual would taste different on a slower phone.
+**Fixed simulation step of 0.05 s.** Cooling and brewing are not linear in time, so integrating once per frame gives different results at 30 and 60 frames per second. Twenty steps a second is well below what a phone can compute and fine enough for the curves. `RitualSession.advance` steps one copy of the state through all the steps of a call and keeps it as the new state, because a copy for every step made a wait of ten simulated minutes cost twelve thousand copies. Rejected: variable steps, because the same ritual would taste different on a slower phone.
 
 **Cooling is applied before heating in a step.** Heating caps at boiling, so cooling after it would keep a working kettle forever just below 100 °C.
 
