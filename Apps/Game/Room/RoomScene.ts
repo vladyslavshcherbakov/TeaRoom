@@ -278,6 +278,7 @@ export class RoomScene {
     this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.room.showHeater(table.isHeaterOn)
+    this.room.turnTheSettingsGear(this.clock.elapsedTime)
     const unit = this.settings.temperatureUnit
     this.room.showHeaterControls({ isNerdModeOn: this.settings.isNerdModeOn, target: { degrees: degreesShownIn(unit, table.thermostat.targetC), unit }, isThermostatOn: table.thermostat.isOn })
     this.room.showPuddles(table.puddles)

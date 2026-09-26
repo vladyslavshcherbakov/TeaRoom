@@ -22,6 +22,7 @@ import { facingDirection, shelfBoards, type Facing } from '../../../../Shared/Co
 import type { RoomArrangement } from '../RoomArrangement.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import { HeaterControls, type HeaterControlsView } from './HeaterControls.ts'
+import { SettingsGear } from './SettingsGear.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 
 const puddleSegments = 40
@@ -34,10 +35,7 @@ const medalRibbonWidthMetres = 0.09
 const medalRibbonLengthMetres = 0.3
 const medalRibbonTiltRadians = 0.35
 const medalTouchAreaMetres = 0.55
-const gearRadiusMetres = 0.13
-const gearThicknessMetres = 0.03
-const gearToothMetres = 0.06
-const gearTeeth = 8
+const gearAwayFromTheWallMetres = 0.006
 const gearTouchAreaWidthMetres = 0.5
 const gearTouchAreaHeightMetres = 0.5
 const gearTouchAreaDepthMetres = 0.3
@@ -88,6 +86,7 @@ export class RoomModel {
   private readonly layout: RoomLayout
   private readonly arrangement: RoomArrangement
   private readonly heaterPlate: THREE.Mesh
+  private readonly settingsGear: SettingsGear
   private readonly heaterControls: HeaterControls
   private readonly puddlesByPlace = new Map<string, THREE.Mesh>()
   readonly root = new THREE.Group()
@@ -102,11 +101,15 @@ export class RoomModel {
     const inscriptions = wallSides.flatMap((wall) => this.addWall(wall, layout.windows.filter((window) => window.wall === wall)))
     this.prophecyInscription = inscriptions[0] ?? null
     this.addMedal(layout.medal)
-    this.addSettingsGear(layout.settingsGear)
+    this.settingsGear = this.addSettingsGear(layout.settingsGear)
     for (const piece of layout.furniture) this.addFurniture(piece)
     for (const spot of layout.itemSpots) this.addItem(spot)
     this.heaterControls = new HeaterControls(materials, (object, tag) => this.tag(object, tag))
     this.heaterPlate = this.addHeater(heaterSpot)
+  }
+
+  turnTheSettingsGear(timeSeconds: number): void {
+    this.settingsGear.turn(timeSeconds)
   }
 
   showHeater(isOn: boolean): void {
@@ -205,27 +208,15 @@ export class RoomModel {
     this.tag(medal, { isMedal: true })
   }
 
-  private addSettingsGear(spot: SpotOnAWall): void {
-    const gear = new THREE.Group()
-    const wheel = new THREE.Mesh(new THREE.CylinderGeometry(gearRadiusMetres, gearRadiusMetres, gearThicknessMetres, 32), this.materials.materialFor('steel'))
-    wheel.rotation.x = Math.PI / 2
-    gear.add(wheel)
-    for (let tooth = 0; tooth < gearTeeth; tooth += 1) {
-      const angle = (tooth / gearTeeth) * Math.PI * 2
-      const toothMesh = this.plainBox('steel', gearToothMetres, gearToothMetres, gearThicknessMetres, { x: Math.cos(angle) * gearRadiusMetres, y: Math.sin(angle) * gearRadiusMetres, z: 0 })
-      toothMesh.rotation.z = angle
-      gear.add(toothMesh)
-    }
-    const hub = new THREE.Mesh(new THREE.CylinderGeometry(gearRadiusMetres * 0.35, gearRadiusMetres * 0.35, gearThicknessMetres * 1.4, 16), this.materials.materialFor('heaterPlate'))
-    hub.rotation.x = Math.PI / 2
-    gear.add(hub)
-    gear.traverse((part) => (part.castShadow = true))
+  private addSettingsGear(spot: SpotOnAWall): SettingsGear {
+    const gear = new SettingsGear(this.materials)
     const touchArea = this.touchArea(gearTouchAreaWidthMetres, gearTouchAreaHeightMetres, gearTouchAreaDepthMetres)
     touchArea.position.set(0, -gearTouchAreaBelowTheGearMetres, gearTouchAreaDepthMetres / 2)
-    gear.add(touchArea)
-    placeOnTheWall(gear, spot, gearThicknessMetres / 2 + 0.01)
-    this.root.add(gear)
-    this.tag(gear, { isSettingsGear: true })
+    gear.root.add(touchArea)
+    placeOnTheWall(gear.root, spot, gearAwayFromTheWallMetres)
+    this.root.add(gear.root)
+    this.tag(gear.root, { isSettingsGear: true })
+    return gear
   }
 
   private touchArea(width: number, height: number, depth: number): THREE.Mesh {

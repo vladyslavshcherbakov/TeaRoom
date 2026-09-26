@@ -75,6 +75,9 @@ export type Surface =
   | 'glass'
   | 'gildedRim'
   | 'medalRibbon'
+  | 'brass'
+  | 'copper'
+  | 'darkIron'
   | 'clearGlassHeldInView'
   | 'koiPainting'
   | 'toadPainting'
@@ -188,6 +191,9 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   glass: { colour: '#ffffff', kind: 'glass' },
   gildedRim: { colour: '#e2b451', kind: 'gold' },
   medalRibbon: { colour: '#a8392e', kind: 'matte' },
+  brass: { colour: '#c9a04e', kind: 'gold' },
+  copper: { colour: '#c07048', kind: 'gold' },
+  darkIron: { colour: '#34302c', kind: 'matte' },
   clearGlassHeldInView: { colour: '#26302c', kind: 'clearGlass' },
   koiPainting: { colour: '#ffffff', kind: 'koiPainting' },
   toadPainting: { colour: '#ffffff', kind: 'painting', paint: paintToad },
