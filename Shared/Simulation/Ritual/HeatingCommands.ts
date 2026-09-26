@@ -39,22 +39,21 @@ export function liftOffTheHeater(draft: Draft, itemId: string): void {
 
 export function switchHeaterOn(draft: Draft, command: CommandOfType<'switchHeaterOn'>): void {
   const heater = draft.state.heater
-  if (heater.isOn) return refuse(draft, command, 'heaterAlreadyOn')
+  if (isTheHeaterInUse(heater)) return refuse(draft, command, 'heaterAlreadyOn', describeTheHeatersControl(heater))
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
-  const wasTheThermostatWaiting = heater.thermostat.isOn
-  if (!wasTheThermostatWaiting) beginToUseTheHeater(draft)
-  heater.thermostat.isOn = false
+  beginToUseTheHeater(draft)
   heater.isOn = true
   heater.holdsTheThermostatsTarget = command.holdsTheThermostatsTarget === true
   if (heater.holdsTheThermostatsTarget) note(draft, `the heater heats the water on it up to the thermostat's ${heater.thermostat.targetC} °C and holds it there until it is switched off`)
-  if (wasTheThermostatWaiting) note(draft, `heater switched on by hand while its thermostat waited at ${heater.thermostat.targetC} °C, so the thermostat is off and the heater heats to the boil`)
-  else note(draft, `heater switched on with ${heater.itemIdOnTop ?? 'nothing'} on top`)
+  note(draft, `heater switched on with ${heater.itemIdOnTop ?? 'nothing'} on top`)
   draft.events.push({ type: 'heaterSwitchedOn' })
 }
 
 export function switchHeaterOff(draft: Draft, command: CommandOfType<'switchHeaterOff'>): void {
-  if (!isTheHeaterInUse(draft.state.heater)) return refuse(draft, command, 'heaterAlreadyOff')
+  const heater = draft.state.heater
+  if (!isTheHeaterInUse(heater)) return refuse(draft, command, 'heaterAlreadyOff')
   if (!isKeeperAtTheHeater(draft)) return refuse(draft, command, 'notAtThatPlace', whereTheKeeperStands(draft))
+  if (heater.thermostat.isOn) note(draft, `the heater's switch stops the thermostat too, which was ${heater.isOn ? 'heating' : 'waiting'} at ${heater.thermostat.targetC} °C`)
   switchTheHeaterOff(draft, judgementOfWaterOnHeater(draft), 'byTheKeeper')
 }
 
@@ -118,6 +117,10 @@ function beginToUseTheHeater(draft: Draft): void {
   heater.secondsHeating = 0
   heater.hasAnnouncedTargetTemperature = false
   heater.hasAnnouncedBoilingAway = false
+}
+
+function describeTheHeatersControl(heater: DeepReadonly<HeaterState>): string {
+  return heater.thermostat.isOn ? `its thermostat works at ${heater.thermostat.targetC} °C, ${heater.isOn ? 'heating' : 'waiting'}` : 'it was switched on by hand'
 }
 
 function heaterDefinitionOf(draft: Draft): HeaterDefinition {

@@ -112,15 +112,25 @@ test('thermostat_startedWhileTheHeaterBoilsByHand_stopsAtTheTarget', () => {
   assert.equal(ritual.state.heater.isOn, false)
 })
 
-test('heaterSwitch_whileTheThermostatWaits_heatsToTheBoilByHand', () => {
+test('heaterSwitch_turnedOffWhileTheThermostatWaits_switchesTheHeaterAndTheThermostatOff', () => {
   const ritual = kettleOnTheHeaterWithTheThermostatAt(60)
   ritual.wait(20)
 
-  ritual.do({ type: 'switchHeaterOn' })
-  ritual.wait(15)
+  const events = ritual.do({ type: 'switchHeaterOff' })
 
-  assertNear(ritual.vessel('kettle').liquid.temperatureC, 100, 0.2)
-  assert.deepEqual(ritual.state.heater.thermostat, { targetC: 60, isOn: false })
+  assert.equal(eventsOfType(events, 'heaterSwitchedOff')[0]?.wasSwitchedOffByTheKeeper, true)
+  assert.equal(ritual.state.heater.isOn, false)
+  assert.equal(ritual.state.heater.thermostat.isOn, false)
+})
+
+test('heaterSwitch_switchedOnWhileTheThermostatWaits_isRefusedAndLeavesTheThermostatWorking', () => {
+  const ritual = kettleOnTheHeaterWithTheThermostatAt(60)
+  ritual.wait(20)
+
+  const events = ritual.do({ type: 'switchHeaterOn' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'switchHeaterOn', reason: 'heaterAlreadyOn' }])
+  assert.deepEqual(ritual.state.heater.thermostat, { targetC: 60, isOn: true })
 })
 
 test('heaterSwitch_turnedOffWhileTheThermostatHeats_switchesTheHeaterAndTheThermostatOff', () => {

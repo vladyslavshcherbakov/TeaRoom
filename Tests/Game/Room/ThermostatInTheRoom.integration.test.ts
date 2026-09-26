@@ -82,14 +82,14 @@ test('heaterSwitch_whenTappedWhileTheThermostatHeats_switchesEverythingOff', () 
   assert.equal(room.state.heater.thermostat.isOn, false)
 })
 
-test('heaterSwitch_whenTappedWhileTheThermostatWaits_boilsByHand', () => {
+test('heaterSwitch_whenTappedWhileTheThermostatWaits_switchesEverythingOff', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.tap({ kind: 'thermostatButton' })
 
   room.tap({ kind: 'heaterSwitch' })
 
-  assert.equal(room.state.heater.isOn, true)
+  assert.equal(room.state.heater.isOn, false)
   assert.equal(room.state.heater.thermostat.isOn, false)
 })
 

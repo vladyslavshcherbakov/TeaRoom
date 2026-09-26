@@ -3,6 +3,7 @@ import type { Spot } from '../../../Shared/Simulation/Definitions/RoomDefinition
 import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
+import { isTheHeaterInUse } from '../../../Shared/Simulation/Ritual/HeatingCommands.ts'
 import { caddyItemId, carriedItemIdsIn, isACloth, itemLocationIn, middleHandIndex, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
@@ -476,7 +477,7 @@ export class RoomPlay {
   }
 
   private switchTheHeater(): void {
-    const command: Command = this.ritual.state.heater.isOn ? { type: 'switchHeaterOff' } : { type: 'switchHeaterOn', holdsTheThermostatsTarget: this.listener.isNerdModeOn() }
+    const command: Command = isTheHeaterInUse(this.ritual.state.heater) ? { type: 'switchHeaterOff' } : { type: 'switchHeaterOn', holdsTheThermostatsTarget: this.listener.isNerdModeOn() }
     this.ritual.dispatch(command)
   }
 
