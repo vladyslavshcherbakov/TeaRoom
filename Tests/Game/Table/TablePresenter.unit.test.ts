@@ -107,7 +107,7 @@ test('puddle_growsWithTheSpillUntilThirtyMillilitres', () => {
 
   for (const [wetMl, puddleShare] of rows) {
     const state = ritualState()
-    state.puddles['teaTable'] = { wetMl, strength: 0, spilledAround: null }
+    state.puddles['teaTable'] = { wetMl, strength: 0, temperatureC: 20, spilledAround: null }
     assert.equal(tableViewState(state, catalog).puddles[0]?.share, puddleShare, `${wetMl} ml`)
   }
 })

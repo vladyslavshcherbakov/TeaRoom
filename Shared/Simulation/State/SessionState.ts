@@ -99,6 +99,7 @@ export type FigurineState = {
 export type PuddleState = {
   wetMl: number
   strength: number
+  temperatureC: number
   spilledAround: Spot | null
 }
 

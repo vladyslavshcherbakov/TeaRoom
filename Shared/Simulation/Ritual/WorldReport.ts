@@ -109,8 +109,9 @@ function spoonLines(now: SessionState, ahead: SessionState): string[] {
 function puddleLines(now: SessionState, ahead: SessionState): string[] {
   return Object.entries(now.puddles).flatMap(([placeId, puddle]) => {
     const wetRate = (ahead.puddles[placeId]?.wetMl ?? 0) - puddle.wetMl
+    const temperatureRate = (ahead.puddles[placeId]?.temperatureC ?? puddle.temperatureC) - puddle.temperatureC
     if (Math.abs(wetRate) <= smallestReportedChange) return []
-    return [`the puddle on the ${placeId}: ${puddle.wetMl.toFixed(2)} ml (${signed(wetRate, 3)} ml/s) of strength ${puddle.strength.toFixed(1)}`]
+    return [`the puddle on the ${placeId}: ${puddle.wetMl.toFixed(2)} ml (${signed(wetRate, 3)} ml/s) of strength ${puddle.strength.toFixed(1)} at ${puddle.temperatureC.toFixed(1)} °C (${signed(temperatureRate, 2)} °C/s)`]
   })
 }
 

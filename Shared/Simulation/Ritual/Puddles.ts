@@ -1,19 +1,22 @@
+import { definitionIn } from '../Definitions/Catalog.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
-import { puddleStrengthAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
+import type { Liquid } from '../Physics/Liquid.ts'
+import { puddleStrengthAfterSpill, puddleTemperatureAfterCooling, puddleTemperatureAfterSpill, wetMlAfterDrying } from '../Physics/Table.ts'
 import type { DeepReadonly } from '../State/DeepReadonly.ts'
 import type { SessionState, VesselState } from '../State/SessionState.ts'
 import { note, type Draft } from './Draft.ts'
 import { ritualPlaceOf } from './Reach.ts'
 
-export function spill(draft: Draft, placeId: string, spilledAround: Spot | null, spilledMl: number, strength: number): void {
+export function spill(draft: Draft, placeId: string, spilledAround: Spot | null, spilledMl: number, spilled: Liquid): void {
   if (spilledMl <= 0) return
   const existing = draft.state.puddles[placeId]
-  const puddle = existing ?? { wetMl: 0, strength: 0, spilledAround }
+  const puddle = existing ?? { wetMl: 0, strength: 0, temperatureC: spilled.temperatureC, spilledAround }
   if (existing === undefined) {
     draft.state.puddles[placeId] = puddle
     note(draft, `a puddle starts on the ${placeId}${spilledAround === null ? '' : ` around (${spilledAround.x.toFixed(2)}, ${spilledAround.z.toFixed(2)})`}`)
   }
-  puddle.strength = puddleStrengthAfterSpill(puddle.wetMl, puddle.strength, spilledMl, strength)
+  puddle.strength = puddleStrengthAfterSpill(puddle.wetMl, puddle.strength, spilledMl, spilled.strength)
+  puddle.temperatureC = puddleTemperatureAfterSpill(puddle.wetMl, puddle.temperatureC, spilledMl, spilled.temperatureC)
   puddle.wetMl += spilledMl
 }
 
@@ -23,8 +26,10 @@ export function placeWhereAPourSpills(draft: Draft, target: VesselState | undefi
 }
 
 export function dryThePuddles(draft: Draft, seconds: number): void {
+  const ambientC = definitionIn(draft.catalog, 'rooms', draft.state.roomId).ambientTemperatureC
   for (const [placeId, puddle] of Object.entries(draft.state.puddles)) {
-    puddle.wetMl = wetMlAfterDrying(puddle.wetMl, seconds)
+    puddle.wetMl = wetMlAfterDrying(puddle.wetMl, puddle.temperatureC, ambientC, seconds)
+    puddle.temperatureC = puddleTemperatureAfterCooling(puddle.temperatureC, ambientC, seconds)
     if (puddle.wetMl > 0) continue
     delete draft.state.puddles[placeId]
     note(draft, `the puddle on the ${placeId} is gone`)

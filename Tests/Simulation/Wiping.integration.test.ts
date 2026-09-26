@@ -97,6 +97,31 @@ test('wipe_withAClothLyingOnTheTable_isRefusedAsNotInHand', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'wipeTable', reason: 'notInHand' }])
 })
 
+test('puddle_ofWaterAtNinetyDegrees_driesFasterThanOneAtRoomTemperature', () => {
+  const hot = TestRitual.begun()
+  hot.heatKettleTo(90)
+  hot.pour('kettle', null, 2.5)
+  const cold = ritualWithSpillOnTheTable()
+  const [hotWetMlBefore, coldWetMlBefore] = [wetMlOnEveryPlace(hot.state), wetMlOnEveryPlace(cold.state)]
+
+  hot.wait(10)
+  cold.wait(10)
+
+  assertNear(coldWetMlBefore - wetMlOnEveryPlace(cold.state), 1)
+  assert.ok(hotWetMlBefore - wetMlOnEveryPlace(hot.state) > 1.5, `the hot puddle lost ${hotWetMlBefore - wetMlOnEveryPlace(hot.state)} ml in 10 s`)
+})
+
+test('puddle_ofHotWater_coolsToTheRoomWithinThreeMinutes', () => {
+  const ritual = TestRitual.begun()
+  ritual.heatKettleTo(90)
+  ritual.pour('kettle', null, 2.5)
+
+  ritual.wait(180)
+
+  const puddleTemperatureC = ritual.state.puddles['table']?.temperatureC
+  assert.ok(puddleTemperatureC !== undefined && puddleTemperatureC < 21, `the puddle is at ${puddleTemperatureC} °C`)
+})
+
 function ritualWithSpillOnTheTable(): TestRitual {
   const ritual = TestRitual.begun()
   ritual.pour('kettle', null, 2.5)

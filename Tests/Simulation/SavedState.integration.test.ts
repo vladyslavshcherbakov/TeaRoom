@@ -147,6 +147,17 @@ test('savedState_fromBeforeVesselsRememberedBeingFull_countsNoneAsFull', () => {
   assert.equal(resumed.state.vessels['kettle']?.hasOnlyBoiledDownSinceFull, false)
 })
 
+test('savedState_fromBeforePuddlesHadATemperature_findsThemAtRoomTemperature', () => {
+  const ritual = TestRitual.begun()
+  ritual.pour('kettle', null, 2.5)
+  const savedState = ritual.savedState as { puddles: Record<string, Record<string, unknown>> }
+  for (const puddle of Object.values(savedState.puddles)) delete puddle['temperatureC']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal(resumed.state.puddles['table']?.temperatureC, 20)
+})
+
 function catalogWithAFourthCup(): Catalog {
   const catalog = testCatalog()
   const room = catalog.rooms['testRoom']

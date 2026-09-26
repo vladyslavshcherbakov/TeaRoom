@@ -3,7 +3,7 @@ import type { Spot } from '../Definitions/RoomDefinition.ts'
 import { isTheThermostatCallingForHeat } from '../Judgement/ThermostatJudgement.ts'
 import { steepLeaves } from '../Physics/Brewing.ts'
 import { coolingPerSecondOf, coolLiquid, isAtTheBoil, isTooHotToHold, shellHeatAfter } from '../Physics/Heat.ts'
-import { isEmpty } from '../Physics/Liquid.ts'
+import { isEmpty, type Liquid } from '../Physics/Liquid.ts'
 import { pourStream, type StreamLanding } from '../Physics/Pouring.ts'
 import { clothWetMlAfterDrying, mlSoakedUp } from '../Physics/Table.ts'
 import { takeIntoTheCloth } from './CleanupCommands.ts'
@@ -123,7 +123,7 @@ function continuePour(draft: Draft, seconds: number): void {
   if (target !== undefined && landing.target !== null) target.liquid = landing.target
   pour.pouredMl += landing.landedMl
   pour.spilledMl += landing.spilledMl
-  spillWhatMissedAndOverflowed(draft, pour.missedStreamLandsAt, target, landing, source.liquid.strength)
+  spillWhatMissedAndOverflowed(draft, pour.missedStreamLandsAt, target, landing, source.liquid)
   if (target !== undefined && landing.overflowedMl > 0 && !pour.hasOverflowed) {
     pour.hasOverflowed = true
     note(draft, `${target.id} overflowed at ${target.liquid.volumeMl.toFixed(1)} ml while pouring from ${source.id}`)
@@ -148,11 +148,11 @@ function runTheTap(draft: Draft, seconds: number): void {
   runTheTapOnto(draft, itemId, runningWater, tap, seconds)
 }
 
-function spillWhatMissedAndOverflowed(draft: Draft, missedStreamLandsAt: Spot | null, target: VesselState | undefined, landing: StreamLanding, strength: number): void {
+function spillWhatMissedAndOverflowed(draft: Draft, missedStreamLandsAt: Spot | null, target: VesselState | undefined, landing: StreamLanding, spilled: Liquid): void {
   const aroundTheTarget = placeWhereAPourSpills(draft, target)
-  if (missedStreamLandsAt === null) return spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.spilledMl, strength)
-  spill(draft, missedStreamLandsAt.placeId, missedStreamLandsAt, landing.spilledMl - landing.overflowedMl, strength)
-  spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.overflowedMl, strength)
+  if (missedStreamLandsAt === null) return spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.spilledMl, spilled)
+  spill(draft, missedStreamLandsAt.placeId, missedStreamLandsAt, landing.spilledMl - landing.overflowedMl, spilled)
+  spill(draft, aroundTheTarget.placeId, aroundTheTarget.spilledAround, landing.overflowedMl, spilled)
 }
 
 function steepAllLeaves(draft: Draft, seconds: number): void {

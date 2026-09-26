@@ -21,11 +21,11 @@ const leavesShape: Leaves = dryLeaves('', 0)
 const pourShape: PourState = { sourceId: '', targetId: null, tiltDegrees: 0, streamOnTargetFraction: 0, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false }
 const runningWaterShape: RunningWaterState = { openedAtSeconds: 0, drainedSinceOpenedMl: 0, filledMl: 0, drainedMl: 0, hasOverflowed: false, isRunningOverTheLid: false, hasRunOntoAnItem: false }
 const vesselShape: VesselState = { id: '', definitionId: '', liquid: water(0, 0), leaves: null, isLidOpen: false, shellHeat: 0, hasOnlyBoiledDownSinceFull: false, location: { kind: 'gone' } }
-const puddleShape: PuddleState = { wetMl: 0, strength: 0, spilledAround: null }
+const puddleShape: PuddleState = { wetMl: 0, strength: 0, temperatureC: 0, spilledAround: null }
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -267,6 +267,18 @@ function withVesselsRememberingTheyWereFull(saved: Shape): ReturnType<SaveMigrat
   return {
     migrated: { ...saved, vessels: remembering },
     change: 'a save from before the vessels remembered being full counts none of them as full',
+  }
+}
+
+function withPuddlesAtTheirTemperature(saved: Shape, catalog: Catalog): ReturnType<SaveMigration> {
+  const puddles = saved['puddles']
+  const roomId = saved['roomId']
+  const room = typeof roomId === 'string' ? catalog.rooms[roomId] : undefined
+  if (!isShape(puddles) || room === undefined || Object.values(puddles).every((puddle) => !isShape(puddle) || puddle['temperatureC'] !== undefined)) return null
+  const warmed = Object.fromEntries(Object.entries(puddles).map(([placeId, puddle]) => [placeId, isShape(puddle) && puddle['temperatureC'] === undefined ? { ...puddle, temperatureC: room.ambientTemperatureC } : puddle]))
+  return {
+    migrated: { ...saved, puddles: warmed },
+    change: `a save from before the puddles had a temperature finds them at the room's ${room.ambientTemperatureC} °C`,
   }
 }
 
