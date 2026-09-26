@@ -26,7 +26,6 @@ test('heaterSwitch_whenTappedWithBothHandsFullAndOneChosen_switchesTheHeaterOn',
   const room = new TestRoom()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'item', itemId: 'thermos' })
 
   room.tap({ kind: 'heaterSwitch' })

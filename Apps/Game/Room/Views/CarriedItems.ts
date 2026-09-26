@@ -136,6 +136,7 @@ export class CarriedItems {
     if (model.tagKey === tagKey) return
     model.tagKey = tagKey
     model.root.traverse((part) => (part.userData = { ...part.userData, tapTarget: tag }))
+    if (model.opening !== null && 'itemId' in tag) model.opening.userData = { ...model.opening.userData, tapTarget: { openingOfItemId: model.itemId } satisfies TapTargetTag }
     if (model.lid === null || !('itemId' in tag || 'handIndex' in tag)) return
     const lidTag: TapTargetTag = { lidOfItemId: model.itemId }
     model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))

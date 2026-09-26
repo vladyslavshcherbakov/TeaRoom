@@ -42,6 +42,7 @@ export type RoomTapTarget =
   | { readonly kind: 'sink' }
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
   | { readonly kind: 'lid'; readonly itemId: string }
+  | { readonly kind: 'opening'; readonly itemId: string }
   | { readonly kind: 'figurine'; readonly figurineId: string }
   | { readonly kind: 'roseBush' }
   | { readonly kind: 'medal' }
@@ -291,7 +292,7 @@ export class RoomPlay {
     this.log(`tap on ${describeTarget(target)}, ${chosenItemId === null ? 'no hand chosen' : `${chosenItemId} chosen in hand ${this.choice}`}`)
     if (target.kind === 'roseBush') return this.countTheRoseBushTap()
     this.forgetTheRoseBushTaps()
-    if (target.kind !== 'item' || !this.tapsWithFullHands.isCounting(target.itemId)) this.forgetTheTapsWithFullHands()
+    if ((target.kind !== 'item' && target.kind !== 'opening') || !this.tapsWithFullHands.isCounting(target.itemId)) this.forgetTheTapsWithFullHands()
     if (target.kind === 'medal') return this.showTheAchievements()
     if (target.kind === 'settingsGear') return this.showTheSettings()
     if (target.kind === 'hand') return this.toggleHand(target.handIndex)
@@ -368,7 +369,10 @@ export class RoomPlay {
   private closeUpActionOn(target: RoomTapTarget): CloseUpAction | null {
     switch (target.kind) {
       case 'item':
-        return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId || this.canAimAPourAt(target.itemId), isAControl: false }
+        return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId, isAControl: false }
+      case 'opening':
+        if (this.canAimAPourAt(target.itemId)) return { act: () => this.startAimingAt(target.itemId), isDoneWithTheChosenItem: true, isAControl: false }
+        return { act: () => this.touchTheOpeningOf(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId, isAControl: false }
       case 'lid':
         if (this.canAimAPourAt(target.itemId)) return { act: () => this.startAimingAt(target.itemId), isDoneWithTheChosenItem: true, isAControl: false }
         return { act: () => this.toggleLidOf(target.itemId), isDoneWithTheChosenItem: false, isAControl: false }
@@ -431,10 +435,15 @@ export class RoomPlay {
 
   private touchItem(itemId: string): void {
     if (this.chosenItemId() === spoonItemId) return this.useTheSpoonOn(itemId)
-    if (this.canAimAPourAt(itemId)) return this.startAimingAt(itemId)
     const chosenItemId = this.chosenItemId()
-    if (chosenItemId !== null) this.log(`no pour aimed from ${chosenItemId} at ${itemId}: ${this.whyNoPourCanBeAimedAt(itemId)}, so ${itemId} is taken`)
+    if (chosenItemId !== null) this.log(`tap on the body of ${itemId} with ${chosenItemId} chosen takes ${itemId}: a pour is aimed by a tap on its lid or its opening`)
     this.pickUpAndChoose(itemId)
+  }
+
+  private touchTheOpeningOf(itemId: string): void {
+    const chosenItemId = this.chosenItemId()
+    if (chosenItemId !== null && chosenItemId !== spoonItemId) this.log(`no pour aimed from ${chosenItemId} at ${itemId}: ${this.whyNoPourCanBeAimedAt(itemId)}`)
+    this.touchItem(itemId)
   }
 
   private whyNoPourCanBeAimedAt(targetId: string): string {
@@ -661,6 +670,7 @@ export class RoomPlay {
         return this.furnitureWithPlace(definitionIn(this.catalog, 'rooms', this.ritual.state.roomId).tap?.sinkSpot.placeId ?? null)
       case 'item':
       case 'lid':
+      case 'opening':
         return this.furnitureWithPlace(placeOf(this.locationOfItem(target.itemId)))
       case 'figurine':
         return this.ritualFurnitureId()
@@ -692,6 +702,8 @@ function describeTarget(target: RoomTapTarget): string {
       return target.itemId
     case 'lid':
       return `the lid of ${target.itemId}`
+    case 'opening':
+      return `the opening of ${target.itemId}`
     case 'figurine':
       return target.figurineId
     case 'hand':

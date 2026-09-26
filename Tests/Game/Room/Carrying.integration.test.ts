@@ -19,7 +19,6 @@ test('bowl_whenPickedUpByATap_isChosenAtOnce', () => {
   const room = new TestRoom()
   room.walkTo('shelf')
   room.tap({ kind: 'item', itemId: 'bowl1' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'item', itemId: 'bowl2' })
 

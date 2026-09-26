@@ -120,7 +120,6 @@ test('thermostatControls_whenTappedWithBothHandsFull_workAndKeepTheItemsInHand',
   const room = new TestRoom()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
   room.tap({ kind: 'item', itemId: 'thermos' })
 
   room.tap(down)

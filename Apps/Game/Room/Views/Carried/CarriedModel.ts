@@ -23,6 +23,7 @@ export type CarriedModel = {
   readonly footprintRadius: number
   readonly lid: THREE.Object3D | null
   readonly lidClosedPosition: THREE.Vector3
+  readonly opening: THREE.Mesh | null
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
   readonly liquidLevel: LiquidLevel | null
@@ -55,6 +56,7 @@ export const mostPuffsFromOneSource = 3
 
 const touchPadShareOfTheFootprint = 1.5
 const touchPadAboveTheRimMetres = 0.05
+const openingTouchAreaAboveTheRimMetres = 0.005
 const liquidSurfaceSegments = 64
 const liquidDrawnAfterThePaintingBelowIt = 2
 const lookByShape: Readonly<Record<CarriedShape, CarriedShapeLook>> = {
@@ -83,6 +85,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const liquidVolume = parts.liquidVolumeAt !== null ? new THREE.Mesh(new THREE.BufferGeometry(), materials.room.unsharedMaterialFor('porcelain')) : null
   if (liquidVolume !== null) root.add(liquidVolume)
   if (parts.lid === null) root.add(forgivingTouchPad(shape, parts.rimHeight))
+  const opening = parts.liquidLevel === null ? null : touchAreaOverTheOpening(shape, parts.rimHeight)
+  if (opening !== null) root.add(opening)
   const leafHolder = look.looseLeaves === null ? null : leafHolderAt(look.looseLeaves.heapStartsAt)
   if (leafHolder !== null) root.add(leafHolder)
   const soakedLeafHolder = look.soakedLeaves === null ? null : new THREE.Group()
@@ -100,6 +104,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     footprintRadius: layoutByShape[shape].footprintRadiusMetres,
     lid: parts.lid,
     lidClosedPosition: parts.lid?.position.clone() ?? new THREE.Vector3(),
+    opening,
     liquid,
     liquidMaterial,
     liquidLevel: parts.liquidLevel,
@@ -134,6 +139,13 @@ function forgivingTouchPad(shape: CarriedShape, rimHeight: number): THREE.Mesh {
   pad.position.y = height / 2
   pad.userData = { isForgivingTouchArea: true }
   return pad
+}
+
+function touchAreaOverTheOpening(shape: CarriedShape, rimHeight: number): THREE.Mesh {
+  const area = touchAreaOf(new THREE.CircleGeometry(layoutByShape[shape].openingRadiusMetres, 24))
+  area.rotation.x = -Math.PI / 2
+  area.position.y = rimHeight + openingTouchAreaAboveTheRimMetres
+  return area
 }
 
 function leafHolderAt(point: { readonly x: number; readonly y: number; readonly z: number }): THREE.Group {

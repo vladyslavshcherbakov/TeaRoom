@@ -526,6 +526,7 @@ function tapTargetOf(hit: THREE.Intersection): RoomTapTarget {
   if ('isSink' in tag) return { kind: 'sink' }
   if ('isFloor' in tag) return { kind: 'floor', point: { x: hit.point.x, z: hit.point.z } }
   if ('lidOfItemId' in tag) return { kind: 'lid', itemId: tag.lidOfItemId }
+  if ('openingOfItemId' in tag) return { kind: 'opening', itemId: tag.openingOfItemId }
   if ('figurineId' in tag) return { kind: 'figurine', figurineId: tag.figurineId }
   if ('isRoseBush' in tag) return { kind: 'roseBush' }
   if ('isMedal' in tag) return { kind: 'medal' }

@@ -64,6 +64,7 @@ export type TapTargetTag =
   | { readonly itemId: string }
   | { readonly handIndex: HandIndex }
   | { readonly lidOfItemId: string }
+  | { readonly openingOfItemId: string }
   | { readonly figurineId: string }
   | { readonly isRoseBush: true }
   | { readonly isMedal: true }

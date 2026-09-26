@@ -13,12 +13,12 @@ const whereTheFingerStarts: ScreenPoint = { x: 0, y: 0 }
 const onTheCounterLeftOfTheHeater: ScreenPoint = { x: 40, y: 700 }
 const counterLeftOfTheHeater = onTopOf('counter', -0.2, 0.15)
 
-test('bowl_whenTappedWithTheKettleChosen_isAimedAtWithoutPouring', () => {
+test('bowlOpening_whenTappedWithTheKettleChosen_isAimedAtWithoutPouring', () => {
   const room = new TestRoom()
   bringABowlToTheCounterAndTakeTheKettle(room)
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'item', itemId: 'bowl1' })
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
 
   assert.equal(room.play.aimedPourView?.targetId, 'bowl1')
   assert.equal(room.state.pour, null)
@@ -140,7 +140,7 @@ test('pour_whenAimedAtABowlOnTheShelf_startsFromTheLeftOfTheScreenAndNotFromBehi
   room.walkTo('shelf')
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'item', itemId: 'bowl1' })
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
 
   const spout = room.play.aimedPourView?.spout
   assertNear(spout?.x ?? 0, -2.772, 0.001)
@@ -178,20 +178,6 @@ test('thermosLid_whenTappedWhileAiming_closesAndKeepsTheAim', () => {
   assert.equal(room.play.aimedPourView?.sourceId, 'thermos')
 })
 
-test('lids_whenTheClosedThermosIsAimedAtTheClosedKettle_bothOpen', () => {
-  const room = new TestRoom()
-  room.walkTo('counter')
-  room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
-  room.fillInTheSink('thermos')
-  room.tap({ kind: 'hand', handIndex: 0 })
-
-  room.tap({ kind: 'item', itemId: 'kettle' })
-
-  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
-  assert.equal(room.state.vessels['kettle']?.isLidOpen, true)
-  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
-})
-
 test('kettleLid_whenTappedWithTheClosedThermosChosen_opensBothLidsAndAimsAtTheKettle', () => {
   const room = new TestRoom()
   room.walkTo('counter')
@@ -206,7 +192,7 @@ test('kettleLid_whenTappedWithTheClosedThermosChosen_opensBothLidsAndAimsAtTheKe
   assert.equal(room.play.aimedPourView?.targetId, 'kettle')
 })
 
-test('thermos_whenTappedAfterATapOnTheLidOfTheKettleInHand_isAimedAtAndNotTaken', () => {
+test('thermosLid_whenTappedAfterATapOnTheLidOfTheKettleInHand_isAimedAtAndTheThermosIsNotTaken', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
@@ -214,21 +200,44 @@ test('thermos_whenTappedAfterATapOnTheLidOfTheKettleInHand_isAimedAtAndNotTaken'
   room.session.dispatch({ type: 'closeVesselLid', vesselId: 'kettle' })
   room.tap({ kind: 'lid', itemId: 'kettle' })
 
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.tap({ kind: 'lid', itemId: 'thermos' })
 
   assert.equal(room.play.aimedPourView?.targetId, 'thermos')
   assert.deepEqual(room.state.keeper.hands, ['kettle', null, null])
 })
 
-test('kettle_whenTappedWithTheEmptyThermosChosen_isAimedAtAndNotTaken', () => {
+test('kettleLid_whenTappedWithTheEmptyThermosChosen_isAimedAtAndTheKettleIsNotTaken', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.tap({ kind: 'item', itemId: 'thermos' })
+
+  room.tap({ kind: 'lid', itemId: 'kettle' })
+
+  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
+  assert.deepEqual(room.state.keeper.hands, ['thermos', null, null])
+})
+
+test('kettleOpening_whenTappedWithTheClosedThermosChosenAndTheKettleOpen_opensTheThermosAndIsAimedAt', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+  room.tap({ kind: 'item', itemId: 'thermos' })
+
+  room.tap({ kind: 'opening', itemId: 'kettle' })
+
+  assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
+  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
+})
+
+test('kettle_whenItsBodyIsTappedWithTheThermosChosen_isTakenIntoTheOtherHand', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.tap({ kind: 'item', itemId: 'thermos' })
 
   room.tap({ kind: 'item', itemId: 'kettle' })
 
-  assert.equal(room.play.aimedPourView?.targetId, 'kettle')
-  assert.deepEqual(room.state.keeper.hands, ['thermos', null, null])
+  assert.equal(room.play.aimedPourView, null)
+  assert.deepEqual(room.state.keeper.hands, ['thermos', 'kettle', null])
 })
 
 test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
@@ -237,7 +246,7 @@ test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
   room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
   room.fillInTheSink('thermos')
   room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'lid', itemId: 'kettle' })
 
   room.play.tiltPressed()
   room.advance(2)
@@ -253,7 +262,7 @@ test('kettleLid_whenTheKettleIsAimedAtTheClosedThermos_staysClosedWhileTheThermo
   room.session.dispatch({ type: 'closeVesselLid', vesselId: 'kettle' })
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.tap({ kind: 'lid', itemId: 'thermos' })
 
   assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
   assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
@@ -314,7 +323,7 @@ function aimTheKettleAtTheFirstOfTwoBowls(room: TestRoom): void {
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
   room.fillInTheSink('kettle')
   room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'item', itemId: 'bowl1' })
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
 }
 
 function aimTheClosedThermosAtTheBowl(room: TestRoom): void {
@@ -324,13 +333,13 @@ function aimTheClosedThermosAtTheBowl(room: TestRoom): void {
   room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
   room.fillInTheSink('thermos')
   room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'item', itemId: 'bowl1' })
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
 }
 
 function aimTheKettleAtTheBowl(room: TestRoom): void {
   bringABowlToTheCounterAndTakeTheKettle(room)
   room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'item', itemId: 'bowl1' })
+  room.tap({ kind: 'opening', itemId: 'bowl1' })
 }
 
 function roomWithAScreen(): TestRoom {
