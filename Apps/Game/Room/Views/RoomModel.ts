@@ -23,6 +23,7 @@ import { facingDirection, shelfBoards, type Facing } from '../../../../Shared/Co
 import type { RoomArrangement } from '../RoomArrangement.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import { HeaterControls, type HeaterControlsView } from './HeaterControls.ts'
+import { guideBookModel } from './GuideBookModel.ts'
 import { SettingsGear } from './SettingsGear.ts'
 import type { TableViewState } from '../../Table/TableViewState.ts'
 
@@ -41,11 +42,6 @@ const gearTouchAreaWidthMetres = 0.5
 const gearTouchAreaHeightMetres = 0.5
 const gearTouchAreaDepthMetres = 0.3
 const gearTouchAreaBelowTheGearMetres = 0.02
-const guidePageWidthMetres = 0.15
-const guidePageHeightMetres = 0.21
-const guidePagesOpenRadians = 0.22
-const guideCoverOverhangMetres = 0.01
-const guideCoverThicknessMetres = 0.012
 const guideTouchAreaWidthMetres = 0.45
 const guideTouchAreaHeightMetres = 0.34
 const faucetPostAboveTheSpoutMetres = 0.04
@@ -235,15 +231,7 @@ export class RoomModel {
   }
 
   private addGuideBook(spot: SpotOnAWall): void {
-    const book = new THREE.Group()
-    const coverWidth = 2 * (guidePageWidthMetres * Math.cos(guidePagesOpenRadians) + guideCoverOverhangMetres)
-    book.add(this.plainBox('guideBookCover', coverWidth, guidePageHeightMetres + 2 * guideCoverOverhangMetres, guideCoverThicknessMetres, { x: 0, y: 0, z: guideCoverThicknessMetres / 2 }))
-    for (const side of [-1, 1]) {
-      const page = new THREE.Mesh(new THREE.PlaneGeometry(guidePageWidthMetres, guidePageHeightMetres), this.materials.materialFor('guideBookPage'))
-      page.position.set((side * guidePageWidthMetres * Math.cos(guidePagesOpenRadians)) / 2, 0, guideCoverThicknessMetres + (guidePageWidthMetres * Math.sin(guidePagesOpenRadians)) / 2)
-      page.rotation.y = side * guidePagesOpenRadians
-      book.add(page)
-    }
+    const book = guideBookModel(this.materials)
     const touchArea = this.touchArea(guideTouchAreaWidthMetres, guideTouchAreaHeightMetres, 0.1)
     touchArea.position.z = 0.05
     book.add(touchArea)

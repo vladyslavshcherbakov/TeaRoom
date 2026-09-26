@@ -92,6 +92,7 @@ export type Surface =
   | 'ginkgoPainting'
   | 'guideBookPage'
   | 'guideBookCover'
+  | 'guideBookPageEdges'
   | 'heronPainting'
   | 'teaCharacterPainting'
   | 'yixingClay'
@@ -209,7 +210,8 @@ const lookBySurface: Readonly<Record<Surface, SurfaceLook>> = {
   lotusPainting: { colour: '#ffffff', kind: 'painting', paint: paintLotus },
   ginkgoPainting: { colour: '#ffffff', kind: 'painting', paint: paintGinkgoLeaves },
   guideBookPage: { colour: '#ffffff', kind: 'painting', paint: paintGuidePage },
-  guideBookCover: { colour: '#6e2f23', kind: 'matte' },
+  guideBookCover: { colour: '#4a1f14', kind: 'matte' },
+  guideBookPageEdges: { colour: '#e6d4ac', kind: 'matte' },
   heronPainting: { colour: '#ffffff', kind: 'painting', paint: paintHeron },
   teaCharacterPainting: { colour: '#ffffff', kind: 'painting', paint: paintTeaCharacter },
   yixingClay: { colour: '#ffffff', kind: 'yixingClay' },
