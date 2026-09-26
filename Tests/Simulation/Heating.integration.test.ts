@@ -329,7 +329,7 @@ test('spoon_whenTakenBeforeItBurns_isSavedButStaysCharred', () => {
 test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
   const ritual = TestRitual.begun()
   ritual.tipASpoonOfLeavesInto('cup1')
-  ritual.do({ type: 'scoopTea', depth: 1 })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
   ritual.do({ type: 'placeOnHeater', itemId: 'spoon' })
   ritual.do({ type: 'switchHeaterOn' })
   ritual.wait(17)
@@ -353,7 +353,7 @@ test('spoon_afterItCrumbled_cannotBeTaken', () => {
 test('spoon_afterItCrumbled_cannotScoop', () => {
   const ritual = ritualWithACrumbledSpoon()
 
-  const events = ritual.do({ type: 'scoopTea', depth: 1 })
+  const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'burntAway' }])
 })

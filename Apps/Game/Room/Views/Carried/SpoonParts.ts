@@ -12,7 +12,6 @@ export const spoonShapeLook: CarriedShapeLook = {
   looseLeaves: {
     heapStartsAt: { x: 0.07, y: 0.02, z: 0 },
     pile: { leafCount: 16, radiusMetres: 0.03, heightMetres: 0.01, isLyingFlat: false },
-    fillShareIn: (table) => table.spoonFillShare,
   },
   soakedLeaves: null,
   fire: { flameAt: { x: 0.07, y: 0.022, z: 0 }, embersAround: { x: 0.01, y: 0.024, z: 0 }, emberSpreadMetres: { x: 0.1, z: 0.012 } },

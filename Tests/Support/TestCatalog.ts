@@ -1,5 +1,6 @@
 import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
-import type { Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import type { RoomVessel, Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
+import type { TeaDefinition } from '../../Shared/Simulation/Definitions/TeaDefinition.ts'
 
 export type CoolingPerSecond = {
   readonly kettle?: number
@@ -8,22 +9,26 @@ export type CoolingPerSecond = {
   readonly caddy?: number
 }
 
+const testGreen: TeaDefinition = {
+  id: 'testGreen',
+  water: { idealC: 80, good: { lowestC: 75, highestC: 85 }, acceptable: { lowestC: 70, highestC: 90 } },
+  steeping: { idealSeconds: 60, idealGramsPer100Ml: 1 },
+  extraction: {
+    strengthRatePerSecond: 0.015,
+    bitternessPerSecond: 0.1,
+    bitternessMultiplierAfterIdealTime: 4,
+    bitternessGainPerDegreeAboveGood: 0.05,
+  },
+  balancedStrength: { lowest: 40, highest: 70 },
+}
+
+const testBlack: TeaDefinition = { ...testGreen, id: 'testBlack', balancedStrength: { lowest: 70, highest: 90 } }
+
+const gramsInEveryCaddy = 50
+
 export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
   return {
-    teas: {
-      testGreen: {
-        id: 'testGreen',
-        water: { idealC: 80, good: { lowestC: 75, highestC: 85 }, acceptable: { lowestC: 70, highestC: 90 } },
-        steeping: { idealSeconds: 60, idealGramsPer100Ml: 1 },
-        extraction: {
-          strengthRatePerSecond: 0.015,
-          bitternessPerSecond: 0.1,
-          bitternessMultiplierAfterIdealTime: 4,
-          bitternessGainPerDegreeAboveGood: 0.05,
-        },
-        balancedStrength: { lowest: 40, highest: 70 },
-      },
-    },
+    teas: { testGreen, testBlack },
     vessels: {
       testKettle: {
         id: 'testKettle',
@@ -98,15 +103,14 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
         heaterSpot: onTheTable(0),
         tap: { sinkSpot: onTheTable(9), waterTemperatureC: 20, flowMlPerSecond: 100 },
         vessels: [
-          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: onTheTable(1) },
-          { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0, startsAt: onTheTable(2) },
-          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(3) },
-          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(4) },
-          { id: 'cup3', definitionId: 'testCup', initialWaterMl: 0, startsAt: onTheTable(5) },
-          { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: onTheTable(6) },
+          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, teaStock: null, startsAt: onTheTable(1) },
+          { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0, teaStock: null, startsAt: onTheTable(2) },
+          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: onTheTable(3) },
+          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: onTheTable(4) },
+          { id: 'cup3', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: onTheTable(5) },
+          { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: gramsInEveryCaddy }, startsAt: onTheTable(6) },
         ],
         figurineIds: ['dragon', 'toad'],
-        caddyGrams: 50,
         spoonCapacityGrams: 5,
         spoonStartsAt: onTheTable(7),
         cloths: [{ id: 'cloth', startsAt: onTheTable(8) }],
@@ -136,10 +140,10 @@ export function testHouseCatalog(): Catalog {
         heaterSpot: at('counter', 0),
         tap: { sinkSpot: at('counter', 9), waterTemperatureC: 20, flowMlPerSecond: 100 },
         vessels: [
-          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, startsAt: at('counter', 1) },
-          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 1) },
-          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, startsAt: at('shelf', 2) },
-          { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: at('shelf', 3) },
+          { id: 'kettle', definitionId: 'testKettle', initialWaterMl: 500, teaStock: null, startsAt: at('counter', 1) },
+          { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: at('shelf', 1) },
+          { id: 'cup2', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: at('shelf', 2) },
+          { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: gramsInEveryCaddy }, startsAt: at('shelf', 3) },
         ],
         spoonStartsAt: at('table', 7),
         cloths: [{ id: 'cloth', startsAt: at('table', 8) }],
@@ -152,4 +156,11 @@ export function withASecondCloth(catalog: Catalog): Catalog {
   const room = catalog.rooms['testRoom']
   if (room === undefined) throw new Error('the test catalog lost its room')
   return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, cloths: [...room.cloths, { id: 'cloth2', startsAt: { placeId: 'table', x: 11, y: 0, z: 0 } }] } } }
+}
+
+export function withMoreCaddies(catalog: Catalog, teaIdByCaddyId: Readonly<Record<string, string>>): Catalog {
+  const room = catalog.rooms['testRoom']
+  if (room === undefined) throw new Error('the test catalog lost its room')
+  const caddies = Object.entries(teaIdByCaddyId).map(([id, teaId], index): RoomVessel => ({ id, definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId, grams: gramsInEveryCaddy }, startsAt: onTheTable(12 + index) }))
+  return { ...catalog, rooms: { ...catalog.rooms, testRoom: { ...room, vessels: [...room.vessels, ...caddies] } } }
 }

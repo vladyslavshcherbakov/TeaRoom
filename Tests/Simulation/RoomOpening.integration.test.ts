@@ -2,7 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { BrokenContentError, RitualSession } from '../../Shared/Simulation/Ritual/RitualSession.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
+import { TestRitual } from '../Support/TestRitual.ts'
 
 test('room_whenItsContentIsBrokenInAPlayersBuild_opensAsUnavailableAndLogsEveryProblem', () => {
   const log = new RecordingLog()
@@ -30,4 +31,11 @@ test('room_whenItsContentIsSound_opensAndLogsWhatIsOnTheTable', () => {
 
   assert.equal(opening.kind, 'opened')
   assert.deepEqual(log.messagesAt('info'), ['t=0.000s session opened in testRoom with kettle, thermos, cup1, cup2, cup3, caddy'])
+})
+
+test('room_whenItOpens_fillsEachCaddyWithTheTeaItKeeps', () => {
+  const ritual = new TestRitual(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+
+  assert.deepEqual(ritual.vessel('caddy').leaves, { teaId: 'testGreen', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
+  assert.deepEqual(ritual.vessel('blackCaddy').leaves, { teaId: 'testBlack', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
 })

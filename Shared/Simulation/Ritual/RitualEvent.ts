@@ -34,10 +34,13 @@ export type RefusalReason =
   | 'sourceIsEmpty'
   | 'vesselIsOnTheHeater'
   | 'vesselIsBeingPoured'
+  | 'notACaddy'
   | 'caddyIsEmpty'
   | 'spoonIsFull'
   | 'spoonIsEmpty'
+  | 'spoonHoldsAnotherTea'
   | 'cannotHoldLeaves'
+  | 'holdsLeavesOfAnotherTea'
   | 'notDrinkable'
   | 'cupIsEmpty'
   | 'figurineAlreadyOffered'
@@ -89,8 +92,8 @@ export type RitualEvent =
   | { readonly type: 'targetTemperatureReached'; readonly vesselId: string }
   | { readonly type: 'pourStarted'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'vesselOverflowed'; readonly vesselId: string }
-  | { readonly type: 'lastLeavesWashedOut'; readonly vesselId: string }
-  | { readonly type: 'houseRestocked'; readonly spoonReturned: boolean; readonly caddyWasRefilled: boolean; readonly caddyWasEmpty: boolean }
+  | { readonly type: 'lastLeavesWashedOut'; readonly vesselId: string; readonly isACaddy: boolean }
+  | { readonly type: 'houseRestocked'; readonly spoonReturned: boolean; readonly wasACaddyRefilled: boolean; readonly wasACaddyEmpty: boolean }
   | {
       readonly type: 'pourFinished'
       readonly sourceId: string

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { defaultCatalog } from '../../Shared/Content/DefaultCatalog.ts'
+import type { Catalog } from '../../Shared/Simulation/Definitions/Catalog.ts'
 import type { Spot } from '../../Shared/Simulation/Definitions/RoomDefinition.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
@@ -25,9 +26,16 @@ function fillBoilAndBringTheKettleToTheTeaTable(ritual: TestRitual, temperatureC
   ritual.do({ type: 'putDown', itemId: 'kettle', spot: onTheTeaTable(1.1) })
 }
 
+function quietRoomWithItsCaddyOf(teaId: string): Catalog {
+  const room = defaultCatalog.rooms['quietRoom']
+  if (room === undefined) throw new Error('the default catalog lost its quiet room')
+  const vessels = room.vessels.map((vessel) => (vessel.teaStock === null ? vessel : { ...vessel, teaStock: { ...vessel.teaStock, teaId } }))
+  return { ...defaultCatalog, rooms: { ...defaultCatalog.rooms, quietRoom: { ...room, vessels } } }
+}
+
 for (const tea of Object.values(defaultCatalog.teas)) {
   test(`${tea.id}_whenBrewedByTheBookInTheQuietRoom_tastesBalancedAndSoft`, () => {
-    const ritual = TestRitual.begun(defaultCatalog, tea.id, 'quietRoom')
+    const ritual = TestRitual.begun(quietRoomWithItsCaddyOf(tea.id), tea.id, 'quietRoom')
     bringTheBowlAndTheCaddyToTheTeaTable(ritual)
     fillBoilAndBringTheKettleToTheTeaTable(ritual, tea.water.idealC)
     ritual.addLeavesToKettle((tea.steeping.idealGramsPer100Ml * ritual.vessel('kettle').liquid.volumeMl) / 100)

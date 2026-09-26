@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('kettle_whenTheKeeperIsAwayAnHour_coolsToTheRoom', () => {
@@ -68,8 +68,8 @@ test('spoon_whenItCrumbledBeforeTheAbsence_waitsAtItsPlaceAgainAndIsAnnounced', 
 
   const { ritual: returned, events } = ritual.leaveAndReturnAfter(0)
 
-  assert.deepEqual(returned.state.spoon, { grams: 0, capacityGrams: 5, charring: 0, location: { kind: 'onSurface', spot: { placeId: 'table', x: 7, y: 0, z: 0 } } })
-  assert.deepEqual(eventsOfType(events, 'houseRestocked'), [{ type: 'houseRestocked', spoonReturned: true, caddyWasRefilled: false, caddyWasEmpty: false }])
+  assert.deepEqual(returned.state.spoon, { grams: 0, teaId: null, capacityGrams: 5, charring: 0, location: { kind: 'onSurface', spot: { placeId: 'table', x: 7, y: 0, z: 0 } } })
+  assert.deepEqual(eventsOfType(events, 'houseRestocked'), [{ type: 'houseRestocked', spoonReturned: true, wasACaddyRefilled: false, wasACaddyEmpty: false }])
 })
 
 test('caddy_whenWashedCleanBeforeTheAbsence_isFullAndDryAgainAndIsAnnouncedAsEmpty', () => {
@@ -85,7 +85,7 @@ test('caddy_whenWashedCleanBeforeTheAbsence_isFullAndDryAgainAndIsAnnouncedAsEmp
 
   assert.equal(returned.vessel('caddy').leaves?.grams, 50)
   assert.equal(returned.vessel('caddy').liquid.volumeMl, 0)
-  assert.deepEqual(eventsOfType(events, 'houseRestocked'), [{ type: 'houseRestocked', spoonReturned: false, caddyWasRefilled: true, caddyWasEmpty: true }])
+  assert.deepEqual(eventsOfType(events, 'houseRestocked'), [{ type: 'houseRestocked', spoonReturned: false, wasACaddyRefilled: true, wasACaddyEmpty: true }])
 })
 
 test('caddy_holdingTeaBrewedInIt_isPouredOutAndRefilledWhereItStands', () => {
@@ -100,7 +100,21 @@ test('caddy_holdingTeaBrewedInIt_isPouredOutAndRefilledWhereItStands', () => {
   assert.deepEqual(returned.vessel('caddy').location, caddyLocationBefore)
   assert.equal(returned.vessel('caddy').liquid.volumeMl, 0)
   assert.deepEqual(returned.vessel('caddy').leaves, { teaId: 'testGreen', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
-  assert.deepEqual(eventsOfType(events, 'houseRestocked'), [{ type: 'houseRestocked', spoonReturned: false, caddyWasRefilled: true, caddyWasEmpty: false }])
+  assert.deepEqual(eventsOfType(events, 'houseRestocked'), [{ type: 'houseRestocked', spoonReturned: false, wasACaddyRefilled: true, wasACaddyEmpty: false }])
+})
+
+test('caddies_whenBothWereScoopedFrom_areEachRefilledWithTheirOwnTea', () => {
+  const catalog = withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' })
+  const ritual = TestRitual.begun(catalog)
+  ritual.tipASpoonOfLeavesInto('cup1')
+  ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
+  ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 1 })
+  ritual.do({ type: 'tipSpoonInto', vesselId: 'cup2' })
+
+  const { ritual: returned } = ritual.leaveAndReturnAfter(0, catalog)
+
+  assert.deepEqual(returned.vessel('caddy').leaves, { teaId: 'testGreen', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
+  assert.deepEqual(returned.vessel('blackCaddy').leaves, { teaId: 'testBlack', grams: 50, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 })
 })
 
 test('return_withTheSpoonHereAndTheCaddyFullAndDry_restocksNothing', () => {

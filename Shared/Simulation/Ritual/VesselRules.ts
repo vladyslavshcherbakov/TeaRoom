@@ -7,6 +7,7 @@ import type { RunningWaterState, VesselState } from '../State/SessionState.ts'
 import { chosenTea, describeLiquid, isClosedAgainstFilling, note, vesselDefinitionOf, type Draft } from './Draft.ts'
 import type { ItemKindRules } from './ItemKinds.ts'
 import { percent } from './Percent.ts'
+import { teaStockOf } from './Reach.ts'
 import { drain } from './RunningWater.ts'
 
 export const vesselRules: ItemKindRules = {
@@ -110,8 +111,9 @@ function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: numbe
     return
   }
   vessel.leaves = null
-  note(draft, `the running water washed the last leaves out of ${vessel.id}, which holds ${describeLiquid(vessel)}`)
-  draft.events.push({ type: 'lastLeavesWashedOut', vesselId: vessel.id })
+  const isACaddy = teaStockOf(draft, vessel.id) !== null
+  note(draft, `the running water washed the last leaves out of ${isACaddy ? 'the caddy ' : ''}${vessel.id}, which holds ${describeLiquid(vessel)}`)
+  draft.events.push({ type: 'lastLeavesWashedOut', vesselId: vessel.id, isACaddy })
 }
 
 function pourAwayTheRinseWaterIfItRanOver(draft: Draft, vessel: VesselState): void {

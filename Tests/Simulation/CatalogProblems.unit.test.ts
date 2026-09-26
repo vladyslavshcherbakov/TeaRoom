@@ -23,10 +23,10 @@ test('contentProblems_whenTheRoomOffersNoWeather_sayWhatIsMissing', () => {
 test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
   const catalog = catalogWithRoomChanges({
     vessels: [
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
-      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 2, y: 0, z: 0 } },
-      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: { placeId: 'table', x: 3, y: 0, z: 0 } },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 2, y: 0, z: 0 } },
+      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 3, y: 0, z: 0 } },
     ],
   })
 
@@ -36,8 +36,8 @@ test('contentProblems_whenAVesselIdRepeats_nameTheIdOnce', () => {
 test('contentProblems_whenAVesselHasTheSpoonsId_nameTheId', () => {
   const catalog = catalogWithRoomChanges({
     vessels: [
-      { id: 'spoon', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
-      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
+      { id: 'spoon', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
+      { id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
     ],
   })
 
@@ -46,10 +46,32 @@ test('contentProblems_whenAVesselHasTheSpoonsId_nameTheId', () => {
 
 test('contentProblems_whenTheRoomHasNoCaddy_sayWhereTheTeaIsMissing', () => {
   const catalog = catalogWithRoomChanges({
-    vessels: [{ id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],
+    vessels: [{ id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],
   })
 
-  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" has no vessel "caddy" to keep its tea in'])
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" keeps its tea in no caddy'])
+})
+
+test('contentProblems_whenACaddyKeepsAnUnknownTea_nameTheTeaAndTheCaddy', () => {
+  const catalog = catalogWithRoomChanges({
+    vessels: [{ id: 'caddy', definitionId: 'testCaddy', initialWaterMl: 0, teaStock: { teaId: 'matcha', grams: 50 }, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } }],
+  })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), ['room "testRoom" keeps unknown tea "matcha" in "caddy"'])
+})
+
+test('contentProblems_whenTeaIsKeptInAVesselThatCannotHoldLeavesOrHasNoLid_nameTheVessel', () => {
+  const catalog = catalogWithRoomChanges({
+    vessels: [
+      { id: 'thermos', definitionId: 'testThermos', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 0, y: 0, z: 0 } },
+      { id: 'cup1', definitionId: 'testCup', initialWaterMl: 0, teaStock: { teaId: 'testGreen', grams: 50 }, startsAt: { placeId: 'table', x: 1, y: 0, z: 0 } },
+    ],
+  })
+
+  assert.deepEqual(problemsOpeningRoom(catalog, 'testRoom'), [
+    'room "testRoom" keeps tea in "thermos", which cannot hold leaves',
+    'room "testRoom" keeps tea in "cup1", which has no lid',
+  ])
 })
 
 test('contentProblems_whenAFigurineLikesAnUnknownTea_nameTheFigurineAndTea', () => {

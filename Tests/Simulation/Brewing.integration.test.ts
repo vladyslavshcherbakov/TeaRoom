@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('tea_whenSteepedForTheIdealTimeInGoodWater_tastesBalancedAndSoft', () => {
@@ -142,7 +142,7 @@ test('leaves_whenTheKettleLidIsClosed_areRefusedAndStayOnTheSpoon', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
-  ritual.do({ type: 'scoopTea', depth: 1 })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
 
   const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'kettle' })
 
@@ -154,7 +154,7 @@ test('spoon_whenTheCaddyIsClosed_scoopsNothing', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
 
-  const events = ritual.do({ type: 'scoopTea', depth: 1 })
+  const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'lidClosed' }])
   assert.equal(ritual.state.spoon.grams, 0)
@@ -165,7 +165,7 @@ test('spoon_whenDippedHalfway_holdsHalfItsCapacity', () => {
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
-  ritual.do({ type: 'scoopTea', depth: 0.5 })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 0.5 })
 
   assert.equal(ritual.state.spoon.grams, 2.5)
   assert.equal(ritual.vessel('caddy').leaves?.grams, 47.5)
@@ -175,7 +175,7 @@ test('leaves_whenTippedIntoTheThermos_areRefused', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'pickUp', itemId: 'spoon' })
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
-  ritual.do({ type: 'scoopTea', depth: 1 })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
 
   const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'thermos' })
 
@@ -221,24 +221,56 @@ test('sip_fromACupPouredFromTheKettle_saysTheCupHeldNoLeaves', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.cupHeldLeaves, false)
 })
 
-test('leaves_inASavedRitualWithNoTeaChosen_areRefusedAsTheRitualHasNotStarted', () => {
-  const ritual = TestRitual.begun()
-  ritual.do({ type: 'pickUp', itemId: 'spoon' })
-  const resumed = TestRitual.resumedFrom({ ...(ritual.savedState as object), teaId: null })
-
-  const events = resumed.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'ritualNotStarted' }])
-})
-
 test('spoon_lyingOnTheTable_scoopsNothingUntilItIsTaken', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
-  const events = ritual.do({ type: 'scoopTea', depth: 1 })
+  const events = ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'notInHand' }])
   assert.equal(ritual.vessel('caddy').leaves?.grams, 50)
+})
+
+test('leaves_scoopedFromASecondCaddy_areOfTheTeaThatCaddyKeeps', () => {
+  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+
+  ritual.tipASpoonOfLeavesInto('cup1', 'blackCaddy')
+
+  assert.equal(ritual.vessel('cup1').leaves?.teaId, 'testBlack')
+})
+
+test('spoon_holdingLeavesOfOneTea_refusesToScoopFromTheCaddyOfAnother', () => {
+  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 0.2 })
+
+  const events = ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'spoonHoldsAnotherTea' }])
+  assert.equal(ritual.state.spoon.grams, 1)
+})
+
+test('leaves_ofOneTea_areRefusedByAVesselHoldingLeavesOfAnother', () => {
+  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  ritual.tipASpoonOfLeavesInto('cup1')
+  ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
+  ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 1 })
+
+  const events = ritual.do({ type: 'tipSpoonInto', vesselId: 'cup1' })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'tipSpoonInto', reason: 'holdsLeavesOfAnotherTea' }])
+  assert.deepEqual([ritual.vessel('cup1').leaves?.grams, ritual.state.spoon.grams], [5, 5])
+})
+
+test('spoon_dippedIntoAVesselTheRoomKeepsNoTeaIn_scoopsNothing', () => {
+  const ritual = TestRitual.begun()
+  ritual.tipASpoonOfLeavesInto('cup1')
+
+  const events = ritual.do({ type: 'scoopTea', caddyId: 'cup1', depth: 1 })
+
+  assert.deepEqual(events, [{ type: 'actionRefused', command: 'scoopTea', reason: 'notACaddy' }])
 })
 
 function ritualWithTeaSteepingAt(waterC: number): TestRitual {

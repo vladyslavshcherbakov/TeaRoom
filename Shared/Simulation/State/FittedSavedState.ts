@@ -25,7 +25,7 @@ const puddleShape: PuddleState = { wetMl: 0, strength: 0, temperatureC: 0, spill
 const spotShape: Spot = { placeId: '', x: 0, y: 0, z: 0 }
 const clothShape: ClothState = { id: '', wetMl: 0, teaStain: 0, charring: 0, wasBurntBeforeWashing: false, isSoakingThePuddle: false, location: { kind: 'gone' } }
 const clothIdOfSavesWithOneCloth = 'cloth'
-const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature]
+const migrationsOldestFirst: readonly SaveMigration[] = [withTheMiddleHand, withClothsById, withWhatTheHeaterAndTheTapRanOnto, withTheShareThroughTheTimeOfDay, withTheHeatersWastedSeconds, withTheThermostat, withTheHeaterHoldingTheTarget, withVesselsRememberingTheyWereFull, withPuddlesAtTheirTemperature, withTheTeaOnTheSpoon]
 const shareThroughTheTimeOfDayOfOlderSaves = 0.5
 
 export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion: number): FittedSavedState {
@@ -48,6 +48,7 @@ export function fittedSavedState(catalog: Catalog, saved: unknown, savedVersion:
   const places = new Set(catalog.rooms[roomId]?.places ?? [])
   problems.push(...placeProblemsOf(state, places), ...handProblemsOf(state))
   if (state.teaId !== null && catalog.teas[state.teaId] === undefined) problems.push(`the saved tea ${state.teaId} is not in the catalog`)
+  problems.push(...unknownTeaProblemsOf(state, catalog))
   if (problems.length > 0) return { kind: 'doesNotFit', problems }
   changes.push(...dropPuddlesOnLostPlaces(state, places))
   return { kind: 'fits', state, changes }
@@ -113,6 +114,11 @@ function locationsIn(state: SessionState): [string, DeepReadonly<ItemLocation>][
     const location = itemLocationIn(state, itemId)
     return location === undefined ? [] : [[itemId, location]]
   })
+}
+
+function unknownTeaProblemsOf(state: SessionState, catalog: Catalog): string[] {
+  const heldTeas: [string, string | null][] = [['the spoon holds', state.spoon.teaId], ...Object.values(state.vessels).map((vessel): [string, string | null] => [`${vessel.id} holds leaves of`, vessel.leaves?.teaId ?? null])]
+  return heldTeas.filter(([, teaId]) => teaId !== null && catalog.teas[teaId] === undefined).map(([holder, teaId]) => `${holder} ${String(teaId)}, which is not in the catalog`)
 }
 
 function fitTheVessels(state: SessionState, fresh: SessionState): string[] {
@@ -286,6 +292,16 @@ function withPuddlesAtTheirTemperature(saved: Shape, catalog: Catalog): ReturnTy
   return {
     migrated: { ...saved, puddles: warmed },
     change: `a save from before the puddles had a temperature finds them at the room's ${room.ambientTemperatureC} °C`,
+  }
+}
+
+function withTheTeaOnTheSpoon(saved: Shape): ReturnType<SaveMigration> {
+  const spoon = saved['spoon']
+  if (!isShape(spoon) || spoon['teaId'] !== undefined) return null
+  const teaId = typeof spoon['grams'] === 'number' && spoon['grams'] > 0 && typeof saved['teaId'] === 'string' ? saved['teaId'] : null
+  return {
+    migrated: { ...saved, spoon: { ...spoon, teaId } },
+    change: `a save from before the spoon knew its tea finds ${teaId === null ? 'no tea' : `the ritual's ${teaId}`} on it`,
   }
 }
 

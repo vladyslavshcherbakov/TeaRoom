@@ -1,9 +1,9 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import { isEmpty, water } from '../Physics/Liquid.ts'
-import type { SessionState, VesselState } from '../State/SessionState.ts'
+import type { TeaStock } from '../Definitions/RoomDefinition.ts'
+import type { SessionState } from '../State/SessionState.ts'
 import { note, outcomeOf, startDraft, type Draft, type Outcome } from './Draft.ts'
 import { finishPour } from './PouringCommands.ts'
-import { caddyItemId } from './Reach.ts'
 import { stepTheWorld } from './SimulationStep.ts'
 import { reportTheWorld } from './WorldReport.ts'
 import { dryLeaves } from '../Physics/Brewing.ts'
@@ -49,10 +49,10 @@ function liveThroughTheAbsence(draft: Draft, awaySeconds: number): void {
 
 function restockTheHouse(draft: Draft): void {
   const spoonReturned = returnTheSpoon(draft)
-  const caddy = draft.state.vessels[caddyItemId]
-  const caddyRefill = caddy === undefined ? null : refillTheCaddy(draft, caddy)
-  if (!spoonReturned && caddyRefill === null) return note(draft, 'nothing to restock on return: the spoon is in the house and the caddy is full and dry')
-  draft.events.push({ type: 'houseRestocked', spoonReturned, caddyWasRefilled: caddyRefill !== null, caddyWasEmpty: caddyRefill === 'wasEmpty' })
+  const caddyRefills = definitionIn(draft.catalog, 'rooms', draft.state.roomId).vessels.flatMap((vessel) => (vessel.teaStock === null ? [] : [refillTheCaddy(draft, vessel.id, vessel.teaStock)]))
+  const wasACaddyRefilled = caddyRefills.some((refill) => refill !== null)
+  if (!spoonReturned && !wasACaddyRefilled) return note(draft, 'nothing to restock on return: the spoon is in the house and every caddy is full and dry')
+  draft.events.push({ type: 'houseRestocked', spoonReturned, wasACaddyRefilled, wasACaddyEmpty: caddyRefills.includes('wasEmpty') })
 }
 
 function returnTheSpoon(draft: Draft): boolean {
@@ -62,24 +62,25 @@ function returnTheSpoon(draft: Draft): boolean {
   spoon.location = { kind: 'onSurface', spot }
   spoon.charring = 0
   spoon.grams = 0
+  spoon.teaId = null
   note(draft, `a new spoon waits at its place on the ${spot.placeId}, since the last one crumbled to ash`)
   return true
 }
 
-function refillTheCaddy(draft: Draft, caddy: VesselState): CaddyRefill | null {
-  const teaId = draft.state.teaId
-  if (teaId === null) {
-    note(draft, 'the caddy is not refilled on return: no tea was chosen yet')
+function refillTheCaddy(draft: Draft, caddyId: string, teaStock: TeaStock): CaddyRefill | null {
+  const caddy = draft.state.vessels[caddyId]
+  if (caddy === undefined) {
+    note(draft, `the caddy ${caddyId} is not refilled on return: the room has no such vessel`)
     return null
   }
   const room = definitionIn(draft.catalog, 'rooms', draft.state.roomId)
   const gramsBefore = caddy.leaves?.grams ?? 0
   const heldWater = !isEmpty(caddy.liquid)
-  const isFullAndDry = !heldWater && caddy.leaves !== null && caddy.leaves.teaId === teaId && gramsBefore >= room.caddyGrams && caddy.leaves.steepedSeconds === 0
+  const isFullAndDry = !heldWater && caddy.leaves !== null && caddy.leaves.teaId === teaStock.teaId && gramsBefore >= teaStock.grams && caddy.leaves.steepedSeconds === 0
   if (isFullAndDry) return null
   const pouredOut = heldWater ? `, after pouring out ${caddy.liquid.volumeMl.toFixed(1)} ml and the wet leaves in it` : ''
   caddy.liquid = water(0, room.ambientTemperatureC)
-  caddy.leaves = dryLeaves(teaId, room.caddyGrams)
-  note(draft, `the caddy is refilled where it stands, from ${gramsBefore.toFixed(1)} g to ${room.caddyGrams} g of ${teaId}${pouredOut}`)
+  caddy.leaves = dryLeaves(teaStock.teaId, teaStock.grams)
+  note(draft, `the caddy ${caddy.id} is refilled where it stands, from ${gramsBefore.toFixed(1)} g to ${teaStock.grams} g of ${teaStock.teaId}${pouredOut}`)
   return gramsBefore === 0 ? 'wasEmpty' : 'wasToppedUp'
 }

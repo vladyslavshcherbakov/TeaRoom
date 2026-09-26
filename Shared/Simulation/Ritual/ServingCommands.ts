@@ -13,7 +13,7 @@ import {
   type Draft,
 } from './Draft.ts'
 import { isNotBeingPoured, isTheKeeperAt, isWithinTheKeepersReach, wasRefusedByAnyOf, type Check } from './ItemRefusals.ts'
-import { caddyItemId, ritualPlaceOf } from './Reach.ts'
+import { ritualPlaceOf, teaStockOf } from './Reach.ts'
 
 const sipMl = 40
 
@@ -35,8 +35,8 @@ export function tasteCup(draft: Draft, command: CommandOfType<'tasteCup'>): void
       `${verdict.temperature}, ${verdict.strength}, ${verdict.bitterness}, reaction ${verdict.reaction}; ${describeLiquid(cup)} left`,
   )
   draft.events.push({ type: 'teaTasted', cupId: cup.id, verdict, cupHeldLeaves })
-  if (cup.id !== caddyItemId || !isFatalStraightFromTheCaddy(verdict)) return
-  note(draft, `the keeper sipped ${verdict.strength} tea straight from the caddy, and it killed them`)
+  if (teaStockOf(draft, cup.id) === null || !isFatalStraightFromTheCaddy(verdict)) return
+  note(draft, `the keeper sipped ${verdict.strength} tea straight from the caddy ${cup.id}, and it killed them`)
   draft.events.push({ type: 'keeperDied', cupId: cup.id })
 }
 

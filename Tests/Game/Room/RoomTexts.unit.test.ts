@@ -50,14 +50,14 @@ test('caption_ofASpoonThatCrumbled_answersInOneLine', () => {
 })
 
 test('caption_ofTheCaddyWashedClean_mournsTheTea', () => {
-  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'caddy' }], 0)
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'caddy', isACaddy: true }], 0)
 
   assert.equal(lines.length, 1)
   assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('caddyWashedOut.') && line === lines[0]), lines.join(' / '))
 })
 
 test('caption_ofLeavesWashedOutOfTheKettle_staysSilent', () => {
-  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'kettle' }], 0), [])
+  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'lastLeavesWashedOut', vesselId: 'kettle', isACaddy: false }], 0), [])
 })
 
 test('heaterTesterLine_acrossTheKeepersVoices_isEveryOneOfItsSixLines', () => {
@@ -214,14 +214,14 @@ test('caption_ofASpillTwoMinutesAfterTheLastRemarkedSpill_remarksInAnotherLine',
 })
 
 test('caption_ofAReturnWithTheSpoonBackAndTheCaddyRefilledFromEmpty_isOneLineAboutBoth', () => {
-  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: true, caddyWasRefilled: true, caddyWasEmpty: true }], 0)
+  const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: true, wasACaddyRefilled: true, wasACaddyEmpty: true }], 0)
 
   assert.equal(lines.length, 1)
   assert.ok(Object.entries(englishTexts).some(([key, line]) => key.startsWith('spoonAndCaddyReturned.') && line === lines[0]), lines.join(' / '))
 })
 
 test('caption_ofAReturnWithOnlyTheCaddyToppedUp_staysSilent', () => {
-  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: false, caddyWasRefilled: true, caddyWasEmpty: false }], 0), [])
+  assert.deepEqual(new RoomTexts(7, () => {}).captionLinesFor([{ type: 'houseRestocked', spoonReturned: false, wasACaddyRefilled: true, wasACaddyEmpty: false }], 0), [])
 })
 
 const tapRanForTwoMinutes = { type: 'tapTurnedOff', openSeconds: 120, drainedMl: 4460, hasRunOntoAnItem: false } as const

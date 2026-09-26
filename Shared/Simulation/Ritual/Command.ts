@@ -22,7 +22,7 @@ export type Command =
   | { readonly type: 'putInTheSink'; readonly itemId: string }
   | { readonly type: 'turnTheTapOn' }
   | { readonly type: 'turnTheTapOff' }
-  | { readonly type: 'scoopTea'; readonly depth: number }
+  | { readonly type: 'scoopTea'; readonly caddyId: string; readonly depth: number }
   | { readonly type: 'tipSpoonInto'; readonly vesselId: string }
   | { readonly type: 'tasteCup'; readonly cupId: string }
   | { readonly type: 'offerCup'; readonly cupId: string; readonly figurineId: string }

@@ -4,7 +4,7 @@ import { isEmpty } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import { tiltWhereTheStreamSplashes } from '../../../Shared/Simulation/Physics/Pouring.ts'
 import type { Command } from '../../../Shared/Simulation/Ritual/Command.ts'
 import { isTheHeaterInUse } from '../../../Shared/Simulation/Ritual/HeatingCommands.ts'
-import { caddyItemId, carriedItemIdsIn, isACloth, itemLocationIn, middleHandIndex, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
+import { carriedItemIdsIn, isACloth, itemLocationIn, middleHandIndex, spoonItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import type { DeepReadonly } from '../../../Shared/Simulation/State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState, VesselState } from '../../../Shared/Simulation/State/SessionState.ts'
@@ -614,8 +614,8 @@ export class RoomPlay {
   }
 
   private useTheSpoonOn(itemId: string): void {
-    if (itemId === caddyItemId) {
-      this.ritual.dispatch({ type: 'scoopTea', depth: fullSpoonDepth })
+    if (carriedShapeOf(this.ritual.state, itemId) === 'caddy') {
+      this.ritual.dispatch({ type: 'scoopTea', caddyId: itemId, depth: fullSpoonDepth })
       return
     }
     const isSomethingToTip = this.ritual.state.spoon.grams > 0 && this.ritual.state.vessels[itemId] !== undefined

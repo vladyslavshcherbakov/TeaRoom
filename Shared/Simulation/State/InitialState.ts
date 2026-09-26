@@ -1,5 +1,6 @@
 import { definitionIn, type Catalog } from '../Definitions/Catalog.ts'
 import type { RoomDefinition, Spot } from '../Definitions/RoomDefinition.ts'
+import { dryLeaves } from '../Physics/Brewing.ts'
 import { water } from '../Physics/Liquid.ts'
 import type { ClothState, FigurineState, SessionState, VesselState } from './SessionState.ts'
 
@@ -26,7 +27,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
       hasAnnouncedTargetTemperature: false,
       hasAnnouncedBoilingAway: false,
     },
-    spoon: { grams: 0, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
+    spoon: { grams: 0, teaId: null, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
     cloths: clothsInTheRoom(room),
     pour: null,
     sink: { itemIdInside: null, runningWater: null, hasRunOverTheItemInside: false },
@@ -42,7 +43,7 @@ function vesselsInTheRoom(room: RoomDefinition): Record<string, VesselState> {
       id: vessel.id,
       definitionId: vessel.definitionId,
       liquid: water(vessel.initialWaterMl, room.ambientTemperatureC),
-      leaves: null,
+      leaves: vessel.teaStock === null ? null : dryLeaves(vessel.teaStock.teaId, vessel.teaStock.grams),
       isLidOpen: false,
       shellHeat: 0,
       hasOnlyBoiledDownSinceFull: false,

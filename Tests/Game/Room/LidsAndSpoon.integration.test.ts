@@ -38,7 +38,7 @@ test('spoon_whenFullAndTheOpenKettleIsTapped_tipsTheLeavesIntoIt', () => {
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
   room.takeAndChoose('spoon')
-  room.session.dispatch({ type: 'scoopTea', depth: 1 })
+  room.session.dispatch({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
 
   room.tap({ kind: 'item', itemId: 'kettle' })
 

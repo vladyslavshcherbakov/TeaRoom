@@ -4,8 +4,6 @@ import { note, refuse, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { isTheHeaterInUse, switchTheHeaterOff } from './HeatingCommands.ts'
 import { finishPour } from './PouringCommands.ts'
 import { wetMlOnEveryPlace } from './Puddles.ts'
-import { caddyItemId } from './Reach.ts'
-import { dryLeaves } from '../Physics/Brewing.ts'
 import { hoursSinceSunriseOf } from '../Judgement/TimeOfDayJudgement.ts'
 import { clampedToShare } from '../Physics/ClampedToShare.ts'
 
@@ -15,10 +13,7 @@ export function beginRitual(draft: Draft, command: CommandOfType<'beginRitual'>)
   }
   draft.state.phase = 'ritual'
   draft.state.teaId = command.teaId
-  const caddy = draft.state.vessels[caddyItemId]
-  const caddyGrams = definitionIn(draft.catalog, 'rooms', draft.state.roomId).caddyGrams
-  if (caddy !== undefined) caddy.leaves = dryLeaves(command.teaId, caddyGrams)
-  note(draft, `ritual began with ${command.teaId}, the caddy holds ${caddyGrams} g of it`)
+  note(draft, `ritual began with ${command.teaId}`)
   draft.events.push({ type: 'ritualBegan', teaId: command.teaId })
 }
 

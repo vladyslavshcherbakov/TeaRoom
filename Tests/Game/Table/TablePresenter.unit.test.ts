@@ -4,7 +4,7 @@ import { tableViewState } from '../../../Apps/Game/Table/TablePresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { Liquid } from '../../../Shared/Simulation/Physics/Liquid.ts'
 import type { SessionState } from '../../../Shared/Simulation/State/SessionState.ts'
-import { testCatalog } from '../../Support/TestCatalog.ts'
+import { testCatalog, withMoreCaddies } from '../../Support/TestCatalog.ts'
 import { TestRitual } from '../../Support/TestRitual.ts'
 
 const catalog = testCatalog()
@@ -178,6 +178,22 @@ test('soakedLeaves_inAnEmptyBowl_stayInIt', () => {
   if (cup !== undefined) cup.leaves = { teaId: 'testGreen', grams: 3, isSteeping: false, isStirredByTheBoil: false, steepedSeconds: 0 }
 
   assert.deepEqual(tableViewState(state, catalog).vessels['cup1']?.soakedLeaves, { teaId: 'testGreen', count: 6 })
+})
+
+test('looseLeaves_ofEachCaddyAndTheSpoon_showTheirOwnTeaAndHowFullTheyAre', () => {
+  const catalogWithTwoCaddies = withMoreCaddies(catalog, { blackCaddy: 'testBlack' })
+  const ritual = TestRitual.begun(catalogWithTwoCaddies)
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
+  ritual.do({ type: 'scoopTea', caddyId: 'blackCaddy', depth: 0.5 })
+
+  const looseLeavesByItem = tableViewState(ritual.state, catalogWithTwoCaddies).looseLeavesByItem
+
+  assert.deepEqual(looseLeavesByItem, {
+    spoon: { teaId: 'testBlack', fillShare: 0.5 },
+    caddy: { teaId: 'testGreen', fillShare: 1 },
+    blackCaddy: { teaId: 'testBlack', fillShare: 0.95 },
+  })
 })
 
 function ritualState(): SessionState {

@@ -15,6 +15,16 @@ test('savedState_missingAFieldTheGameReads_doesNotFit', () => {
   assert.deepEqual(resuming, { kind: 'savedStateDoesNotFit', problems: ['state.cloths.cloth.teaStain is not a number'] })
 })
 
+test('savedState_withLeavesOfATeaTheCatalogNoLongerHas_doesNotFit', () => {
+  const savedState = TestRitual.begun().savedState as { vessels: Record<string, { leaves: Record<string, unknown> }> }
+  const caddy = savedState.vessels['caddy']
+  if (caddy !== undefined) caddy.leaves['teaId'] = 'earlGrey'
+
+  const resuming = RitualSession.resume(testCatalog(), savedState, 1, new RecordingLog(), true)
+
+  assert.deepEqual(resuming, { kind: 'savedStateDoesNotFit', problems: ['caddy holds leaves of earlGrey, which is not in the catalog'] })
+})
+
 test('savedState_ofAnotherVersion_doesNotFit', () => {
   const resuming = RitualSession.resume(testCatalog(), TestRitual.begun().savedState, 0, new RecordingLog(), true)
 
@@ -158,6 +168,19 @@ test('savedState_fromBeforePuddlesHadATemperature_findsThemAtRoomTemperature', (
   assert.equal(resumed.state.puddles['table']?.temperatureC, 20)
 })
 
+test('savedState_fromBeforeTheSpoonKnewItsTea_findsTheRitualsTeaOnAFullSpoon', () => {
+  const ritual = TestRitual.begun()
+  ritual.do({ type: 'pickUp', itemId: 'spoon' })
+  ritual.do({ type: 'openVesselLid', vesselId: 'caddy' })
+  ritual.do({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
+  const savedState = ritual.savedState as { spoon: Record<string, unknown> }
+  delete savedState.spoon['teaId']
+
+  const resumed = TestRitual.resumedFrom(savedState)
+
+  assert.equal(resumed.state.spoon.teaId, 'testGreen')
+})
+
 test('savedState_whoseHeaterLeftTheCatalog_resumesWithTheRoomsHeaterSwitchedOff', () => {
   const ritual = TestRitual.begun()
   ritual.do({ type: 'placeOnHeater', itemId: 'kettle' })
@@ -182,6 +205,6 @@ function catalogWithAFourthCup(): Catalog {
   const catalog = testCatalog()
   const room = catalog.rooms['testRoom']
   if (room === undefined) throw new Error('the test catalog lost its room')
-  const fourthCup = { id: 'cup4', definitionId: 'testCup', initialWaterMl: 0, startsAt: { placeId: 'table', x: 10, y: 0, z: 0 } }
+  const fourthCup = { id: 'cup4', definitionId: 'testCup', initialWaterMl: 0, teaStock: null, startsAt: { placeId: 'table', x: 10, y: 0, z: 0 } }
   return { ...catalog, rooms: { testRoom: { ...room, vessels: [...room.vessels, fourthCup] } } }
 }

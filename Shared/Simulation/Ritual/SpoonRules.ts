@@ -29,6 +29,7 @@ function crumbleTheSpoon(draft: Draft): 'crumbled' {
   const gramsLost = spoon.grams
   note(draft, `the spoon, ${percent(spoon.charring)} charred, crumbles to ash as it is taken, and ${gramsLost.toFixed(2)} g of leaves on it are lost`)
   spoon.grams = 0
+  spoon.teaId = null
   spoon.location = { kind: 'gone' }
   draft.events.push({ type: 'spoonCrumbled', gramsLost })
   return 'crumbled'

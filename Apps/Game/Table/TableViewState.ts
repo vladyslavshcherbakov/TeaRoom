@@ -2,8 +2,7 @@ export type TableViewState = {
   readonly vessels: Readonly<Record<string, VesselView>>
   readonly isHeaterOn: boolean
   readonly thermostat: ThermostatView
-  readonly caddy: CaddyView
-  readonly spoonFillShare: number
+  readonly looseLeavesByItem: Readonly<Record<string, LooseLeavesView>>
   readonly cloths: Readonly<Record<string, ClothView>>
   readonly charringByItem: Readonly<Record<string, CharringView>>
   readonly puddles: readonly PuddleView[]
@@ -57,7 +56,7 @@ export type SoakedLeavesView = {
   readonly count: number
 }
 
-export type CaddyView = {
-  readonly isOpen: boolean
+export type LooseLeavesView = {
+  readonly teaId: string | null
   readonly fillShare: number
 }

@@ -47,6 +47,7 @@ export type HeaterState = {
 
 export type SpoonState = {
   grams: number
+  teaId: string | null
   capacityGrams: number
   charring: number
   location: ItemLocation

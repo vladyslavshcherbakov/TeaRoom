@@ -8,10 +8,16 @@ export type Spot = {
   readonly turnRadians?: number
 }
 
+export type TeaStock = {
+  readonly teaId: string
+  readonly grams: number
+}
+
 export type RoomVessel = {
   readonly id: string
   readonly definitionId: string
   readonly initialWaterMl: number
+  readonly teaStock: TeaStock | null
   readonly startsAt: Spot
 }
 
@@ -39,7 +45,6 @@ export type RoomDefinition = {
   readonly tap: TapDefinition | null
   readonly vessels: readonly RoomVessel[]
   readonly figurineIds: readonly string[]
-  readonly caddyGrams: number
   readonly spoonCapacityGrams: number
   readonly spoonStartsAt: Spot
   readonly cloths: readonly RoomCloth[]

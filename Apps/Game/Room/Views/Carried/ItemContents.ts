@@ -7,7 +7,7 @@ import { openLidOffsetBeside, type Surroundings } from '../../Placement.ts'
 import { turnedBy, type FloorPoint } from '../../RoomLayout.ts'
 import { mostSoakedLeavesShown } from '../../../Table/TablePresenter.ts'
 import { teaLookFor } from '../../../Table/TeaLooks.ts'
-import type { SteamLevel, SurfaceMotion, VesselView } from '../../../Table/TableViewState.ts'
+import type { LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Table/TableViewState.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
 import { mostPuffsFromOneSource, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
@@ -46,6 +46,7 @@ const oilySheenOfTar = 0.9
 const redHeatRisesWithGlow = 1.5
 const brightestRedHeatIntensity = 2.2
 const leavesDriftRadiansPerSecondByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
+const noLooseLeaves: LooseLeavesView = { teaId: null, fillShare: 0 }
 const stillWater: Wave = { riseMetres: 0, tiltXRadians: 0, tiltZRadians: 0 }
 const wavesByMotion: Readonly<Record<SurfaceMotion, { heightMetres: number; tiltRadians: number; wavesPerSecond: number }>> = {
   still: { heightMetres: 0, tiltRadians: 0, wavesPerSecond: 0 },
@@ -161,7 +162,7 @@ function steamRisingTo(source: THREE.Vector3, toTheEyes: SteamDrawnToTheEyes): T
 function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItemsScene): void {
   const looseLeaves = model.look.looseLeaves
   if (looseLeaves === null) return
-  const teaId = scene.state.teaId
+  const { teaId, fillShare } = scene.table.looseLeavesByItem[model.itemId] ?? noLooseLeaves
   if (model.leaves === null || model.leaves.teaId !== teaId) {
     if (model.leaves !== null) holder.remove(model.leaves.pile.mesh)
     const pile = new LeafPile(teaLookFor(teaId), looseLeaves.pile, model.leafMaterial)
@@ -170,7 +171,6 @@ function showLeaves(model: CarriedModel, holder: THREE.Group, scene: CarriedItem
     holder.add(pile.mesh)
     model.leaves = { pile, teaId }
   }
-  const fillShare = looseLeaves.fillShareIn(scene.table)
   model.leaves.pile.showFill(fillShare)
   holder.position.y = looseLeaves.heapStartsAt.y + heapLiftedByTheLiquid(model, looseLeaves, fillShare, scene.table.vessels[model.itemId])
 }

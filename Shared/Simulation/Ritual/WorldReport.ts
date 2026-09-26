@@ -104,7 +104,7 @@ function clothLinesFor(now: SessionState, cloth: ClothState, clothAhead: ClothSt
 function spoonLines(now: SessionState, ahead: SessionState): string[] {
   const charringRate = ahead.spoon.charring - now.spoon.charring
   if (Math.abs(charringRate) <= smallestReportedChange) return []
-  return [`the spoon ${where(now, spoonItemId, now.spoon.location)} with ${now.spoon.grams.toFixed(2)} g on it: charring ${percent(now.spoon.charring)} (${signedPercent(charringRate)}/s)`]
+  return [`the spoon ${where(now, spoonItemId, now.spoon.location)} with ${now.spoon.grams.toFixed(2)} g of ${now.spoon.teaId ?? 'no tea'} on it: charring ${percent(now.spoon.charring)} (${signedPercent(charringRate)}/s)`]
 }
 
 function puddleLines(now: SessionState, ahead: SessionState): string[] {

@@ -150,7 +150,7 @@ test('caddy_underTheRunningTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', (
   const events = ritual.wait(60)
 
   assert.equal(ritual.vessel('caddy').leaves, null)
-  assert.deepEqual(eventsOfType(events, 'lastLeavesWashedOut'), [{ type: 'lastLeavesWashedOut', vesselId: 'caddy' }])
+  assert.deepEqual(eventsOfType(events, 'lastLeavesWashedOut'), [{ type: 'lastLeavesWashedOut', vesselId: 'caddy', isACaddy: true }])
 })
 
 test('sink_awayFromTheCounter_isRefused', () => {

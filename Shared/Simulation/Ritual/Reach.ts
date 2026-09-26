@@ -1,5 +1,5 @@
 import { definitionIn } from '../Definitions/Catalog.ts'
-import type { Spot, TapDefinition } from '../Definitions/RoomDefinition.ts'
+import type { Spot, TapDefinition, TeaStock } from '../Definitions/RoomDefinition.ts'
 import type { DeepReadonly } from '../State/DeepReadonly.ts'
 import type { HandIndex, ItemLocation, SessionState } from '../State/SessionState.ts'
 import { note, type Draft } from './Draft.ts'
@@ -10,7 +10,6 @@ type ItemHolders<Holder> = {
   readonly vessels: Readonly<Record<string, Holder>>
 }
 
-export const caddyItemId = 'caddy'
 export const spoonItemId = 'spoon'
 
 export function carriedItemIdsIn(state: DeepReadonly<SessionState>): readonly string[] {
@@ -65,6 +64,10 @@ export function heaterSpotOf(draft: Draft): Spot {
 
 export function tapOf(draft: Draft): TapDefinition | null {
   return definitionIn(draft.catalog, 'rooms', draft.state.roomId).tap
+}
+
+export function teaStockOf(draft: Draft, vesselId: string): TeaStock | null {
+  return definitionIn(draft.catalog, 'rooms', draft.state.roomId).vessels.find((vessel) => vessel.id === vesselId)?.teaStock ?? null
 }
 
 export function ritualPlaceOf(draft: Draft): string {

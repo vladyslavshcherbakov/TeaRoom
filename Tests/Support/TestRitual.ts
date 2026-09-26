@@ -94,7 +94,7 @@ export class TestRitual {
     let gramsLeftToAdd = grams
     while (gramsLeftToAdd > 0) {
       const depth = Math.min(1, gramsLeftToAdd / this.state.spoon.capacityGrams)
-      events.push(...this.do({ type: 'scoopTea', depth }))
+      events.push(...this.do({ type: 'scoopTea', caddyId: 'caddy', depth }))
       gramsLeftToAdd -= this.state.spoon.grams
       events.push(...this.do({ type: 'tipSpoonInto', vesselId: 'kettle' }))
     }
@@ -103,11 +103,11 @@ export class TestRitual {
     return events
   }
 
-  tipASpoonOfLeavesInto(vesselId: string): readonly RitualEvent[] {
+  tipASpoonOfLeavesInto(vesselId: string, caddyId = 'caddy'): readonly RitualEvent[] {
     return [
       ...this.do({ type: 'pickUp', itemId: 'spoon' }),
-      ...this.do({ type: 'openVesselLid', vesselId: 'caddy' }),
-      ...this.do({ type: 'scoopTea', depth: 1 }),
+      ...this.do({ type: 'openVesselLid', vesselId: caddyId }),
+      ...this.do({ type: 'scoopTea', caddyId, depth: 1 }),
       ...this.do({ type: 'tipSpoonInto', vesselId }),
     ]
   }

@@ -29,7 +29,6 @@ export const caddyShapeLook: CarriedShapeLook = {
   looseLeaves: {
     heapStartsAt: { x: 0, y: 0.018, z: 0 },
     pile: { leafCount: 480, radiusMetres: 0.062, heightMetres: 0.126, isLyingFlat: false },
-    fillShareIn: (table) => table.caddy.fillShare,
   },
   soakedLeaves: null,
   fire: null,

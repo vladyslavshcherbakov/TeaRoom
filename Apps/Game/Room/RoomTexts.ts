@@ -1,5 +1,4 @@
 import type { OfferingResponse } from '../../../Shared/Simulation/Judgement/OfferingJudgement.ts'
-import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
@@ -59,11 +58,11 @@ export class RoomTexts {
       case 'spoonCrumbled':
         return this.joke('spoonCrumbled')
       case 'lastLeavesWashedOut':
-        return event.vesselId === caddyItemId ? this.joke('caddyWashedOut') : []
+        return event.isACaddy ? this.joke('caddyWashedOut') : []
       case 'burntClothWashedBackToNew':
         return this.saidUpTo('burntClothWashed', onceAVisit)
       case 'houseRestocked':
-        return this.restockLines(event.spoonReturned, event.caddyWasEmpty)
+        return this.restockLines(event.spoonReturned, event.wasACaddyEmpty)
       case 'figurineAcceptedTea':
         return [offeringResponseText(event.figurineId, event.response)]
       default:
@@ -71,10 +70,10 @@ export class RoomTexts {
     }
   }
 
-  private restockLines(spoonReturned: boolean, caddyWasEmpty: boolean): readonly string[] {
-    if (spoonReturned && caddyWasEmpty) return [phraseLineAtTurn('spoonAndCaddyReturned', this.voiceSeed, 1)]
+  private restockLines(spoonReturned: boolean, wasACaddyEmpty: boolean): readonly string[] {
+    if (spoonReturned && wasACaddyEmpty) return [phraseLineAtTurn('spoonAndCaddyReturned', this.voiceSeed, 1)]
     if (spoonReturned) return [phraseLineAtTurn('spoonReturned', this.voiceSeed, 1)]
-    if (caddyWasEmpty) return [phraseLineAtTurn('emptyCaddyRefilled', this.voiceSeed, 1)]
+    if (wasACaddyEmpty) return [phraseLineAtTurn('emptyCaddyRefilled', this.voiceSeed, 1)]
     return []
   }
 

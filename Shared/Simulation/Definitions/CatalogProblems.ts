@@ -1,7 +1,7 @@
 import type { Catalog } from './Catalog.ts'
-import type { RoomDefinition } from './RoomDefinition.ts'
+import type { RoomDefinition, RoomVessel } from './RoomDefinition.ts'
 import type { TeaDefinition } from './TeaDefinition.ts'
-import { caddyItemId, spoonItemId } from '../Ritual/Reach.ts'
+import { spoonItemId } from '../Ritual/Reach.ts'
 
 export function problemsOpeningRoom(catalog: Catalog, roomId: string): string[] {
   const room = catalog.rooms[roomId]
@@ -23,8 +23,9 @@ function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
       problems.push(`room "${room.id}" uses unknown vessel "${vessel.definitionId}" for "${vessel.id}"`)
     }
   }
+  problems.push(...room.vessels.flatMap((vessel) => problemsWithTheTeaStockOf(catalog, room, vessel)))
+  if (room.vessels.every((vessel) => vessel.teaStock === null)) problems.push(`room "${room.id}" keeps its tea in no caddy`)
   const vesselIds = room.vessels.map((vessel) => vessel.id)
-  if (!vesselIds.includes(caddyItemId)) problems.push(`room "${room.id}" has no vessel "${caddyItemId}" to keep its tea in`)
   for (const repeatedId of new Set(vesselIds.filter((id, index) => vesselIds.indexOf(id) !== index))) {
     problems.push(`room "${room.id}" repeats vessel id "${repeatedId}"`)
   }
@@ -37,6 +38,17 @@ function problemsWithRoom(catalog: Catalog, room: RoomDefinition): string[] {
   for (const figurineId of room.figurineIds) {
     if (catalog.figurines[figurineId] === undefined) problems.push(`room "${room.id}" uses unknown figurine "${figurineId}"`)
   }
+  return problems
+}
+
+function problemsWithTheTeaStockOf(catalog: Catalog, room: RoomDefinition, vessel: RoomVessel): string[] {
+  const teaStock = vessel.teaStock
+  const definition = catalog.vessels[vessel.definitionId]
+  if (teaStock === null || definition === undefined) return []
+  const problems: string[] = []
+  if (catalog.teas[teaStock.teaId] === undefined) problems.push(`room "${room.id}" keeps unknown tea "${teaStock.teaId}" in "${vessel.id}"`)
+  if (!definition.canHoldLeaves) problems.push(`room "${room.id}" keeps tea in "${vessel.id}", which cannot hold leaves`)
+  if (definition.lid === null) problems.push(`room "${room.id}" keeps tea in "${vessel.id}", which has no lid`)
   return problems
 }
 

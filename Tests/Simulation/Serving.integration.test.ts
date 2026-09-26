@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { assertNear } from '../Support/Assertions.ts'
-import { testCatalog } from '../Support/TestCatalog.ts'
+import { testCatalog, withMoreCaddies } from '../Support/TestCatalog.ts'
 import { eventsOfType, TestRitual } from '../Support/TestRitual.ts'
 
 test('sip_ofPlainWater_tastesOfNoTea', () => {
@@ -113,6 +113,18 @@ test('keeper_whenSippingTeaOfExtremeStrengthStraightFromTheCaddy_dies', () => {
   const events = ritual.do({ type: 'tasteCup', cupId: 'caddy' })
 
   assert.deepEqual(eventsOfType(events, 'keeperDied'), [{ type: 'keeperDied', cupId: 'caddy' }])
+})
+
+test('keeper_whenSippingTeaOfExtremeStrengthStraightFromASecondCaddy_dies', () => {
+  const ritual = TestRitual.begun(withMoreCaddies(testCatalog(), { blackCaddy: 'testBlack' }))
+  ritual.heatKettleTo(80)
+  ritual.do({ type: 'openVesselLid', vesselId: 'blackCaddy' })
+  ritual.pour('kettle', 'blackCaddy', 10)
+  ritual.wait(10)
+
+  const events = ritual.do({ type: 'tasteCup', cupId: 'blackCaddy' })
+
+  assert.deepEqual(eventsOfType(events, 'keeperDied'), [{ type: 'keeperDied', cupId: 'blackCaddy' }])
 })
 
 test('keeper_whenSippingTheCaddysTeaFromABowl_lives', () => {
