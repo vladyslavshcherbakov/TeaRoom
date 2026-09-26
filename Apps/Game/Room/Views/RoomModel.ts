@@ -108,8 +108,12 @@ export class RoomModel {
     this.heaterPlate = this.addHeater(heaterSpot)
   }
 
-  turnTheSettingsGear(timeSeconds: number): void {
-    this.settingsGear.turn(timeSeconds)
+  turnTheSettingsGearOneTooth(): void {
+    this.settingsGear.turnOneTooth()
+  }
+
+  advanceTheSettingsGear(seconds: number): void {
+    this.settingsGear.advance(seconds)
   }
 
   showHeater(isOn: boolean): void {

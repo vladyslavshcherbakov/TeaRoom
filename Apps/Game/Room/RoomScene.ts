@@ -225,13 +225,13 @@ export class RoomScene {
     this.playTime = new PlayTime(new PlayTimeStore(log), log)
     this.settings = this.settingsStore.load()
     this.settingsScreen = new SettingsScreen(container, {
-      coatColourChosen: (coatColour) => this.changeTheSettings({ coatColour }, 'from the settings'),
-      softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.changeTheSettings({ hasSoftShadowsInCorners }, 'from the settings'),
-      glowChosen: (hasGlow) => this.changeTheSettings({ hasGlow }, 'from the settings'),
-      frameRateShownChosen: (isFrameRateShown) => this.changeTheSettings({ isFrameRateShown }, 'from the settings'),
-      faceFeatureChosen: (faceFeature) => this.changeTheSettings({ faceFeature }, 'from the settings'),
-      nerdModeChosen: (isNerdModeOn) => this.changeTheSettings({ isNerdModeOn }, 'from the settings'),
-      temperatureUnitChosen: (temperatureUnit) => this.changeTheSettings({ temperatureUnit }, 'from the settings'),
+      coatColourChosen: (coatColour) => this.settingChosen({ coatColour }),
+      softShadowsInCornersChosen: (hasSoftShadowsInCorners) => this.settingChosen({ hasSoftShadowsInCorners }),
+      glowChosen: (hasGlow) => this.settingChosen({ hasGlow }),
+      frameRateShownChosen: (isFrameRateShown) => this.settingChosen({ isFrameRateShown }),
+      faceFeatureChosen: (faceFeature) => this.settingChosen({ faceFeature }),
+      nerdModeChosen: (isNerdModeOn) => this.settingChosen({ isNerdModeOn }),
+      temperatureUnitChosen: (temperatureUnit) => this.settingChosen({ temperatureUnit }),
     })
     this.frameRateCounter = new FrameRateCounter(container)
     new FullScreenButton(container, log)
@@ -278,7 +278,7 @@ export class RoomScene {
     this.carried.show({ state, table, walk: this.play.walk, heldInView, inspected, aimedPour: this.play.aimedPourView, clothWiping: this.play.clothWiping, timeSeconds: this.clock.elapsedTime, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.room.showHeater(table.isHeaterOn)
-    this.room.turnTheSettingsGear(this.clock.elapsedTime)
+    this.room.advanceTheSettingsGear(seconds)
     const unit = this.settings.temperatureUnit
     this.room.showHeaterControls({ isNerdModeOn: this.settings.isNerdModeOn, target: { degrees: degreesShownIn(unit, table.thermostat.targetC), unit }, isThermostatOn: table.thermostat.isOn })
     this.room.showPuddles(table.puddles)
@@ -387,6 +387,11 @@ export class RoomScene {
     if (savedPlace === this.lastSavedPlace) return
     this.lastSavedPlace = savedPlace
     this.log(`the visit is saved with the walker at ${savedPlace}`)
+  }
+
+  private settingChosen(change: Partial<RoomSettings>): void {
+    this.changeTheSettings(change, 'from the settings')
+    this.room.turnTheSettingsGearOneTooth()
   }
 
   private changeTheSettings(change: Partial<RoomSettings>, how: string): void {

@@ -26,25 +26,40 @@ const axleRiseMetres = 0.012
 const nutRadiusMetres = 0.022
 const nutHeightMetres = 0.01
 const boltHeadRadiusMetres = 0.008
-const turnRadiansPerSecond = 0.12
+const secondsToTurnATooth = 0.6
 
 export class SettingsGear {
   readonly root = new THREE.Group()
   private readonly big: THREE.Group
   private readonly small: THREE.Group
+  private teethAsked = 0
+  private teethTurned = 0
 
   constructor(materials: SurfaceMaterials) {
-    this.big = gearOf(bigGear, materials.materialFor('brass'), materials)
-    this.small = gearOf(smallGear, materials.materialFor('copper'), materials)
+    this.big = gearOf(bigGear, materials.materialFor('gearMetal'), materials)
+    this.small = gearOf(smallGear, materials.materialFor('darkGearMetal'), materials)
     const centresApart = bigGear.pitchRadius + smallGear.pitchRadius
     this.small.position.set(Math.cos(smallGearDirectionRadians) * centresApart, Math.sin(smallGearDirectionRadians) * centresApart, 0)
     this.root.add(this.big, this.small)
     this.root.traverse((part) => (part.castShadow = true))
-    this.turn(0)
+    this.showTheTurn()
   }
 
-  turn(timeSeconds: number): void {
-    const bigTurn = timeSeconds * turnRadiansPerSecond
+  turnOneTooth(): void {
+    this.teethAsked += 1
+  }
+
+  advance(seconds: number): void {
+    if (this.teethTurned >= this.teethAsked) return
+    this.teethTurned = Math.min(this.teethAsked, this.teethTurned + seconds / secondsToTurnATooth)
+    this.showTheTurn()
+  }
+
+  private showTheTurn(): void {
+    const wholeTeeth = Math.floor(this.teethTurned)
+    const partOfATooth = this.teethTurned - wholeTeeth
+    const teeth = wholeTeeth + partOfATooth * partOfATooth * (3 - 2 * partOfATooth)
+    const bigTurn = (teeth * Math.PI * 2) / bigGear.teeth
     const gapTowardsTheSmallGear = smallGearDirectionRadians - Math.PI / bigGear.teeth
     this.big.rotation.z = gapTowardsTheSmallGear + bigTurn
     this.small.rotation.z = smallGearDirectionRadians + Math.PI - bigTurn * (bigGear.teeth / smallGear.teeth)
