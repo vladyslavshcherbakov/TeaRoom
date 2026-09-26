@@ -3,7 +3,7 @@ import { caddyItemId } from '../../../Shared/Simulation/Ritual/Reach.ts'
 import type { RitualEvent } from '../../../Shared/Simulation/Ritual/RitualEvent.ts'
 import { smoulderingFromCharring } from '../Table/TablePresenter.ts'
 import { sipText } from '../Table/TableTexts.ts'
-import { phraseLineAtTurn, phraseVariantsOf, textOrFallback, textWith } from '../Texts/Texts.ts'
+import { phraseLineAtTurn, phraseVariantsOf, text, textOrFallback, textWith } from '../Texts/Texts.ts'
 import type { RoomLog } from './RoomNavigator.ts'
 import type { RoomRemark } from './RoomRemarks.ts'
 
@@ -107,6 +107,10 @@ export class RoomTexts {
     this.spillsRemarkedOn += 1
     return [phraseLineAtTurn('spill', this.voiceSeed, this.spillsRemarkedOn)]
   }
+}
+
+export function startOverNote(areAchievementsShown: boolean): string {
+  return text(areAchievementsShown ? 'visit.startOverNote' : 'visit.startOverNoteWithoutAchievements')
 }
 
 function litresText(drainedMl: number): string {

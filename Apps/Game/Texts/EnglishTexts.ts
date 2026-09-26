@@ -114,6 +114,7 @@ export const englishTexts = {
   'visit.continue': 'Continue',
   'visit.startOver': 'Start over',
   'visit.startOverNote': 'Your achievements will most likely stay, and the rest are still yours to earn. The world you know may change a little.',
+  'visit.startOverNoteWithoutAchievements': 'The world you know may change a little.',
   'visit.keys.title': 'Keys',
   'visit.keys.hands.key': '1  2',
   'visit.keys.hands': 'Choose a hand',

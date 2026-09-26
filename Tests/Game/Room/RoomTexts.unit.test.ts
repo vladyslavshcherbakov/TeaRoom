@@ -1,7 +1,15 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { RoomTexts } from '../../../Apps/Game/Room/RoomTexts.ts'
+import { RoomTexts, startOverNote } from '../../../Apps/Game/Room/RoomTexts.ts'
 import { englishTexts } from '../../../Apps/Game/Texts/EnglishTexts.ts'
+
+test('startOverNote_whenAchievementsAreShown_promisesToKeepThem', () => {
+  assert.equal(startOverNote(true), 'Your achievements will most likely stay, and the rest are still yours to earn. The world you know may change a little.')
+})
+
+test('startOverNote_whenAchievementsAreHidden_saysNothingOfThem', () => {
+  assert.equal(startOverNote(false), 'The world you know may change a little.')
+})
 
 test('caption_ofAnOffering_namesTheFigurine', () => {
   const lines = new RoomTexts(7, () => {}).captionLinesFor([{ type: 'figurineAcceptedTea', figurineId: 'dragon', response: 'glow' }], 0)

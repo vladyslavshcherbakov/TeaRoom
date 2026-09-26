@@ -38,7 +38,7 @@ import { RoomPlay, type RitualPort, type RoomTapTarget } from './RoomPlay.ts'
 import { RoomTexts } from './RoomTexts.ts'
 import { text } from '../Texts/Texts.ts'
 import type { FaceFeature, RoomSettings } from './RoomSettings.ts'
-import { SettingsStore } from './SettingsStore.ts'
+import type { SettingsStore } from './SettingsStore.ts'
 import { PlayTime } from './PlayTime.ts'
 import { PlayTimeStore } from './PlayTimeStore.ts'
 import { SettingsScreen } from './Views/SettingsScreen.ts'
@@ -163,7 +163,7 @@ export class RoomScene {
   private lastSavedPlace: string | null = null
   private hasTheKeeperDied = false
 
-  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, heaterItemsBeforeTheTesterJoke: number, bowlPaintings: BowlPaintings, arrival: RoomArrival, visitStore: VisitStore) {
+  constructor(container: HTMLElement, session: RitualSession, catalog: Catalog, log: RoomLog, voiceSeed: number, heaterItemsBeforeTheTesterJoke: number, bowlPaintings: BowlPaintings, arrival: RoomArrival, visitStore: VisitStore, settingsStore: SettingsStore, settings: RoomSettings) {
     this.session = session
     this.catalog = catalog
     this.arrangement = arrival.arrangement
@@ -222,7 +222,7 @@ export class RoomScene {
         this.achievements.keeperDied()
         this.visitStore.forget('the keeper died, so the next visit starts anew')
         this.caption.hide()
-        this.youDied.show(this.texts.lastWordsLine(), this.texts.obituaryLine())
+        this.youDied.show(this.texts.lastWordsLine(), this.texts.obituaryLine(), this.settings.areAchievementsShown)
       },
     }, arrival.place)
     this.gestures = new RoomGestures(this.play, this.zoom, { tapTargetAt: (point) => this.tapTargetAt(point), aimPointAt: (point) => this.aimPlanePointAt(point) }, log)
@@ -277,9 +277,9 @@ export class RoomScene {
     })
     this.garden = new Garden(materials, log)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
-    this.settingsStore = new SettingsStore(log, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
+    this.settingsStore = settingsStore
     this.playTime = new PlayTime(new PlayTimeStore(log), log)
-    this.settings = this.settingsStore.load()
+    this.settings = settings
     this.debugSettingsStore = new DebugSettingsStore(log)
     this.debugSettings = this.debugSettingsStore.load()
     this.settingsScreen = new SettingsScreen(container, {

@@ -8,6 +8,7 @@ import { arrangementOfANewGame, describeArrangement, quietRoomArrangementOf, typ
 import { roomEntrance } from './RoomNavigator.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { faceFeaturesOfANewGame } from './RoomSettings.ts'
+import { SettingsStore } from './SettingsStore.ts'
 import { roomWithVesselsShuffled } from './RoomWithVesselsShuffled.ts'
 import { ContinueScreen } from './Views/ContinueScreen.ts'
 import { whiteBowlIds } from './Views/Carried/BowlParts.ts'
@@ -31,6 +32,8 @@ const isBuiltToBePublishedSilently = import.meta.env.MODE === silentBuildMode
 const roomLog = isBuiltToBePublishedSilently ? (): void => {} : (message: string): void => console.info(`${new Date().toISOString()} INFO [room] ${message}`)
 const ritualLog = isBuiltToBePublishedSilently ? { write: (): void => {} } : { write: writeToTheConsole }
 
+const settingsStore = new SettingsStore(roomLog, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
+const settingsAtTheStart = settingsStore.load()
 const visitStore = new VisitStore(roomLog)
 const foundVisit = visitStore.find()
 if (foundVisit.kind === 'found') offerToContinue(foundVisit.visit)
@@ -59,7 +62,7 @@ function offerToContinue(visit: SavedVisit): void {
       visitStore.forget('the player starts over')
       enterAnew(null)
     },
-  })
+  }, settingsAtTheStart.areAchievementsShown)
 }
 
 function enterAnew(notice: string | null): void {
@@ -94,7 +97,7 @@ function enterTheRoom(session: RitualSession, catalog: Catalog, arrival: RoomArr
   roomLog(`the white bowl shows the koi pond ${koiPond}, chosen at random for this visit`)
   const bowlIdWithTheToadUnderneath = whiteBowlIds[Math.floor(Math.random() * whiteBowlIds.length)] ?? ''
   roomLog(`the three-legged toad is painted under ${bowlIdWithTheToadUnderneath}, chosen at random from ${whiteBowlIds.join(', ')} for this visit`)
-  new RoomScene(container, session, catalog, roomLog, voiceSeed, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, visitStore)
+  new RoomScene(container, session, catalog, roomLog, voiceSeed, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, visitStore, settingsStore, settingsAtTheStart)
 }
 
 function showTheQuietScreen(): void {

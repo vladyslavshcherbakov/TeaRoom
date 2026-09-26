@@ -1,4 +1,5 @@
 import { text, type TextKey } from '../../Texts/Texts.ts'
+import { startOverNote } from '../RoomTexts.ts'
 
 type KeyLine = {
   readonly keyKey: TextKey
@@ -22,7 +23,7 @@ export type ContinueChoice = {
 export class ContinueScreen {
   private readonly element: HTMLElement
 
-  constructor(container: HTMLElement, choice: ContinueChoice) {
+  constructor(container: HTMLElement, choice: ContinueChoice, areAchievementsShown: boolean) {
     this.element = document.createElement('div')
     this.element.className = 'continue'
     const title = document.createElement('p')
@@ -30,10 +31,10 @@ export class ContinueScreen {
     title.textContent = text('visit.welcomeBack')
     const continueButton = this.button('visit.continue', 'continue-primary', choice.continued)
     const startOverButton = this.button('visit.startOver', 'continue-secondary', choice.startedOver)
-    const startOverNote = document.createElement('p')
-    startOverNote.className = 'continue-note'
-    startOverNote.textContent = text('visit.startOverNote')
-    this.element.append(title, continueButton, startOverButton, startOverNote)
+    const startOverNoteElement = document.createElement('p')
+    startOverNoteElement.className = 'continue-note'
+    startOverNoteElement.textContent = startOverNote(areAchievementsShown)
+    this.element.append(title, continueButton, startOverButton, startOverNoteElement)
     if (hasAKeyboard()) this.element.append(keysList())
     container.append(this.element)
   }
