@@ -6,51 +6,42 @@ export type LampReading = {
   readonly unit: TemperatureUnit
 }
 
-type Segment = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g'
-
-type Cell = { readonly left: number; readonly width: number; readonly height: number; readonly top: number }
+type Tube = { readonly left: number; readonly top: number; readonly width: number; readonly height: number }
 
 const pixelsPerMetre = 2400
 const digitCount = 3
-const litColour = '#ffae3c'
-const glowColour = 'rgba(255, 150, 40, 0.9)'
-const ghostColour = 'rgba(255, 174, 60, 0.07)'
-const glassColour = '#140d08'
-const bezelColour = '#2b2521'
-const bezelShare = 0.06
-const segmentThicknessShare = 0.26
-const cellGapShare = 0.2
-const glowBlurPx = 10
-const segmentsByCharacter: Readonly<Record<string, readonly Segment[]>> = {
-  '0': ['a', 'b', 'c', 'd', 'e', 'f'],
-  '1': ['b', 'c'],
-  '2': ['a', 'b', 'g', 'e', 'd'],
-  '3': ['a', 'b', 'g', 'c', 'd'],
-  '4': ['f', 'g', 'b', 'c'],
-  '5': ['a', 'f', 'g', 'c', 'd'],
-  '6': ['a', 'f', 'g', 'e', 'd', 'c'],
-  '7': ['a', 'b', 'c'],
-  '8': ['a', 'b', 'c', 'd', 'e', 'f', 'g'],
-  '9': ['a', 'b', 'c', 'd', 'f', 'g'],
-  '-': ['g'],
-  ' ': [],
-  C: ['a', 'f', 'e', 'd'],
-  F: ['a', 'f', 'g', 'e'],
-  '°': ['a', 'b', 'f', 'g'],
-}
-const everySegment: readonly Segment[] = ['a', 'b', 'c', 'd', 'e', 'f', 'g']
-const unitLetters: Readonly<Record<TemperatureUnit, string>> = { celsius: 'C', fahrenheit: 'F' }
+const tubeCount = digitCount + 1
+const tubeGapShare = 0.12
+const tubeMarginShare = 0.08
+const backgroundColour = '#0b0806'
+const glassEdgeColour = 'rgba(210, 190, 170, 0.28)'
+const glassShineColour = 'rgba(255, 255, 255, 0.07)'
+const meshColour = 'rgba(150, 120, 90, 0.16)'
+const cathodeColour = 'rgba(255, 150, 90, 0.07)'
+const glowColour = 'rgba(255, 80, 20, 1)'
+const litColour = '#ff7f35'
+const litCoreColour = '#ffd6ae'
+const digitFontShare = 0.62
+const unitFontShare = 0.34
+const strokeShare = 0.035
+const glowShare = 0.22
+const meshStepShare = 0.09
+const fontFamily = '"Arial Narrow", "Helvetica Neue", Arial, sans-serif'
+const everyCathode = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+const unitSymbols: Readonly<Record<TemperatureUnit, string>> = { celsius: '°C', fahrenheit: '°F' }
 
 export class LampDisplay {
   readonly mesh: THREE.Mesh
   private readonly material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial
   private readonly pixelWidth: number
   private readonly pixelHeight: number
+  private readonly filamentWeight: number
   private painting: { readonly canvas: HTMLCanvasElement; readonly texture: THREE.CanvasTexture } | null = null
   private shownCharacters = ''
 
-  constructor(widthMetres: number, heightMetres: number, material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial) {
+  constructor(widthMetres: number, heightMetres: number, material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial, filamentWeight = 1) {
     this.material = material
+    this.filamentWeight = filamentWeight
     this.material.toneMapped = false
     this.pixelWidth = Math.round(widthMetres * pixelsPerMetre)
     this.pixelHeight = Math.round(heightMetres * pixelsPerMetre)
@@ -60,11 +51,11 @@ export class LampDisplay {
 
   show(reading: LampReading): void {
     const digits = reading.degrees === null ? '-'.repeat(digitCount) : String(Math.round(reading.degrees)).padStart(digitCount, ' ').slice(-digitCount)
-    const characters = `${digits}°${unitLetters[reading.unit]}`
-    if (characters === this.shownCharacters) return
-    this.shownCharacters = characters
+    const shown = `${digits}${unitSymbols[reading.unit]}`
+    if (shown === this.shownCharacters) return
+    this.shownCharacters = shown
     const painting = this.painting ?? this.startThePainting()
-    paintCharacters(painting.canvas, characters)
+    paintTubes(painting.canvas, [...digits], unitSymbols[reading.unit], this.filamentWeight)
     painting.texture.needsUpdate = true
   }
 
@@ -81,97 +72,86 @@ export class LampDisplay {
   }
 }
 
-function paintCharacters(canvas: HTMLCanvasElement, characters: string): void {
+function paintTubes(canvas: HTMLCanvasElement, digits: readonly string[], unitSymbol: string, filamentWeight: number): void {
   const context = canvas.getContext('2d')
   if (context === null) return
   const { width, height } = canvas
-  const bezel = Math.round(height * bezelShare)
-  context.fillStyle = bezelColour
+  context.fillStyle = backgroundColour
   context.fillRect(0, 0, width, height)
-  context.fillStyle = glassColour
-  context.fillRect(bezel, bezel, width - 2 * bezel, height - 2 * bezel)
-  cellsAcross(width, height, bezel).forEach((cell, index) => paintCharacter(context, cell, characters[index] ?? ' '))
+  tubesAcross(width, height).forEach((tube, index) => {
+    paintTheGlass(context, tube)
+    const isTheUnit = index === digitCount
+    if (!isTheUnit) paintTheCathodes(context, tube)
+    paintTheGlow(context, tube, isTheUnit ? unitSymbol : digits[index] ?? ' ', isTheUnit ? unitFontShare : digitFontShare, filamentWeight)
+  })
 }
 
-function cellsAcross(width: number, height: number, bezel: number): Cell[] {
-  const top = bezel * 2.5
-  const digitHeight = height - top * 2
-  const smallHeight = digitHeight * 0.55
-  const digitWidth = digitHeight * 0.55
-  const smallWidth = smallHeight * 0.55
-  const gap = digitWidth * cellGapShare
-  const totalWidth = digitCount * digitWidth + 2 * smallWidth + (digitCount + 1) * gap
-  let left = (width - totalWidth) / 2
-  const cells: Cell[] = []
-  for (let index = 0; index < digitCount; index += 1) {
-    cells.push({ left, width: digitWidth, height: digitHeight, top })
-    left += digitWidth + gap
+function tubesAcross(width: number, height: number): Tube[] {
+  const margin = height * tubeMarginShare
+  const tubeWidth = (width - 2 * margin) / (tubeCount + (tubeCount - 1) * tubeGapShare)
+  return Array.from({ length: tubeCount }, (_, index) => ({ left: margin + index * tubeWidth * (1 + tubeGapShare), top: margin, width: tubeWidth, height: height - 2 * margin }))
+}
+
+function paintTheGlass(context: CanvasRenderingContext2D, tube: Tube): void {
+  const radius = tube.width * 0.45
+  context.save()
+  context.beginPath()
+  context.roundRect(tube.left, tube.top, tube.width, tube.height, [radius, radius, radius * 0.3, radius * 0.3])
+  context.clip()
+  const shine = context.createLinearGradient(tube.left, 0, tube.left + tube.width, 0)
+  shine.addColorStop(0, glassShineColour)
+  shine.addColorStop(0.25, 'rgba(255, 255, 255, 0)')
+  shine.addColorStop(0.8, 'rgba(255, 255, 255, 0)')
+  shine.addColorStop(1, glassShineColour)
+  context.fillStyle = shine
+  context.fillRect(tube.left, tube.top, tube.width, tube.height)
+  context.strokeStyle = meshColour
+  context.lineWidth = 1
+  const step = tube.width * meshStepShare
+  for (let offset = -tube.height; offset < tube.width + tube.height; offset += step) {
+    context.beginPath()
+    context.moveTo(tube.left + offset, tube.top)
+    context.lineTo(tube.left + offset + tube.height * 0.6, tube.top + tube.height)
+    context.moveTo(tube.left + offset + tube.height * 0.6, tube.top)
+    context.lineTo(tube.left + offset, tube.top + tube.height)
+    context.stroke()
   }
-  cells.push({ left, width: smallWidth, height: smallHeight, top })
-  left += smallWidth + gap
-  cells.push({ left, width: smallWidth, height: smallHeight, top })
-  return cells
+  context.restore()
+  context.strokeStyle = glassEdgeColour
+  context.lineWidth = Math.max(1, tube.width * 0.03)
+  context.beginPath()
+  context.roundRect(tube.left, tube.top, tube.width, tube.height, [radius, radius, radius * 0.3, radius * 0.3])
+  context.stroke()
 }
 
-function paintCharacter(context: CanvasRenderingContext2D, cell: Cell, character: string): void {
-  const lit = new Set(segmentsByCharacter[character] ?? [])
-  context.shadowBlur = 0
-  context.fillStyle = ghostColour
-  for (const segment of everySegment) if (!lit.has(segment)) fillSegment(context, cell, segment)
+function paintTheCathodes(context: CanvasRenderingContext2D, tube: Tube): void {
+  setTheFont(context, tube, digitFontShare)
+  context.strokeStyle = cathodeColour
+  context.lineWidth = tube.height * strokeShare
+  for (const cathode of everyCathode) context.strokeText(cathode, tube.left + tube.width / 2, tube.top + tube.height / 2)
+}
+
+function paintTheGlow(context: CanvasRenderingContext2D, tube: Tube, symbol: string, fontShare: number, filamentWeight: number): void {
+  if (symbol.trim() === '') return
+  setTheFont(context, tube, fontShare)
+  const x = tube.left + tube.width / 2
+  const y = tube.top + tube.height / 2
+  context.save()
   context.shadowColor = glowColour
-  context.shadowBlur = glowBlurPx
-  context.fillStyle = litColour
-  for (const segment of lit) fillSegment(context, cell, segment)
-  context.shadowBlur = 0
+  context.shadowBlur = tube.height * glowShare
+  context.strokeStyle = litColour
+  context.lineWidth = tube.height * strokeShare * 1.6 * filamentWeight
+  context.strokeText(symbol, x, y)
+  context.strokeText(symbol, x, y)
+  context.shadowBlur = tube.height * glowShare * 0.3
+  context.strokeStyle = litCoreColour
+  context.lineWidth = tube.height * strokeShare * 0.6 * filamentWeight
+  context.strokeText(symbol, x, y)
+  context.restore()
 }
 
-function fillSegment(context: CanvasRenderingContext2D, cell: Cell, segment: Segment): void {
-  const thickness = cell.width * segmentThicknessShare
-  const half = thickness / 2
-  const { left, top, width, height } = cell
-  const right = left + width
-  const middle = top + height / 2
-  const bottom = top + height
-  switch (segment) {
-    case 'a':
-      return across(context, left + half, right - half, top + half, half)
-    case 'g':
-      return across(context, left + half, right - half, middle, half)
-    case 'd':
-      return across(context, left + half, right - half, bottom - half, half)
-    case 'f':
-      return down(context, left + half, top + half, middle, half)
-    case 'b':
-      return down(context, right - half, top + half, middle, half)
-    case 'e':
-      return down(context, left + half, middle, bottom - half, half)
-    case 'c':
-      return down(context, right - half, middle, bottom - half, half)
-  }
-}
-
-function across(context: CanvasRenderingContext2D, fromX: number, toX: number, y: number, half: number): void {
-  const inset = half * 0.35
-  context.beginPath()
-  context.moveTo(fromX + inset, y)
-  context.lineTo(fromX + half + inset, y - half)
-  context.lineTo(toX - half - inset, y - half)
-  context.lineTo(toX - inset, y)
-  context.lineTo(toX - half - inset, y + half)
-  context.lineTo(fromX + half + inset, y + half)
-  context.closePath()
-  context.fill()
-}
-
-function down(context: CanvasRenderingContext2D, x: number, fromY: number, toY: number, half: number): void {
-  const inset = half * 0.35
-  context.beginPath()
-  context.moveTo(x, fromY + inset)
-  context.lineTo(x + half, fromY + half + inset)
-  context.lineTo(x + half, toY - half - inset)
-  context.lineTo(x, toY - inset)
-  context.lineTo(x - half, toY - half - inset)
-  context.lineTo(x - half, fromY + half + inset)
-  context.closePath()
-  context.fill()
+function setTheFont(context: CanvasRenderingContext2D, tube: Tube, fontShare: number): void {
+  context.font = `300 ${Math.round(tube.height * fontShare)}px ${fontFamily}`
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
 }

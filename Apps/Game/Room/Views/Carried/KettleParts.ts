@@ -20,11 +20,12 @@ const overflowAboveTheBodyMetres = 0.005
 const overflowLeavesTheKettleAtRadians = 2.4
 const overflowPointsOnTheKettle = 12
 const soakedLeavesRadiusMetres = 0.06
-const thermometerWidthMetres = 0.084
-const thermometerHeightMetres = 0.038
+const thermometerWidthMetres = 0.1
+const thermometerHeightMetres = 0.046
+const thermometerFilamentWeight = 2.2
 const thermometerTurnFromTheGaugeRadians = 0.55
 const thermometerHeightOnTheBodyMetres = 0.125
-const thermometerAboveTheBodyMetres = 0.007
+const thermometerAboveTheBodyMetres = 0.01
 const leavesClearOfTheWallMetres = 0.006
 
 export const kettleShapeLook: CarriedShapeLook = {
@@ -97,7 +98,7 @@ function waterInsideTheKettle(materials: SurfaceMaterials): THREE.Mesh {
 
 function thermometerOnTheBody(materials: SurfaceMaterials): LampDisplay {
   const { bodyRadiusMetres, bodyCentreMetres, bodySquash } = kettleShape
-  const thermometer = new LampDisplay(thermometerWidthMetres, thermometerHeightMetres, materials.unsharedMaterialFor('lampDisplay'))
+  const thermometer = new LampDisplay(thermometerWidthMetres, thermometerHeightMetres, materials.unsharedMaterialFor('lampDisplay'), thermometerFilamentWeight)
   const height = thermometerHeightOnTheBodyMetres
   const radius = kettleRadiusAt(height)
   const onTheBody = new THREE.Vector3(Math.sin(thermometerTurnFromTheGaugeRadians) * radius, height, Math.cos(thermometerTurnFromTheGaugeRadians) * radius)
