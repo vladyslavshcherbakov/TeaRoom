@@ -272,6 +272,23 @@
         font: 14px/1.4 system-ui, sans-serif;
         text-align: center;
       }
+      .continue-keys {
+        display: grid;
+        grid-template-columns: auto auto;
+        gap: 4px 16px;
+        margin: 16px 0 0;
+        color: #8a6a52;
+        font: 14px/1.4 system-ui, sans-serif;
+      }
+      .continue-keys dt {
+        justify-self: end;
+        font-weight: 600;
+        color: #5a3a26;
+        white-space: pre;
+      }
+      .continue-keys dd {
+        margin: 0;
+      }
       .crosshair {
         position: fixed;
         left: 50%;
@@ -488,6 +505,11 @@
         position: fixed;
         top: calc(12px + env(safe-area-inset-top));
         right: calc(12px + env(safe-area-inset-right));
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 8px;
+      }
+      .corner-button {
         width: 36px;
         height: 36px;
         border: none;

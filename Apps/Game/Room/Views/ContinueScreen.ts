@@ -1,4 +1,19 @@
-import { text } from '../../Texts/Texts.ts'
+import { text, type TextKey } from '../../Texts/Texts.ts'
+
+type KeyLine = {
+  readonly keyKey: TextKey
+  readonly actionKey: TextKey
+}
+
+const keyLines: readonly KeyLine[] = [
+  { keyKey: 'visit.keys.hands.key', actionKey: 'visit.keys.hands' },
+  { keyKey: 'visit.keys.look.key', actionKey: 'visit.keys.look' },
+  { keyKey: 'visit.keys.sip.key', actionKey: 'visit.keys.sip' },
+  { keyKey: 'visit.keys.pour.key', actionKey: 'visit.keys.pour' },
+  { keyKey: 'visit.keys.walk.key', actionKey: 'visit.keys.walk' },
+  { keyKey: 'visit.keys.hurry.key', actionKey: 'visit.keys.hurry' },
+  { keyKey: 'visit.keys.mouse.key', actionKey: 'visit.keys.mouse' },
+]
 
 export type ContinueChoice = {
   readonly continued: () => void
@@ -20,6 +35,7 @@ export class ContinueScreen {
     startOverNote.className = 'continue-note'
     startOverNote.textContent = text('visit.startOverNote')
     this.element.append(title, continueButton, startOverButton, startOverNote)
+    if (hasAKeyboard()) this.element.append(keysList())
     container.append(this.element)
   }
 
@@ -33,4 +49,22 @@ export class ContinueScreen {
     })
     return button
   }
+}
+
+function hasAKeyboard(): boolean {
+  return window.matchMedia('(hover: hover) and (pointer: fine)').matches
+}
+
+function keysList(): HTMLElement {
+  const keys = document.createElement('dl')
+  keys.className = 'continue-keys'
+  keys.setAttribute('aria-label', text('visit.keys.title'))
+  for (const line of keyLines) {
+    const key = document.createElement('dt')
+    key.textContent = text(line.keyKey)
+    const action = document.createElement('dd')
+    action.textContent = text(line.actionKey)
+    keys.append(key, action)
+  }
+  return keys
 }
