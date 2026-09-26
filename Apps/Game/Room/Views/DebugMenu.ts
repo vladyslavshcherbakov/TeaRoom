@@ -12,6 +12,8 @@ export type DebugMenuListener = {
   readonly keeperHeightChosen: (heightCentimetres: number) => void
   readonly frameBudgetShownChosen: (isShown: boolean) => void
   readonly googlyEyesChosen: (areGoogly: boolean) => void
+  readonly giantAfroChosen: (isGiant: boolean) => void
+  readonly everyFaceAtOnceChosen: (isEveryFaceShown: boolean) => void
 }
 
 export class DebugMenu {
@@ -40,19 +42,16 @@ export class DebugMenu {
     closeButton.className = 'debug-close'
     closeButton.textContent = text('debug.close')
     closeButton.addEventListener('click', () => (this.panel.hidden = true))
-    const frameBudgetToggle = document.createElement('input')
-    frameBudgetToggle.type = 'checkbox'
-    frameBudgetToggle.addEventListener('change', () => listener.frameBudgetShownChosen(frameBudgetToggle.checked))
-    const frameBudgetRow = document.createElement('label')
-    frameBudgetRow.className = 'debug-toggle'
-    frameBudgetRow.append(frameBudgetToggle, document.createTextNode(text('debug.frameBudget')))
-    const googlyEyesToggle = document.createElement('input')
-    googlyEyesToggle.type = 'checkbox'
-    googlyEyesToggle.addEventListener('change', () => listener.googlyEyesChosen(googlyEyesToggle.checked))
-    const googlyEyesRow = document.createElement('label')
-    googlyEyesRow.className = 'debug-toggle'
-    googlyEyesRow.append(googlyEyesToggle, document.createTextNode(text('debug.googlyEyes')))
-    this.panel.append(title, heightLabel, heightStepper, frameBudgetRow, googlyEyesRow, closeButton)
+    this.panel.append(
+      title,
+      heightLabel,
+      heightStepper,
+      toggleRow('debug.frameBudget', listener.frameBudgetShownChosen),
+      toggleRow('debug.googlyEyes', listener.googlyEyesChosen),
+      toggleRow('debug.giantAfro', listener.giantAfroChosen),
+      toggleRow('debug.everyFaceAtOnce', listener.everyFaceAtOnceChosen),
+      closeButton,
+    )
     container.append(this.panel)
   }
 
@@ -100,4 +99,14 @@ export class DebugMenu {
     this.keeperHeightCentimetres = heightCentimetres
     this.heightShown.textContent = textWith('debug.height.value', { centimetres: String(heightCentimetres) })
   }
+}
+
+function toggleRow(textKey: TextKey, chosen: (isOn: boolean) => void): HTMLElement {
+  const toggle = document.createElement('input')
+  toggle.type = 'checkbox'
+  toggle.addEventListener('change', () => chosen(toggle.checked))
+  const row = document.createElement('label')
+  row.className = 'debug-toggle'
+  row.append(toggle, document.createTextNode(text(textKey)))
+  return row
 }

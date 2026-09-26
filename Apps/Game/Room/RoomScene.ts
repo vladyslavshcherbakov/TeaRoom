@@ -258,6 +258,8 @@ export class RoomScene {
       keeperHeightChosen: (heightCentimetres) => this.keeperHeightChosen(heightCentimetres),
       frameBudgetShownChosen: (isShown) => this.frameBudgetShownChosen(isShown),
       googlyEyesChosen: (areGoogly) => this.googlyEyesChosen(areGoogly),
+      giantAfroChosen: (isGiant) => this.giantAfroChosen(isGiant),
+      everyFaceAtOnceChosen: (isEveryFaceShown) => this.everyFaceAtOnceChosen(isEveryFaceShown),
     })
     this.garden = new Garden(materials, log)
     this.scene.add(this.room.root, this.garden.root, this.sky.root, this.walker.root, this.carried.root, ...this.roomLights.lights, ...this.inspectionStage.lights)
@@ -387,6 +389,16 @@ export class RoomScene {
   private googlyEyesChosen(areGoogly: boolean): void {
     this.walker.showGooglyEyes(areGoogly)
     this.log(areGoogly ? 'the eyes are googly from the debug menu, when the face has eyes' : 'the eyes are plain dots again from the debug menu')
+  }
+
+  private giantAfroChosen(isGiant: boolean): void {
+    this.walker.growTheAfroGiant(isGiant)
+    this.log(isGiant ? 'the afro grows giant from the debug menu, whenever it shows' : 'the afro is its own size again from the debug menu')
+  }
+
+  private everyFaceAtOnceChosen(isEveryFaceShown: boolean): void {
+    this.walker.showEveryFaceAtOnce(isEveryFaceShown)
+    this.log(isEveryFaceShown ? `the face shows the nose, the eyes, the ears and the afro at once from the debug menu, over the chosen ${this.settings.faceFeature}` : `the face shows only the chosen ${this.settings.faceFeature} again from the debug menu`)
   }
 
   private showTheAchievements(): void {

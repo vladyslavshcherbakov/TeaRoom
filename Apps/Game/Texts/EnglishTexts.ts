@@ -11,6 +11,8 @@ export const englishTexts = {
   'debug.height.higher': 'Taller',
   'debug.frameBudget': 'Show the frame budget',
   'debug.googlyEyes': 'Googly eyes',
+  'debug.giantAfro': 'Giant afro',
+  'debug.everyFaceAtOnce': 'Every face at once',
   'debug.close': 'Close',
   'frameBudget.frame': '{framesPerSecond} fps, frame {average} ms, longest {longest} ms',
   'frameBudget.phase': '{phase} {milliseconds} ms',

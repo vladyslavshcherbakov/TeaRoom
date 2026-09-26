@@ -28,6 +28,8 @@ const googlyEyesApartMetres = 0.11
 const googlyEyeDepthMetres = 0.008
 const googlyEyesTurnOutwardRadians = 0.3
 const hardestHeadShakeMetresPerSecondSquared = 60
+const giantAfroScale = 3
+const giantAfroGrowsFrom = new THREE.Vector3(0, headHeightMetres, headRadiusMetres)
 
 type GooglyEye = {
   readonly pupilMesh: THREE.Mesh
@@ -48,6 +50,8 @@ export class WalkerModel {
   private readonly googlyEyesPair = new THREE.Group()
   private readonly googlyEyes: readonly GooglyEye[]
   private headMotion: HeadMotion | null = null
+  private chosenFace: FaceFeature = 'nose'
+  private isEveryFaceShown = false
 
   constructor(materials: RoomMaterials) {
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.5, 4, 10), materials.unsharedMaterialFor('walkerCoat'))
@@ -69,7 +73,19 @@ export class WalkerModel {
   }
 
   showTheFace(feature: FaceFeature): void {
-    for (const [shownFeature, face] of Object.entries(this.faces)) face.visible = shownFeature === feature
+    this.chosenFace = feature
+    this.showTheFaces()
+  }
+
+  showEveryFaceAtOnce(isEveryFaceShown: boolean): void {
+    this.isEveryFaceShown = isEveryFaceShown
+    this.showTheFaces()
+  }
+
+  growTheAfroGiant(isGiant: boolean): void {
+    const scale = isGiant ? giantAfroScale : 1
+    this.faces.afro.scale.setScalar(scale)
+    this.faces.afro.position.copy(giantAfroGrowsFrom).multiplyScalar(1 - scale)
   }
 
   showGooglyEyes(areGoogly: boolean): void {
@@ -87,6 +103,10 @@ export class WalkerModel {
     this.root.position.set(walk.position.x, bob, walk.position.z)
     this.root.rotation.y = walk.headingRadians
     if (this.googlyEyesPair.visible && this.faces.eyes.visible) this.shakeTheGooglyEyes(timeSeconds)
+  }
+
+  private showTheFaces(): void {
+    for (const [feature, face] of Object.entries(this.faces)) face.visible = this.isEveryFaceShown || feature === this.chosenFace
   }
 
   private shakeTheGooglyEyes(timeSeconds: number): void {
