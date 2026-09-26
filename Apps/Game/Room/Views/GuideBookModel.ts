@@ -9,7 +9,6 @@ const coverThicknessMetres = 0.014
 const pageBlockThicknessMetres = 0.024
 const pageBulgeMetres = 0.012
 const pageSegmentsAcross = 16
-const cornerCapMetres = 0.035
 const ribbonWidthMetres = 0.012
 const ribbonBelowTheBookMetres = 0.11
 const ledgeDepthMetres = 0.09
@@ -35,10 +34,6 @@ function bookHalf(materials: RoomMaterials, side: number): THREE.Group {
     box(materials, 'guideBookPageEdges', pageWidthMetres, pageHeightMetres, pageBlockThicknessMetres, (side * pageWidthMetres) / 2, 0, (coverThicknessMetres + pageBlockThicknessMetres) / 2),
     curvedPage(materials, side),
   )
-  for (const upOrDown of [-1, 1]) {
-    const cornerY = upOrDown * (pageHeightMetres / 2 + coverOverhangMetres - cornerCapMetres / 2)
-    half.add(box(materials, 'gildedRim', cornerCapMetres, cornerCapMetres, coverThicknessMetres + 0.004, side * (coverWidth - cornerCapMetres / 2), cornerY, 0))
-  }
   half.rotation.y = -side * pagesOpenRadians
   return half
 }
