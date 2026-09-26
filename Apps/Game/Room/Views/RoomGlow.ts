@@ -22,7 +22,7 @@ export class RoomGlow {
   private readonly neverInFrontOfAGlow: readonly THREE.Object3D[]
   private readonly log: RoomLog
   private readonly unlitStandIn = new THREE.MeshBasicMaterial({ color: 0x000000 })
-  private readonly standInByMaterial = new Map<THREE.Material, THREE.MeshBasicMaterial>()
+  private readonly standIns = new GlowStandIns()
   private readonly swappedMaterials: [THREE.Mesh, MaterialOfAMesh][] = []
   private wasAnythingGlowing: boolean | null = null
 
@@ -82,7 +82,7 @@ export class RoomGlow {
     this.composer.dispose()
     this.overlay.dispose()
     this.unlitStandIn.dispose()
-    for (const standIn of this.standInByMaterial.values()) standIn.dispose()
+    this.standIns.dispose()
   }
 
   private darkenWhatDoesNotGlow(): number {
@@ -119,23 +119,33 @@ export class RoomGlow {
     if (meshGlowStrength > 0 && (material instanceof THREE.MeshBasicMaterial || material instanceof THREE.MeshStandardMaterial)) return this.dimmedStandInFor(material, meshGlowStrength)
     const materialGlowStrength = glowStrengthOf(material)
     if (materialGlowStrength <= 0 || !(material instanceof THREE.MeshStandardMaterial) || material.emissiveIntensity <= 0) return this.unlitStandIn
-    const standIn = this.standInFor(material)
+    const standIn = this.standIns.standInFor(material, meshGlowStrength)
     standIn.color.copy(material.emissive).multiplyScalar(Math.min(1, material.emissiveIntensity) * materialGlowStrength)
     standIn.map = null
     return standIn
   }
 
   private dimmedStandInFor(material: THREE.MeshBasicMaterial | THREE.MeshStandardMaterial, strength: number): THREE.MeshBasicMaterial {
-    const standIn = this.standInFor(material)
+    const standIn = this.standIns.standInFor(material, strength)
     standIn.color.copy(material.color).multiplyScalar(strength)
     standIn.map = material.map
     return standIn
   }
+}
 
-  private standInFor(material: THREE.Material): THREE.MeshBasicMaterial {
-    const standIn = this.standInByMaterial.get(material) ?? new THREE.MeshBasicMaterial()
-    this.standInByMaterial.set(material, standIn)
+export class GlowStandIns {
+  private readonly standInByStrengthByMaterial = new Map<THREE.Material, Map<number, THREE.MeshBasicMaterial>>()
+
+  standInFor(material: THREE.Material, meshGlowStrength: number): THREE.MeshBasicMaterial {
+    const standInByStrength = this.standInByStrengthByMaterial.get(material) ?? new Map<number, THREE.MeshBasicMaterial>()
+    this.standInByStrengthByMaterial.set(material, standInByStrength)
+    const standIn = standInByStrength.get(meshGlowStrength) ?? new THREE.MeshBasicMaterial()
+    standInByStrength.set(meshGlowStrength, standIn)
     standIn.side = material.side
     return standIn
+  }
+
+  dispose(): void {
+    for (const standInByStrength of this.standInByStrengthByMaterial.values()) for (const standIn of standInByStrength.values()) standIn.dispose()
   }
 }
