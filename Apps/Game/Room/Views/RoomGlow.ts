@@ -3,6 +3,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import type { RoomLog } from '../RoomNavigator.ts'
 import { glowStrengthOf } from './RoomLayers.ts'
 
 type MaterialOfAMesh = THREE.Material | THREE.Material[]
@@ -17,12 +18,19 @@ export class RoomGlow {
   private readonly composer: EffectComposer
   private readonly overlay: FullScreenQuad
   private readonly scene: THREE.Scene
+  private readonly camera: THREE.Camera
+  private readonly neverInFrontOfAGlow: readonly THREE.Object3D[]
+  private readonly log: RoomLog
   private readonly unlitStandIn = new THREE.MeshBasicMaterial({ color: 0x000000 })
   private readonly standInByMaterial = new Map<THREE.Material, THREE.MeshBasicMaterial>()
   private readonly swappedMaterials: [THREE.Mesh, MaterialOfAMesh][] = []
+  private wasAnythingGlowing: boolean | null = null
 
-  constructor(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
+  constructor(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, neverInFrontOfAGlow: readonly THREE.Object3D[], log: RoomLog) {
     this.scene = scene
+    this.camera = camera
+    this.neverInFrontOfAGlow = neverInFrontOfAGlow
+    this.log = log
     const size = renderer.getSize(new THREE.Vector2())
     this.composer = new EffectComposer(renderer)
     this.composer.renderToScreen = false
@@ -52,8 +60,17 @@ export class RoomGlow {
   drawOver(renderer: THREE.WebGLRenderer): void {
     const shadowsNeedUpdate = renderer.shadowMap.needsUpdate
     renderer.shadowMap.needsUpdate = false
-    this.darkenWhatDoesNotGlow()
+    const glowingParts = this.darkenWhatDoesNotGlow()
+    this.noteWhetherAnythingGlows(glowingParts)
+    if (glowingParts === 0) {
+      this.restoreTheMaterials()
+      renderer.shadowMap.needsUpdate = shadowsNeedUpdate
+      return
+    }
+    const hidden = this.neverInFrontOfAGlow.filter((part) => part.visible)
+    for (const part of hidden) part.visible = false
     this.composer.render()
+    for (const part of hidden) part.visible = true
     this.restoreTheMaterials()
     renderer.shadowMap.needsUpdate = shadowsNeedUpdate
     const material = this.overlay.material
@@ -68,15 +85,28 @@ export class RoomGlow {
     for (const standIn of this.standInByMaterial.values()) standIn.dispose()
   }
 
-  private darkenWhatDoesNotGlow(): void {
+  private darkenWhatDoesNotGlow(): number {
+    let glowingParts = 0
     this.scene.traverseVisible((part) => {
-      if (!(part instanceof THREE.Mesh)) return
+      if (!(part instanceof THREE.Mesh) || !part.layers.test(this.camera.layers)) return
       const meshGlowStrength = glowStrengthOf(part)
-      if (meshGlowStrength >= 1) return
+      if (meshGlowStrength >= 1) {
+        glowingParts += 1
+        return
+      }
       const glowing = Array.isArray(part.material) ? part.material.map((material) => this.glowOf(material, meshGlowStrength)) : this.glowOf(part.material, meshGlowStrength)
+      if ((Array.isArray(glowing) ? glowing : [glowing]).some((material) => material !== this.unlitStandIn)) glowingParts += 1
       this.swappedMaterials.push([part, part.material])
       part.material = glowing
     })
+    return glowingParts
+  }
+
+  private noteWhetherAnythingGlows(glowingParts: number): void {
+    const isAnythingGlowing = glowingParts > 0
+    if (isAnythingGlowing === this.wasAnythingGlowing) return
+    this.wasAnythingGlowing = isAnythingGlowing
+    this.log(isAnythingGlowing ? `the glow is drawn around ${glowingParts} glowing parts, without the garden and the sky, which never stand in front of one` : 'nothing in view glows, so the glow is not drawn')
   }
 
   private restoreTheMaterials(): void {

@@ -525,7 +525,7 @@ export class RoomScene {
   private showTheGlow(isOn: boolean): void {
     if ((this.glow !== null) === isOn) return
     this.glow?.dispose()
-    this.glow = isOn ? new RoomGlow(this.renderer, this.scene, this.camera) : null
+    this.glow = isOn ? new RoomGlow(this.renderer, this.scene, this.camera, [this.garden.root, this.sky.root], this.log) : null
   }
 
   private keeperHeightChosen(heightCentimetres: number): void {
