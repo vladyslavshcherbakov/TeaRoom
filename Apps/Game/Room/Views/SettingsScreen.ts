@@ -38,14 +38,14 @@ export class SettingsScreen {
     this.faceChoices = faceFeatures.map((feature) => this.faceChoice(feature, choices))
     faceRow.append(...this.faceChoices)
     this.nerdModeToggle = toggle(choices.nerdModeChosen)
-    const nerdModeNote = note('settings-note', 'settings.nerdModeNote')
+    const nerdModeNote = paragraphOf('settings-note', 'settings.nerdModeNote')
     const unitRow = document.createElement('div')
     unitRow.className = 'settings-units'
     this.unitChoices = temperatureUnits.map((unit) => this.unitChoice(unit, choices))
     unitRow.append(...this.unitChoices)
     this.softShadowsToggle = toggle(choices.softShadowsInCornersChosen)
     this.frameRateToggle = toggle(choices.frameRateShownChosen)
-    const warning = note('settings-warning', 'settings.softShadowsInCornersWarning')
+    const warning = paragraphOf('settings-warning', 'settings.softShadowsInCornersWarning')
     const closeButton = document.createElement('button')
     closeButton.className = 'settings-close'
     closeButton.textContent = text('settings.close')
@@ -121,7 +121,7 @@ function heading(tag: 'h2' | 'h3', key: 'settings.title' | 'settings.coatColour'
   return element
 }
 
-function note(className: string, key: TextKey): HTMLElement {
+function paragraphOf(className: string, key: TextKey): HTMLElement {
   const paragraph = document.createElement('p')
   paragraph.className = className
   paragraph.textContent = text(key)
