@@ -217,10 +217,12 @@ test('leavesInABowl_whileTheTapFillsItBelowTheRim_stayAndFloat', () => {
   const ritual = new TestRitual()
   ritual.tipASpoonOfLeavesInto('cup1')
   ritual.do({ type: 'pickUp', itemId: 'cup1' })
-
   ritual.do({ type: 'putInTheSink', itemId: 'cup1' })
+  ritual.do({ type: 'turnTheTapOn' })
+
   ritual.wait(0.5)
 
+  assertNear(ritual.vessel('cup1').liquid.volumeMl, 50)
   assert.equal(ritual.vessel('cup1').leaves?.grams, 5)
 })
 
