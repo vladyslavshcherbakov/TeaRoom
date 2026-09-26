@@ -8,7 +8,8 @@ import { glowStrengthOf } from './RoomLayers.ts'
 type MaterialOfAMesh = THREE.Material | THREE.Material[]
 
 const glowStrength = 0.7
-const glowRadius = 0.05
+const glowRadius = 0
+const glowShareByBlurWidth = [1, 0.4, 0, 0, 0]
 const glowThreshold = 0
 const glowResolutionShare = 0.5
 
@@ -28,7 +29,10 @@ export class RoomGlow {
     this.composer.setPixelRatio(renderer.getPixelRatio() * glowResolutionShare)
     this.composer.setSize(size.x, size.y)
     this.composer.addPass(new RenderPass(scene, camera, undefined, new THREE.Color(0x000000), 1))
-    this.composer.addPass(new UnrealBloomPass(size.clone().multiplyScalar(glowResolutionShare), glowStrength, glowRadius, glowThreshold))
+    const bloom = new UnrealBloomPass(size.clone().multiplyScalar(glowResolutionShare), glowStrength, glowRadius, glowThreshold)
+    const bloomFactors = bloom.compositeMaterial.uniforms['bloomFactors']
+    if (bloomFactors !== undefined) bloomFactors.value = glowShareByBlurWidth
+    this.composer.addPass(bloom)
     this.overlay = new FullScreenQuad(new THREE.ShaderMaterial({
       uniforms: { glow: { value: null } },
       vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
