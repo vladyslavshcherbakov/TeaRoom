@@ -1,0 +1,88 @@
+import { pseudoRandom } from '../../../../../Shared/Engine/Random.ts'
+import type { AppLog } from '../../../../Engine/AppLog.ts'
+import { paintedCanvas, paintPixels, roundedMix } from '../../../../Engine/Rendering/Painting/CanvasPainting.ts'
+
+const canvasWidth = 1024
+const canvasHeight = 512
+const canvasSize = { width: canvasWidth, height: canvasHeight }
+const skyBlue = [159, 208, 234] as const
+const paleSkyBlue = [186, 224, 242] as const
+const crackColour = [74, 104, 120] as const
+const largeCells = 70
+const smallCells = 260
+const largeCrackWidth = 0.0024
+const smallCrackWidth = 0.0013
+const largeCrackDarkness = 0.8
+const smallCrackDarkness = 0.35
+const cellsStretchAlong = 2
+const pixelsPerCandidateCell = 16
+const candidateCellsAround = canvasWidth / pixelsPerCandidateCell
+const candidateCellsAlong = canvasHeight / pixelsPerCandidateCell
+const roundingMargin = 1e-9
+
+type Seed = { readonly around: number; readonly along: number }
+
+type SeedsByCell = readonly (readonly Seed[])[]
+
+
+export function paintCrackle(log: AppLog): HTMLCanvasElement {
+  return paintedCanvas(canvasSize, 'the crackle glaze cannot be painted, because the browser gives no 2D canvas, so the sky blue bowl is blank', log, (context) => {
+    const largeSeedsByCell = seedsThatCanBeNearestByCell(seedsFor(largeCells, 11))
+    const smallSeedsByCell = seedsThatCanBeNearestByCell(seedsFor(smallCells, 23))
+    paintPixels(context, canvasSize, (column, row) => {
+      const around = column / canvasWidth
+      const along = row / canvasHeight
+      const cellIndex = Math.floor(row / pixelsPerCandidateCell) * candidateCellsAround + Math.floor(column / pixelsPerCandidateCell)
+      const glaze = roundedMix(skyBlue, paleSkyBlue, 0.5 + 0.5 * Math.sin(Math.PI * 2 * around * 6 + along * 23) * Math.sin(along * 31 - Math.PI * 2 * around * 3))
+      const largeCrack = crackAt(around, along, largeSeedsByCell[cellIndex] ?? [], largeCrackWidth) * largeCrackDarkness
+      const smallCrack = crackAt(around, along, smallSeedsByCell[cellIndex] ?? [], smallCrackWidth) * smallCrackDarkness
+      return [...roundedMix(glaze, crackColour, Math.max(largeCrack, smallCrack)), 255]
+    })
+  })
+}
+
+function seedsFor(count: number, salt: number): Seed[] {
+  return Array.from({ length: count }, (_, index) => ({ around: pseudoRandom(index * 2 + salt), along: pseudoRandom(index * 2 + 1 + salt * 7) }))
+}
+
+function seedsThatCanBeNearestByCell(seeds: readonly Seed[]): SeedsByCell {
+  const halfCellAround = 0.5 / candidateCellsAround
+  const halfCellAlong = 0.5 / candidateCellsAlong
+  const centreToCorner = distanceBetween(0, 0, halfCellAround, halfCellAlong)
+  return Array.from({ length: candidateCellsAround * candidateCellsAlong }, (_, cellIndex) => {
+    const centreAround = (cellIndex % candidateCellsAround) / candidateCellsAround + halfCellAround
+    const centreAlong = Math.floor(cellIndex / candidateCellsAround) / candidateCellsAlong + halfCellAlong
+    const distancesFromTheCentre = seeds.map((seed) => distanceBetween(centreAround, centreAlong, seed.around, seed.along))
+    const secondNearestFromTheCentre = [...distancesFromTheCentre].sort((first, second) => first - second)[1] ?? Infinity
+    const farthestThatCanBeNearest = secondNearestFromTheCentre + 2 * centreToCorner + roundingMargin
+    return seeds.filter((_, index) => (distancesFromTheCentre[index] ?? Infinity) <= farthestThatCanBeNearest)
+  })
+}
+
+function crackAt(around: number, along: number, seeds: readonly Seed[], width: number): number {
+  let nearest: Seed | undefined
+  let secondNearest: Seed | undefined
+  let nearestDistance = Infinity
+  let secondDistance = Infinity
+  for (const seed of seeds) {
+    const distance = distanceBetween(around, along, seed.around, seed.along)
+    if (distance < nearestDistance) {
+      secondNearest = nearest
+      secondDistance = nearestDistance
+      nearest = seed
+      nearestDistance = distance
+    } else if (distance < secondDistance) {
+      secondNearest = seed
+      secondDistance = distance
+    }
+  }
+  if (nearest === undefined || secondNearest === undefined) return 0
+  const seedsApart = distanceBetween(nearest.around, nearest.along, secondNearest.around, secondNearest.along)
+  const distanceToTheBorder = (secondDistance ** 2 - nearestDistance ** 2) / (2 * seedsApart)
+  return Math.max(0, 1 - distanceToTheBorder / width)
+}
+
+function distanceBetween(around: number, along: number, otherAround: number, otherAlong: number): number {
+  const acrossTheSeam = Math.abs(around - otherAround)
+  return Math.hypot(Math.min(acrossTheSeam, 1 - acrossTheSeam), (along - otherAlong) / cellsStretchAlong)
+}

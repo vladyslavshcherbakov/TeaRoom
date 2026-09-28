@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#f6e9d6" />
+    <title>TeaCeremony</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #f6e9d6;
+        overflow: hidden;
+        overscroll-behavior: none;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      #room {
+        position: fixed;
+        inset: 0;
+      }
+      .quiet {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        color: #5a3a26;
+        font: 16px/1.4 system-ui, sans-serif;
+      }
+    </style>
+    <link rel="stylesheet" href="./Rendering/Controls/ScreenButtonsOnThePage.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/AimHint.css" />
+    <link rel="stylesheet" href="../../Engine/Rendering/Controls/Caption.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/Joysticks.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/DebugMenu.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/YouDiedScreen.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/ContinueScreen.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/KeyboardAndMouse.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/SettingsScreen.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/AchievementsList.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/GuideBook.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/CornerButtons.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/FrameBudgetPanel.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/FrameRateCounter.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/AchievementNotice.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/Disclaimer.css" />
+    <link rel="stylesheet" href="./Rendering/Controls/LoadingScreen.css" />
+  </head>
+  <body>
+    <div id="room"></div>
+    <script type="module" src="./RoomMain.ts"></script>
+  </body>
+</html>

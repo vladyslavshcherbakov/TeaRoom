@@ -1,0 +1,12 @@
+.aim-hint {
+  position: fixed;
+  left: 16px;
+  right: 128px;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(251, 244, 232, 0.94);
+  color: #5a3a26;
+  font: 15px/1.4 system-ui, sans-serif;
+  pointer-events: none;
+}

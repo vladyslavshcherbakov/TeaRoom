@@ -1,0 +1,22 @@
+export const thermosShape = {
+  reachMetres: 0.08,
+  footRadiusMetres: 0.064,
+  footTopMetres: 0.018,
+  bodyRadiusMetres: 0.062,
+  bodyTopMetres: 0.265,
+  shoulderPoints: [
+    { x: 0.0645, y: 0.265 },
+    { x: 0.0615, y: 0.28 },
+    { x: 0.05, y: 0.292 },
+    { x: 0.041, y: 0.297 },
+  ],
+  neckRadiusMetres: 0.04,
+  neckBottomMetres: 0.297,
+  neckRidgeHeightsMetres: [0.304, 0.313],
+  neckRidgeTubeMetres: 0.0014,
+  lipTubeMetres: 0.003,
+  mouthRadiusMetres: 0.034,
+  mouthMetres: 0.325,
+  floorMetres: 0.02,
+  cup: { radiusMetres: 0.044, heightMetres: 0.062, domeMetres: 0.008, restsOnMetres: 0.295, originAboveItsRimMetres: 0.015, lyingRadiusMetres: 0.046 },
+} as const

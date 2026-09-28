@@ -1,0 +1,28 @@
+name: Merge the base of the open pull request
+description: On a push to a branch other than the default one, merges the base of the branch's open pull request into the checked-out commit, so the job tests what the pull request would merge. The checkout needs the whole history.
+
+runs:
+  using: composite
+  steps:
+    - name: Merge the base of the branch's open pull request
+      if: github.event_name == 'push' && github.ref_name != github.event.repository.default_branch
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+        BRANCH: ${{ github.ref_name }}
+      run: |
+        baseBranches=$(gh api --method GET "repos/$GITHUB_REPOSITORY/pulls" -f state=open -f "head=$GITHUB_REPOSITORY_OWNER:$BRANCH" --jq '.[].base.ref')
+        if [ -z "$baseBranches" ]; then
+          echo "$BRANCH has no open pull request, so the job tests the branch as it is"
+          exit 0
+        fi
+        baseBranch=$(echo "$baseBranches" | head -n 1)
+        if [ "$(echo "$baseBranches" | wc -l)" -gt 1 ]; then
+          echo "::warning::$BRANCH has open pull requests into $(echo $baseBranches), and the job tests only the one into $baseBranch"
+        fi
+        echo "$BRANCH has an open pull request into $baseBranch, so the job tests the branch merged with $baseBranch"
+        git fetch --no-tags origin "$baseBranch"
+        if ! git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' merge --no-edit FETCH_HEAD; then
+          echo "::error::$BRANCH does not merge with $baseBranch without conflicts, so its pull request cannot be tested. Merge $baseBranch into $BRANCH and resolve the conflicts."
+          exit 1
+        fi

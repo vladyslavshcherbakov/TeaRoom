@@ -1,0 +1,95 @@
+.continue {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  background: #f6e9d6;
+}
+
+.continue-title {
+  max-width: 24em;
+  margin: 0 0 16px;
+  color: #5a3a26;
+  font: 18px/1.4 system-ui, sans-serif;
+  text-align: center;
+}
+
+.continue-primary,
+.continue-secondary {
+  min-width: 200px;
+  min-height: 48px;
+  padding: 0 24px;
+  border-radius: 24px;
+  font: 600 16px/1 system-ui, sans-serif;
+}
+
+.continue-primary {
+  border: 2px solid #3f6f57;
+  background: #5f9a7c;
+  color: #fbf4e8;
+}
+
+.continue-secondary {
+  border: 2px solid #8f5a3a;
+  background: #fbf4e8;
+  color: #5a3a26;
+}
+
+.continue-note {
+  max-width: 22em;
+  margin: -4px 0 0;
+  color: #8a6a52;
+  font: 14px/1.4 system-ui, sans-serif;
+  text-align: center;
+}
+
+.continue-keys {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 16px;
+  margin: 16px 0 0;
+  color: #8a6a52;
+  font: 14px/1.4 system-ui, sans-serif;
+}
+
+.continue-keys dt {
+  justify-self: end;
+  font-weight: 600;
+  color: #5a3a26;
+  white-space: pre;
+}
+
+.continue-keys dd {
+  margin: 0;
+}
+
+.continue-primary:disabled,
+.continue-secondary:disabled {
+  opacity: 0.5;
+}
+
+.continue-primary[aria-busy='true'],
+.continue-secondary[aria-busy='true'] {
+  opacity: 1;
+}
+
+.continue-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  vertical-align: middle;
+  will-change: transform;
+  animation: continue-spin 0.8s linear infinite;
+}
+
+@keyframes continue-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

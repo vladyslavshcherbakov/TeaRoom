@@ -1,0 +1,145 @@
+name: Test and deploy
+
+on:
+  push:
+    paths-ignore: &changesThatLeaveTheGameAsItIs
+      - '**.md'
+      - '.gitignore'
+      - '.claude/**'
+      - 'Scripts/build-artifact.sh'
+      - 'Scripts/assemble-artifact-page.mjs'
+      - 'Scripts/silent-build.vite.config.mjs'
+  pull_request:
+    paths-ignore: *changesThatLeaveTheGameAsItIs
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.event.action != 'synchronize'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-test
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/merge-the-open-pull-requests-base
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Type-check and run the tests
+        run: Scripts/test.sh
+
+  ui-test:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.event.action != 'synchronize'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-ui-test-${{ matrix.project }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: iphone-webkit
+            browser: webkit
+          - project: android-chromium
+            browser: chromium
+          - project: scenarios-in-the-room-view
+            browser: chromium
+          - project: scenarios-in-first-person
+            browser: chromium
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/merge-the-open-pull-requests-base
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Find the revisions that Playwright installs for the UI tests' browser
+        id: browser-revisions
+        run: |
+          revisions=$(npx playwright install --dry-run ${{ matrix.browser }} | sed -n 's|^ *Install location: *.*/||p' | sort -u | paste -sd- -)
+          if [ -z "$revisions" ]; then
+            echo "::error::playwright install --dry-run ${{ matrix.browser }} named no install location, so the browser's cache has no key"
+            exit 1
+          fi
+          echo "Playwright installs $revisions for ${{ matrix.browser }}"
+          echo "revisions=$revisions" >> "$GITHUB_OUTPUT"
+      - name: Restore the browser for the UI tests
+        id: browser-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.browser-revisions.outputs.revisions }}
+      - name: Install the browser for the UI tests
+        if: steps.browser-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Install the system libraries of the restored browser
+        if: steps.browser-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ matrix.browser }}
+      - name: Build the site and run the UI tests on ${{ matrix.project }}
+        run: Scripts/test-ui.sh --project=${{ matrix.project }}
+      - name: Upload the traces and screenshots of the failed UI tests on ${{ matrix.project }}
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: failed-ui-tests-${{ matrix.project }}
+          path: test-results/
+
+  build:
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.repository || github.event.action != 'synchronize'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-build
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/merge-the-open-pull-requests-base
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies from the lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Build the site
+        run: Scripts/build.sh
+      - name: Upload the site for GitHub Pages
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: [test, ui-test, build]
+    if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: ${{ github.workflow }}-deploy
+      cancel-in-progress: false
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
