@@ -25,7 +25,7 @@ export const thermos: VesselDefinition = {
   isMadeForTheHeater: false,
   hasAMetalShell: true,
   canHoldLeaves: false,
-  isDrinkable: false,
+  isDrinkable: true,
 }
 
 export const teaBowl: VesselDefinition = {

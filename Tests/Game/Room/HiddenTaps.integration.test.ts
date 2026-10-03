@@ -21,33 +21,11 @@ test('roseBush_whenAnotherTapComesBeforeTheTenth_startsCountingAgain', () => {
   assert.equal(room.debugMenusAsked, 0)
 })
 
-test('middleHand_whenTheSameItemIsTappedTenTimesWithFullHands_growsHoldingItAndChosen', () => {
+test('item_whenTappedTenTimesWithFullHands_staysWhereItIs', () => {
   const room = new TestRoom()
-  room.carryFromTheShelf('bowl1', 'bowl2')
-  room.tapTimes(9, { kind: 'item', itemId: 'bowl3' })
-
-  room.tap({ kind: 'item', itemId: 'bowl3' })
-
-  assert.deepEqual(itemIdsInTheHands(room.state), ['bowl1', 'bowl2', 'bowl3'])
-  assert.equal(room.playerController.chosenHandIndex, 2)
-})
-
-test('middleHand_whenAnotherItemIsTappedInBetween_countsTheTapsAgain', () => {
-  const room = new TestRoom()
-  room.carryFromTheShelf('bowl1', 'bowl2')
-  room.tapTimes(9, { kind: 'item', itemId: 'bowl3' })
-  room.tap({ kind: 'item', itemId: 'bowl4' })
-
-  room.tapTimes(9, { kind: 'item', itemId: 'bowl3' })
-
-  assert.equal(room.state.player.hasAMiddleHand, false)
-})
-
-test('middleHand_whenItHasBeenGrownBefore_doesNotGrowAgain', () => {
-  const room = new TestRoom({ unlocked: ['shiva'] })
   room.carryFromTheShelf('bowl1', 'bowl2')
 
   room.tapTimes(10, { kind: 'item', itemId: 'bowl3' })
 
-  assert.equal(room.state.player.hasAMiddleHand, false)
+  assert.deepEqual(itemIdsInTheHands(room.state), ['bowl1', 'bowl2'])
 })

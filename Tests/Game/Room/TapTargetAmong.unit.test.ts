@@ -4,6 +4,7 @@ import type { TapTarget } from '../../../Apps/Game/Room/TapTarget.ts'
 import { isReachedThroughItsAreaOnTheScreen, tapTargetAmong } from '../../../Apps/Game/Room/TapTargetAmong.ts'
 
 const firstHand: TapTarget = { kind: 'hand', handIndex: 0 }
+const firstPlaceOfTheInventory: TapTarget = { kind: 'inventorySlot', slotIndex: 0 }
 const nothing: TapTarget = { kind: 'nothing' }
 const shelfSurface: TapTarget = { kind: 'surface', furnitureId: 'shelf', point: { x: 0, y: 1, z: 0 } }
 const bowlOnTheShelf: TapTarget = { kind: 'item', itemId: 'bowl7' }
@@ -19,79 +20,77 @@ const canActOnAnything = (): boolean => true
 const canActOnNothing = (): boolean => false
 
 test('tap_onNothing_hitsNothing', () => {
-  assert.deepEqual(tapTargetAmong(nothing, [], null, canActOnAnything), nothing)
+  assert.deepEqual(tapTargetAmong(nothing, [], canActOnAnything), nothing)
 })
 
-test('tap_throughTheChosenHandsAreaOnWhatItsItemCanActOn_reachesWhatIsBehind', () => {
-  const target = tapTargetAmong(shelfSurface, [firstHand], 0, canActOnAnything)
+test('tap_throughAHandsAreaOnWhatHasActions_reachesWhatIsBehind', () => {
+  const target = tapTargetAmong(shelfSurface, [firstHand], canActOnAnything)
 
   assert.deepEqual(target, shelfSurface)
 })
 
-test('tap_throughTheChosenHandsAreaOnWhatItsItemCannotActOn_staysOnTheHand', () => {
-  const target = tapTargetAmong(shelfSurface, [firstHand], 0, canActOnNothing)
+test('tap_throughAHandsAreaOnWhatHasNoActions_staysOnTheHand', () => {
+  const target = tapTargetAmong(shelfSurface, [firstHand], canActOnNothing)
 
   assert.deepEqual(target, firstHand)
 })
 
-test('tap_onAnItemInsideAHandsArea_reachesTheItemWhetherOrNotTheHandIsChosen', () => {
-  for (const chosenHandIndex of [0, 1, null] as const) {
-    const target = tapTargetAmong(bowlOnTheShelf, [firstHand], chosenHandIndex, canActOnNothing)
+test('tap_onAnItemInsideAHandsArea_reachesTheItem', () => {
+  const target = tapTargetAmong(bowlOnTheShelf, [firstHand], canActOnNothing)
 
-    assert.deepEqual(target, bowlOnTheShelf)
-  }
+  assert.deepEqual(target, bowlOnTheShelf)
 })
 
 test('tap_throughAHandsAreaOnlyOnAnItemsArea_staysOnTheHand', () => {
-  const target = tapTargetAmong(shelfSurface, [firstHand, bowlOnTheShelf], null, canActOnNothing)
+  const target = tapTargetAmong(shelfSurface, [firstHand, bowlOnTheShelf], canActOnNothing)
 
   assert.deepEqual(target, firstHand)
 })
 
-test('tap_throughTheChosenHandsAreaOnAnItemsArea_reachesThatItemWhenTheChosenItemCanActOnIt', () => {
-  const target = tapTargetAmong(shelfSurface, [firstHand, frontBowl], 0, canActOnAnything)
+test('tap_throughAHandsAreaOnAnItemsArea_reachesThatItemWhenItHasActions', () => {
+  const target = tapTargetAmong(shelfSurface, [firstHand, frontBowl], canActOnAnything)
 
   assert.deepEqual(target, frontBowl)
 })
 
 test('tap_onAnItemInsideAnotherItemsArea_reachesTheItemTouched', () => {
-  const target = tapTargetAmong(bowlOnTheShelf, [frontBowl], 0, canActOnAnything)
+  const target = tapTargetAmong(bowlOnTheShelf, [frontBowl], canActOnAnything)
 
   assert.deepEqual(target, bowlOnTheShelf)
 })
 
 test('tap_throughAStandingItemsAreaOnAPlace_reachesThatItem', () => {
-  const target = tapTargetAmong(shelfSurface, [frontBowl], null, canActOnNothing)
+  const target = tapTargetAmong(shelfSurface, [frontBowl], canActOnNothing)
 
   assert.deepEqual(target, frontBowl)
 })
 
 test('tap_onAKettlesLidInsideTheFaucetsArea_reachesTheLid', () => {
-  const target = tapTargetAmong(kettlesLid, [faucet], null, canActOnNothing)
+  const target = tapTargetAmong(kettlesLid, [faucet], canActOnNothing)
 
   assert.deepEqual(target, kettlesLid)
 })
 
 test('tap_throughTheFaucetsAreaOnTheSinkUnderIt_reachesTheSink', () => {
-  const target = tapTargetAmong(sink, [faucet], null, canActOnNothing)
+  const target = tapTargetAmong(sink, [faucet], canActOnNothing)
 
   assert.deepEqual(target, sink)
 })
 
 test('tap_throughAHandsAreaOnTheSinkBehind_staysOnTheHand', () => {
-  const target = tapTargetAmong(sink, [firstHand], null, canActOnNothing)
+  const target = tapTargetAmong(sink, [firstHand], canActOnNothing)
 
   assert.deepEqual(target, firstHand)
 })
 
 test('tap_onTheGuideBookInsideTheGearsArea_opensTheBook', () => {
-  const target = tapTargetAmong(guideBook, [settingsGear], null, canActOnAnything)
+  const target = tapTargetAmong(guideBook, [settingsGear], canActOnAnything)
 
   assert.deepEqual(target, guideBook)
 })
 
 test('tap_throughAControlsAreaOnThePanelAroundIt_reachesTheControl', () => {
-  const target = tapTargetAmong(heaterPanel, [upArrow], null, canActOnNothing)
+  const target = tapTargetAmong(heaterPanel, [upArrow], canActOnNothing)
 
   assert.deepEqual(target, upArrow)
 })
@@ -106,4 +105,14 @@ test('areaOnTheScreen_isGivenToThingsAndNotToPlacesPartsOfAnItemOrTheRoseBush', 
 
 test('areaOnTheScreen_ofAHand_isGivenOnlyWhileItIsDrawnOverTheScene', () => {
   assert.deepEqual([isReachedThroughItsAreaOnTheScreen(firstHand, true), isReachedThroughItsAreaOnTheScreen(firstHand, false)], [true, false])
+})
+
+test('areaOnTheScreen_ofAPlaceOfTheInventory_isGivenOnlyWhileItIsDrawnOverTheScene', () => {
+  assert.deepEqual([isReachedThroughItsAreaOnTheScreen(firstPlaceOfTheInventory, true), isReachedThroughItsAreaOnTheScreen(firstPlaceOfTheInventory, false)], [true, false])
+})
+
+test('tap_throughAPlaceOfTheInventoryOnTheShelf_staysOnTheInventoryEvenWhenTheShelfHasActions', () => {
+  const target = tapTargetAmong(shelfSurface, [firstPlaceOfTheInventory], canActOnAnything)
+
+  assert.deepEqual(target, firstPlaceOfTheInventory)
 })

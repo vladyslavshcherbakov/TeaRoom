@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import type { HandIndex } from '../../../../Shared/GameLogic/GameLogic.ts'
 import type { ScreenPoint } from '../../../Engine/ScreenPoint.ts'
 import type { TapTarget, TapTargetTag } from '../TapTarget.ts'
 import { isReachedThroughItsAreaOnTheScreen, tapTargetAmong, type AreaSetAside, type TapReach } from '../TapTargetAmong.ts'
@@ -12,11 +11,6 @@ export type TappablePass = {
   readonly tappable: readonly THREE.Object3D[]
   readonly areasOnTheScreen: readonly THREE.Object3D[]
   readonly isDrawnOverTheScene: boolean
-}
-
-export type ChosenHand = {
-  readonly handIndex: HandIndex | null
-  readonly doesATapReachPastIt: (target: TapTarget) => boolean
 }
 
 type TouchablesUnderTheFinger = {
@@ -39,7 +33,7 @@ const metresAlwaysReachedPastWhatTheFingerTouched = 0.05
 const pointsTriedAlongEachSideOfABox = 9
 const raycaster = raycasterSeeingEveryTappableLayer()
 
-export function tapTargetUnderTheFinger(finger: ScreenPoint, screen: ScreenRectangle, passesDrawnLastFirst: readonly TappablePass[], chosenHand: ChosenHand): TapReach {
+export function tapTargetUnderTheFinger(finger: ScreenPoint, screen: ScreenRectangle, passesDrawnLastFirst: readonly TappablePass[], doesATapReachPastTheHands: (target: TapTarget) => boolean): TapReach {
   const pointer = pointerAt(finger, screen)
   const hitsOfEachPass = passesDrawnLastFirst.map((pass) => ({ pass, hits: hitsSeenBy(pass.camera, pointer, pass.tappable) }))
   const firstPassHit = hitsOfEachPass.find(({ hits }) => hits.length > 0)
@@ -49,7 +43,7 @@ export function tapTargetUnderTheFinger(finger: ScreenPoint, screen: ScreenRecta
   const underTheFingerInEachPass = passesDrawnLastFirst.map((pass) => touchablesUnderTheFinger(finger, pass, screen, pointTouchedInTheRoom))
   const areasHoldingTheFinger = touchablesReachedAt(finger, underTheFingerInEachPass.flatMap(({ reached }) => reached)).map((touchable) => touchable.target)
   const areasSetAside = underTheFingerInEachPass.flatMap(({ setAside }) => setAside)
-  return { target: tapTargetAmong(touched, areasHoldingTheFinger, chosenHand.handIndex, chosenHand.doesATapReachPastIt), touched, areasHoldingTheFinger, areasSetAside }
+  return { target: tapTargetAmong(touched, areasHoldingTheFinger, doesATapReachPastTheHands), touched, areasHoldingTheFinger, areasSetAside }
 }
 
 export function touchablesUnderTheFinger(finger: ScreenPoint, pass: TappablePass, screen: ScreenRectangle, pointTouchedInTheRoom: PointTouchedInTheRoom | null): TouchablesUnderTheFinger {
@@ -129,6 +123,7 @@ function tagOfTheTappedTarget(target: TapTarget): TapTargetTag | null {
     case 'faucet':
     case 'sink':
     case 'hand':
+    case 'inventorySlot':
     case 'lid':
     case 'opening':
     case 'figurine':

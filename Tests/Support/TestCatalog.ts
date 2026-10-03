@@ -92,8 +92,8 @@ export function testCatalog(cooling: CoolingPerSecond = {}): Catalog {
       testHeater: { id: 'testHeater', degreesPerSecondPerLitre: 2, powerWatts: 3000, boilingAwayMlPerSecond: 1, thermostat: { lowestC: 40, highestC: 100, startsAtC: 100, heatsAgainBelowTheTargetByC: 2 } },
     },
     figurines: {
-      dragon: { id: 'dragon', affinityByTeaId: { testGreen: 0 }, preferredStrength: { lowest: 40, highest: 70 } },
-      toad: { id: 'toad', affinityByTeaId: { testGreen: 1 }, preferredStrength: { lowest: 40, highest: 70 } },
+      dragon: { id: 'dragon', affinityByTeaId: { testGreen: 0 } },
+      toad: { id: 'toad', affinityByTeaId: { testGreen: 1 } },
     },
     rooms: {
       testRoom: {

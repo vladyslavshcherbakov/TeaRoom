@@ -1,3 +1,3 @@
-export const screenButtons = ['sip', 'tilt', 'whyPouring', 'leaveFirstPerson'] as const
+export const screenButtons = ['tilt', 'whyPouring', 'leaveFirstPerson'] as const
 
 export type ScreenButton = (typeof screenButtons)[number]

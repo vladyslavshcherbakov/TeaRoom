@@ -15,7 +15,7 @@ How Tea Room is built and how to change it, seen from above. The README says wha
 | Drawing in `Rendering/` | The type-check, and the test files that name what changed. |
 | The UI tests, their support files, or the gestures, picking and `Host` they drive | The type-check and the UI project that the change touches. |
 
-- Every change to a source or test file also runs `CodeConventions`, `ImportCycles`, `GameLogicBoundary` and `EngineBoundary` in `Tests/Game/`, because they read every file and take seconds.
+- Every change to a source or test file also runs `CodeConventions`, `ImportCycles`, `GameLogicBoundary` and `EngineBoundary` in `Tests/Game/`.
 - A UI test runs locally only for the last row, or to find the cause of a CI failure.
 - A screenshot answers one question about a new or changed look that no test sees, such as a shape, a material or a pose. Choose the pose first, then take one shot.
 - The build runs locally only when the change touches `index.html`, the styles or the Vite configuration. The type-check catches the rest of what the build would.
@@ -24,6 +24,7 @@ How Tea Room is built and how to change it, seen from above. The README says wha
 - A bug fix comes with a test that fails without the fix.
 - A commit holds one whole change: its code, its tests, and every line of the README, `docs/`, CONTRIBUTING.md and ROADMAP.md that the change makes true or false. A piece found missing after the commit is amended into it before the push, and never follows it as a commit of its own.
 - A push carries only finished commits, and one push may carry several.
+- A commit message says what the change does. A reason in it is one the user gave or a fact that someone measured. It holds no judgement of the user's work and no motive the user did not state.
 - A change that finishes a task of ROADMAP.md removes the task.
 
 ## The layers
@@ -38,7 +39,7 @@ How Tea Room is built and how to change it, seen from above. The README says wha
 | `Apps/Game/Texts` | Every word the player reads, as a key and a value. | `EnglishTexts.ts` |
 | `Apps/Game/Room` | The walkable room in Three.js: taps, walking, the camera, the models and the controls on the page. | `RoomMain.ts` |
 
-Dependencies point towards `Shared/GameLogic`, and everything may use the engine, which uses nothing of the game. No word of the tea game appears in the engine, and `Tests/Game/EngineBoundary.integration.test.ts` checks both. The root `tsconfig.json` checks `Shared` without the browser's types, so the game logic cannot reach the page.
+Dependencies point towards `Shared/GameLogic`, and everything may use the engine, which uses nothing of the game. No word of the tea game appears in the engine, and `Tests/Game/EngineBoundary.integration.test.ts` checks both. The root `tsconfig.json` checks `Shared` without the browser's types.
 
 ### The engine
 
@@ -61,23 +62,25 @@ The room opens or resumes a session, sends one command for each decision of the 
 
 ### The room
 
-A tap travels like this. `RoomScene` draws the room and hands every press to `TouchInput`, which tells a tap from a stroke, a pinch or a hold. `PlayerController` decides what the press means in its current mode, such as free, aiming a pour or looking closely, and sends commands to the session. `RoomVisit` turns the events into what the player says, the achievements, the saved visit and the death screen.
+A tap travels like this. `RoomScene` draws the room and hands every press to `TouchInput`, which tells a tap from a stroke, a pinch or a hold. `PlayerController` decides what the press means in its current mode, such as free, choosing from a menu, aiming a pour or looking closely. A tap on a thing opens a menu of the actions that the session would not refuse, and a chosen action sends its commands to the session. `RoomVisit` turns the events into what the player says, the achievements, the saved visit and the death screen.
 
-The files at the root of `Apps/Game/Room` decide and import no Three.js, so every decision is tested in Node. `Rendering/` only draws what they decided and reports what the finger did. `Camera/` holds the camera, and the engine walks the floor.
+The files at the root of `Apps/Game/Room` decide, import no Three.js, and are tested in Node. `Rendering/` only draws what they decided and reports what the finger did. `Camera/` holds the camera, and the engine walks the floor.
 
 ## Adding a kind of thing
 
 Most kinds of thing are closed sets: a union or a record keyed by one. Add the member, and the compiler lists every place that must answer for it. The flows below name only what the compiler cannot find.
 
 - **Content**, such as a tea, a tea bowl, a figurine or a room: its definition in `Shared/Content`, and its look in the room. The content tests run every definition of the real catalog.
-- **A mechanic**: first answer who acts on what, when it is available, which gesture starts it, what the player sees and hears while it lasts, when it is done, what an early lift or a change of mind does, what a clumsy try produces, and what lingers after. Then its arithmetic in `Chemistry/`, its decisions in `Judgement/`, a command with its events and its rule in `Simulation/CommandBook.ts`, and its rule in `docs/game-logic.md`. In the room it needs a tap target, what a tap on it does in `PlayerController`, and its gesture in `docs/interactions.md`. Pouring is the mechanic to copy, and the sink is the feature of the room to copy.
+- **A mechanic**: first answer who acts on what, when it is available, which gesture starts it, what the player sees and hears while it lasts, when it is done, what an early lift or a change of mind does, what a clumsy try produces, and what lingers after. Then its arithmetic in `Chemistry/`, its decisions in `Judgement/`, a command with its events and its rule in `Simulation/CommandBook.ts`, and its rule in `docs/game-logic.md`. In the room it needs a tap target, its action in the menu, and its gesture in `docs/interactions.md`. Pouring is the mechanic to copy, and the sink is the feature of the room to copy.
 - **A kind of carried item**, beside a vessel, the spoon and a cloth: start at `Simulation/ItemKinds.ts`. The compiler does not list where it is held and found in `State/WhereItemsAre.ts`, the check of its place in `CatalogProblems.ts`, or its lines in `WorldReport.ts`.
 - **A shape of carried item**, such as a teapot: start at `CarriedShapes.ts`. The compiler does not list the places that treat a shape as a role, so search for `carriedShapeOf`. `CarriedItems.integration.test.ts` checks what every shape promises.
 - **A system of the fixed step**, something the world does by itself as time passes: a function of the draft and the seconds in `Simulation/Systems.ts`, placed in `teaSchedule` where its order matters, and a line in `WorldReport.ts` for what it changes.
 - **A piece another game would need too**, such as a kind of input, a service or a way to draw: it goes to `Shared/Engine` or `Apps/Engine` in the engine's words, and the tea game gives it what is about tea.
 - **A secret of the world**: game logic. Its condition reads the state, its trace is an event, and what it remembers is saved in `SessionState` and lived through during an absence. Its engine in `Shared/Engine` comes with the first secret.
+- **An action in the menu**: its member in `ActionMenu.ts`, its words in `EnglishTexts.ts`, and the list in `PlayerController` that offers it when `wouldRefuse` finds no refusal.
 - **A setting, an achievement, a bark, a button on the screen or a mode of `PlayerController`**: add the member to its closed set, and the compiler lists the rest.
-- **A sound**: its file in `Apps/Game/Room/Sounds/`, Opus in WebM at 64 kbit/s, or 40 kbit/s in mono when the source has no stereo, with only the silence at its start cut and only when the user asks. Its gain is the strictest of three limits: −24 LUFS on average, −18 LUFS for its loudest 400 ms, and a peak of −1.5 dB. Its member goes in `RoomSounds.ts`. The compiler then asks for its line in `RoomSoundFiles.ts`. A sound that lasts is decided in `soundsLastingIn`, and a sound of a moment is started where its moment is decided.
+- **A model from outside**, such as the sparrow: one GLB in `Apps/Game/Room/Models/`, its colours baked into vertex colours and no image in it, loaded by a model in `Rendering/` through `bytesAt`. Its author's credit, when its licence asks for one, goes in the debug menu.
+- **A sound**: its file in `Apps/Game/Room/Sounds/`, Opus in WebM, as small as it can be without an audible loss: 64 kbit/s, or 40 kbit/s in mono when the source has no stereo, and lower only while no difference can be heard. Only the silence at its start is cut, and only when the user asks. Its gain is the strictest of three limits: −24 LUFS on average, −18 LUFS for its loudest 400 ms, and a peak of −1.5 dB. Its member goes in `RoomSounds.ts`. The compiler then asks for its line in `RoomSoundFiles.ts`. A sound that lasts is decided in `soundsLastingIn`, and a sound of a moment is started where its moment is decided.
 
 ## Policies
 
@@ -91,15 +94,15 @@ Most kinds of thing are closed sets: a union or a record keyed by one. Add the m
 
 ### The room
 
-- The game logic emits ids, and the presentation turns them into words. A text key is built from a typed union, so the type-check finds a missing text. A line the player may hear more than once has several variants.
+- The game logic emits ids, and the presentation turns them into words. A text key is built from a typed union. A line the player may hear more than once has several variants.
 - Everything the player says is a bark, the short line of a character that games call so, earned by an event of the simulation or by a fact only the room knows.
 - Every value kept in the browser has its own store with a decoder. It is a convenience: the game works when the storage is gone.
 - `Rendering/RoomLayers.ts` declares the passes, and `roomLayers` decides in which pass a thing is drawn and whether it takes taps. Only the engine's `Rendering/Layers.ts` sets a layer.
-- A new way to log uses a name that the silent build of the artifact knows, so the artifact spells out no rule.
+- A new way to log uses a name that the silent build of the artifact knows.
 
 ### The code
 
-- Source files use only erasable TypeScript syntax. Relative imports end in `.ts`, or in `.webm` for a sound.
+- Source files use only erasable TypeScript syntax. Relative imports end in `.ts`, in `.webm` for a sound, or in `.glb?url` for a model.
 - A closed set answers for its members. Code never compares with one member to decide what runs.
 - A word of the tea game names only the tea game: "ritual" only the tea ritual, "chemistry" the tea game's liquids, heat and brewing.
 - A type that two files name has its own file, and no two files import each other.
@@ -107,13 +110,14 @@ Most kinds of thing are closed sets: a union or a record keyed by one. Add the m
 
 ## Rules the code cannot show
 
-- The user decides, and only the user changes: the game's version in `GameVersion.ts`, the touch area's size in `smallestTouchAreaPixels`, the paintings on the bowls and the thermos, the parts of the book of instructions, the player's starting height, achievements shown at first, the rules of Sommelier, Gourmet and The Usual, Please, the Sip button shown during a sip, the heater's switch that never takes over from the thermostat, and debug settings that outlast a new game.
+- The user decides, and only the user changes: the game's version in `GameVersion.ts`, the touch area's size in `smallestTouchAreaPixels`, the paintings on the bowls and the thermos, the parts of the book of instructions, the player's starting height, achievements shown at first, the rules of Sommelier, Gourmet and The Usual, Please, the heater's switch that never takes over from the thermostat, and debug settings that outlast a new game.
 - The first target is mobile Safari: no Vibration API, and sound only as Opus in WebM, which it plays from iOS 17.5 and macOS 15.4.
 - Three.js, Vite and TypeScript stay pinned in `package.json`, and an update of one of them is a commit of its own. `@playwright/test` stays at the version whose Chromium the agent's environment has.
 - Only `nextHeaterMode` changes the heater's mode. Only `takeLiquidFrom` and `emptyTheVessel` lower what a vessel holds, apart from boiling away.
 - Nothing is drawn through anything else. Every spot a thing is drawn at comes from `Placement.ts` or is checked against what stands there, and a new spot is checked in a close-up next to its neighbours.
 - Every model and every look is built by a function from its data, with nothing taken from a running game.
 - The setting for the glow names only lamps, never hot metal.
+- The sparrow's credit, under CC BY 4.0, stays in the debug menu with its links.
 - A warm-up of the shaders draws through `RoomScene`'s `render()`, shadow map first.
 - A sun that moves during play joins the shadow pose in `RoomScene`'s `render()`.
 - The garden in `Rendering/Garden.ts` stays instanced, simple and without shadows.
@@ -123,7 +127,7 @@ Most kinds of thing are closed sets: a union or a record keyed by one. Add the m
 - Nothing frees a model's resources. The first mechanic that removes a model gives the model a record of its resources in `Host`, frees the record in one call, and adds a browser test that rebuilds the model twice and compares the counts.
 - `Scripts/silent-build.vite.config.mjs` removes the call of `exposeTheProbe` by its name.
 - `Apps/tsconfig.json` keeps its own empty `exclude`.
-- The workflow's actions stay on their Node 24 majors: GitHub removes the Node 20 runtime in September 2026. The browsers' cache key comes from `playwright install --dry-run`, never from `browsers.json`.
+- The workflow's actions stay on their Node 24 majors. The browsers' cache key comes from `playwright install --dry-run`, never from `browsers.json`.
 - Screenshots and scratch output stay outside the repository, and files are staged by name.
 
 ## Tests

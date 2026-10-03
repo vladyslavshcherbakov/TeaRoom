@@ -1,20 +1,14 @@
-import { definitionIn } from '../../Engine/Catalog.ts'
-import { affinityForTheBlend, judgeOffering } from '../Judgement/OfferingJudgement.ts'
 import { balancedStrengthOf, blendOf, isFatalStraightFromTheCaddy, judgeTaste, type TeaInABlend } from '../Judgement/TasteJudgement.ts'
 import { totalLeafGrams } from '../Chemistry/Brewing.ts'
 import { isEmpty } from '../Chemistry/Liquid.ts'
-import type { FigurineState, VesselState } from '../State/SessionState.ts'
+import type { VesselState } from '../State/SessionState.ts'
 import { describeLiquid, describeTheTeasOf, vesselDefinitionOf, type Draft } from './Draft.ts'
 import { note } from '../../Engine/Draft.ts'
-import { commandRuleOnASubject, found, refusedWith, type Found } from '../../Engine/Commands.ts'
+import { commandRuleOnASubject } from '../../Engine/Commands.ts'
 import type { TeaCommandEntry } from './TeaCommandEntry.ts'
-import type { RefusalReason } from './TeaEvent.ts'
-import type { CommandOfType } from './Command.ts'
-import { foundVessel, isNotBeingPoured, isThePlayerAt, isWithinThePlayersReach, type Check } from './ItemRefusals.ts'
-import { ritualPlaceOf, teaStockOf } from './Reach.ts'
-import { emptyTheVessel, takeLiquidFrom } from './VesselLiquid.ts'
-
-type CupAndFigurine = { readonly cup: VesselState; readonly figurine: FigurineState }
+import { foundVessel, isNotBeingPoured, isWithinThePlayersReach, type Check } from './ItemRefusals.ts'
+import { teaStockOf } from './Reach.ts'
+import { takeLiquidFrom } from './VesselLiquid.ts'
 
 const sipMl = 40
 
@@ -22,12 +16,6 @@ export const tasteCupRule: TeaCommandEntry<'tasteCup'> = commandRuleOnASubject({
   find: (draft, command) => foundVessel(draft, command.cupId),
   checks: (cup) => [isWithinThePlayersReach(cup.id), ...checksToServeFrom(cup)],
   carryOut: tasteCup,
-})
-
-export const offerCupRule: TeaCommandEntry<'offerCup'> = commandRuleOnASubject({
-  find: foundCupAndFigurine,
-  checks: ({ cup, figurine }) => [isWithinThePlayersReach(cup.id), isThePlayerAtTheFigurines, hasNotBeenOffered(figurine), ...checksToServeFrom(cup)],
-  carryOut: offerCup,
 })
 
 function tasteCup(draft: Draft, cup: VesselState): void {
@@ -47,27 +35,6 @@ function tasteCup(draft: Draft, cup: VesselState): void {
   draft.events.push({ type: 'playerDied', cupId: cup.id })
 }
 
-function foundCupAndFigurine(draft: Draft, command: CommandOfType<'offerCup'>): Found<CupAndFigurine, RefusalReason> {
-  const cup = draft.state.vessels[command.cupId]
-  const figurine = draft.state.figurines[command.figurineId]
-  if (cup === undefined) return refusedWith('unknownVessel', `the room has no vessel ${command.cupId}`)
-  if (figurine === undefined) return refusedWith('unknownFigurine', `the room has no figurine ${command.figurineId}`)
-  return found({ cup, figurine })
-}
-
-function offerCup(draft: Draft, { cup, figurine }: CupAndFigurine): void {
-  const definition = definitionIn(draft.catalog, 'figurines', figurine.id)
-  const blend = blendOf(cup.liquid, draft.catalog)
-  const offering = judgeOffering(cup.liquid, blend, definition)
-  const satisfactionBefore = figurine.satisfaction
-  note(draft, `offered to ${figurine.id}: ${describeLiquid(cup)}, affinity for the blend ${affinityForTheBlend(blend, definition).toFixed(2)}`)
-  emptyTheVessel(cup)
-  figurine.wasOfferedTeaThisRitual = true
-  figurine.satisfaction = Math.min(100, Math.max(0, figurine.satisfaction + offering.satisfactionDelta))
-  note(draft, `${figurine.id} satisfaction ${satisfactionBefore} → ${figurine.satisfaction}, response ${offering.response}`)
-  draft.events.push({ type: 'figurineAcceptedTea', figurineId: figurine.id, response: offering.response })
-}
-
 function describeTheBalancedStrengthOf(blend: readonly TeaInABlend[]): string {
   if (blend.length === 0) return ''
   const { lowest, highest } = balancedStrengthOf(blend)
@@ -84,10 +51,4 @@ function isDrinkable(cup: VesselState): Check {
 
 function hasSomethingToServe(cup: VesselState): Check {
   return () => (isEmpty(cup.liquid) ? { reason: 'cupIsEmpty', values: describeLiquid(cup) } : null)
-}
-
-const isThePlayerAtTheFigurines: Check = (draft) => isThePlayerAt(ritualPlaceOf(draft), 'the figurines')(draft)
-
-function hasNotBeenOffered(figurine: FigurineState): Check {
-  return () => (figurine.wasOfferedTeaThisRitual ? { reason: 'figurineAlreadyOffered', values: `${figurine.id} was offered tea this ritual` } : null)
 }

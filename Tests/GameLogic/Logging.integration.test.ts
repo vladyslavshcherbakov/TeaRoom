@@ -157,7 +157,7 @@ test('worldReport_whileTheTapWashesLeavesOutOfAFullKettle_logsHowFastTheLeavesGo
   session.do({ type: 'pickUp', itemId: 'kettle' })
   session.do({ type: 'openVesselLid', vesselId: 'kettle' })
   session.do({ type: 'putInTheSink', itemId: 'kettle' })
-  session.do({ type: 'turnTheTapOn' })
+  session.do({ type: 'turnTheTapOn', use: 'wash' })
 
   session.wait(11)
 

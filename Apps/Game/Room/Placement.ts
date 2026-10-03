@@ -9,6 +9,10 @@ import { doesACircleTouch, isACircleInside } from '../../Engine/Footprints.ts'
 export const sameBoardWithinMetres = 0.15
 const openLidGapMetres = 0.01
 const openLidDirectionsRadians = [Math.PI, 0, Math.PI / 2, -Math.PI / 2, (3 * Math.PI) / 4, Math.PI / 4, (-3 * Math.PI) / 4, -Math.PI / 4]
+export const nearestSpotSearchedWithinMetres = 0.3
+const nearestSpotSearchStepMetres = 0.01
+const snugSpotsWithinMetresOfTheNearest = 0.03
+const touchingWithinMetres = 0.01
 
 type Circle = { readonly spot: Spot; readonly radius: number; readonly restsOnTheSurface: boolean }
 
@@ -66,6 +70,17 @@ export function whyThereIsNoRoomFor(itemId: string, spot: Spot, state: DeepReado
   return doesTouchALidOfAnotherItem(circles, itemId, state, surroundings, lyingLids) ? 'somethingIsThere' : null
 }
 
+export function nearestSpotWithRoomFor(itemId: string, spot: Spot, state: DeepReadonly<SessionState>, surroundings: Surroundings, lyingLids: LyingLids): Spot | null {
+  const lidsOfOtherItems = lyingLids.layOpenLids(state, surroundings).filter((lid) => lid.itemId !== itemId)
+  const hasRoomAt = (candidate: Spot): boolean => {
+    const circles = footprintOf(state, itemId, candidate, surroundings.layout)
+    return whyThereIsNoRoomForCircles(circles, itemId, state, surroundings) === null && !doesTouchALid(circles, lidsOfOtherItems)
+  }
+  if (hasRoomAt(spot)) return spot
+  const spotsWithRoom = nearestSpotsWithRoom(spot, hasRoomAt)
+  return snuggestOf(spotsWithRoom, (candidate) => contactsOf(footprintOf(state, itemId, candidate, surroundings.layout), itemId, state, surroundings, lidsOfOtherItems))
+}
+
 export function isUnderAnotherItem(itemId: string, spot: Spot, state: DeepReadonly<SessionState>, surroundings: Surroundings, lyingLids: LyingLids): boolean {
   const circles = footprintOf(state, itemId, spot, surroundings.layout)
   return doesTouchANeighbour(circles, itemId, state, surroundings.layout) || doesTouchALidOfAnotherItem(circles, itemId, state, surroundings, lyingLids)
@@ -86,12 +101,59 @@ function whyThereIsNoRoomForCircles(circles: readonly Circle[], movingItemId: st
 
 function doesTouchANeighbour(circles: readonly Circle[], movingItemId: string | null, state: DeepReadonly<SessionState>, layout: RoomLayout): boolean {
   const neighbourCircles = itemsOnSurfaces(state).filter((item) => item.itemId !== movingItemId).flatMap((item) => footprintOf(state, item.itemId, item.spot, layout))
-  return circles.some((circle) => neighbourCircles.some((neighbour) => isNear(circle.spot, neighbour.spot, circle.radius + neighbour.radius)))
+  return doesTouchACircle(circles, neighbourCircles)
 }
 
 function doesTouchALidOfAnotherItem(circles: readonly Circle[], itemId: string, state: DeepReadonly<SessionState>, surroundings: Surroundings, lyingLids: LyingLids): boolean {
-  const lidsOfOtherItems = lyingLids.layOpenLids(state, surroundings).filter((lid) => lid.itemId !== itemId)
-  return lidsOfOtherItems.some((lid) => circles.some((circle) => isNear(circle.spot, lid.spot, circle.radius + lid.radius)))
+  return doesTouchALid(circles, lyingLids.layOpenLids(state, surroundings).filter((lid) => lid.itemId !== itemId))
+}
+
+function doesTouchALid(circles: readonly Circle[], lids: readonly LyingLid[]): boolean {
+  return lids.some((lid) => circles.some((circle) => isNear(circle.spot, lid.spot, circle.radius + lid.radius)))
+}
+
+function nearestSpotsWithRoom(spot: Spot, hasRoomAt: (candidate: Spot) => boolean): Spot[] {
+  const spotsWithRoom: Spot[] = []
+  let nearestDistance = Number.POSITIVE_INFINITY
+  for (let distance = nearestSpotSearchStepMetres; distance <= Math.min(nearestSpotSearchedWithinMetres, nearestDistance + snugSpotsWithinMetresOfTheNearest); distance += nearestSpotSearchStepMetres) {
+    const ringWithRoom = spotsOnARing(spot, distance).filter(hasRoomAt)
+    if (ringWithRoom.length > 0) nearestDistance = Math.min(nearestDistance, distance)
+    spotsWithRoom.push(...ringWithRoom)
+  }
+  return spotsWithRoom
+}
+
+function snuggestOf(spots: readonly Spot[], contactsAt: (spot: Spot) => number): Spot | null {
+  let snuggest: { readonly spot: Spot; readonly contacts: number } | null = null
+  for (const candidate of spots) {
+    const contacts = contactsAt(candidate)
+    if (snuggest === null || contacts > snuggest.contacts) snuggest = { spot: candidate, contacts }
+  }
+  return snuggest?.spot ?? null
+}
+
+function contactsOf(circles: readonly Circle[], movingItemId: string, state: DeepReadonly<SessionState>, surroundings: Surroundings, lidsOfOtherItems: readonly LyingLid[]): number {
+  const { layout, heaterSpot } = surroundings
+  const reachingCircles = circles.map((circle) => ({ ...circle, radius: circle.radius + touchingWithinMetres }))
+  const restingCircles = reachingCircles.filter((circle) => circle.restsOnTheSurface)
+  const touchesAnEdge = restingCircles.some(({ spot, radius }) => {
+    const piece = layout.furniture.find((candidate) => candidate.id === spot.placeId)
+    return piece !== undefined && !isACircleInside(piece.footprint, spot, radius)
+  })
+  const touchesTheHeater = restingCircles.some(({ spot, radius }) => overlapsTheHeater(heaterSpot, spot, radius))
+  const touchesTheSink = restingCircles.some(({ spot, radius }) => spot.placeId === layout.sinkBasin.placeId && overlapsTheSink(layout.sinkBasin, spot, radius))
+  const neighboursTouched = itemsOnSurfaces(state).filter((item) => item.itemId !== movingItemId && doesTouchACircle(reachingCircles, footprintOf(state, item.itemId, item.spot, layout))).length
+  const lidsTouched = lidsOfOtherItems.filter((lid) => doesTouchALid(reachingCircles, [lid])).length
+  return [touchesAnEdge, touchesTheHeater, touchesTheSink].filter((touches) => touches).length + neighboursTouched + lidsTouched
+}
+
+function doesTouchACircle(circles: readonly Circle[], others: readonly Circle[]): boolean {
+  return circles.some((circle) => others.some((other) => isNear(circle.spot, other.spot, circle.radius + other.radius)))
+}
+
+function spotsOnARing(spot: Spot, distance: number): Spot[] {
+  const count = Math.ceil((2 * Math.PI * distance) / nearestSpotSearchStepMetres)
+  return Array.from({ length: count }, (_, index) => offsetSpot(spot, { x: Math.cos((2 * Math.PI * index) / count) * distance, z: Math.sin((2 * Math.PI * index) / count) * distance }))
 }
 
 function footprintOf(state: DeepReadonly<SessionState>, itemId: string, spot: Spot, roomLayout: RoomLayout): Circle[] {

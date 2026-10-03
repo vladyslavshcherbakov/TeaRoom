@@ -139,11 +139,11 @@ test('sink_whenSomethingIsInIt_refusesASecondItem', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'putInTheSink', reason: 'sinkOccupied' }])
 })
 
-test('caddy_underTheRunningTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', () => {
+test('caddy_washedUnderTheTapWithItsLidOpenForAMinute_hasEveryLeafWashedOut', () => {
   const session = new TestTeaSession()
   session.do({ type: 'pickUp', itemId: 'caddy' })
   session.do({ type: 'putInTheSink', itemId: 'caddy' })
-  session.do({ type: 'turnTheTapOn' })
+  session.do({ type: 'turnTheTapOn', use: 'wash' })
   session.do({ type: 'openVesselLid', vesselId: 'caddy' })
 
   const events = session.wait(60)
@@ -275,13 +275,37 @@ test('teaInABowl_whenTheTapRunsOverItsRim_fadesToPlainWater', () => {
   assert.ok(session.vessel('cup1').liquid.strength < 1, `strength ${session.vessel('cup1').liquid.strength}`)
 })
 
-test('leavesInABowl_whenTheTapRunsOverItsRim_areWashedOut', () => {
+test('leavesInABowl_whenWashedUntilTheTapRunsOverItsRim_areWashedOut', () => {
+  const session = new TestTeaSession()
+  session.tipASpoonOfLeavesInto('cup1')
+  session.do({ type: 'pickUp', itemId: 'cup1' })
+
+  session.do({ type: 'putInTheSink', itemId: 'cup1' })
+  session.do({ type: 'turnTheTapOn', use: 'wash' })
+  session.wait(5)
+
+  assert.equal(session.vessel('cup1').leaves, null)
+})
+
+test('leavesInABowl_whenTheTapFillsItPastItsRim_stay', () => {
   const session = new TestTeaSession()
   session.tipASpoonOfLeavesInto('cup1')
   session.do({ type: 'pickUp', itemId: 'cup1' })
 
   session.do({ type: 'putInTheSink', itemId: 'cup1' })
   session.do({ type: 'turnTheTapOn' })
+  session.wait(5)
+
+  assert.deepEqual(session.vessel('cup1').leaves?.gramsByTeaId, { testGreen: 5 })
+})
+
+test('leavesInABowl_whenPutUnderTheRunningTapToWash_areWashedOut', () => {
+  const session = new TestTeaSession()
+  session.tipASpoonOfLeavesInto('cup1')
+  session.do({ type: 'pickUp', itemId: 'cup1' })
+  session.do({ type: 'turnTheTapOn' })
+
+  session.do({ type: 'putInTheSink', itemId: 'cup1', use: 'wash' })
   session.wait(5)
 
   assert.equal(session.vessel('cup1').leaves, null)
@@ -300,7 +324,19 @@ test('leavesInABowl_whileTheTapFillsItBelowTheRim_stayAndFloat', () => {
   assert.deepEqual(session.vessel('cup1').leaves?.gramsByTeaId, { testGreen: 5 })
 })
 
-test('bowl_whenTakenOutAfterTheTapRanOverItsRim_isPouredEmpty', () => {
+test('bowl_whenTakenOutAfterItWasWashedPastItsRim_isPouredEmpty', () => {
+  const session = cupOfTeaInHand()
+  session.do({ type: 'putInTheSink', itemId: 'cup1' })
+  session.do({ type: 'turnTheTapOn', use: 'wash' })
+  session.wait(3)
+  session.do({ type: 'turnTheTapOff' })
+
+  session.do({ type: 'pickUp', itemId: 'cup1' })
+
+  assert.equal(session.vessel('cup1').liquid.volumeMl, 0)
+})
+
+test('bowl_whenTakenOutAfterTheTapFilledItPastItsRim_keepsItsWater', () => {
   const session = cupOfTeaInHand()
   session.do({ type: 'putInTheSink', itemId: 'cup1' })
   session.do({ type: 'turnTheTapOn' })
@@ -309,7 +345,7 @@ test('bowl_whenTakenOutAfterTheTapRanOverItsRim_isPouredEmpty', () => {
 
   session.do({ type: 'pickUp', itemId: 'cup1' })
 
-  assert.equal(session.vessel('cup1').liquid.volumeMl, 0)
+  assert.equal(session.vessel('cup1').liquid.volumeMl, 100)
 })
 
 test('bowl_whenTakenOutBeforeTheTapRanOverItsRim_keepsItsWater', () => {

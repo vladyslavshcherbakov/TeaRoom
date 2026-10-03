@@ -1,19 +1,15 @@
-import { figurineIds, type FigurineId } from '../../../Shared/Content/Rooms.ts'
-import type { OfferingResponse } from '../../../Shared/GameLogic/GameLogic.ts'
 import { sipText } from '../Presentation/SipTexts.ts'
 import { phraseLineAtTurn, text, textWith, type PhraseKey } from '../Texts/Texts.ts'
-import type { AppLog } from '../../Engine/AppLog.ts'
+import type { ActionLabel } from './ActionMenu.ts'
 import type { PlayerBark } from './PlayerBarks.ts'
 
 const millilitresInALitre = 1000
 
 export class RoomTexts {
   private readonly voiceSeed: number
-  private readonly log: AppLog
 
-  constructor(voiceSeed: number, log: AppLog) {
+  constructor(voiceSeed: number) {
     this.voiceSeed = voiceSeed
-    this.log = log
   }
 
   linesOf(barks: readonly PlayerBark[]): readonly string[] {
@@ -37,8 +33,6 @@ export class RoomTexts {
         return [text('room.noRoom')]
       case 'sip':
         return event?.type === 'teaTasted' ? [sipText(event.verdict, event.cupHeldLeaves, this.voiceSeed)] : []
-      case 'offering':
-        return event?.type === 'figurineAcceptedTea' ? this.offeringLines(event.figurineId, event.response) : []
       case 'heaterRanLong':
         return event?.type === 'heaterSwitchedOff' ? [this.lineOnTurn(bark.kind, bark.timesMade, { kilowattHours: kilowattHoursText(event.kilowattHoursWasted) })] : []
       case 'tapRanLong':
@@ -68,13 +62,10 @@ export class RoomTexts {
     return phraseLineAtTurn(phrase, this.voiceSeed, turn, values)
   }
 
-  private offeringLines(figurineId: string, response: OfferingResponse): readonly string[] {
-    if (!isAFigurineOfTheRoom(figurineId)) {
-      this.log(`the offering to ${figurineId} gets no caption: no figurine of the room has that id, so it has no name`)
-      return []
-    }
-    return [textWith(`offering.${response}`, { figurine: text(`figurine.${figurineId}`) })]
-  }
+}
+
+export function actionText(label: ActionLabel): string {
+  return textWith(`action.${label.kind}`, { item: text(`item.${label.item}`), target: label.target === null ? '' : text(`item.${label.target}`) })
 }
 
 export function startOverNote(areAchievementsShown: boolean): string {
@@ -87,8 +78,4 @@ function litresText(drainedMl: number): string {
 
 function kilowattHoursText(kilowattHoursUsed: number): string {
   return String(Number(kilowattHoursUsed.toFixed(2)))
-}
-
-function isAFigurineOfTheRoom(id: string): id is FigurineId {
-  return (figurineIds as readonly string[]).includes(id)
 }

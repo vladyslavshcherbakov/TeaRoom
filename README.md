@@ -1,6 +1,6 @@
 # Tea Room
 
-A small, calm ritual game for the mobile browser. You heat water, brew tea, pour it, offer some to the tea figurines, taste it, tidy up and stay for a while. Nothing is won or lost.
+A small, calm ritual game for the mobile browser. You heat water, brew tea, pour it, taste it, tidy up and stay for a while. Nothing is won or lost.
 
 Play it on a phone: <https://vladyslavshcherbakov.github.io/TeaRoom/>.
 

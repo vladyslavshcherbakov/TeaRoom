@@ -15,6 +15,7 @@ export function isWithinReach(draft: Draft, location: DeepReadonly<ItemLocation>
     case 'onTheHeater':
     case 'inTheSink':
       return draft.state.player.placeId === location.spot.placeId
+    case 'inTheInventory':
     case 'gone':
       return false
   }
@@ -38,10 +39,6 @@ export function teaStockOf(draft: Draft, vesselId: string): TeaStock | null {
 
 export function teaStockIn(catalog: Catalog, state: DeepReadonly<SessionState>, vesselId: string): TeaStock | null {
   return definitionIn(catalog, 'rooms', state.roomId).vessels.find((vessel) => vessel.id === vesselId)?.teaStock ?? null
-}
-
-export function ritualPlaceOf(draft: Draft): string {
-  return definitionIn(draft.catalog, 'rooms', draft.state.roomId).ritualPlaceId
 }
 
 export function whereTheItemIs(state: DeepReadonly<SessionState>, itemId: string): string {

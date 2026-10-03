@@ -5,8 +5,7 @@ import { TestRoom } from '../../Support/TestRoom.ts'
 test('whyPouringButton_whileAPourIsAimed_explainsThePour', () => {
   const room = new TestRoom()
   room.bringABowlToTheCounterAndTakeTheKettle()
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto')
 
   room.playerController.screenButtonPressed('whyPouring')
 
@@ -32,8 +31,7 @@ test('leaveFirstPersonButton_whenPressed_asksToLeaveFirstPerson', () => {
 test('tiltButton_whenPressedAndLetGoWhileAiming_tiltsTheVesselAndTipsItBack', () => {
   const room = new TestRoom()
   room.bringABowlToTheCounterAndTakeTheKettle()
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto')
   room.playerController.screenButtonPressed('tilt')
   room.advance(1)
   const tiltWhileHeld = room.playerController.aimedPourView?.tiltDegrees ?? 0

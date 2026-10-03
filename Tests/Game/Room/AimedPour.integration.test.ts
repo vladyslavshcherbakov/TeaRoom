@@ -25,12 +25,12 @@ const frontEdgeOfTheCounterZ = counter.footprint.z + counter.footprint.depth / 2
 const aimedVesselAwayFromTheWallsMetres = 0.05
 const aimedVesselReachBehindItsSpoutMetres = 0.3
 
-test('bowlOpening_whenTappedWithTheKettleChosen_isAimedAtWithoutPouring', () => {
+test('bowl_whenPourFromTheKettleIsChosen_isAimedAtWithoutPouring', () => {
   const room = new TestRoom()
   room.bringABowlToTheCounterAndTakeTheKettle()
-  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'item', itemId: 'bowl1' })
 
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.choose('pourInto', 'kettle', 'bowl')
 
   assert.equal(room.playerController.aimedPourView?.targetId, 'bowl1')
   assert.equal(room.state.pour, null)
@@ -124,15 +124,6 @@ test('pourAim_whenDone_endsWithTheKettleStillInHand', () => {
   assert.equal(itemIdsInTheHands(room.state)[0], 'kettle')
 })
 
-test('pourAim_whenDone_leavesNoHandChosen', () => {
-  const room = new TestRoom()
-  aimTheKettleAtTheBowl(room)
-
-  room.playerController.pourDone()
-
-  assert.equal(room.playerController.chosenHandIndex, null)
-})
-
 test('tiltRelease_afterTheAimEndedWhileTheTiltWasHeld_isNotRefused', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
@@ -156,7 +147,7 @@ test('kettle_whenASurfaceIsTappedWhileAiming_isPutDownThere', () => {
   assert.deepEqual(withoutTheTurn(room.state.vessels['kettle']?.location), { kind: 'onSurface', spot: { placeId: 'counter', ...counterLeftOfTheHeater } })
 })
 
-test('kettle_whenASpotTakenByTheBowlIsTappedWhileAiming_returnsToItsHandThatIsNoLongerChosen', () => {
+test('kettle_whenASpotTakenByTheBowlIsTappedWhileAiming_returnsToItsHand', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
@@ -164,7 +155,6 @@ test('kettle_whenASpotTakenByTheBowlIsTappedWhileAiming_returnsToItsHandThatIsNo
 
   assert.equal(room.playerController.aimedPourView, null)
   assert.equal(itemIdsInTheHands(room.state)[0], 'kettle')
-  assert.equal(room.playerController.chosenHandIndex, null)
 })
 
 test('kettle_whenTheEmptySinkIsTappedWhileAiming_goesIntoTheSink', () => {
@@ -177,7 +167,7 @@ test('kettle_whenTheEmptySinkIsTappedWhileAiming_goesIntoTheSink', () => {
   assert.equal(room.state.vessels['kettle']?.location.kind, 'inTheSink')
 })
 
-test('bowl_whenItsOpeningIsTappedWhileAiming_isTakenIntoAChosenHandWhileTheKettleGoesBackToItsHand', () => {
+test('bowl_whenItsOpeningIsTappedWhileAiming_isTakenIntoAHandWhileTheKettleGoesBackToItsHand', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
@@ -186,17 +176,16 @@ test('bowl_whenItsOpeningIsTappedWhileAiming_isTakenIntoAChosenHandWhileTheKettl
   const hands = itemIdsInTheHands(room.state)
   assert.equal(room.playerController.aimedPourView, null)
   assert.ok(hands.includes('kettle') && hands.includes('bowl1'), `the hands hold ${hands.join(', ')}`)
-  assert.equal(room.playerController.chosenHandIndex, hands.indexOf('bowl1'))
 })
 
-test('thermos_whenItsOpeningIsTappedWhileAiming_staysAndTheKettleGoesBackToItsHand', () => {
+test('thermos_whenItsOpeningIsTappedWhileAiming_isTakenAndTheKettleGoesBackToItsHand', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
   room.playerController.aimingTapped({ kind: 'opening', itemId: 'thermos' })
 
   assert.equal(room.playerController.aimedPourView, null)
-  assert.deepEqual(itemIdsInTheHands(room.state).filter((itemId) => itemId !== null), ['kettle'])
+  assert.deepEqual(itemIdsInTheHands(room.state).filter((itemId) => itemId !== null), ['kettle', 'thermos'])
 })
 
 test('kettle_whenTheBowlIsTappedWhileAiming_returnsToItsHand', () => {
@@ -215,9 +204,9 @@ test('pour_whenAimedAtABowlOnTheShelf_startsStraightLeftOfItOnTheScreenAndOverTh
   room.testSession.doWithoutARefusal({ type: 'pickUp', itemId: 'kettle' })
   room.fillInTheSink('kettle')
   room.walkTo('shelf')
-  room.tap({ kind: 'hand', handIndex: 0 })
+  room.tap({ kind: 'item', itemId: 'bowl1' })
 
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.choose('pourInto')
 
   const spout = room.playerController.aimedPourView?.spout ?? { x: Number.NaN, z: Number.NaN }
   const bowl = spotOf(room, 'bowl1')
@@ -299,8 +288,7 @@ test('pour_whenTheSpoutMovesOverBowlsOnTwoShelfBoards_staysOnTheBoardOfItsTarget
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
   room.fillInTheSink('kettle')
   room.walkTo('shelf')
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'opening', itemId: 'bowl5' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl5' }, 'pourInto')
 
   moveTheSpoutOver(room, spotOf(room, 'bowl4'))
 
@@ -338,75 +326,86 @@ test('thermosLid_whenTappedWhileAiming_closesAndKeepsTheAim', () => {
   assert.equal(room.playerController.aimedPourView?.sourceId, 'thermos')
 })
 
-test('kettleLid_whenTappedWithTheClosedThermosChosen_opensBothLidsAndAimsAtTheKettle', () => {
+test('kettle_whenPourFromTheClosedThermosIsChosen_opensBothLidsAndIsAimedAt', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
   room.fillInTheSink('thermos')
-  room.tap({ kind: 'hand', handIndex: 0 })
+  room.session.dispatch({ type: 'closeVesselLid', vesselId: 'thermos' })
+  room.tap({ kind: 'item', itemId: 'kettle' })
 
-  room.tap({ kind: 'lid', itemId: 'kettle' })
+  room.choose('pourInto', 'thermos', 'kettle')
 
   assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
   assert.equal(room.state.vessels['kettle']?.isLidOpen, true)
   assert.equal(room.playerController.aimedPourView?.targetId, 'kettle')
 })
 
-test('thermosLid_whenTappedAfterATapOnTheLidOfTheKettleInHand_isAimedAtAndTheThermosIsNotTaken', () => {
+test('closedLidOfTheKettleInHand_whenTapped_opensTheHandsMenuWithOpeningTheLid', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
-  room.fillInTheSink('kettle')
-  room.session.dispatch({ type: 'closeVesselLid', vesselId: 'kettle' })
+
   room.tap({ kind: 'lid', itemId: 'kettle' })
 
-  room.tap({ kind: 'lid', itemId: 'thermos' })
-
-  assert.equal(room.playerController.aimedPourView?.targetId, 'thermos')
-  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', null, null])
+  assert.deepEqual({ isLidOpen: room.state.vessels['kettle']?.isLidOpen, actions: room.actionsOffered() }, { isLidOpen: false, actions: ['putAway kettle', 'openTheLid kettle'] })
 })
 
-test('kettleLid_whenTappedWithTheEmptyThermosChosen_isAimedAtAndTheKettleIsNotTaken', () => {
+test('openLidOfTheKettleInHand_whenTapped_closesWithNoMenu', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
 
   room.tap({ kind: 'lid', itemId: 'kettle' })
 
-  assert.equal(room.playerController.aimedPourView?.targetId, 'kettle')
-  assert.deepEqual(itemIdsInTheHands(room.state), ['thermos', null, null])
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
-test('kettleOpening_whenTappedWithTheClosedThermosChosenAndTheKettleOpen_opensTheThermosAndIsAimedAt', () => {
+test('closedKettleLid_whenTappedWithTheThermosInHand_opensTheKettlesMenuAndAimsNothing', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.take('thermos')
+
+  room.tap({ kind: 'lid', itemId: 'kettle' })
+
+  assert.deepEqual(room.actionsOffered(), ['take kettle', 'putAway kettle', 'openTheLid kettle', 'pourInto thermos kettle'])
+  assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
+  assert.equal(room.playerController.aimedPourView, null)
+  assert.deepEqual(itemIdsInTheHands(room.state), ['thermos', null])
+})
+
+test('kettleOpening_whenPourFromTheClosedThermosIsChosen_opensTheThermosAndIsAimedAt', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.take('thermos')
 
-  room.tap({ kind: 'opening', itemId: 'kettle' })
+  room.tapAndChoose({ kind: 'opening', itemId: 'kettle' }, 'pourInto', 'thermos', 'kettle')
 
   assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
   assert.equal(room.playerController.aimedPourView?.targetId, 'kettle')
 })
 
-test('kettle_whenItsBodyIsTappedWithTheThermosChosen_isTakenIntoTheOtherHand', () => {
+test('kettle_whenTakenWithTheThermosInHand_goesIntoTheOtherHand', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.take('thermos')
 
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tapAndChoose({ kind: 'item', itemId: 'kettle' }, 'take')
 
   assert.equal(room.playerController.aimedPourView, null)
-  assert.deepEqual(itemIdsInTheHands(room.state), ['thermos', 'kettle', null])
+  assert.deepEqual(itemIdsInTheHands(room.state), ['thermos', 'kettle'])
 })
 
-test('bowlOpening_whenTappedAfterWalkingToTheShelfWithTheThermosChosen_isAimedAt', () => {
+test('bowl_whenPourFromTheThermosIsChosenAfterWalkingToTheShelf_isAimedAt', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.take('thermos')
   room.walkTo('shelf')
 
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto', 'thermos', 'bowl')
 
   assert.equal(room.playerController.aimedPourView?.targetId, 'bowl1')
 })
@@ -416,8 +415,8 @@ test('pour_fromTheClosedThermosIntoTheClosedKettle_starts', () => {
   room.walkTo('counter')
   room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
   room.fillInTheSink('thermos')
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'lid', itemId: 'kettle' })
+  room.session.dispatch({ type: 'closeVesselLid', vesselId: 'thermos' })
+  room.tapAndChoose({ kind: 'item', itemId: 'kettle' }, 'pourInto', 'thermos', 'kettle')
 
   room.playerController.tiltPressed()
   room.advance(2)
@@ -431,9 +430,8 @@ test('kettleLid_whenTheKettleIsAimedAtTheClosedThermos_staysClosedWhileTheThermo
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
   room.fillInTheSink('kettle')
   room.session.dispatch({ type: 'closeVesselLid', vesselId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'lid', itemId: 'thermos' })
+  room.tapAndChoose({ kind: 'item', itemId: 'thermos' }, 'pourInto', 'kettle', 'thermos')
 
   assert.equal(room.state.vessels['kettle']?.isLidOpen, false)
   assert.equal(room.state.vessels['thermos']?.isLidOpen, true)
@@ -444,8 +442,8 @@ test('emptyThermos_whenTheTiltIsHeldOverABowl_tiltsAndPoursNothing', () => {
   room.carryFromTheShelf('bowl1')
   room.walkTo('counter')
   room.putDown(0, onTheCounter)
-  room.tap({ kind: 'item', itemId: 'thermos' })
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.take('thermos')
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto', 'thermos', 'bowl')
 
   room.playerController.tiltPressed()
   room.advance(1)
@@ -521,7 +519,7 @@ test('aimingFinger_whenLiftedWithoutMoving_putsTheKettleDownWhereItTouched', () 
   assert.deepEqual(withoutTheTurn(room.state.vessels['kettle']?.location), { kind: 'onSurface', spot: { placeId: 'counter', ...counterLeftOfTheHeater } })
 })
 
-test('aimingFinger_whenTheBrowserCancelsIt_returnsTheKettleToItsHandThatIsNoLongerChosen', () => {
+test('aimingFinger_whenTheBrowserCancelsIt_returnsTheKettleToItsHand', () => {
   const room = roomWithAScreen()
   aimTheKettleAtTheBowl(room)
   room.touchInput.fingerDown(1, onTheCounterLeftOfTheHeater)
@@ -530,16 +528,15 @@ test('aimingFinger_whenTheBrowserCancelsIt_returnsTheKettleToItsHandThatIsNoLong
 
   assert.equal(room.playerController.aimedPourView, null)
   assert.equal(itemIdsInTheHands(room.state)[0], 'kettle')
-  assert.equal(room.playerController.chosenHandIndex, null)
 })
 
-test('handKey_whileAPourIsAimed_leavesTheHandOfTheAimedVesselChosen', () => {
+test('handKey_whileAPourIsAimed_opensNoMenuAndKeepsTheAim', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
   room.playerController.handKeyTapped(1)
 
-  assert.equal(room.playerController.chosenHandIndex, 0)
+  assert.equal(room.playerController.actionMenuView, null)
   assert.equal(room.playerController.aimedPourView?.sourceId, 'kettle')
 })
 
@@ -575,8 +572,7 @@ function aimTheKettleAtTheFirstOfTwoBowls(room: TestRoom): void {
   room.putDown(1, onTheCounterBesideTheBowl)
   room.session.dispatch({ type: 'pickUp', itemId: 'kettle' })
   room.fillInTheSink('kettle')
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto')
 }
 
 function aimTheClosedThermosAtTheBowl(room: TestRoom): void {
@@ -585,14 +581,12 @@ function aimTheClosedThermosAtTheBowl(room: TestRoom): void {
   room.putDown(0, onTheCounter)
   room.session.dispatch({ type: 'pickUp', itemId: 'thermos' })
   room.fillInTheSink('thermos')
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto')
 }
 
 function aimTheKettleAtTheBowl(room: TestRoom): void {
   room.bringABowlToTheCounterAndTakeTheKettle()
-  room.tap({ kind: 'hand', handIndex: 0 })
-  room.tap({ kind: 'opening', itemId: 'bowl1' })
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto')
 }
 
 function moveTheSpoutOver(room: TestRoom, point: FloorPoint): void {

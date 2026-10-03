@@ -2,6 +2,7 @@ import { text, textWith, type TextKey } from '../../../Texts/Texts.ts'
 import { playTimeShownFor } from '../../../../Engine/PlayTime.ts'
 import { controlSchemes, stickLayouts } from '../../../../Engine/Camera/FirstPersonControls.ts'
 import { cameraModes, coatColours, faceFeatures, objectDetails, type CoatColour, type RoomSettingName, type RoomSettings } from '../../RoomSettings.ts'
+import { soundLoudnesses } from '../../SoundLoudness.ts'
 import { temperatureUnits } from '../../Temperatures.ts'
 import { button, choiceRow, pageElement, SheetOverTheScene, toggleRow, type ChoiceLook } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
@@ -36,6 +37,8 @@ const swatches: ChoiceLook<CoatColour> = {
 export const settingsScreenRows: readonly RowOnTheScreen[] = [
   heading('h2', 'settings.title'),
   toggle('areAchievementsShown', 'settings.showAchievements'),
+  heading('h3', 'settings.sound'),
+  choice('soundLoudness', soundLoudnesses, buttons((loudness) => `settings.sound.${loudness}`)),
   heading('h3', 'settings.coatColour'),
   choice('coatColour', coatColours, swatches),
   heading('h3', 'settings.face'),

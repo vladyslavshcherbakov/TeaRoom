@@ -17,6 +17,7 @@ import type { CarriedItemsScene } from '../../../Apps/Game/Room/Rendering/Carrie
 import { newCarriedModel, tagForTaps, type CarriedModel } from '../../../Apps/Game/Room/Rendering/Carried/CarriedModel.ts'
 import { showContentsOf } from '../../../Apps/Game/Room/Rendering/Carried/ItemContents.ts'
 import { handAreaOnTheScreen, holdInView, placeTheHandsAreaOnTheScreen } from '../../../Apps/Game/Room/Rendering/Carried/Hands/HeldInView.ts'
+import { inventoryAreaOnTheScreen, inventorySlots, keepInTheInventory, placeTheInventoryAreaOnTheScreen } from '../../../Apps/Game/Room/Rendering/Carried/Hands/InventoryInView.ts'
 import { screenPointThatTapsTheTarget, tapTargetUnderTheFinger, touchablesUnderTheFinger, type TappablePass } from '../../../Apps/Game/Room/Rendering/TapTargetUnderTheFinger.ts'
 import type { ItemSetUp } from '../../../Apps/Game/Room/Rendering/Carried/ItemParts.ts'
 import type { SurfaceMaterials } from '../../../Apps/Game/Room/Rendering/RoomMaterials.ts'
@@ -24,7 +25,7 @@ import { WallThings } from '../../../Apps/Game/Room/Rendering/WallThings.ts'
 import { worldViewState } from '../../../Apps/Game/Presentation/WorldPresenter.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { definitionIn } from '../../../Shared/Engine/Catalog.ts'
-import { carriedItemIdsIn, itemLocationIn, middleHandIndex } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
+import { carriedItemIdsIn, itemLocationIn } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
 import type { DeepReadonly } from '../../../Shared/Engine/DeepReadonly.ts'
 import type { HandIndex, SessionState } from '../../../Shared/GameLogic/State/SessionState.ts'
 import { TestTeaSession } from '../../Support/TestTeaSession.ts'
@@ -50,11 +51,11 @@ const cornerInsideTheAreaPixels = 1
 const roundingPixels = 0.001
 const fingertipPixels = 44
 const quietRoomSurroundings = { layout: quietRoomLayout, heaterSpot: definitionIn(defaultCatalog, 'rooms', 'quietRoom').heaterSpot }
-const everyHandIndex: readonly HandIndex[] = [0, 1, middleHandIndex]
+const everyHandIndex: readonly HandIndex[] = [0, 1]
 const everyZoom = [nearestDistanceShare, farthestDistanceShare]
 const everyViewKind: readonly ViewKind[] = ['room view', 'close-up', 'first person']
 const screenHeightShareTakenBySticks = 0.34
-const nobodyChosen = { handIndex: null, doesATapReachPastIt: (): boolean => false }
+const noActionsBehindTheHands = (): boolean => false
 
 test('standingItem_everyOneInTheRoomViewACloseUpAndFirstPersonAtEitherZoom_isReachedAnywhereWithin22PixelsOfItsMiddle', () => {
   for (const item of standingItemsOfTheQuietRoom()) {
@@ -77,7 +78,7 @@ test('heldItem_everyOneInEveryHandInACloseUpOrFirstPerson_isReachedThroughItsHan
 
   for (const itemId of carriedItemIdsOfTheQuietRoom()) {
     for (const handIndex of everyHandIndex) {
-      for (const heldInView of [{ camera, chosenHandIndex: null, isFirstPerson: false, screenHeightShareTakenByControls: 0 }, { camera, chosenHandIndex: null, isFirstPerson: true, screenHeightShareTakenByControls: screenHeightShareTakenBySticks }]) {
+      for (const heldInView of [{ camera, isFirstPerson: false, screenHeightShareTakenByControls: 0 }, { camera, isFirstPerson: true, screenHeightShareTakenByControls: screenHeightShareTakenBySticks }]) {
         const model = modelWithItsContents(itemId)
         tagForTaps(model, { kind: 'hand', handIndex })
         holdInView(model, handIndex, heldInView)
@@ -93,11 +94,49 @@ test('heldItem_everyOneInEveryHandInACloseUpOrFirstPerson_isReachedThroughItsHan
   }
 })
 
+test('handArea_aFifthOfTheScreenBesideTheHeldSpoon_letsATapOnNothingThrough', () => {
+  const camera = cameraAt({ position: { x: 0, y: 1, z: 1 }, target: { x: 0, y: 1, z: 0 } }, cameraFieldOfViewDegrees)
+  const heldInView = { camera, isFirstPerson: false, screenHeightShareTakenByControls: 0 }
+  const spoon = modelWithItsContents('spoon')
+  tagForTaps(spoon, { kind: 'hand', handIndex: 0 })
+  holdInView(spoon, 0, heldInView)
+  const handArea = handAreaOnTheScreen(0)
+  placeTheHandsAreaOnTheScreen(handArea, 0, heldInView)
+  const pass: TappablePass = { camera, tappable: [spoon.root], areasOnTheScreen: [handArea], isDrawnOverTheScene: true }
+  const middleOfTheSpoon = middleOnTheScreenOf(spoon.root, camera)
+  if (middleOfTheSpoon === null) throw new Error('the held spoon is not on the screen')
+
+  const reach = tapTargetUnderTheFinger({ x: middleOfTheSpoon.x + smallestPhoneScreen.width / 5, y: middleOfTheSpoon.y }, smallestPhoneScreen, [pass], noActionsBehindTheHands)
+
+  assert.equal(reach.target.kind, 'nothing')
+})
+
+test('inventoryItem_everyOneInEitherPlaceInEveryView_isReachedThroughItsAreaAtLeast44PixelsWideAndHigh', () => {
+  const camera = cameraAt({ position: { x: 0, y: 1, z: 1 }, target: { x: 0, y: 1, z: 0 } }, cameraFieldOfViewDegrees)
+
+  for (const itemId of carriedItemIdsOfTheQuietRoom()) {
+    for (const slotIndex of inventorySlots) {
+      for (const inventoryInView of [{ camera, isFirstPerson: false, screenHeightShareTakenByControls: 0 }, { camera, isFirstPerson: true, screenHeightShareTakenByControls: screenHeightShareTakenBySticks }]) {
+        const model = modelWithItsContents(itemId)
+        tagForTaps(model, { kind: 'inventorySlot', slotIndex })
+        keepInTheInventory(model, slotIndex, inventoryInView)
+        const inventoryArea = inventoryAreaOnTheScreen(slotIndex)
+        placeTheInventoryAreaOnTheScreen(inventoryArea, slotIndex, inventoryInView)
+        const pass: TappablePass = { camera, tappable: [model.root], areasOnTheScreen: [inventoryArea], isDrawnOverTheScene: true }
+
+        const area = areaWhereATapReaches(pass, middleOnTheScreenOf(model.root, camera), [{ kind: 'inventorySlot', slotIndex }])
+
+        assert.ok(area !== null && isAtLeastAFingertip(area), `${itemId} in place ${slotIndex} of the inventory, ${inventoryInView.isFirstPerson ? 'first person' : 'close-up'}: ${describe(area)}`)
+      }
+    }
+  }
+})
+
 test('screenPointOfATarget_whenANearerThingCoversItsMiddle_isAPointWhereATapReachesIt', () => {
   const faucet = tappableBox({ kind: 'faucet' }, { width: 0.4, height: 0.4 }, 0)
   const lidInFront = tappableBox({ kind: 'lid', itemId: 'thermos' }, { width: 0.15, height: 0.15 }, 0.3)
   const pass: TappablePass = { camera: cameraAt({ position: { x: 0, y: 0, z: 2 }, target: { x: 0, y: 0, z: 0 } }, cameraFieldOfViewDegrees), tappable: [faucet, lidInFront], areasOnTheScreen: [], isDrawnOverTheScene: false }
-  const targetTappedAt = (point: { readonly x: number; readonly y: number }): TapTarget => tapTargetUnderTheFinger(point, smallestPhoneScreen, [pass], nobodyChosen).target
+  const targetTappedAt = (point: { readonly x: number; readonly y: number }): TapTarget => tapTargetUnderTheFinger(point, smallestPhoneScreen, [pass], noActionsBehindTheHands).target
 
   const pointOfTheFaucet = screenPointThatTapsTheTarget({ kind: 'faucet' }, [pass], smallestPhoneScreen, targetTappedAt)
 
@@ -113,7 +152,7 @@ test('thingInTheRoom_whenOnlyItsBoxOnTheScreenHoldsTheFinger_givesWayToWhatTheFi
   const pass: TappablePass = { camera: cameraAt({ position: { x: 0, y: 0, z: 2 }, target: { x: 0, y: 0, z: 0 } }, cameraFieldOfViewDegrees), tappable: [barAcrossTheScreen, wallBehind], areasOnTheScreen: [], isDrawnOverTheScene: false }
   const topLeftOfTheBar = screenPointOf(new THREE.Vector3(-0.2, 0.2, 0), pass.camera)
 
-  const reach = tapTargetUnderTheFinger(topLeftOfTheBar, smallestPhoneScreen, [pass], nobodyChosen)
+  const reach = tapTargetUnderTheFinger(topLeftOfTheBar, smallestPhoneScreen, [pass], noActionsBehindTheHands)
 
   assert.equal(reach.target.kind, 'floor')
 })
@@ -126,7 +165,7 @@ test('thingInTheRoom_whenTheFingerTouchesAPlaceWellInFrontOfIt_givesWayToThatPla
   const pass: TappablePass = { camera: cameraAt({ position: { x: 0, y: 0, z: 2 }, target: { x: 0, y: 0, z: 0 } }, cameraFieldOfViewDegrees), tappable: [book, counterInFront], areasOnTheScreen: [], isDrawnOverTheScene: false }
   const justBelowTheBook = { x: smallestPhoneScreen.width / 2, y: smallestPhoneScreen.height / 2 + 19 }
 
-  const reach = tapTargetUnderTheFinger(justBelowTheBook, smallestPhoneScreen, [pass], nobodyChosen)
+  const reach = tapTargetUnderTheFinger(justBelowTheBook, smallestPhoneScreen, [pass], noActionsBehindTheHands)
 
   assert.equal(reach.target.kind, 'floor')
 })
@@ -139,7 +178,7 @@ test('thingInTheRoom_whenTheFingerTouchesAPlaceRightInFrontOfIt_isReached', () =
   const pass: TappablePass = { camera: cameraAt({ position: { x: 0, y: 0, z: 2 }, target: { x: 0, y: 0, z: 0 } }, cameraFieldOfViewDegrees), tappable: [book, counterUnderIt], areasOnTheScreen: [], isDrawnOverTheScene: false }
   const justBelowTheBook = { x: smallestPhoneScreen.width / 2, y: smallestPhoneScreen.height / 2 + 19 }
 
-  const reach = tapTargetUnderTheFinger(justBelowTheBook, smallestPhoneScreen, [pass], nobodyChosen)
+  const reach = tapTargetUnderTheFinger(justBelowTheBook, smallestPhoneScreen, [pass], noActionsBehindTheHands)
 
   assert.deepEqual({ target: reach.target, touched: reach.touched.kind }, { target: { kind: 'guideBook' }, touched: 'floor' })
 })
@@ -191,7 +230,7 @@ function isReachedAtEveryCornerOf(area: ScreenBox, pass: TappablePass, targetsOf
     { x: area.left + cornerInsideTheAreaPixels, y: area.bottom - cornerInsideTheAreaPixels },
     { x: area.right - cornerInsideTheAreaPixels, y: area.bottom - cornerInsideTheAreaPixels },
   ]
-  return corners.every((corner) => targetsOfItsParts.some((target) => isDeepStrictEqual(tapTargetUnderTheFinger(corner, smallestPhoneScreen, [pass], nobodyChosen).target, target)))
+  return corners.every((corner) => targetsOfItsParts.some((target) => isDeepStrictEqual(tapTargetUnderTheFinger(corner, smallestPhoneScreen, [pass], noActionsBehindTheHands).target, target)))
 }
 
 function isAtLeastAFingertip(area: ScreenBox): boolean {
@@ -279,7 +318,7 @@ function modelWithItsContents(itemId: string): CarriedModel {
 }
 
 function sceneOf(state: DeepReadonly<SessionState>): CarriedItemsScene {
-  return { state, view: worldViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inspected: null, aimedPour: null, clothWiping: null, sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
+  return { state, view: worldViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inventoryInView: { camera: new THREE.PerspectiveCamera(), isFirstPerson: false, screenHeightShareTakenByControls: 0 }, inspected: null, aimedPour: null, clothWiping: null, sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
 }
 
 function carriedItemIdsOfTheQuietRoom(): string[] {

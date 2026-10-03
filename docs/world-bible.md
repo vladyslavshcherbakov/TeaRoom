@@ -459,11 +459,11 @@ Lines the game may show. Each one is small, dry and appears rarely.
 - "The fish ask to pass on that the tea was lovely."
 - "The bear says it only came to sit with you. But thank you for the tea."
 - "Somehow the tea is cold. I wonder why."
-- "Sure, let it burn. We will just buy another house, as we always do."
-- "Magic sink! The burn is gone. I'm never leaving."
-- "Poor little spoon. It scooped so faithfully, and now it is a pinch of ash. 😭"
-- "Who would have thought this would become the most popular feature of the tea room."
-- "The next tea delivery is a week away. Enjoy your hot water until then."
+- "Oh, let it burn. We'll just buy another house, as we always do."
+- "A magic sink! The burn is gone. I'm never leaving, and neither is the sink."
+- "Poor little spoon. It served faithfully, never asked for anything, and now it is a pinch of ash. 😭"
+- "Who knew the heater would become the most popular attraction in the tea room."
+- "The next tea delivery is a week away. Enjoy your hot water. It's very traditional, in its way."
 - "YOU DIED." Under it: "Gone today, strong to the end, like their tea. In lieu of flowers, please send a smaller caddy."
 
 ## How the world remembers

@@ -11,6 +11,7 @@ import itemPickedUpUrl from './item-picked-up.webm'
 import itemPutDownUrl from './item-put-down.webm'
 import debugMenuUrl from './debug-menu.webm'
 import kettleWhistleUrl from './kettle-whistle.webm'
+import leavesRustlingUrl from './leaves-rustling.webm'
 import metalTooHotUrl from './metal-too-hot.webm'
 import pageTurnUrl from './page-turn.webm'
 import playerDiedUrl from './player-died.webm'
@@ -24,6 +25,8 @@ const fullLoudness = 1
 const backgroundLoudness = 0.1
 const kettleWhistleLoudness = 0.5
 const metalTooHotLoudness = 0.18
+const quietLoudness = 0.3
+const itemPutDownLoudness = 0.6
 
 export const roomSoundFiles: Readonly<Record<RoomSound, SoundFile>> = {
   backgroundBirds: { url: backgroundBirdsUrl, gain: backgroundLoudness, playing: { kind: 'streamedAndLooped', crossfadeSeconds: 3, fadeInSeconds: 2, fadeOutSeconds: 1 } },
@@ -36,13 +39,14 @@ export const roomSoundFiles: Readonly<Record<RoomSound, SoundFile>> = {
   sip: { url: sipUrl, gain: fullLoudness, playing: { kind: 'once' } },
   achievement: { url: achievementUrl, gain: fullLoudness, playing: { kind: 'once' } },
   settingsGear: { url: settingsGearUrl, gain: fullLoudness, playing: { kind: 'once' } },
-  buttonClick: { url: buttonClickUrl, gain: fullLoudness, playing: { kind: 'once' } },
+  buttonClick: { url: buttonClickUrl, gain: quietLoudness, playing: { kind: 'once' } },
   debugMenu: { url: debugMenuUrl, gain: fullLoudness, playing: { kind: 'once' } },
   pageTurn: { url: pageTurnUrl, gain: fullLoudness, playing: { kind: 'once' } },
   closeUpWhoosh: { url: closeUpWhooshUrl, gain: fullLoudness, playing: { kind: 'once' } },
   metalTooHot: { url: metalTooHotUrl, gain: metalTooHotLoudness, playing: { kind: 'once' } },
   playerDied: { url: playerDiedUrl, gain: fullLoudness, playing: { kind: 'once' } },
-  itemPickedUp: { url: itemPickedUpUrl, gain: fullLoudness, playing: { kind: 'once' } },
-  itemPutDown: { url: itemPutDownUrl, gain: fullLoudness, playing: { kind: 'once' } },
+  leavesRustling: { url: leavesRustlingUrl, gain: fullLoudness, playing: { kind: 'once' } },
+  itemPickedUp: { url: itemPickedUpUrl, gain: quietLoudness, playing: { kind: 'once' } },
+  itemPutDown: { url: itemPutDownUrl, gain: itemPutDownLoudness, playing: { kind: 'once' } },
   spoonCrumbling: { url: spoonCrumblingUrl, gain: fullLoudness, playing: { kind: 'once' } },
 }

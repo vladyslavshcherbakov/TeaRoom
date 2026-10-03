@@ -9,31 +9,58 @@ import { itemIdsInTheHands } from '../../../Shared/GameLogic/State/WhereItemsAre
 const onTheTeaTableAwayFromTheTeaThings = onTopOf('teaTable', -0.5, -0.25)
 const bowlCapacityMl = definitionIn(defaultCatalog, 'vessels', 'teaBowl').capacityMl
 
-test('sipButton_whenTheKettleIsPickedUp_isNotOffered', () => {
+test('handMenu_ofTheKettle_offersNoSip', () => {
   const room = new TestRoom()
   room.walkTo('counter')
+  room.take('kettle')
 
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tap({ kind: 'hand', handIndex: 0 })
 
-  assert.equal(room.playerController.chosenHandIndex, 0)
-  assert.equal(room.playerController.sippableCupId, null)
+  assert.deepEqual(room.actionsOffered(), ['putAway kettle', 'openTheLid kettle'])
 })
 
-test('sipButton_whenTheChosenBowlIsEmpty_isNotOffered', () => {
+test('handMenu_ofAnEmptyBowl_offersNoSip', () => {
   const room = new TestRoom()
   room.carryFromTheShelf('bowl1')
 
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  assert.equal(room.playerController.sippableCupId, null)
+  assert.deepEqual(room.actionsOffered(), ['putAway bowl'])
 })
 
-test('sip_fromTheChosenBowlOfTea_takesFortyMillilitres', () => {
+test('handMenu_ofABowlOfTea_offersToSipFromIt', () => {
   const room = new TestRoom()
-  room.setTheTeaTable()
-  room.testSession.pour('kettle', 'bowl1', 4)
-  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
+  holdABowlOfTea(room)
+
   room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.deepEqual(room.actionsOffered(), ['putAway bowl', 'sip bowl'])
+})
+
+test('handMenu_ofAThermosOfWater_offersToSipFromIt', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.testSession.doWithoutARefusal({ type: 'pickUp', itemId: 'thermos' })
+  room.fillInTheSink('thermos')
+
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.ok(room.actionsOffered().includes('sip thermos'), room.actionsOffered().join(', '))
+})
+
+test('sip_chosenFromTheMenuOfABowlOfTea_takesFortyMillilitres', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
+  const volumeBeforeTheSip = room.state.vessels['bowl1']?.liquid.volumeMl ?? 0
+
+  room.tapAndChoose({ kind: 'hand', handIndex: 0 }, 'sip')
+
+  assertNear(room.state.vessels['bowl1']?.liquid.volumeMl ?? 0, volumeBeforeTheSip - 40)
+})
+
+test('sipKey_withABowlOfTeaInHand_sipsFromIt', () => {
+  const room = new TestRoom()
+  holdABowlOfTea(room)
   const volumeBeforeTheSip = room.state.vessels['bowl1']?.liquid.volumeMl ?? 0
 
   room.playerController.sipTapped()
@@ -73,23 +100,25 @@ test('sipGesture_afterOneAndAHalfSeconds_isOver', () => {
   assert.equal(room.playerController.sipGestureView, null)
 })
 
-test('sipButton_whileTheBowlIsAtTheLips_staysShown', () => {
+test('hand_whileTheBowlIsAtTheLips_opensNoMenu', () => {
   const room = new TestRoom()
   holdABowlOfTea(room)
-
   room.playerController.sipTapped()
 
-  assert.equal(room.buttonsShownInTheRoomView().sip, true)
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
-test('sipButton_afterTheBowlIsLoweredFromASip_isOfferedAgain', () => {
+test('handMenu_afterTheBowlIsLoweredFromASip_offersTheSipAgain', () => {
   const room = new TestRoom()
   holdABowlOfTea(room)
   room.playerController.sipTapped()
-
   room.advance(1.6)
 
-  assert.equal(room.buttonsShownInTheRoomView().sip, true)
+  room.tap({ kind: 'hand', handIndex: 0 })
+
+  assert.ok(room.actionsOffered().includes('sip bowl'), room.actionsOffered().join(', '))
 })
 
 test('secondSip_whileTheBowlIsStillAtTheLips_drinksNothing', () => {
@@ -113,38 +142,25 @@ test('tapOnTheTeaTable_whileTheBowlIsAtTheLips_leavesTheBowlInTheHand', () => {
   assert.equal(itemIdsInTheHands(room.state)[0], 'bowl1')
 })
 
-test('handKey_whileTheBowlIsAtTheLips_leavesTheBowlChosen', () => {
+test('handKey_whileTheBowlIsAtTheLips_opensNoMenu', () => {
   const room = new TestRoom()
   holdABowlOfTea(room)
   room.playerController.sipTapped()
 
   room.playerController.handKeyTapped(0)
 
-  assert.equal(room.playerController.chosenHandIndex, 0)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
-test('figurine_whenTappedWithABowlOfTeaChosen_isOfferedIt', () => {
+test('figurine_whenTappedWithABowlOfTeaInHandAtTheTeaTable_takesNoTeaAndIsBarkedOn', () => {
   const room = new TestRoom()
-  room.setTheTeaTable()
-  room.testSession.pour('kettle', 'bowl1', 4)
-  room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
-  room.tap({ kind: 'hand', handIndex: 0 })
+  holdABowlOfTea(room)
+  const teaBeforeTheTap = room.state.vessels['bowl1']?.liquid.volumeMl
 
   room.tap({ kind: 'figurine', figurineId: 'dragon' })
 
-  assert.equal(room.state.figurines['dragon']?.wasOfferedTeaThisRitual, true)
-})
-
-test('offering_whenTheChosenBowlIsEmpty_isRefusedAndTheBowlStaysChosen', () => {
-  const room = new TestRoom()
-  room.carryFromTheShelf('bowl1')
-  room.walkTo('teaTable')
-  room.tap({ kind: 'hand', handIndex: 0 })
-
-  room.tap({ kind: 'figurine', figurineId: 'dragon' })
-
-  assert.equal(room.state.figurines['dragon']?.wasOfferedTeaThisRitual, false)
-  assert.equal(room.playerController.chosenHandIndex, 0)
+  assert.equal(room.state.vessels['bowl1']?.liquid.volumeMl, teaBeforeTheTap)
+  assert.deepEqual(room.barks, [{ kind: 'sillIsTheRoomsOwn', timesMade: 1 }])
 })
 
 test('figurine_whenTappedAwayFromTheTeaTable_leavesThePlayerWhereTheyStand', () => {
@@ -186,15 +202,14 @@ test('player_whoDied_forgetsTheVisitAndSavesItNoMore', () => {
   assert.deepEqual({ forgotten: room.visitsForgotten, saved: room.savedVisits }, { forgotten: 1, saved: 0 })
 })
 
-test('handKey_afterThePlayerDied_leavesTheHandsAsTheyWere', () => {
+test('handKey_afterThePlayerDied_opensNoMenu', () => {
   const room = new TestRoom()
   holdTheCaddyWithHotWaterPouredOntoItsLeaves(room)
-  const chosenHandIndexAtTheSip = room.playerController.chosenHandIndex
   room.playerController.sipTapped()
 
-  room.playerController.handKeyTapped(chosenHandIndexAtTheSip ?? 0)
+  room.playerController.handKeyTapped(0)
 
-  assert.equal(room.playerController.chosenHandIndex, chosenHandIndexAtTheSip)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
 test('tapOnTheTap_afterThePlayerDied_leavesTheWaterOff', () => {
@@ -222,7 +237,6 @@ function holdABowlOfTea(room: TestRoom): void {
   room.setTheTeaTable()
   room.testSession.pour('kettle', 'bowl1', 4)
   room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 }
 
 function holdTheCaddyWithHotWaterPouredOntoItsLeaves(room: TestRoom): void {
@@ -235,7 +249,6 @@ function holdTheCaddyWithHotWaterPouredOntoItsLeaves(room: TestRoom): void {
   room.testSession.heatKettleTo(90)
   room.testSession.pour('kettle', 'caddy', 4)
   room.session.dispatch({ type: 'pickUp', itemId: 'caddy' })
-  room.tap({ kind: 'hand', handIndex: itemIdsInTheHands(room.state)[0] === 'caddy' ? 0 : 1 })
 }
 
 function holdTheCaddyWithColdTapWater(room: TestRoom): void {
@@ -247,5 +260,4 @@ function holdTheCaddyWithColdTapWater(room: TestRoom): void {
   room.advance(4)
   room.session.dispatch({ type: 'turnTheTapOff' })
   room.session.dispatch({ type: 'pickUp', itemId: 'caddy' })
-  room.tap({ kind: 'hand', handIndex: itemIdsInTheHands(room.state)[0] === 'caddy' ? 0 : 1 })
 }

@@ -3,18 +3,20 @@ import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { Leaves } from '../Chemistry/Brewing.ts'
 import type { Liquid } from '../Chemistry/Liquid.ts'
 
-export type HandIndex = 0 | 1 | 2
+export type HandIndex = 0 | 1
+
+export type InventorySlot = 0 | 1
 
 export type ItemLocation =
   | { kind: 'onSurface'; spot: Spot }
   | { kind: 'onTheHeater'; spot: Spot }
   | { kind: 'inTheSink'; spot: Spot }
   | { kind: 'inHand'; handIndex: HandIndex }
+  | { kind: 'inTheInventory'; slotIndex: InventorySlot }
   | { kind: 'gone' }
 
 export type PlayerState = {
   placeId: string | null
-  hasAMiddleHand: boolean
 }
 
 export type VesselState = {
@@ -71,7 +73,12 @@ export type PourState = {
   hasRunDry: boolean
 }
 
+export const tapUses = ['fill', 'wash'] as const
+
+export type TapUse = (typeof tapUses)[number]
+
 export type RunningWaterState = {
+  use: TapUse
   openedAtSeconds: number
   drainedSinceOpenedMl: number
   filledMl: number
@@ -83,13 +90,7 @@ export type RunningWaterState = {
 
 export type SinkState = {
   runningWater: RunningWaterState | null
-  hasRunOverTheItemInside: boolean
-}
-
-export type FigurineState = {
-  id: string
-  satisfaction: number
-  wasOfferedTeaThisRitual: boolean
+  hasRinsedTheItemInside: boolean
 }
 
 export type PuddleState = {
@@ -110,7 +111,6 @@ export type SessionState = {
   cloths: Record<string, ClothState>
   pour: PourState | null
   sink: SinkState
-  figurines: Record<string, FigurineState>
   puddles: Record<string, PuddleState>
   puddlesSpilled: number
 }

@@ -16,7 +16,7 @@ type Probe = {
   readonly drawnResources: () => DrawnResources
 }
 
-const seedOfARoomWithTheCounterInTheBackWall = 13
+const seedOfARoomWithTheCounterInTheBackWall = 1476718547
 const lineAppearsWithinMilliseconds = 30_000
 const pollEveryMilliseconds = [50]
 const smallestDrawnScreenshotBytes = 20_000
@@ -48,6 +48,14 @@ export class RoomScenario {
     await page.addInitScript(({ seed, camera }) => {
       let randomState = seed
       Math.random = () => (randomState = (randomState * 16807) % 2147483647) / 2147483647
+      const browserWindow = globalThis as unknown as { requestAnimationFrame: (frame: (milliseconds: number) => void) => number }
+      const requestTheFrame = browserWindow.requestAnimationFrame.bind(browserWindow)
+      let isTheFirstFrameRequest = true
+      browserWindow.requestAnimationFrame = (frame) => {
+        if (isTheFirstFrameRequest) randomState = seed
+        isTheFirstFrameRequest = false
+        return requestTheFrame(frame)
+      }
       localStorage.setItem('settings', JSON.stringify({ cameraMode: camera, areAchievementsShown: true }))
       localStorage.setItem('debugSettings', JSON.stringify({ isTheWorldFast: true }))
     }, { seed: seedOfARoomWithTheCounterInTheBackWall, camera: cameraMode })

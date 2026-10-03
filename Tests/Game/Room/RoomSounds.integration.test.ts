@@ -23,7 +23,7 @@ test('soundsLasting_inARoomWhereNothingHappens_areTheBirdsAlone', () => {
 test('tapRunning_whileTheTapRuns_lasts', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
 
   room.tap({ kind: 'faucet' })
 
@@ -72,7 +72,7 @@ test('spoonCrumbling_whenTheBurningSpoonIsTaken_isHeard', () => {
   heatTheSpoonOnTheHeaterUntil(room, 'burning')
   const soundsBeforeTheAct = room.soundsStarted.length
 
-  room.tap({ kind: 'item', itemId: 'spoon' })
+  room.tapAndChoose({ kind: 'item', itemId: 'spoon' }, 'take')
 
   assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheAct), ['spoonCrumbling'])
 })
@@ -117,12 +117,13 @@ test('buttonClick_whenTheHeaterSwitchIsTapped_isHeard', () => {
   assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheAct), ['buttonClick'])
 })
 
-test('buttonClick_whenTheKettlesLidIsOpened_isHeard', () => {
+test('buttonClick_whenTheKettlesLidIsOpenedFromTheMenu_isHeard', () => {
   const room = new TestRoom()
   room.walkTo('counter')
+  room.tap({ kind: 'lid', itemId: 'kettle' })
   const soundsBeforeTheAct = room.soundsStarted.length
 
-  room.tap({ kind: 'lid', itemId: 'kettle' })
+  room.choose('openTheLid')
 
   assert.deepEqual({ isLidOpen: room.state.vessels['kettle']?.isLidOpen, sounds: room.soundsStarted.slice(soundsBeforeTheAct) }, { isLidOpen: true, sounds: ['buttonClick'] })
 })
@@ -130,10 +131,10 @@ test('buttonClick_whenTheKettlesLidIsOpened_isHeard', () => {
 test('itemPutDown_whenTheKettleIsPutOnTheHeater_isHeard', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
   const soundsBeforeTheTap = room.soundsStarted.length
 
-  room.tap({ kind: 'heater' })
+  room.tapAndChoose({ kind: 'heater' }, 'putOnTheHeater')
 
   assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheTap), ['itemPutDown'])
 })
@@ -143,20 +144,20 @@ test('itemPickedUp_whenTheKettleIsTakenFromTheCounter_isHeard', () => {
   room.walkTo('counter')
   const soundsBeforeTheAct = room.soundsStarted.length
 
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.tapAndChoose({ kind: 'item', itemId: 'kettle' }, 'take')
 
   assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheAct), ['itemPickedUp'])
 })
 
-test('buttonClick_whenTheHandHoldingTheKettleIsChosenAgain_isHeard', () => {
+test('menuOfTheHandHoldingTheKettle_whenItOpens_isSilent', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
   const soundsBeforeTheTap = room.soundsStarted.length
 
   room.tap({ kind: 'hand', handIndex: 0 })
 
-  assert.deepEqual({ chosenHand: room.playerController.chosenHandIndex, sounds: room.soundsStarted.slice(soundsBeforeTheTap) }, { chosenHand: null, sounds: ['buttonClick'] })
+  assert.deepEqual({ actions: room.actionsOffered(), sounds: room.soundsStarted.slice(soundsBeforeTheTap) }, { actions: ['putAway kettle', 'openTheLid kettle'], sounds: [] })
 })
 
 test('buttonClick_whenTheShownMedalIsTapped_isHeard', () => {
@@ -168,19 +169,19 @@ test('buttonClick_whenTheShownMedalIsTapped_isHeard', () => {
   assert.deepEqual(room.soundsStarted, ['buttonClick'])
 })
 
-test('buttonClick_whenTheLidOfTheKettleInTheHandThatIsNotChosenIsTapped_isHeardAsTheHandIsChosen', () => {
+test('buttonClick_whenTheOpenLidOfTheKettleInHandIsTapped_isHeardAsItCloses', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
+  room.take('kettle')
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
   const soundsBeforeTheTap = room.soundsStarted.length
 
   room.tap({ kind: 'lid', itemId: 'kettle' })
 
-  assert.deepEqual({ chosenHand: room.playerController.chosenHandIndex, isLidOpen: room.state.vessels['kettle']?.isLidOpen, sounds: room.soundsStarted.slice(soundsBeforeTheTap) }, { chosenHand: 0, isLidOpen: false, sounds: ['buttonClick'] })
+  assert.deepEqual({ isLidOpen: room.state.vessels['kettle']?.isLidOpen, sounds: room.soundsStarted.slice(soundsBeforeTheTap) }, { isLidOpen: false, sounds: ['buttonClick'] })
 })
 
-test('buttonClick_whenAnEmptyHandIsTappedWithNoHandChosen_isNotHeard', () => {
+test('buttonClick_whenAnEmptyHandIsTapped_isNotHeard', () => {
   const room = new TestRoom()
   room.walkTo('counter')
   const soundsBeforeTheTap = room.soundsStarted.length
@@ -188,6 +189,32 @@ test('buttonClick_whenAnEmptyHandIsTappedWithNoHandChosen_isNotHeard', () => {
   room.tap({ kind: 'hand', handIndex: 0 })
 
   assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheTap), [])
+})
+
+test('leavesRustling_whenTheSpoonScoopsFromTheOpenCaddy_isHeard', () => {
+  const room = new TestRoom()
+  room.setTheTeaTable()
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
+  room.take('spoon')
+  const soundsBeforeTheTap = room.soundsStarted.length
+
+  room.tapAndChoose({ kind: 'item', itemId: 'caddy' }, 'scoopFrom')
+
+  assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheTap), ['leavesRustling'])
+})
+
+test('leavesRustling_whenTheFullSpoonTipsItsLeavesIntoTheOpenKettle_isHeard', () => {
+  const room = new TestRoom()
+  room.setTheTeaTable()
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'caddy' })
+  room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
+  room.take('spoon')
+  room.session.dispatch({ type: 'scoopTea', caddyId: 'caddy', depth: 1 })
+  const soundsBeforeTheTap = room.soundsStarted.length
+
+  room.tapAndChoose({ kind: 'item', itemId: 'kettle' }, 'tipLeavesInto')
+
+  assert.deepEqual(room.soundsStarted.slice(soundsBeforeTheTap), ['leavesRustling'])
 })
 
 test('closeUpWhoosh_whenTheWalkerArrivesAtTheCounter_isHeardOnce', () => {
@@ -233,7 +260,7 @@ test('metalTooHot_whenTheThermosOnTheWorkingHeaterGlowsTooHotToHold_isHeardOnce'
 test('buttonClick_whenTheFaucetIsTapped_isNotHeard', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
   const soundsBeforeTheTap = room.soundsStarted.length
 
   room.tap({ kind: 'faucet' })
@@ -275,7 +302,6 @@ function holdABowlOfTea(room: TestRoom): void {
   room.setTheTeaTable()
   room.testSession.pour('kettle', 'bowl1', 4)
   room.session.dispatch({ type: 'pickUp', itemId: 'bowl1' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 }
 
 function heatTheSpoonOnTheHeaterUntil(room: TestRoom, heating: Heating): void {

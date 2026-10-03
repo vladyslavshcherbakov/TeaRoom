@@ -1,11 +1,12 @@
 import type { TimeOfDay, Weather } from '../Definitions/Atmosphere.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
+import type { TapUse } from '../State/SessionState.ts'
 
 export type Command =
   | { readonly type: 'chooseAtmosphere'; readonly timeOfDay: TimeOfDay; readonly shareThroughTheTimeOfDay: number; readonly weather: Weather }
   | { readonly type: 'standAt'; readonly placeId: string | null }
   | { readonly type: 'pickUp'; readonly itemId: string }
-  | { readonly type: 'pickUpWithAMiddleHand'; readonly itemId: string }
+  | { readonly type: 'putAway'; readonly itemId: string }
   | { readonly type: 'putDown'; readonly itemId: string; readonly spot: Spot }
   | { readonly type: 'openVesselLid'; readonly vesselId: string }
   | { readonly type: 'closeVesselLid'; readonly vesselId: string }
@@ -18,13 +19,12 @@ export type Command =
   | { readonly type: 'startPouring'; readonly sourceId: string; readonly targetId: string | null }
   | { readonly type: 'adjustPour'; readonly tiltDegrees: number; readonly streamOnTargetFraction: number; readonly missedStreamLandsAt: Spot | null }
   | { readonly type: 'stopPouring' }
-  | { readonly type: 'putInTheSink'; readonly itemId: string }
-  | { readonly type: 'turnTheTapOn' }
+  | { readonly type: 'putInTheSink'; readonly itemId: string; readonly use?: TapUse }
+  | { readonly type: 'turnTheTapOn'; readonly use?: TapUse }
   | { readonly type: 'turnTheTapOff' }
   | { readonly type: 'scoopTea'; readonly caddyId: string; readonly depth: number }
   | { readonly type: 'tipSpoonInto'; readonly vesselId: string }
   | { readonly type: 'tasteCup'; readonly cupId: string }
-  | { readonly type: 'offerCup'; readonly cupId: string; readonly figurineId: string }
   | { readonly type: 'wipeTable'; readonly clothId: string; readonly puddleId: string; readonly strokeSpeedCmPerSecond: number; readonly coveredFraction: number }
   | { readonly type: 'soakUpThePuddle'; readonly clothId: string; readonly puddleId: string; readonly coveredFraction: number }
   | { readonly type: 'puddleReachesTheCloth'; readonly clothId: string; readonly puddleId: string; readonly coveredFraction: number }

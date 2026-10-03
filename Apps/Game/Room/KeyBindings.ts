@@ -1,4 +1,4 @@
-import { middleHandIndex, type HandIndex } from '../../../Shared/GameLogic/GameLogic.ts'
+import type { HandIndex } from '../../../Shared/GameLogic/GameLogic.ts'
 import { holdSecondsThatInspectAnItem } from './TouchInput.ts'
 import type { AppLog } from '../../Engine/AppLog.ts'
 
@@ -19,10 +19,8 @@ type HandKeyHeld = { readonly code: string; readonly handIndex: HandIndex; heldS
 const bindingByCode: Readonly<Record<string, Binding>> = {
   Digit1: { kind: 'hand', handIndex: 0 },
   Digit2: { kind: 'hand', handIndex: 1 },
-  Digit3: { kind: 'hand', handIndex: middleHandIndex },
   Numpad1: { kind: 'hand', handIndex: 0 },
   Numpad2: { kind: 'hand', handIndex: 1 },
-  Numpad3: { kind: 'hand', handIndex: middleHandIndex },
   KeyE: { kind: 'sip' },
   Space: { kind: 'tilt' },
 }

@@ -1,7 +1,7 @@
 import { floorGridShape, furnitureWithId, nearestFurnitureWithin, sideStoodAt, walkerStart, type CloseUp, type FurnitureId, type RoomLayout } from './RoomLayout.ts'
 import type { FloorPoint } from '../../Engine/Points.ts'
 import { FloorGrid } from '../../Engine/Walking/FloorGrid.ts'
-import { isWalking, standingAt, walkFurther, type Walk } from '../../Engine/Walking/Walk.ts'
+import { headingFrom, headingTurnedTowards, isWalking, standingAt, turningRadiansPerSecond, walkFurther, type Walk } from '../../Engine/Walking/Walk.ts'
 import type { AppLog } from '../../Engine/AppLog.ts'
 import { floorDistanceBetween } from '../../Engine/Arithmetic.ts'
 
@@ -37,6 +37,7 @@ export class RoomNavigator {
   private furnitureStoodAt: FurnitureId | null
   private isWalkingFreely = false
   private walksStartedSinceTheRoomOpened = 0
+  private wantedHeadingRadians: number | null = null
 
   constructor(layout: RoomLayout, log: AppLog, playerMoved: PlayerMoved = () => {}, startsAt: RoomPlace = roomEntrance) {
     this.layout = layout
@@ -85,7 +86,7 @@ export class RoomNavigator {
   }
 
   advance(seconds: number): void {
-    if (!isWalking(this.currentWalk)) return
+    if (!isWalking(this.currentWalk)) return this.turnWhileStanding(seconds)
     this.currentWalk = walkFurther(this.currentWalk, seconds)
     if (isWalking(this.currentWalk) || this.currentView.kind !== 'approaching') return
     const { furnitureId } = this.currentView
@@ -107,10 +108,29 @@ export class RoomNavigator {
     this.standAtTheFurnitureWithinReach()
   }
 
+  faceTheLook(headingRadians: number): void {
+    if (isWalking(this.currentWalk) || this.currentWalk.headingRadians === headingRadians) return
+    this.currentWalk = { ...this.currentWalk, headingRadians }
+    this.wantedHeadingRadians = null
+  }
+
+  turnTowards(point: FloorPoint): void {
+    if (isWalking(this.currentWalk) || this.isWalkingFreely) return
+    this.wantedHeadingRadians = headingFrom(this.currentWalk.position, point)
+  }
+
   stopWalkingFreely(): void {
     if (!this.isWalkingFreely) return
     this.isWalkingFreely = false
     this.log(`stopped walking freely at ${coordinatesOf(this.currentWalk.position)}`)
+  }
+
+  private turnWhileStanding(seconds: number): void {
+    const wanted = this.wantedHeadingRadians
+    if (wanted === null) return
+    const headingRadians = headingTurnedTowards(this.currentWalk.headingRadians, wanted, turningRadiansPerSecond * seconds)
+    this.currentWalk = { ...this.currentWalk, headingRadians }
+    if (headingRadians === wanted) this.wantedHeadingRadians = null
   }
 
   private placeToStartAt(place: RoomPlace): RoomPlace {
@@ -179,6 +199,7 @@ export class RoomNavigator {
 
   private followTheWay(waypoints: readonly FloorPoint[]): void {
     this.currentWalk = { ...this.currentWalk, waypoints: waypoints.slice(1) }
+    this.wantedHeadingRadians = null
     this.walksStartedSinceTheRoomOpened += 1
     if (this.furnitureStoodAt === null) return
     this.log(`left ${this.furnitureStoodAt}`)

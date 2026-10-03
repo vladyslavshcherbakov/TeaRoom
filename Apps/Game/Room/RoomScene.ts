@@ -38,6 +38,7 @@ import type { TapTarget } from './TapTarget.ts'
 import { LyingLids } from './Placement.ts'
 import type { TapReach } from './TapTargetAmong.ts'
 import type { FaceFeature, RoomSettings } from './RoomSettings.ts'
+import { shareOfEverySoundsLoudnessBySetting, type SoundLoudness } from './SoundLoudness.ts'
 import type { BrowserStore, StoreWithADefault } from '../../Engine/BrowserStorage.ts'
 import { playTimeStore } from '../../Engine/PlayTimeStore.ts'
 import { SettingsScreen } from './Rendering/Controls/SettingsScreen.ts'
@@ -72,6 +73,7 @@ import { exposeTheProbe } from '../../Engine/Probe.ts'
 import { ClothLookShown } from './ClothLookShown.ts'
 import { PuddlesShown } from './PuddlesShown.ts'
 import { AimHint } from './Rendering/Controls/AimHint.ts'
+import { ActionMenuOnThePage } from './Rendering/Controls/ActionMenuOnThePage.ts'
 import { ScreenButtonsOnThePage } from './Rendering/Controls/ScreenButtonsOnThePage.ts'
 import { WalkerModel } from './Rendering/WalkerModel.ts'
 import { degreesShownIn } from './Temperatures.ts'
@@ -135,6 +137,7 @@ export class RoomScene {
   private readonly carried: CarriedItems
   private readonly screenButtons: ScreenButtonsOnThePage
   private readonly aimHint: AimHint
+  private readonly actionMenu: ActionMenuOnThePage
   private readonly caption: Caption
   private readonly achievementsList: AchievementsList
   private readonly guideBook: GuideBook
@@ -223,7 +226,7 @@ export class RoomScene {
     const materials = new RoomMaterials(this.host.reflectionsOf(new RoomEnvironment(), reflectionsBlurSigma), bowlPaintings.koiPond, log)
     const roomDefinition = definitionIn(catalog, 'rooms', session.state.roomId)
     this.room = new RoomModel(materials, layout, arrival.arrangement, roomDefinition.heaterSpot, log)
-    this.walker = new WalkerModel(materials)
+    this.walker = new WalkerModel(materials, debugSettingsByDefault.sparrowAnimation, log)
     this.sky = new Sky(materials)
     this.inspectionStage = new CloseLookStage(materials.materialFor('inspectionDimming'), inspectedDistanceMetres, (light) => roomLayers.showThePassTo(light, 'inspected'))
     this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot }, lyingLids, clothPatternsByIdIn(roomDefinition, arrival.arrangement), bowlPaintings.bowlIdWithTheToadUnderneath, log)
@@ -235,6 +238,7 @@ export class RoomScene {
       letGo: (button) => this.playerController.screenButtonReleased(button),
     })
     this.aimHint = new AimHint(container, aimHintStore(log))
+    this.actionMenu = new ActionMenuOnThePage(container, (index) => this.playerController.actionChosen(index))
     this.caption = new Caption(container)
     this.achievementNotice = new AchievementNotice(container)
     this.achievementsList = new AchievementsList(container, {
@@ -294,6 +298,10 @@ export class RoomScene {
     this.host.start((times) => this.frame(times))
   }
 
+  soundLoudnessChosenOnAStartScreen(soundLoudness: SoundLoudness): void {
+    this.changeTheSettings({ soundLoudness }, 'on a start screen')
+  }
+
   private frame({ realSeconds, worldSeconds }: FrameTimes): void {
     this.frameRateCounter.frameDrawn(realSeconds)
     this.walkAndLookInFirstPerson(worldSeconds)
@@ -325,10 +333,11 @@ export class RoomScene {
     const worldView = { ...worldViewNow, cloths: this.clothLookShown.clothsAfterAFrame(worldViewNow.cloths, realSeconds) }
     this.sounds.keepPlayingOnly(soundsLastingIn(state, worldView, this.visit.isWaterBeingWipedUp))
     const heldItemsCamera = this.heldItemsCamera()
-    const heldInView = isWalkerShown ? null : { camera: heldItemsCamera, chosenHandIndex: this.playerController.chosenHandIndex, isFirstPerson, screenHeightShareTakenByControls: isFirstPerson ? this.joysticks.screenHeightShareTakenFromTheBottom : 0 }
+    const inventoryInView = { camera: heldItemsCamera, isFirstPerson, screenHeightShareTakenByControls: isFirstPerson ? this.joysticks.screenHeightShareTakenFromTheBottom : 0 }
+    const heldInView = isWalkerShown ? null : inventoryInView
     const inspection = this.playerController.inspectionView
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
-    this.carried.show({ state, view: worldView, walk: this.playerController.walk, heldInView, inspected, aimedPour: this.playerController.aimedPourView, clothWiping: this.playerController.clothWiping, sipGesture: this.playerController.sipGestureView, timeSeconds: this.host.elapsedSeconds, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null, distantDetail: this.settings.objectDetail === 'reduced' ? { camera: this.camera, screenHeightPixels: window.innerHeight } : null })
+    this.carried.show({ state, view: worldView, walk: this.playerController.walk, heldInView, inventoryInView, inspected, aimedPour: this.playerController.aimedPourView, clothWiping: this.playerController.clothWiping, sipGesture: this.playerController.sipGestureView, timeSeconds: this.host.elapsedSeconds, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null, distantDetail: this.settings.objectDetail === 'reduced' ? { camera: this.camera, screenHeightPixels: window.innerHeight } : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.host.frameBudget.phaseEnded('carriedItems', performance.now())
     this.room.showHeater(worldView.isHeaterOn)
@@ -340,6 +349,7 @@ export class RoomScene {
     const shown = this.screenControlsShown()
     this.screenButtons.show(shown.buttons)
     this.aimHint.show(this.playerController.mode === 'aiming')
+    this.actionMenu.show(this.playerController.actionMenuView)
     this.joysticks.show(shown.leftStick, shown.rightStick)
     if (!shown.mayHoldTheMouse) this.keyboardAndMouse.letGoOfTheMouse('the look is not free now')
     this.host.frameBudget.phaseEnded('screenControls', performance.now())
@@ -375,6 +385,7 @@ export class RoomScene {
   private showTheDebugSettings(): void {
     if (!this.debugSettings.isFrameBudgetShown) this.frameBudgetPanel.hide()
     this.host.runTheWorldAt(this.debugSettings.isTheWorldFast ? fastWorldTimeScale : 1)
+    this.walker.playTheSparrowAnimation(this.debugSettings.sparrowAnimation)
   }
 
   private noticeTheProphecyIfSeenWhole(): void {
@@ -390,6 +401,7 @@ export class RoomScene {
     const mouseMovement = usesTheMouse(controlScheme) ? this.keyboardAndMouse.takeTheMouseMovement() : null
     this.look = this.lookAlongTheWalk.lookAfterAFrame(this.look, { mouseMovement, lookStick: stickWithRole('look', controlScheme, stickLayout, this.sticksHeld()) }, this.playerController.walk, this.playerController.walksStarted, seconds)
     if (mouseMovement !== null && this.keyboardAndMouse.isLocked) this.touchInput.crosshairSwept(Math.hypot(mouseMovement.x, mouseMovement.y))
+    this.playerController.firstPersonLookTurned(this.look.headingRadians)
     const walking = walkAsked(controlScheme, stickLayout, this.keyboardAndMouse.keysHeld, this.sticksHeld())
     if (walking.right === 0 && walking.up === 0) return this.playerController.stopWalkingFreely()
     this.playerController.standUpToWalk()
@@ -401,7 +413,7 @@ export class RoomScene {
   }
 
   private screenControlsShown() {
-    return screenControlsShown({ cameraMode: this.settings.cameraMode, controlScheme: this.settings.controlScheme, stickLayout: this.settings.stickLayout, mode: this.playerController.mode, hasACupToSip: this.playerController.sippableCupId !== null })
+    return screenControlsShown({ cameraMode: this.settings.cameraMode, controlScheme: this.settings.controlScheme, stickLayout: this.settings.stickLayout, mode: this.playerController.mode })
   }
 
   private restoreTheCamera(camera: SavedCamera): void {
@@ -435,6 +447,7 @@ export class RoomScene {
 
   private applyTheSettings(): void {
     this.showTheAchievementsOnTheWall(this.settings.areAchievementsShown)
+    this.sounds.setOverallLoudness(shareOfEverySoundsLoudnessBySetting[this.settings.soundLoudness])
     this.walker.paintTheBody(this.settings.coatColour)
     this.walker.showTheFaces(this.settings.faceFeaturesShown)
     this.frameRateCounter.show(this.settings.isFrameRateShown)
@@ -443,6 +456,7 @@ export class RoomScene {
     this.host.showSoftShadowsInCorners(this.settings.hasSoftShadowsInCorners, this.scene, this.camera)
     this.showTheGlow(this.settings.hasGlow)
     this.garden.showDistantFlowers(this.settings.objectDetail)
+    this.walker.showTheSparrowShadow(this.settings.objectDetail)
   }
 
   private showTheAchievementsOnTheWall(areShown: boolean): void {
@@ -565,7 +579,10 @@ export class RoomScene {
       if (event.pointerType === 'mouse' && this.mayCatchTheMouse() && !this.keyboardAndMouse.isLocked) return this.keyboardAndMouse.catchTheMouse()
       this.touchInput.fingerDown(event.pointerId, this.pointOfThe(event))
     })
-    canvas.addEventListener('pointermove', (event) => this.touchInput.fingerMoved(event.pointerId, this.pointOfThe(event)))
+    canvas.addEventListener('pointermove', (event) => {
+      this.touchInput.fingerMoved(event.pointerId, this.pointOfThe(event))
+      if (event.pointerType === 'mouse' && event.buttons === 0 && this.settings.cameraMode === 'room') this.turnTheWalkerTowardsTheMouse(this.pointOfThe(event))
+    })
     canvas.addEventListener('pointerup', (event) => this.touchInput.fingerUp(event.pointerId))
     canvas.addEventListener('pointercancel', (event) => this.touchInput.fingerCancelled(event.pointerId))
     canvas.addEventListener('wheel', (event) => {
@@ -583,6 +600,12 @@ export class RoomScene {
     if (!this.keyboardAndMouse.isLocked) return { x: event.clientX, y: event.clientY }
     const bounds = this.host.renderer.domElement.getBoundingClientRect()
     return { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 }
+  }
+
+  private turnTheWalkerTowardsTheMouse(point: ScreenPoint): void {
+    this.raycaster.setFromCamera(this.pointerAt(point), this.camera)
+    const hit = this.raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), new THREE.Vector3())
+    if (hit !== null) this.playerController.mouseMovedOverTheFloor({ x: hit.x, z: hit.z })
   }
 
   private aimPlanePointAt(point: ScreenPoint): FloorPoint | null {
@@ -604,13 +627,12 @@ export class RoomScene {
   }
 
   private tapTargetAt(point: ScreenPoint): TapReach {
-    const chosenHand = { handIndex: this.playerController.chosenHandIndex, doesATapReachPastIt: (target: TapTarget) => this.playerController.doesATapReachPastTheChosenHand(target) }
-    return tapTargetUnderTheFinger(point, this.host.renderer.domElement.getBoundingClientRect(), this.tappablePassesDrawnLastFirst(), chosenHand)
+    return tapTargetUnderTheFinger(point, this.host.renderer.domElement.getBoundingClientRect(), this.tappablePassesDrawnLastFirst(), (target) => this.playerController.doesATapReachPastTheHands(target))
   }
 
   private tappablePassesDrawnLastFirst(): readonly TappablePass[] {
     const tappable = [...this.room.tappableMeshes, ...this.carried.tappableMeshes, ...this.garden.tappableMeshes]
-    const heldInView: TappablePass = { camera: this.heldItemsCamera(), tappable: tappable.filter((mesh) => this.carried.isHeldInView(mesh)), areasOnTheScreen: this.carried.handAreasOnTheScreen, isDrawnOverTheScene: true }
+    const heldInView: TappablePass = { camera: this.heldItemsCamera(), tappable: tappable.filter((mesh) => this.carried.isHeldInView(mesh)), areasOnTheScreen: this.carried.areasOnTheScreen, isDrawnOverTheScene: true }
     const room: TappablePass = { camera: this.camera, tappable: tappable.filter((mesh) => !this.carried.isHeldInView(mesh)), areasOnTheScreen: [], isDrawnOverTheScene: false }
     return [heldInView, room]
   }

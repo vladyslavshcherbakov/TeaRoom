@@ -29,6 +29,14 @@ export function isWithinThePlayersReach(itemId: string): Check {
   }
 }
 
+export function isWithinReachOrPutAway(itemId: string): Check {
+  return (draft) => (itemLocationIn(draft.state, itemId)?.kind === 'inTheInventory' ? null : isWithinThePlayersReach(itemId)(draft))
+}
+
+export function isNotPutAway(itemId: string): Check {
+  return (draft) => (itemLocationIn(draft.state, itemId)?.kind === 'inTheInventory' ? { reason: 'alreadyPutAway', values: `${itemId} is ${whereTheItemIs(draft.state, itemId)}` } : null)
+}
+
 export function isInAHand(itemId: string): Check {
   return (draft) => {
     const location = itemLocationIn(draft.state, itemId)

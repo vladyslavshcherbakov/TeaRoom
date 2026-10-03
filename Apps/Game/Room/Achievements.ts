@@ -19,7 +19,6 @@ export const achievementIds = [
   'visitContinued',
   'tapAndHeaterLeftOn',
   'kettleBoiledDry',
-  'shiva',
   'died',
   'delphicOracle',
   'gourmet',
@@ -194,8 +193,6 @@ function achievementsOf(event: TeaEvent, state: DeepReadonly<SessionState>): rea
       return ['burntClothWashed']
     case 'spoonCrumbled':
       return ['spoonBurnt']
-    case 'middleHandGrown':
-      return ['shiva']
     case 'playerDied':
       return ['died']
     case 'metalGlowsTooHotToHold':

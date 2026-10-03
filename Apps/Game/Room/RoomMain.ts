@@ -6,9 +6,11 @@ import { roomEntrance } from './RoomNavigator.ts'
 import type { AppLog, AppLogLevel } from '../../Engine/AppLog.ts'
 import { RoomScene, type RoomArrival } from './RoomScene.ts'
 import { faceFeaturesOfANewGame } from './RoomSettings.ts'
+import { shareOfEverySoundsLoudnessBySetting, type SoundLoudness } from './SoundLoudness.ts'
 import { settingsStore } from './SettingsStore.ts'
 import { ContinueScreen } from './Rendering/Controls/ContinueScreen.ts'
 import { Disclaimer } from './Rendering/Controls/Disclaimer.ts'
+import type { SoundLoudnessChoice } from './Rendering/Controls/SoundLoudnessChoice.ts'
 import { LoadingScreen } from './Rendering/Controls/LoadingScreen.ts'
 import { disclaimerStore } from './DisclaimerStore.ts'
 import { gameVersion } from './GameVersion.ts'
@@ -43,12 +45,15 @@ document.addEventListener('pointerdown', (event) => {
 }, { capture: true })
 void roomSounds.load()
 
+const roomSettingsStore = settingsStore(roomLog, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
+let settingsBeforeTheRoom = roomSettingsStore.load()
+let roomScene: RoomScene | null = null
+roomSounds.setOverallLoudness(shareOfEverySoundsLoudnessBySetting[settingsBeforeTheRoom.soundLoudness])
+
 const loadingScreen = new LoadingScreen(container)
 rememberThePlayedVersion()
 showTheDisclaimerOnTheFirstVisit()
 
-const roomSettingsStore = settingsStore(roomLog, matchMedia('(pointer: fine)').matches ? 'mouseAndKeyboard' : 'twoSticks')
-const settingsAtTheStart = roomSettingsStore.load()
 const savedVisitStore = visitStore(roomLog)
 roomLog('the loading screen is shown while the room is built')
 requestAnimationFrame(() => setTimeout(openTheSavedVisitOrANewGame, 0))
@@ -86,7 +91,7 @@ function offerToContinue(visit: SavedVisit): void {
       savedVisitStore.forget('the player starts over')
       enterAnew(null)
     },
-  }, settingsAtTheStart.areAchievementsShown)
+  }, settingsBeforeTheRoom.areAchievementsShown, soundLoudnessChoiceOnAStartScreen())
 }
 
 function enterAnew(notice: string | null): void {
@@ -126,7 +131,7 @@ function enterTheRoom(session: TeaSession, catalog: Catalog, arrival: RoomArriva
     `the three-legged toad is painted under ${bowlIdWithTheToadUnderneath} of ${whiteBowlIds.join(', ')}`,
   ]
   roomLog(`${arrival.continuesAVisit ? 'this continued visit' : 'this new game'} chose at random: ${[...choicesOfTheNewGame, ...choicesOfTheVisit].join('; ')}`)
-  new RoomScene(container, session, catalog, roomLog, voiceSeed, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, savedVisitStore, roomSettingsStore, settingsAtTheStart, roomSounds)
+  roomScene = new RoomScene(container, session, catalog, roomLog, voiceSeed, heaterItemsBeforeTheTesterJoke, { koiPond, bowlIdWithTheToadUnderneath }, arrival, savedVisitStore, roomSettingsStore, settingsBeforeTheRoom, roomSounds)
 }
 
 function rememberThePlayedVersion(): void {
@@ -143,7 +148,19 @@ function showTheDisclaimerOnTheFirstVisit(): void {
   new Disclaimer(container, () => {
     seenStore.keep(true)
     roomLog('the note about the sandbox is read, and it will not be shown again')
-  })
+  }, soundLoudnessChoiceOnAStartScreen())
+}
+
+function soundLoudnessChoiceOnAStartScreen(): SoundLoudnessChoice {
+  return { chosenNow: settingsBeforeTheRoom.soundLoudness, chosen: chooseTheSoundLoudnessOnAStartScreen }
+}
+
+function chooseTheSoundLoudnessOnAStartScreen(soundLoudness: SoundLoudness): void {
+  if (roomScene !== null) return roomScene.soundLoudnessChosenOnAStartScreen(soundLoudness)
+  settingsBeforeTheRoom = { ...settingsBeforeTheRoom, soundLoudness }
+  roomSettingsStore.keep(settingsBeforeTheRoom)
+  roomSounds.setOverallLoudness(shareOfEverySoundsLoudnessBySetting[soundLoudness])
+  roomLog(`the sound is set to ${soundLoudness} on a start screen, before the room is built`)
 }
 
 function showTheQuietScreen(): void {

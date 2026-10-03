@@ -1,9 +1,9 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { text, type TextKey } from '../../Apps/Game/Texts/Texts.ts'
 import { consoleRecordOf, roomOpening } from '../Support/BrowserRoom.ts'
 import type { DrawnResources } from '../../Apps/Engine/Rendering/DrawnResources.ts'
 
-type SettingTurned = { readonly name: string; readonly turnOn: TextKey; readonly turnOff: TextKey }
+type SettingTurned = { readonly name: string; readonly turnOn: TextKey; readonly turnOff: TextKey; readonly underTheLabel?: TextKey }
 
 const smallScreen = { width: 180, height: 360 }
 const everySettingTurnedTwiceWithinMilliseconds = 150_000
@@ -12,7 +12,7 @@ const settingsThatRebuildWhatIsDrawn: readonly SettingTurned[] = [
   { name: 'glow', turnOn: 'settings.glow', turnOff: 'settings.glow' },
   { name: 'full resolution', turnOn: 'settings.fullResolution', turnOff: 'settings.fullResolution' },
   { name: 'smooth edges', turnOn: 'settings.smoothEdges', turnOff: 'settings.smoothEdges' },
-  { name: 'object detail', turnOn: 'settings.objectDetail.full', turnOff: 'settings.objectDetail.reduced' },
+  { name: 'object detail', turnOn: 'settings.objectDetail.full', turnOff: 'settings.objectDetail.reduced', underTheLabel: 'settings.objectDetail' },
   { name: 'camera', turnOn: 'settings.camera.firstPerson', turnOff: 'settings.camera.room' },
 ]
 
@@ -46,10 +46,15 @@ async function openTheSettings(page: Page): Promise<void> {
 }
 
 async function turnOnAndOff(page: Page, setting: SettingTurned): Promise<void> {
-  await page.getByText(text(setting.turnOn), { exact: true }).dispatchEvent('click')
+  await choiceOf(page, setting, setting.turnOn).dispatchEvent('click')
   await framesDrawn(page)
-  await page.getByText(text(setting.turnOff), { exact: true }).dispatchEvent('click')
+  await choiceOf(page, setting, setting.turnOff).dispatchEvent('click')
   await framesDrawn(page)
+}
+
+function choiceOf(page: Page, setting: SettingTurned, choice: TextKey): Locator {
+  const rowOfTheSetting = setting.underTheLabel === undefined ? page.locator('.settings-sheet') : page.getByText(text(setting.underTheLabel), { exact: true }).locator('xpath=following-sibling::*[1]')
+  return rowOfTheSetting.getByText(text(choice), { exact: true })
 }
 
 async function drawnResourcesOf(page: Page): Promise<DrawnResources> {

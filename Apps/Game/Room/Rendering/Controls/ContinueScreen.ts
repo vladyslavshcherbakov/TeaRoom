@@ -1,6 +1,7 @@
 import { text, type TextKey } from '../../../Texts/Texts.ts'
 import { startOverNote } from '../../RoomTexts.ts'
 import { button, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
+import { soundLoudnessChoiceOnThePage, type SoundLoudnessChoice } from './SoundLoudnessChoice.ts'
 
 type KeyLine = {
   readonly keyKey: TextKey
@@ -25,13 +26,13 @@ export class ContinueScreen {
   private readonly element: HTMLElement
   private readonly buttons: HTMLButtonElement[] = []
 
-  constructor(container: HTMLElement, listener: ContinueScreenListener, areAchievementsShown: boolean) {
+  constructor(container: HTMLElement, listener: ContinueScreenListener, areAchievementsShown: boolean, soundLoudnessChoice: SoundLoudnessChoice) {
     this.element = pageElement('div', 'continue')
     const title = pageElement('p', 'continue-title', text('visit.welcomeBack'))
     const continueButton = this.choiceButton('visit.continue', 'continue-primary', listener.continued)
     const startOverButton = this.choiceButton('visit.startOver', 'continue-secondary', listener.startedOver)
     this.buttons.push(continueButton, startOverButton)
-    this.element.append(title, continueButton, startOverButton, pageElement('p', 'continue-note', startOverNote(areAchievementsShown)))
+    this.element.append(title, continueButton, startOverButton, pageElement('p', 'continue-note', startOverNote(areAchievementsShown)), soundLoudnessChoiceOnThePage(soundLoudnessChoice))
     if (hasAKeyboard()) this.element.append(keysList())
     container.append(this.element)
   }

@@ -13,7 +13,7 @@ test('cup_whenPickedUpWhereThePlayerStands_goesIntoTheFirstFreeHand', () => {
   const events = session.do({ type: 'pickUp', itemId: 'cup1' })
 
   assert.deepEqual(events, [{ type: 'pickedUp', itemId: 'cup1', handIndex: 0 }])
-  assert.deepEqual(itemIdsInTheHands(session.state), ['cup1', null, null])
+  assert.deepEqual(itemIdsInTheHands(session.state), ['cup1', null])
 })
 
 test('cup_whenThePlayerStandsElsewhere_isOutOfReach', () => {
@@ -46,7 +46,7 @@ test('cup_whenPutDownOnTheTable_restsExactlyWhereItWasPut', () => {
   session.do({ type: 'putDown', itemId: 'cup1', spot: onTheTable })
 
   assert.deepEqual(session.vessel('cup1').location, { kind: 'onSurface', spot: onTheTable })
-  assert.deepEqual(itemIdsInTheHands(session.state), [null, null, null])
+  assert.deepEqual(itemIdsInTheHands(session.state), [null, null])
 })
 
 test('cup_whenPutDownAtAPlaceThePlayerIsNotAt_isRefused', () => {
@@ -57,7 +57,7 @@ test('cup_whenPutDownAtAPlaceThePlayerIsNotAt_isRefused', () => {
   const events = session.do({ type: 'putDown', itemId: 'cup1', spot: onTheTable })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'putDown', reason: 'notAtThatPlace' }])
-  assert.deepEqual(itemIdsInTheHands(session.state), ['cup1', null, null])
+  assert.deepEqual(itemIdsInTheHands(session.state), ['cup1', null])
 })
 
 test('cup_lyingOnAnotherPlace_cannotBePutDownAsItIsOutOfReach', () => {
@@ -114,19 +114,6 @@ test('thermostat_whenThePlayerWalkedAwayFromTheCounter_cannotBeStopped', () => {
   const events = session.do({ type: 'stopTheThermostat' })
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'stopTheThermostat', reason: 'notAtThatPlace' }])
-})
-
-test('offering_awayFromTheRitualPlace_isRefusedAndKeepsTheTea', () => {
-  const session = houseSession()
-  session.do({ type: 'standAt', placeId: 'counter' })
-  session.do({ type: 'pickUp', itemId: 'kettle' })
-  session.do({ type: 'standAt', placeId: 'shelf' })
-  session.pour('kettle', 'cup1', 5)
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'toad' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'offerCup', reason: 'notAtThatPlace' }])
-  assert.equal(Math.round(session.vessel('cup1').liquid.volumeMl), 50)
 })
 
 test('spoon_inHandAtTheTable_cannotScoopFromTheCaddyOnTheShelf', () => {
@@ -211,7 +198,7 @@ test('kettle_whenPutOnTheHeaterFromTheHand_leavesTheHandFree', () => {
   session.do({ type: 'placeOnHeater', itemId: 'kettle' })
 
   assert.equal(itemIdOnTheHeater(session.state), 'kettle')
-  assert.deepEqual(itemIdsInTheHands(session.state), [null, null, null])
+  assert.deepEqual(itemIdsInTheHands(session.state), [null, null])
   assert.equal(session.vessel('kettle').location.kind, 'onTheHeater')
 })
 
@@ -226,7 +213,7 @@ test('kettle_whenPickedUpFromAWorkingHeater_isLiftedOff', () => {
 
   assert.deepEqual(eventsOfType(events, 'takenOffHeater'), [{ type: 'takenOffHeater', itemId: 'kettle' }])
   assert.equal(itemIdOnTheHeater(session.state), null)
-  assert.deepEqual(itemIdsInTheHands(session.state), ['kettle', null, null])
+  assert.deepEqual(itemIdsInTheHands(session.state), ['kettle', null])
 })
 
 test('kettleInHand_whenPouredIntoACupOnTheTable_fillsIt', () => {
@@ -300,85 +287,6 @@ test('caddy_whenPickedUpOpen_isClosed', () => {
   assert.equal(session.vessel('caddy').isLidOpen, false)
 })
 
-test('middleHand_withBothHandsFull_growsAndTakesTheItem', () => {
-  const session = new TestTeaSession()
-  session.do({ type: 'pickUp', itemId: 'kettle' })
-  session.do({ type: 'pickUp', itemId: 'thermos' })
-
-  const events = session.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
-
-  assert.deepEqual(itemIdsInTheHands(session.state), ['kettle', 'thermos', 'cup1'])
-  assert.equal(session.state.player.hasAMiddleHand, true)
-  assert.deepEqual(eventsOfType(events, 'middleHandGrown'), [{ type: 'middleHandGrown', itemId: 'cup1' }])
-})
-
-test('middleHand_whenAHandIsStillFree_doesNotGrow', () => {
-  const session = new TestTeaSession()
-  session.do({ type: 'pickUp', itemId: 'kettle' })
-
-  const events = session.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUpWithAMiddleHand', reason: 'aHandIsFree' }])
-  assert.equal(session.state.player.hasAMiddleHand, false)
-})
-
-test('middleHand_whenItsItemIsPutDown_vanishes', () => {
-  const session = sessionWithAMiddleHandHoldingCup1()
-
-  const events = session.do({ type: 'putDown', itemId: 'cup1', spot: { placeId: 'table', x: 3, y: 0, z: 0 } })
-
-  assert.deepEqual(eventsOfType(events, 'middleHandVanished'), [{ type: 'middleHandVanished' }])
-  assert.equal(session.state.player.hasAMiddleHand, false)
-})
-
-test('middleHand_afterItVanished_takesNothingMore', () => {
-  const session = sessionWithAMiddleHandHoldingCup1()
-  session.do({ type: 'putDown', itemId: 'cup1', spot: { placeId: 'table', x: 3, y: 0, z: 0 } })
-
-  const events = session.do({ type: 'pickUp', itemId: 'cup2' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUp', reason: 'handsFull' }])
-})
-
-test('middleHand_whenItHasGrownAndHoldsAnItem_growsNoSecond', () => {
-  const session = new TestTeaSession()
-  session.do({ type: 'pickUp', itemId: 'kettle' })
-  session.do({ type: 'pickUp', itemId: 'thermos' })
-  session.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
-
-  const events = session.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup2' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUpWithAMiddleHand', reason: 'middleHandAlreadyGrown' }])
-  assert.deepEqual(itemIdsInTheHands(session.state), ['kettle', 'thermos', 'cup1'])
-})
-
-test('middleHand_forAThermosTooHotToTake_doesNotGrow', () => {
-  const session = new TestTeaSession()
-  session.do({ type: 'placeOnHeater', itemId: 'thermos' })
-  session.do({ type: 'switchHeaterOn' })
-  session.wait(30)
-  session.do({ type: 'pickUp', itemId: 'kettle' })
-  session.do({ type: 'pickUp', itemId: 'cup1' })
-
-  const events = session.do({ type: 'pickUpWithAMiddleHand', itemId: 'thermos' })
-
-  assert.deepEqual(eventsOfType(events, 'middleHandGrown'), [])
-  assert.equal(session.state.player.hasAMiddleHand, false)
-  assert.deepEqual(itemIdsInTheHands(session.state), ['kettle', 'cup1', null])
-})
-
-test('middleHand_forAnItemOutOfReach_isRefusedAsTheMiddleHandTakeAndDoesNotGrow', () => {
-  const session = houseSession()
-  session.do({ type: 'standAt', placeId: 'shelf' })
-  session.do({ type: 'pickUp', itemId: 'cup1' })
-  session.do({ type: 'pickUp', itemId: 'cup2' })
-
-  const events = session.do({ type: 'pickUpWithAMiddleHand', itemId: 'kettle' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'pickUpWithAMiddleHand', reason: 'outOfReach' }])
-  assert.equal(session.state.player.hasAMiddleHand, false)
-})
-
 test('item_theRoomDoesNotHave_cannotBePickedUp', () => {
   const session = new TestTeaSession()
 
@@ -421,14 +329,6 @@ test('lid_ofABowl_cannotBeOpenedAsItHasNone', () => {
 
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'openVesselLid', reason: 'vesselHasNoLid' }])
 })
-
-function sessionWithAMiddleHandHoldingCup1(): TestTeaSession {
-  const session = new TestTeaSession()
-  session.do({ type: 'pickUp', itemId: 'kettle' })
-  session.do({ type: 'pickUp', itemId: 'thermos' })
-  session.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
-  return session
-}
 
 function houseSession(): TestTeaSession {
   return new TestTeaSession(testHouseCatalog(), 'testHouse')

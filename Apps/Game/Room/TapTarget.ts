@@ -1,4 +1,4 @@
-import type { HandIndex } from '../../../Shared/GameLogic/GameLogic.ts'
+import type { HandIndex, InventorySlot } from '../../../Shared/GameLogic/GameLogic.ts'
 import type { FurnitureId } from './RoomLayout.ts'
 import type { FloorPoint, WorldPoint } from '../../Engine/Points.ts'
 
@@ -15,6 +15,7 @@ export type TapTarget =
   | { readonly kind: 'faucet' }
   | { readonly kind: 'sink' }
   | { readonly kind: 'hand'; readonly handIndex: HandIndex }
+  | { readonly kind: 'inventorySlot'; readonly slotIndex: InventorySlot }
   | { readonly kind: 'lid'; readonly itemId: string }
   | { readonly kind: 'opening'; readonly itemId: string }
   | { readonly kind: 'figurine'; readonly figurineId: string }
@@ -38,6 +39,8 @@ export function describeTarget(target: TapTarget): string {
       return target.figurineId
     case 'hand':
       return `hand ${target.handIndex}`
+    case 'inventorySlot':
+      return `place ${target.slotIndex} of the inventory`
     case 'furniture':
     case 'surface':
       return `the ${target.furnitureId}`

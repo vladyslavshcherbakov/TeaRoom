@@ -8,7 +8,6 @@ export type ScreenSituation = {
   readonly controlScheme: ControlScheme
   readonly stickLayout: StickLayout
   readonly mode: PlayerMode
-  readonly hasACupToSip: boolean
 }
 
 export type ScreenControlsShown = {
@@ -26,25 +25,34 @@ type ScreenButtonRule = {
 }
 
 export const screenButtonRules: Readonly<Record<ScreenButton, ScreenButtonRule>> = {
-  sip: { press: 'tap', isNeededIn: (situation) => situation.hasACupToSip },
   tilt: { press: 'hold', isNeededIn: () => true },
   whyPouring: { press: 'tap', isNeededIn: () => true },
   leaveFirstPerson: { press: 'lift', isNeededIn: (situation) => situation.cameraMode === 'firstPerson' },
 }
 
 const screenButtonsByMode: Readonly<Record<PlayerMode, readonly ScreenButton[]>> = {
-  free: ['sip', 'leaveFirstPerson'],
+  free: ['leaveFirstPerson'],
   aiming: ['tilt', 'whyPouring', 'leaveFirstPerson'],
   lookingClosely: ['leaveFirstPerson'],
-  sipping: ['sip', 'leaveFirstPerson'],
+  sipping: ['leaveFirstPerson'],
+  choosing: ['leaveFirstPerson'],
   ended: ['leaveFirstPerson'],
 }
 
+const isTheLookFreeIn: Readonly<Record<PlayerMode, boolean>> = {
+  free: true,
+  aiming: false,
+  lookingClosely: false,
+  sipping: true,
+  choosing: false,
+  ended: true,
+}
+
 export function screenControlsShown(situation: ScreenSituation): ScreenControlsShown {
-  const isLookingFreely = situation.cameraMode === 'firstPerson' && situation.mode !== 'aiming' && situation.mode !== 'lookingClosely'
+  const isLookingFreely = situation.cameraMode === 'firstPerson' && isTheLookFreeIn[situation.mode]
   const sticks = sticksShownFor(situation.controlScheme, situation.stickLayout)
   return {
-    buttons: { sip: isShown('sip', situation), tilt: isShown('tilt', situation), whyPouring: isShown('whyPouring', situation), leaveFirstPerson: isShown('leaveFirstPerson', situation) },
+    buttons: { tilt: isShown('tilt', situation), whyPouring: isShown('whyPouring', situation), leaveFirstPerson: isShown('leaveFirstPerson', situation) },
     leftStick: isLookingFreely && sticks.left !== null,
     rightStick: isLookingFreely && sticks.right !== null,
     mayHoldTheMouse: isLookingFreely && usesTheMouse(situation.controlScheme),

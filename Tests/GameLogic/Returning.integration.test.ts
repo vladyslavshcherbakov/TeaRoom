@@ -88,7 +88,7 @@ test('caddy_whenWashedCleanBeforeTheAbsence_isFullAndDryAgainAndIsAnnouncedAsEmp
   const session = new TestTeaSession()
   session.do({ type: 'pickUp', itemId: 'caddy' })
   session.do({ type: 'putInTheSink', itemId: 'caddy' })
-  session.do({ type: 'turnTheTapOn' })
+  session.do({ type: 'turnTheTapOn', use: 'wash' })
   session.do({ type: 'openVesselLid', vesselId: 'caddy' })
   session.wait(60)
   session.do({ type: 'turnTheTapOff' })

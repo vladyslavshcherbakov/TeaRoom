@@ -77,7 +77,7 @@ test('debugSettings_whenTheirTextIsNotJson_areTheDefaultsAndTheFailureIsLoggedAs
 
 test('achievements_whenKept_areFoundAgainByTheNextPage', (t) => {
   installStorageInMemory(t)
-  const keptRecord: AchievementRecord = { unlocked: ['died', 'shiva'], hasTheTapRunForNothing: true, hasTheHeaterRunForNothing: false, puddlesWiped: 1, visitsBegun: 3 }
+  const keptRecord: AchievementRecord = { unlocked: ['died', 'gourmet'], hasTheTapRunForNothing: true, hasTheHeaterRunForNothing: false, puddlesWiped: 1, visitsBegun: 3 }
   achievementStore(() => {}).keep(keptRecord)
 
   const foundRecord = achievementStore(() => {}).load()

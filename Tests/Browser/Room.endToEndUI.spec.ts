@@ -10,7 +10,7 @@ const floorSharesToTry = [
   [0.4, 0.58],
 ] as const
 
-test('room_whenOpenedAndTheFloorIsTapped_walksThereWithNothingToSip', async ({ page }) => {
+test('room_whenOpenedAndTheFloorIsTapped_walksThereWithNoMenuOfActions', async ({ page }) => {
   const record = consoleRecordOf(page)
   await page.goto('./')
   await roomOpening(record, 1)
@@ -19,8 +19,8 @@ test('room_whenOpenedAndTheFloorIsTapped_walksThereWithNothingToSip', async ({ p
 
   expect(walkingLine).toContain('walking to the floor at')
   expect(record.simulationLines.some((line) => line.includes('session opened in quietRoom'))).toBe(true)
-  await expect(page.locator('button.sip')).toBeAttached()
-  await expect(page.locator('button.sip')).toBeHidden()
+  await expect(page.locator('.action-menu')).toBeAttached()
+  await expect(page.locator('.action-menu')).toBeHidden()
   expect(record.errors).toEqual([])
 })
 

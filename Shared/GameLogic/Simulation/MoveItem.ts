@@ -1,7 +1,7 @@
 import { isTheHeaterInUse } from '../Judgement/HeaterModes.ts'
 import type { DeepReadonly } from '../../Engine/DeepReadonly.ts'
-import type { HandIndex, ItemLocation } from '../State/SessionState.ts'
-import { itemWithItsLocationIn, middleHandIndex } from '../State/WhereItemsAre.ts'
+import type { ItemLocation } from '../State/SessionState.ts'
+import { itemWithItsLocationIn } from '../State/WhereItemsAre.ts'
 import { type Draft } from './Draft.ts'
 import { note } from '../../Engine/Draft.ts'
 import { describeOnTheHeater, rulesFor } from './ItemKinds.ts'
@@ -27,12 +27,12 @@ export function moveItem(draft: Draft, itemId: string, destination: ItemLocation
 
 function leave(draft: Draft, itemId: string, origin: DeepReadonly<ItemLocation>): void {
   switch (origin.kind) {
-    case 'inHand':
-      return letGoWithTheHand(draft, origin.handIndex)
     case 'onTheHeater':
       return takeOffTheHeater(draft, itemId)
     case 'inTheSink':
       return takeOutOfTheSink(draft, itemId)
+    case 'inHand':
+    case 'inTheInventory':
     case 'onSurface':
     case 'gone':
       return
@@ -46,6 +46,7 @@ function isLiftedFrom(origin: DeepReadonly<ItemLocation>): boolean {
     case 'inTheSink':
       return true
     case 'inHand':
+    case 'inTheInventory':
     case 'gone':
       return false
   }
@@ -54,6 +55,7 @@ function isLiftedFrom(origin: DeepReadonly<ItemLocation>): boolean {
 function isLiftedTo(destination: DeepReadonly<ItemLocation>): boolean {
   switch (destination.kind) {
     case 'inHand':
+    case 'inTheInventory':
     case 'onTheHeater':
       return true
     case 'onSurface':
@@ -61,13 +63,6 @@ function isLiftedTo(destination: DeepReadonly<ItemLocation>): boolean {
     case 'gone':
       return false
   }
-}
-
-function letGoWithTheHand(draft: Draft, handIndex: HandIndex): void {
-  if (handIndex !== middleHandIndex) return
-  draft.state.player.hasAMiddleHand = false
-  note(draft, 'the middle hand is empty, and it is gone for good')
-  draft.events.push({ type: 'middleHandVanished' })
 }
 
 function takeOffTheHeater(draft: Draft, itemId: string): void {
@@ -79,9 +74,9 @@ function takeOffTheHeater(draft: Draft, itemId: string): void {
 function takeOutOfTheSink(draft: Draft, itemId: string): void {
   const sink = draft.state.sink
   rulesFor(draft.state, itemId)?.liftOutOfTheSink(draft, itemId)
-  sink.hasRunOverTheItemInside = false
+  sink.hasRinsedTheItemInside = false
   const runningWater = sink.runningWater
   if (runningWater === null) return note(draft, `${itemId} lifted out of the sink, the tap is closed`)
   note(draft, `${itemId} lifted out of the sink after ${runningWater.filledMl.toFixed(1)} ml went in, the tap keeps running into the empty sink`)
-  sink.runningWater = runningWaterOver(draft, null, false, runningWater)
+  sink.runningWater = runningWaterOver(draft, null, false, runningWater.use, runningWater)
 }

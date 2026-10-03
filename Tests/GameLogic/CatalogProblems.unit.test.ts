@@ -82,7 +82,7 @@ test('contentProblems_whenAFigurineLikesAnUnknownTea_nameTheFigurineAndTea', () 
   const catalog = testCatalog()
   const brokenCatalog: Catalog = {
     ...catalog,
-    figurines: { ...catalog.figurines, monk: { id: 'monk', affinityByTeaId: { matcha: 2 }, preferredStrength: { lowest: 40, highest: 60 } } },
+    figurines: { ...catalog.figurines, monk: { id: 'monk', affinityByTeaId: { matcha: 2 } } },
   }
 
   assertOneProblemNaming(problemsOpeningRoom(brokenCatalog, 'testRoom'), 'monk', 'matcha')

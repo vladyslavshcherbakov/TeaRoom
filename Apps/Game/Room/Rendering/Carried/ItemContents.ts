@@ -1,15 +1,16 @@
 import * as THREE from 'three'
-import { itemLocationIn } from '../../../../../Shared/GameLogic/GameLogic.ts'
 import { isTheLidOpen, layoutOf } from '../../CarriedShapes.ts'
 import type { LyingLid } from '../../Placement.ts'
 import { turnedBy } from '../../RoomLayout.ts'
 import type { FloorPoint } from '../../../../Engine/Points.ts'
 import { mostSoakedLeavesShown } from '../../../Presentation/WorldPresenter.ts'
 import { teaLookFor } from '../../../Presentation/TeaLooks.ts'
-import type { LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Presentation/WorldViewState.ts'
+import type { BrewStage, LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Presentation/WorldViewState.ts'
+import type { DyeInflow } from '../../../../Engine/Rendering/Flow/SwirlingDye.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
-import { mostPuffsFromOneSource, type CarriedModel, type PuffTrail } from './CarriedModel.ts'
+import type { CarriedModel } from './CarriedModel.ts'
+import type { WispsLook } from '../../../../Engine/Rendering/Wisps/RisingWisps.ts'
 import { LeafPile } from './LeafPile.ts'
 import { roomLayers } from '../RoomLayers.ts'
 import { stillWater, waveAt, type Wave } from './Wave.ts'
@@ -21,113 +22,65 @@ type SteamDrawnToTheEyes = {
 }
 
 const openLidSwungPastUprightRadians = (105 * Math.PI) / 180
-const steamRiseMetresPerSecond = 0.2
-const steamColumnMetres = 0.12
 const steamStartsAboveTheOpeningMetres = 0.04
 const steamStartsAboveTheSpoutMetres = 0.02
-const smallestPuffScale = 0.6
-const sipPuffCrossingsPerSecond = 0.38
 const steamAppearsOverShareOfItsRise = 0.12
-const leftBehindPuffFadesInSeconds = 0.8
-const puffsBySteam: Readonly<Record<SteamLevel, number>> = { none: 0, wisps: 1, visible: 2, billowing: mostPuffsFromOneSource }
+const wispsPerSecondBySteam: Readonly<Record<SteamLevel, number>> = { none: 0, wisps: 10, visible: 22, billowing: 40 }
+const wispOpacityShareOfTheSteam = 0.5
+const longestWispStepSeconds = 0.1
+const straightUp = new THREE.Vector3(0, 1, 0)
+const whiteUnderTheDye = new THREE.Color('#ffffff')
+const longestDyeStepSeconds = 0.1
+const agitationByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0, shimmering: 0.3, simmering: 1, boiling: 3 }
+const seepingFromTheLeavesByBrewStage: Readonly<Record<BrewStage, number>> = { water: 0.5, pale: 0.4, good: 0.25, rich: 0.1, heavy: 0, overbrewed: 0, tar: 0 }
+const seepingSpotsAroundTheLeaves = 3
+const seepingSpotsFromTheMiddleShare = 0.2
+const seepingColourShareOfTheTea = 0.7
+const warmthOfWhatSeepsFromTheLeaves = -1
 const leavesAboveTheWaterMetres = 0.0015
 const oilySheenOfTar = 0.9
 const leavesDriftRadiansPerSecondByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
 const noLooseLeaves: LooseLeavesView = { teaId: null, fillShare: 0 }
 
-export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, lidsLyingOpen: readonly LyingLid[]): void {
+export function showContentsOf(model: CarriedModel, scene: CarriedItemsScene, lidsLyingOpen: readonly LyingLid[], inflow: DyeInflow | null = null): void {
   const vessel = scene.view.vessels[model.itemId]
   const isOpen = isTheLidOpen(scene.state, model.itemId)
   const lyingLidOffsetInTheRoom = lidsLyingOpen.find((lid) => lid.itemId === model.itemId)?.offset ?? null
   const lyingLidOffset = lyingLidOffsetInTheRoom === null ? null : turnedBy(lyingLidOffsetInTheRoom, -model.root.rotation.y)
   if (model.lid !== null) placeLid(model, model.lid, isOpen, lyingLidOffset, layoutOf(scene.state, model.itemId)?.lid?.lyingRadiusMetres ?? 0)
   const wave = vessel === undefined ? stillWater : waveAt(vessel.surfaceMotion, scene.timeSeconds)
-  if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel, wave)
+  if (model.liquid !== null && model.liquidMaterial !== null && vessel !== undefined) showLiquid(model, vessel, wave, inflow, scene.timeSeconds)
   for (const display of model.displays) display({ vessel, cloth: scene.view.cloths[model.itemId], wave, temperatureUnit: scene.temperatureUnitShown })
   if (model.soakedLeafHolder !== null && vessel !== undefined) showSoakedLeaves(model, model.soakedLeafHolder, vessel, wave, scene.timeSeconds)
   if (model.leafHolder !== null) showLeaves(model, model.leafHolder, scene)
-  const puffsPerSource = vessel === undefined || !model.root.visible || model.now.pass === 'inspected' ? 0 : puffsBySteam[vessel.steam]
+  const wispsPerSecond = vessel === undefined || !model.root.visible || model.now.pass === 'inspected' ? 0 : wispsPerSecondBySteam[vessel.steam]
   const sip = scene.sipGesture?.cupId === model.itemId ? scene.sipGesture : null
   const toTheEyes = sip === null || scene.heldInView === null ? null : { eyes: scene.heldInView.camera.getWorldPosition(new THREE.Vector3()), share: sip.liftShare }
   const isOpenToTheAir = model.lid === null || isOpen
-  const whereTheVesselIs = whereIsTheVessel(model, scene)
   model.root.updateMatrixWorld()
-  showSteam(model, steamSourcesOf(model, isOpenToTheAir), puffsPerSource, scene.timeSeconds, whereTheVesselIs)
-  showSipSteam(model, isOpenToTheAir ? puffsPerSource : 0, scene.timeSeconds, toTheEyes, whereTheVesselIs)
+  showSteam(model, steamSourcesOf(model, isOpenToTheAir), wispsPerSecond, scene.timeSeconds, toTheEyes)
 }
 
-function whereIsTheVessel(model: CarriedModel, scene: CarriedItemsScene): string {
-  const location = itemLocationIn(scene.state, model.itemId)
-  const isChosen = location?.kind === 'inHand' && scene.heldInView?.chosenHandIndex === location.handIndex
-  return JSON.stringify({ pass: model.now.pass, location, isChosen })
+function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], wispsPerSecond: number, timeSeconds: number, toTheEyes: SteamDrawnToTheEyes | null): void {
+  if (model.now.wispsPass !== model.now.pass) {
+    model.wisps.clear()
+    roomLayers.putOnLayer(model.wisps.points, model.now.pass, 'decoration')
+    model.now.wispsPass = model.now.pass
+  }
+  const secondsSinceLastShown = model.now.wispsShownAtSeconds === null ? 0 : Math.min(longestWispStepSeconds, Math.max(0, timeSeconds - model.now.wispsShownAtSeconds))
+  model.now.wispsShownAtSeconds = timeSeconds
+  model.wisps.showLook(wispsLookOf(toTheEyes !== null ? model.steamLook.drawnToTheEyes : model.now.isHeldInView ? model.steamLook.heldInView : model.steamLook.inRoom))
+  const scale = model.root.scale.x * model.look.steamPuffSizeShare
+  model.wisps.advance(secondsSinceLastShown, timeSeconds, steamSources.map((position) => ({ position, wispsPerSecond, lean: toTheEyes === null ? straightUp : steamRisingTo(position, toTheEyes), scale })))
 }
 
-function showSteam(model: CarriedModel, steamSources: readonly THREE.Vector3[], puffsPerSource: number, timeSeconds: number, whereTheVesselIs: string): void {
-  model.puffs.forEach((puff, index) => {
-    const trail = model.puffTrails[index]
-    const source = steamSources[index % steamSources.length]
-    const puffAtItsSource = Math.floor(index / steamSources.length)
-    if (trail === undefined || source === undefined || puffAtItsSource >= puffsPerSource) {
-      hideThePuff(puff, trail)
-      return
-    }
-    const rise = (timeSeconds * steamRiseMetresPerSecond + puffAtItsSource / mostPuffsFromOneSource) % 1
-    if (!trail.isOut || rise < trail.lastRise) releaseThePuff(model, puff, trail, source, new THREE.Vector3(0, 1, 0), steamColumnMetres * model.root.scale.x, model.now.isHeldInView ? model.steamLook.heldInView : model.steamLook.inRoom, whereTheVesselIs)
-    showThePuff(model, puff, trail, rise, timeSeconds, whereTheVesselIs)
-  })
-}
-
-function showSipSteam(model: CarriedModel, sipPuffCount: number, timeSeconds: number, toTheEyes: SteamDrawnToTheEyes | null, whereTheVesselIs: string): void {
-  if (toTheEyes !== null && model.now.sipSteamStartedAtSeconds === null) model.now.sipSteamStartedAtSeconds = timeSeconds
-  const startedAtSeconds = model.now.sipSteamStartedAtSeconds
-  if (startedAtSeconds === null) return
-  const crossings = (timeSeconds - startedAtSeconds) * sipPuffCrossingsPerSecond
-  const opening = model.root.localToWorld(new THREE.Vector3(0, openingHeightOf(model) + steamStartsAboveTheOpeningMetres, 0))
-  model.sipPuffs.forEach((puff, index) => {
-    const trail = model.sipPuffTrails[index]
-    if (trail === undefined) return
-    const crossingsOfThePuff = crossings - index / Math.max(1, sipPuffCount)
-    const rise = Math.max(0, crossingsOfThePuff) % 1
-    const isDue = !trail.isOut || rise < trail.lastRise
-    if (isDue) {
-      if (toTheEyes === null || index >= sipPuffCount || crossingsOfThePuff < 0) return hideThePuff(puff, trail)
-      const reachMetres = THREE.MathUtils.lerp(steamColumnMetres * model.root.scale.x, opening.distanceTo(toTheEyes.eyes), toTheEyes.share)
-      releaseThePuff(model, puff, trail, opening, steamRisingTo(opening, toTheEyes), reachMetres, model.steamLook.drawnToTheEyes, whereTheVesselIs)
-    }
-    showThePuff(model, puff, trail, rise, timeSeconds, whereTheVesselIs)
-  })
-  if (toTheEyes === null && model.sipPuffTrails.every((trail) => !trail.isOut)) model.now.sipSteamStartedAtSeconds = null
-}
-
-function releaseThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail, source: THREE.Vector3, direction: THREE.Vector3, reachMetres: number, look: THREE.Material, whereTheVesselIs: string): void {
-  trail.isOut = true
-  trail.origin.copy(source)
-  trail.direction.copy(direction)
-  trail.size = model.root.scale.x
-  trail.reachMetres = reachMetres
-  trail.opacity = look.opacity
-  trail.whereTheVesselWas = whereTheVesselIs
-  trail.leftBehindAtSeconds = null
-  roomLayers.putOnLayer(puff, model.now.pass, 'decoration')
-}
-
-function showThePuff(model: CarriedModel, puff: THREE.Mesh, trail: PuffTrail, rise: number, timeSeconds: number, whereTheVesselIs: string): void {
-  if (trail.leftBehindAtSeconds === null && trail.whereTheVesselWas !== whereTheVesselIs) trail.leftBehindAtSeconds = timeSeconds
-  const shareLeft = trail.leftBehindAtSeconds === null ? 1 : Math.max(0, 1 - (timeSeconds - trail.leftBehindAtSeconds) / leftBehindPuffFadesInSeconds)
-  trail.lastRise = rise
-  trail.material.opacity = trail.opacity * shareLeft * shareOfSteamLeftAt(rise)
-  puff.visible = shareLeft > 0
-  puff.position.copy(trail.origin).addScaledVector(trail.direction, rise * trail.reachMetres)
-  puff.scale.setScalar((smallestPuffScale + rise) * model.look.steamPuffSizeShare * trail.size)
+function wispsLookOf(steam: THREE.Material): WispsLook {
+  const colour = steam instanceof THREE.MeshBasicMaterial || steam instanceof THREE.MeshStandardMaterial ? steam.color : new THREE.Color('#ffffff')
+  return { colour, opacity: steam.opacity * wispOpacityShareOfTheSteam }
 }
 
 export function shareOfSteamLeftAt(rise: number): number {
   return Math.min(1, rise / steamAppearsOverShareOfItsRise) * (1 - rise) ** 2
-}
-
-function hideThePuff(puff: THREE.Mesh, trail: PuffTrail | undefined): void {
-  puff.visible = false
-  if (trail !== undefined) trail.isOut = false
 }
 
 function steamRisingTo(source: THREE.Vector3, toTheEyes: SteamDrawnToTheEyes): THREE.Vector3 {
@@ -157,7 +110,7 @@ function heapLiftedByTheLiquid(model: CarriedModel, looseLeaves: LooseLeavesLook
   return Math.max(0, liquidLevelIn(model.vessel.profile, vessel.fillShare).heightMetres - heapTop)
 }
 
-function showLiquid(model: CarriedModel, vessel: VesselView, wave: Wave): void {
+function showLiquid(model: CarriedModel, vessel: VesselView, wave: Wave, inflow: DyeInflow | null, timeSeconds: number): void {
   const liquidParts = model.vessel?.liquid ?? null
   if (model.liquid === null || model.liquidMaterial === null || model.vessel === null || liquidParts === null) return
   model.liquid.visible = vessel.fillShare > 0 && vessel.isLidOpen !== false
@@ -165,16 +118,46 @@ function showLiquid(model: CarriedModel, vessel: VesselView, wave: Wave): void {
   model.liquid.position.y = surfaceHeight + (vessel.fillShare > 0 ? wave.riseMetres : 0)
   model.liquid.rotation.set(-Math.PI / 2 + wave.tiltXRadians, 0, wave.tiltZRadians)
   model.liquid.scale.setScalar(radiusMetres)
-  model.liquidMaterial.color.set(vessel.liquorColour)
-  if (liquidParts.tint !== null) model.liquidMaterial.color.multiply(liquidParts.tint)
+  const surfaceColour = new THREE.Color(vessel.liquorColour)
+  if (liquidParts.tint !== null) surfaceColour.multiply(liquidParts.tint)
+  showTheDye(model, vessel, surfaceColour, inflow === null ? null : { ...inflow, colour: liquidParts.tint === null ? inflow.colour : inflow.colour.clone().multiply(liquidParts.tint) }, timeSeconds)
+  model.liquidMaterial.color.set(model.dye === null ? surfaceColour : whiteUnderTheDye)
   model.liquidMaterial.opacity = vessel.liquorOpacity
   if (model.liquidMaterial instanceof THREE.MeshPhysicalMaterial) model.liquidMaterial.iridescence = vessel.brewStage === 'tar' ? oilySheenOfTar : 0
-  if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel)
+  if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel, surfaceColour)
 }
 
-function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight: number, vessel: VesselView): void {
+function showTheDye(model: CarriedModel, vessel: VesselView, surfaceColour: THREE.Color, inflow: DyeInflow | null, timeSeconds: number): void {
+  const dye = model.dye
+  if (dye === null) return
+  if (vessel.fillShare <= 0) {
+    model.now.isTheDyeFilled = false
+    return
+  }
+  if (!model.now.isTheDyeFilled) {
+    dye.fillWith(surfaceColour)
+    model.now.isTheDyeFilled = true
+    model.now.dyeShownAtSeconds = timeSeconds
+  }
+  const seconds = model.now.dyeShownAtSeconds === null ? 0 : Math.min(longestDyeStepSeconds, Math.max(0, timeSeconds - model.now.dyeShownAtSeconds))
+  model.now.dyeShownAtSeconds = timeSeconds
+  dye.advance(seconds, timeSeconds, surfaceColour, [...(inflow === null ? [] : [inflow]), ...seepingFromTheLeaves(model, vessel, surfaceColour)], agitationByMotion[vessel.surfaceMotion])
+}
+
+function seepingFromTheLeaves(model: CarriedModel, vessel: VesselView, surfaceColour: THREE.Color): DyeInflow[] {
+  const strength = vessel.soakedLeaves === null ? 0 : seepingFromTheLeavesByBrewStage[vessel.brewStage]
+  if (strength <= 0) return []
+  const turn = model.now.soakedLeavesTurn?.radians ?? 0
+  const colour = surfaceColour.clone().multiplyScalar(seepingColourShareOfTheTea)
+  return Array.from({ length: seepingSpotsAroundTheLeaves }, (_, index) => {
+    const angle = turn + (2 * Math.PI * index) / seepingSpotsAroundTheLeaves
+    return { u: 0.5 + Math.cos(angle) * seepingSpotsFromTheMiddleShare, v: 0.5 + Math.sin(angle) * seepingSpotsFromTheMiddleShare, colour, strength, warmth: warmthOfWhatSeepsFromTheLeaves, pushU: 0, pushV: 0 }
+  })
+}
+
+function showLiquidVolume(model: CarriedModel, volume: THREE.Mesh, surfaceHeight: number, vessel: VesselView, surfaceColour: THREE.Color): void {
   volume.visible = vessel.fillShare > 0
-  if (volume.material instanceof THREE.MeshStandardMaterial && model.liquidMaterial !== null) volume.material.color.copy(model.liquidMaterial.color)
+  if (volume.material instanceof THREE.MeshStandardMaterial) volume.material.color.copy(surfaceColour)
   const volumeAt = model.vessel?.liquid?.volumeAt ?? null
   if (!volume.visible || volumeAt === null || model.now.liquidVolumeHeight === surfaceHeight) return
   model.now.liquidVolumeHeight = surfaceHeight
@@ -217,7 +200,7 @@ function steamSourcesOf(model: CarriedModel, isOpenToTheAir: boolean): THREE.Vec
   return [...aboveTheSpout, ...(isOpenToTheAir ? [aboveTheOpening] : [])]
 }
 
-function openingHeightOf(model: CarriedModel): number {
+export function openingHeightOf(model: CarriedModel): number {
   return model.vessel === null ? model.heightMetres : openingOf(model.vessel.profile).heightMetres
 }
 

@@ -1,9 +1,11 @@
 import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { DeepReadonly } from '../../Engine/DeepReadonly.ts'
-import type { HandIndex, ItemLocation, SessionState } from './SessionState.ts'
+import type { HandIndex, InventorySlot, ItemLocation, SessionState } from './SessionState.ts'
 import { componentAcross, entityIdsAcross, firstEntityAcross, type Table } from '../../Engine/World.ts'
 
-export type ItemsInTheHands = readonly [string | null, string | null, string | null]
+export type ItemsInTheHands = readonly [string | null, string | null]
+
+export type ItemsInTheInventory = readonly [string | null, string | null]
 
 type ItemHolders<Holder> = {
   readonly spoon: Holder
@@ -12,7 +14,6 @@ type ItemHolders<Holder> = {
 }
 
 export const spoonItemId = 'spoon'
-export const middleHandIndex: HandIndex = 2
 
 type CarriedItem = { readonly location: DeepReadonly<ItemLocation> }
 
@@ -33,11 +34,19 @@ export function itemWithItsLocationIn(state: SessionState, itemId: string): { lo
 }
 
 export function itemIdsInTheHands(state: DeepReadonly<SessionState>): ItemsInTheHands {
-  return [itemIdInHand(state, 0), itemIdInHand(state, 1), itemIdInHand(state, middleHandIndex)]
+  return [itemIdInHand(state, 0), itemIdInHand(state, 1)]
 }
 
 export function itemIdInHand(state: DeepReadonly<SessionState>, handIndex: HandIndex): string | null {
   return firstEntityAcross(tablesOfCarriedItems<CarriedItem>(state), ({ location }) => location.kind === 'inHand' && location.handIndex === handIndex)
+}
+
+export function itemIdsInTheInventory(state: DeepReadonly<SessionState>): ItemsInTheInventory {
+  return [itemIdInTheInventory(state, 0), itemIdInTheInventory(state, 1)]
+}
+
+export function itemIdInTheInventory(state: DeepReadonly<SessionState>, slotIndex: InventorySlot): string | null {
+  return firstEntityAcross(tablesOfCarriedItems<CarriedItem>(state), ({ location }) => location.kind === 'inTheInventory' && location.slotIndex === slotIndex)
 }
 
 export function itemIdOnTheHeater(state: DeepReadonly<SessionState>): string | null {
@@ -56,6 +65,7 @@ export function standingSpotOf(location: DeepReadonly<ItemLocation> | undefined)
     case 'inTheSink':
       return location.spot
     case 'inHand':
+    case 'inTheInventory':
     case 'gone':
       return null
   }
@@ -66,6 +76,8 @@ export function whereIs(location: DeepReadonly<ItemLocation> | undefined): strin
   switch (location.kind) {
     case 'inHand':
       return `in hand ${location.handIndex}`
+    case 'inTheInventory':
+      return `in place ${location.slotIndex} of the inventory`
     case 'onSurface':
       return `on the ${location.spot.placeId}`
     case 'onTheHeater':

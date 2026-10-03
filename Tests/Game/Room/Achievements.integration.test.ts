@@ -113,9 +113,8 @@ test('achievement_ofATeaBowlTriedOnTheHeater_isHistoryLesson', () => {
   const room = new TestRoom()
   room.carryFromTheShelf('bowl1')
   room.walkTo('counter')
-  room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'heater' })
+  room.tapAndChoose({ kind: 'heater' }, 'putOnTheHeater', 'bowl')
 
   assert.deepEqual([...room.achievements.unlocked], ['bowlTriedOnTheHeater'])
 })
@@ -124,9 +123,8 @@ test('achievement_ofTheCaddyTriedOnTheHeater_isNotHistoryLesson', () => {
   const room = new TestRoom()
   room.carryFromTheShelf('caddy')
   room.walkTo('counter')
-  room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'heater' })
+  room.tapAndChoose({ kind: 'heater' }, 'putOnTheHeater', 'caddy')
 
   assert.deepEqual([...room.achievements.unlocked], [])
 })
@@ -135,10 +133,10 @@ test('achievement_ofTheLastThingPutOnTheShelf_isDvd', () => {
   const room = new TestRoom()
   room.putEverythingButTheClothOnTheShelf()
   room.walkTo('teaTable')
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   room.walkTo('shelf')
 
-  room.tap({ kind: 'surface', furnitureId: 'shelf', point: onTheShelfBesideTheBowls })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'shelf', point: onTheShelfBesideTheBowls }, 'putDownHere')
 
   assert.deepEqual([...room.achievements.unlocked], ['everythingOnTheShelf'])
 })
@@ -147,9 +145,9 @@ test('achievement_ofAThingPutOnTheShelfWhileTheClothLiesOnTheTeaTable_isNotDvd',
   const room = new TestRoom()
   room.putEverythingButTheClothOnTheShelf()
   room.walkTo('shelf')
-  room.takeAndChoose('caddy')
+  room.take('caddy')
 
-  room.tap({ kind: 'surface', furnitureId: 'shelf', point: onTheShelfBesideTheBowls })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'shelf', point: onTheShelfBesideTheBowls }, 'putDownHere')
 
   assert.deepEqual([...room.achievements.unlocked], [])
 })
@@ -194,14 +192,6 @@ test('achievement_whenANewPuddleIsWipedWhereTheWipedOneHasGone_isOcd', () => {
   room.achievements.eventsHappened([{ ...wipeOnTheTeaTable, puddleId: 'puddle2' }], room.testSession.state)
 
   assert.deepEqual(room.announced, ['tableWiped'])
-})
-
-test('achievement_ofAMiddleHandGrown_isShiva', () => {
-  const room = new AchievementsInTheRoom()
-
-  room.achievements.eventsHappened([{ type: 'middleHandGrown', itemId: 'bowl3' }], room.testSession.state)
-
-  assert.deepEqual(room.announced, ['shiva'])
 })
 
 test('achievement_ofThePlayerDying_isAnEnthusiast', () => {
@@ -476,7 +466,7 @@ function pourTheThirdTeaIntoTheThermosAndWashItsCup(session: TestTeaSession): vo
   session.pour('cup1', 'thermos', 3, fullFlowTiltDegrees)
   session.doWithoutARefusal({ type: 'putDown', itemId: 'kettle', spot: { placeId: 'table', x: 1, y: 0, z: 0 } })
   session.doWithoutARefusal({ type: 'pickUp', itemId: 'cup1' })
-  session.fillInTheSink('cup1', 10)
+  session.washInTheSink('cup1', 10)
 }
 
 const strongButFine: TasteVerdict = { temperature: 'pleasant', strength: 'heavy', bitterness: 'soft', reaction: 'grimace' }
@@ -552,7 +542,7 @@ class AchievementsInTheRoom {
     this.testSession.doWithoutARefusal({ type: 'openVesselLid', vesselId: 'caddy' })
     this.testSession.doWithoutARefusal({ type: 'standAt', placeId: 'counter' })
     this.testSession.doWithoutARefusal({ type: 'putInTheSink', itemId: 'caddy' })
-    this.testSession.doWithoutARefusal({ type: 'turnTheTapOn' })
+    this.testSession.doWithoutARefusal({ type: 'turnTheTapOn', use: 'wash' })
     this.testSession.wait(120)
     this.testSession.doWithoutARefusal({ type: 'turnTheTapOff' })
   }

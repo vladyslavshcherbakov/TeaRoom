@@ -7,10 +7,10 @@ import type { Liquid } from '../Chemistry/Liquid.ts'
 import type { DeepReadonly } from '../../Engine/DeepReadonly.ts'
 import { initialSessionState } from './InitialState.ts'
 import { aBoolean, absentOr, aNumber, anObject, aRecordOf, aString, fittedSave, isAnObject, nullOr, type FittedSave, type ObjectShape } from '../../Engine/Save.ts'
-import { carriedItemIdsIn, itemLocationIn, middleHandIndex, standingSpotOf } from './WhereItemsAre.ts'
-import type { ClothState, FigurineState, HeaterState, ItemLocation, PlayerState, PourState, PuddleState, RunningWaterState, SessionState, SinkState, SpoonState, VesselState } from './SessionState.ts'
+import { carriedItemIdsIn, itemLocationIn, standingSpotOf } from './WhereItemsAre.ts'
+import { tapUses, type ClothState, type HeaterState, type ItemLocation, type PlayerState, type PourState, type PuddleState, type RunningWaterState, type SessionState, type SinkState, type SpoonState, type VesselState } from './SessionState.ts'
 
-export const sessionStateVersion = 4
+export const sessionStateVersion = 8
 
 const aSpot = anObject<Spot>({ placeId: aString, x: aNumber, y: aNumber, z: aNumber, turnRadians: absentOr(aNumber) })
 
@@ -64,6 +64,7 @@ const aPour = anObject<PourState>({
 })
 
 const someRunningWater = anObject<RunningWaterState>({
+  use: aTapUse,
   openedAtSeconds: aNumber,
   drainedSinceOpenedMl: aNumber,
   filledMl: aNumber,
@@ -77,14 +78,13 @@ const sessionStateSchema = anObject<SessionState>({
   elapsedSeconds: aNumber,
   roomId: aString,
   atmosphere: anObject<Atmosphere>({ timeOfDay: aString, shareThroughTheTimeOfDay: aNumber, weather: aString }),
-  player: anObject<PlayerState>({ placeId: nullOr(aString), hasAMiddleHand: aBoolean }),
+  player: anObject<PlayerState>({ placeId: nullOr(aString) }),
   vessels: aRecordOf(aVessel),
   heater: aHeater,
   spoon: anObject<SpoonState>({ gramsByTeaId: aRecordOf(aNumber), capacityGrams: aNumber, charring: aNumber, location: aLocation }),
   cloths: aRecordOf(aCloth),
   pour: nullOr(aPour),
-  sink: anObject<SinkState>({ runningWater: nullOr(someRunningWater), hasRunOverTheItemInside: aBoolean }),
-  figurines: aRecordOf(anObject<FigurineState>({ id: aString, satisfaction: aNumber, wasOfferedTeaThisRitual: aBoolean })),
+  sink: anObject<SinkState>({ runningWater: nullOr(someRunningWater), hasRinsedTheItemInside: aBoolean }),
   puddles: aRecordOf(anObject<PuddleState>({ centre: aSpot, wetMl: aNumber, strength: aNumber, temperatureC: aNumber })),
   puddlesSpilled: aNumber,
 })
@@ -114,7 +114,6 @@ function roomContentProblemsOf(state: SessionState, fresh: SessionState, room: R
   return [
     ...differentItemsProblems('vessel', Object.values(state.vessels).map(vesselWithItsDefinition), Object.values(fresh.vessels).map(vesselWithItsDefinition)),
     ...differentItemsProblems('cloth', Object.keys(state.cloths), Object.keys(fresh.cloths)),
-    ...differentItemsProblems('figurine', Object.keys(state.figurines), Object.keys(fresh.figurines)),
     ...(state.heater.definitionId === fresh.heater.definitionId ? [] : [`the saved heater is ${state.heater.definitionId}, and the room has ${fresh.heater.definitionId}`]),
     ...(room.timesOfDay.length === 0 || room.timesOfDay.includes(timeOfDay) ? [] : [`the room does not offer the time of day ${timeOfDay}`]),
     ...(room.weathers.length === 0 || room.weathers.includes(weather) ? [] : [`the room does not offer the weather ${weather}`]),
@@ -132,14 +131,26 @@ function differentItemsProblems(kindOfItem: string, savedItems: readonly string[
 }
 
 function handProblemsOf(state: SessionState): string[] {
-  const itemIdsByHand = new Map<number, string[]>()
+  const itemIdsByHolder = new Map<string, string[]>()
   for (const [itemId, location] of locationsIn(state)) {
-    if (location.kind === 'inHand') itemIdsByHand.set(location.handIndex, [...(itemIdsByHand.get(location.handIndex) ?? []), itemId])
+    const holder = holderOf(location)
+    if (holder !== null) itemIdsByHolder.set(holder, [...(itemIdsByHolder.get(holder) ?? []), itemId])
   }
-  const crowdedHands = [...itemIdsByHand].filter(([, itemIds]) => itemIds.length > 1).map(([handIndex, itemIds]) => `hand ${handIndex} holds ${itemIds.join(' and ')} at once`)
-  const middleHandItemIds = itemIdsByHand.get(middleHandIndex) ?? []
-  const middleHandThatNeverGrew = !state.player.hasAMiddleHand && middleHandItemIds.length > 0 ? [`the middle hand holds ${middleHandItemIds.join(' and ')}, though it has not grown`] : []
-  return [...crowdedHands, ...middleHandThatNeverGrew]
+  return [...itemIdsByHolder].filter(([, itemIds]) => itemIds.length > 1).map(([holder, itemIds]) => `${holder} holds ${itemIds.join(' and ')} at once`)
+}
+
+function holderOf(location: DeepReadonly<ItemLocation>): string | null {
+  switch (location.kind) {
+    case 'inHand':
+      return `hand ${location.handIndex}`
+    case 'inTheInventory':
+      return `place ${location.slotIndex} of the inventory`
+    case 'onSurface':
+    case 'onTheHeater':
+    case 'inTheSink':
+    case 'gone':
+      return null
+  }
 }
 
 function referenceProblemsOf(state: SessionState): string[] {
@@ -190,12 +201,18 @@ function aLocation(value: unknown, path: string): string[] {
     case 'inTheSink':
       return aSpot(value['spot'], `${path}.spot`)
     case 'inHand':
-      return value['handIndex'] === 0 || value['handIndex'] === 1 || value['handIndex'] === 2 ? [] : [`${path} is a hand that does not exist, ${String(value['handIndex'])}`]
+      return value['handIndex'] === 0 || value['handIndex'] === 1 ? [] : [`${path} is a hand that does not exist, ${String(value['handIndex'])}`]
+    case 'inTheInventory':
+      return value['slotIndex'] === 0 || value['slotIndex'] === 1 ? [] : [`${path} is a place of the inventory that does not exist, ${String(value['slotIndex'])}`]
     case 'gone':
       return []
     default:
       return [`${path} is an unknown kind of place, ${String(value['kind'])}`]
   }
+}
+
+function aTapUse(value: unknown, path: string): string[] {
+  return tapUses.some((use) => use === value) ? [] : [`${path} is an unknown use of the tap, ${String(value)}`]
 }
 
 function aHeaterMode(value: unknown, path: string): string[] {

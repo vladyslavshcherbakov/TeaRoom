@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { whyThereIsNoRoomFor, type LyingLid } from '../../../Apps/Game/Room/Placement.ts'
+import { isUnderAnotherItem, nearestSpotSearchedWithinMetres, whyThereIsNoRoomFor, type LyingLid } from '../../../Apps/Game/Room/Placement.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { definitionIn } from '../../../Shared/Engine/Catalog.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { quietRoomLayout, onTheShelfBoard, onTheTeaTable, onTopOf, spotOn, TestRoom } from '../../Support/TestRoom.ts'
-import { itemIdsInTheHands } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
+import { standingSpotOf } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
 
 const behindTheKettle = onTopOf('counter', -0.1, -0.21)
 const kettleAndCaddyLidsTouchWithinMetres = 0.17
@@ -78,16 +78,17 @@ test('openCaddyLid_withNoRoomBesideTheCaddy_isLoggedOnce', () => {
   assert.equal(room.logLines.filter((line) => line.startsWith('the open lid of caddy finds no room')).length, 1, room.logLines.join('\n'))
 })
 
-test('bowl_whenPutDownOnTheKettlesOpenLid_staysInHand', () => {
+test('bowl_whenPutDownOnTheKettlesOpenLid_standsClearOfTheLid', () => {
   const room = new TestRoom()
   room.carryFromTheShelf('bowl1')
   room.walkTo('counter')
   room.session.dispatch({ type: 'openVesselLid', vesselId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'surface', furnitureId: 'counter', point: behindTheKettle })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'counter', point: behindTheKettle }, 'putDownHere')
 
-  assert.deepEqual(itemIdsInTheHands(room.state), ['bowl1', null, null])
+  const bowlSpot = standingSpotOf(room.state.vessels['bowl1']?.location)
+  if (bowlSpot === null) throw new Error('the bowl is not standing on the counter')
+  assert.equal(isUnderAnotherItem('bowl1', bowlSpot, room.state, quietRoomSurroundings, room.lyingLids), false)
 })
 
 test('bowl_underTheSpoutOfTheKettleStandingThere_hasNoRoom', () => {
@@ -135,14 +136,17 @@ test('bowl_behindTheKettleAwayFromItsSpout_fits', () => {
   assert.equal(refusal, null)
 })
 
-test('kettle_whenPutDownAtTheSinksEdge_staysInHand', () => {
+test('kettle_whenPutDownAtTheSinksEdge_standsNearbyClearOfTheSink', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
 
-  room.tap({ kind: 'surface', furnitureId: 'counter', point: atTheSinksEdge })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'counter', point: atTheSinksEdge }, 'putDownHere')
 
-  assert.equal(room.state.vessels['kettle']?.location.kind, 'inHand')
+  const kettleSpot = standingSpotOf(room.state.vessels['kettle']?.location)
+  if (kettleSpot === null) throw new Error('the kettle is not standing on the counter')
+  assert.equal(whyThereIsNoRoomFor('kettle', kettleSpot, room.state, quietRoomSurroundings, room.lyingLids), null)
+  assert.ok(Math.hypot(kettleSpot.x - atTheSinksEdge.x, kettleSpot.z - atTheSinksEdge.z) <= nearestSpotSearchedWithinMetres, JSON.stringify(kettleSpot))
 })
 
 test('kettle_atTheSinksEdge_hasNoRoomBecauseTheSinkIsThere', () => {
@@ -155,14 +159,14 @@ test('kettle_atTheSinksEdge_hasNoRoomBecauseTheSinkIsThere', () => {
   assert.equal(refusal, 'theSinkIsThere')
 })
 
-test('kettle_whenTappedDownAtTheSinksEdge_staysInTheHandAndThePlayerSaysThereIsNoRoom', () => {
+test('bowl_whenPutDownOnTopOfTheShelf_staysInTheHandAndThePlayerSaysThereIsNoRoom', () => {
   const room = new TestRoom()
-  room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.walkTo('shelf')
+  room.take('bowl1')
 
-  room.tap({ kind: 'surface', furnitureId: 'counter', point: atTheSinksEdge })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'shelf', point: onTopOf('shelf', 0, 0) }, 'putDownHere')
 
-  assert.deepEqual({ kettleIsIn: room.state.vessels['kettle']?.location.kind, barks: room.barks }, { kettleIsIn: 'inHand', barks: [{ kind: 'noRoomToPutDown', timesMade: 1 }] })
+  assert.deepEqual({ bowlIsIn: room.state.vessels['bowl1']?.location.kind, barks: room.barks }, { bowlIsIn: 'inHand', barks: [{ kind: 'noRoomToPutDown', timesMade: 1 }] })
 })
 
 test('bowl_overACornerOfTheHeaterPlate_hasNoRoom', () => {

@@ -57,13 +57,6 @@ export function canAimAPour(state: SessionPort['state'], sourceId: string | null
   return source !== undefined && sourceId !== targetId && standingSpotOf(state.vessels[targetId]?.location) !== null
 }
 
-export function whyNoPourCanBeAimed(state: SessionPort['state'], sourceId: string | null, targetId: string): string {
-  const source = sourceId === null ? undefined : state.vessels[sourceId]
-  if (source === undefined) return `${sourceId ?? 'nothing'} is not a vessel`
-  if (source.id === targetId) return `${targetId} is the chosen vessel itself`
-  return `${targetId} is not a vessel standing on a surface`
-}
-
 export function aimAPour(setUp: PourSetUp): AimedPour | null {
   const { session, log, sourceId, targetId, spoutDirection } = setUp
   const state = session.state

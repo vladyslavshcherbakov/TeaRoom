@@ -1,6 +1,6 @@
 # Game logic rules
 
-The rules the game logic follows. Numbers that differ per tea, vessel, heater, figurine or room live in the definitions under `Shared/Content/`. Numbers that are the same everywhere are named constants beside the rule that uses them. Units: °C, millilitres, grams and seconds. Strength, bitterness and a figurine's satisfaction run from 0 to 100.
+The rules the game logic follows. Numbers that differ per tea, vessel, heater, figurine or room live in the definitions under `Shared/Content/`. Numbers that are the same everywhere are named constants beside the rule that uses them. Units: °C, millilitres, grams and seconds. Strength and bitterness run from 0 to 100.
 
 ## Time
 
@@ -9,22 +9,21 @@ The rules the game logic follows. Numbers that differ per tea, vessel, heater, f
 
 ## Places and hands
 
-- A room has places, such as the counter, the shelf and the tea table. Every carried item, each vessel, the caddy among them, the spoon and each cloth, is on a surface at a spot of a place, on the heater, in the sink, or in one of the player's hands. The spot keeps the exact position where the item was put down.
-- The player has two hands, and a middle hand that grows when both are full. The player stands at one place, or at none while walking. An item is within reach when it is in a hand, or at the place where the player stands.
+- A room has places, such as the counter, the shelf and the tea table. Every carried item, each vessel, the caddy among them, the spoon and each cloth, is on a surface at a spot of a place, on the heater, in the sink, in one of the player's hands, or in one of the two places of the inventory. The spot keeps the exact position where the item was put down.
+- The player has two hands and an inventory of two places. The player stands at one place, or at none while walking. An item is within reach when it is in a hand, or at the place where the player stands. An item in the inventory is reached only to be taken into a hand.
 - An action on an item checks, in this order, that the item exists, that it has not crumbled to ash, and that it is within reach, then whatever else it needs. It is refused with the reason of the first check that fails. The heater, the thermostat and the tap check first that the player stands at their place.
 
 | Action | Needs | What happens |
 |---|---|---|
-| Pick up | The item within reach and a free hand | The first free hand takes it. An open lid closes. From the heater it is lifted off, from the sink it leaves the sink, and a cloth lying in a puddle stops soaking it. |
+| Pick up | The item within reach or in the inventory, and a free hand | The first free hand takes it. An open lid closes. From the heater it is lifted off, from the sink it leaves the sink, and a cloth lying in a puddle stops soaking it. |
 | Put down | The item in a hand, and the spot at the player's place | It stands at the spot. |
-| Grow a middle hand, `pickUpWithAMiddleHand` | The checks of picking up, both hands full and no middle hand yet | The middle hand grows and takes the item at once. Every refusal names `pickUpWithAMiddleHand`. If the item cannot be taken, such as a spoon that crumbles or a thermos too hot to hold, no hand grows. The middle hand is gone as soon as it lets go of its item, however it lets go, with `middleHandVanished`. |
+| Put away, `putAway` | The item within reach, not yet in the inventory, cool enough to hold, and a free place in the inventory | The first free place takes it, and it is lifted as picking up lifts it. It goes on living there: it cools, and leaves in it steep. |
 | Put on the heater | The player at the heater's place, and the item in a hand or on the same surface | Taken from a surface or the sink, it is lifted as picking up lifts it. |
 | Pour | The source and the target within reach | Walking away ends the pour. |
 | Lids, tasting, scooping | The item within reach | Scooping and tipping need the spoon in a hand. |
 | Wipe | The cloth in a hand, and the player at a place with a puddle | |
 | Soak up a puddle | The cloth lying on the surface, the player there, and a puddle there | A cloth in a hand is refused with `alreadyInHand`. |
 | A puddle reaches the cloth, `puddleReachesTheCloth` | The cloth lying on the surface and a puddle there, wherever the player stands | The cloth starts soaking as if it were laid in the puddle. |
-| Offer | The player at the ritual place, where the figurines are | |
 
 A spoon that crumbled on the heater is gone for the rest of the ritual, and every action with it is refused with `burntAway`.
 
@@ -32,7 +31,7 @@ A spoon that crumbled on the heater is gone for the rest of the ritual, and ever
 
 - A vessel on a working heater gains `degreesPerSecondPerLitre × 1000 / volume` degrees a second, up to 100 °C, so less water heats faster. While its lid is open, the gain is multiplied by the lid's `heatingMultiplierWhenOpen`.
 - Every vessel closes a share of the gap to the room's temperature each second: its `coolingPerSecond`, multiplied by the lid's `coolingMultiplierWhenOpen` while the lid is open. Cooling comes before heating in a step, so a vessel on a working heater still reaches the boil.
-- Water at the boil on a working heater boils away at the heater's `boilingAwayMlPerSecond`, until it is lifted off, the heater is switched off, or it boils dry. A vessel that boils dry says so once with `boiledDry`, and says whether it was filled to the brim and lost water only by boiling since. Pouring from it, a sip, an offering and rinse water poured away count as taking water. Boiling dry starts the count again.
+- Water at the boil on a working heater boils away at the heater's `boilingAwayMlPerSecond`, until it is lifted off, the heater is switched off, or it boils dry. A vessel that boils dry says so once with `boiledDry`, and says whether it was filled to the brim and lost water only by boiling since. Pouring from it, a sip and rinse water poured away count as taking water. Boiling dry starts the count again.
 - The thermos has a metal shell. On a working heater its metal heats to red in 45 seconds, and off a working heater it cools back in a minute and a half. From a fifth of red heat it is too hot to hold, which it says once with `metalGlowsTooHotToHold`, and picking it up and opening or closing its lid are refused with `tooHotToHold`.
 
 ### The thermostat
@@ -70,9 +69,10 @@ Switching the heater off reports:
 - A room may have a sink at one spot of one of its places, with the tap's water temperature and flow. The quiet room's sink is on the counter.
 - The player puts an item from a hand into the sink at the sink's place. One item fits at a time. A vessel or a cloth may go in, and the spoon may not. The tap stays as it was.
 - The player turns the tap on and off at the sink's place, whatever the hands hold. It runs until it is turned off, also while the player is away.
+- The tap runs to fill or to wash. Turning it on names its use, and putting an item in the sink while it runs may name a new one. Without a name it fills, and an item put in under it keeps the use it had.
 - The tap fills the vessel in the sink, mixing by volume. While a lid that must be open to fill is closed, the water runs over the lid down the drain.
-- Once the vessel is full, the rest runs over the rim down the drain. The first overflow is reported, and the table stays dry. The water running over carries out what the vessel held: tea fades towards the tap's water, hot water cools towards the tap's temperature, and each full vessel's worth of water that runs over washes out all but a seventh of the leaves, of every tea alike. Below 0.1 g no leaves are left, and the last ones washed out report `lastLeavesWashedOut`.
-- A tea bowl or the caddy that the tap ran over is emptied as it leaves the sink. The kettle and the thermos keep their water.
+- Once the vessel is full, the rest runs over the rim down the drain. The first overflow is reported, and the table stays dry. The water running over carries out what the vessel held: tea fades towards the tap's water and hot water cools towards the tap's temperature. Only while it washes, each full vessel's worth of water that runs over also washes out all but a seventh of the leaves, of every tea alike. Below 0.1 g no leaves are left, and the last ones washed out report `lastLeavesWashedOut`.
+- A tea bowl, the thermos or the caddy that the tap ran over while washing it is emptied as it leaves the sink. A filled one and the kettle keep their water.
 - With nothing in the sink, the water runs down the drain. Turning the tap off reports how long it ran, how much went down the drain since it opened, and whether anything stood in the sink meanwhile.
 - An item leaves the sink when it is picked up or put on the heater, and an open lid closes, as for any item taken.
 
@@ -83,7 +83,7 @@ Switching the heater off reports:
 - Leaves only come out of a caddy: tipping the spoon over a caddy is refused with `caddyTakesNoLeaves`. Scooping from a vessel the room keeps no tea in is refused with `notACaddy`.
 - The kettle and the tea bowls hold leaves, of several teas at once. Leaves stay in their vessel when it is poured from.
 - Water poured into the open caddy brews all its leaves at once, so its tea turns extremely strong within seconds. A sip of heavy or extreme tea straight from the caddy kills the player with `playerDied`. The same tea poured into a bowl first is only drunk with a grimace.
-- In the sink with its lid open, the tap fills a caddy and washes every leaf out, and it has no tea until the player returns.
+- In the sink with its lid open, the tap washing a caddy washes every leaf out, and it has no tea until the player returns.
 
 A brew starts when leaves and water first share a vessel, whichever arrives second. While it lasts, each second:
 
@@ -111,20 +111,6 @@ A sip takes 40 ml and says whether the bowl held leaves. Nothing is judged befor
 
 The blend's balanced range is the average of the balanced ranges of the teas in the sip, each weighted by its share of the strength. A tea bowl filled from the boiling kettle in the quiet room is too hot to sip for about six seconds.
 
-## Offerings
-
-A bowl set before a figurine goes wholly into its saucer. Each figurine accepts one offering a ritual.
-
-| Satisfaction | Points |
-|---|---|
-| Plain water | 1, and nothing else counts |
-| Any tea | 4 |
-| Affinity | 4 for each point of the figurine's hidden affinity for the teas of the offering, each weighted by its share of the strength |
-| Strength in the figurine's preferred range | 4 |
-| Bitterness 45 or more | −4 |
-
-The figurine answers with `glow` from 12 points, `subtle` from 6, and `barely` below that.
-
 ## Puddles and the cloth
 
 - Spilled liquid lies where it falls. A stream that misses its target falls where the room says it lands, with `adjustPour`. When the room names no spot, because no top is under the spout, the missed water is lost and leaves no puddle. What splashes off a vessel on a surface, or overflows it, lies around it.
@@ -133,7 +119,7 @@ The figurine answers with `glow` from 12 points, `subtle` from 6, and `barely` b
 - A wipe works on each puddle the cloth passes over. A wipe over the whole puddle removes 80% of it at 50 cm/s or slower, 30% at 200 cm/s or faster, and in proportion between. A wipe over a share of it removes `1 − (1 − that removal)^share`, so short wipes remove as much as one long wipe over the same area.
 - A wipe takes its share of the puddle however wet the cloth is. The cloth takes in what it wiped up to the 40 ml it holds. Tea stains it by all it wiped: 20 ml of the strongest tea stain it fully, and less in proportion. It dries at 0.1 ml a second clean and at 0.03 ml a second fully stained.
 - A cloth laid down in a puddle takes at once what a slow wipe over the share of the puddle under it takes. Then it soaks the puddle up at 0.5 ml a second, until the puddle is gone, or it is picked up or put on the heater. A full cloth keeps soaking up what it dries off. The room says when the cloth lands in the puddle, and which share it covers, with `soakUpThePuddle`, and when a spreading puddle reaches a lying cloth with `puddleReachesTheCloth`. A cloth soaks one puddle at a time.
-- Under the running tap a cloth loses a full stain in 10 seconds, soaks up to 40 ml, and loses a full charring in 5 seconds. It is wrung out to 8 ml as it leaves the sink.
+- Under the running tap, filling or washing, a cloth loses a full stain in 10 seconds, soaks up to 40 ml, and loses a full charring in 5 seconds. It is wrung out to 8 ml as it leaves the sink.
 - A room may hold several cloths, each with its own water, stain and charring. `wipeTable` and `soakUpThePuddle` name the cloth and the puddle.
 
 ## Charring
@@ -147,7 +133,7 @@ The figurine answers with `glow` from 12 points, `subtle` from 6, and `barely` b
 
 ## Saving and returning
 
-- A saved state is resumed only when it fits the game: the same version, every field the game reads with its kind of value, and what names an item agrees with that item. No hand, heater or sink holds two items, the middle hand holds something only once it has grown, a pour runs between the room's vessels, and the player stands at one of the room's places or at none. It holds exactly the room's vessels, each of the same definition, its cloths, its figurines and its heater, a time of day and a weather the room offers, and puddles only on the room's places. A saved state that does not fit is not resumed, and the room opens anew.
+- A saved state is resumed only when it fits the game: the same version, every field the game reads with its kind of value, and what names an item agrees with that item. No hand, place of the inventory, heater or sink holds two items, a pour runs between the room's vessels, and the player stands at one of the room's places or at none. It holds exactly the room's vessels, each of the same definition, its cloths and its heater, a time of day and a weather the room offers, and puddles only on the room's places. A saved state that does not fit is not resumed, and the room opens anew.
 - On the player's return a running pour stops, and the world lives through the time away in steps of 1 s, up to twelve hours. What happened meanwhile is logged and not shown.
 - Then the house is restocked. A spoon that crumbled waits at its starting place again, clean and empty. Each caddy is poured out, with its wet leaves, and refilled where it stands with its own tea. The return says whether the spoon came back and whether a caddy was empty.
 - Last, the time of day moves on to the next one the room offers, in the order dawn, morning, day, sunset, dusk, night, and round again. The return lands at a share through it that the room passes in, and reports `atmosphereChanged`.

@@ -5,22 +5,10 @@ import type { AppLog } from '../../../Apps/Engine/AppLog.ts'
 import { PlayerBarks, type HeardFact } from '../../../Apps/Game/Room/PlayerBarks.ts'
 import { RoomTexts } from '../../../Apps/Game/Room/RoomTexts.ts'
 import { englishPhrases } from '../../../Apps/Game/Texts/EnglishTexts.ts'
-import { phraseVariantsOf, text, textWith, type PhraseKey } from '../../../Apps/Game/Texts/Texts.ts'
+import { phraseVariantsOf, type PhraseKey } from '../../../Apps/Game/Texts/Texts.ts'
 
 const heaterItemsBeforeTheTesterJoke = 3
-const aTapOnTheSill: HeardFact = { kind: 'figurineTappedFromAfar', figurineId: 'dragon' }
-
-test('caption_ofAnOffering_namesTheFigurine', () => {
-  const lines = player().linesFor([{ type: 'figurineAcceptedTea', figurineId: 'dragon', response: 'glow' }], 0)
-
-  assert.deepEqual(lines, [textWith('offering.glow', { figurine: text('figurine.dragon') })])
-})
-
-test('caption_ofAnOfferingToAFigurineTheRoomDoesNotHave_isNotShownWithItsId', () => {
-  const lines = player().linesFor([{ type: 'figurineAcceptedTea', figurineId: 'crane', response: 'glow' }], 0)
-
-  assert.deepEqual(lines, [])
-})
+const aTapOnTheSill: HeardFact = { kind: 'figurineTapped', figurineId: 'dragon' }
 
 test('caption_ofABurntClothWashedBackToNew_marvelsAtTheWorld', () => {
   const lines = player().linesFor([{ type: 'burntClothWashedBackToNew', clothId: 'cloth' }], 0)
@@ -202,7 +190,7 @@ type Player = {
 
 function player(log: AppLog = () => {}): Player {
   const barks = new PlayerBarks(heaterItemsBeforeTheTesterJoke, log)
-  const texts = new RoomTexts(7, log)
+  const texts = new RoomTexts(7)
   return {
     linesFor: (events, elapsedSeconds) => texts.linesOf(barks.heard(events.map((event) => ({ kind: 'teaEvent', event, elapsedSeconds })))),
     linesForAFact: (fact) => texts.linesOf(barks.heard([fact])),

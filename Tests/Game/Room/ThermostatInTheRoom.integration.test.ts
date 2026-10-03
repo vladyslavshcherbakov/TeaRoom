@@ -135,23 +135,23 @@ test('heaterSwitch_withoutNerdMode_boilsTheKettlePastTheTarget', () => {
 test('thermostatControls_whenTappedWithBothHandsFull_workAndKeepTheItemsInHand', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.take('kettle')
+  room.take('thermos')
 
   room.tap(down)
   room.tap({ kind: 'thermostatButton' })
 
   assert.deepEqual({ targetC: room.state.heater.thermostatTargetC, isWorking: isTheThermostatWorking(room.state.heater.mode) }, { targetC: thermostat.startsAtC - 1, isWorking: true })
-  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', 'thermos', null])
+  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', 'thermos'])
 })
 
-test('thermostatControls_behindTheChosenHandsTouchArea_areReachedByATap', () => {
+test('thermostatControls_behindAHandsTouchArea_areReachedByATap', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
 
-  assert.equal(room.playerController.doesATapReachPastTheChosenHand(down), true)
-  assert.equal(room.playerController.doesATapReachPastTheChosenHand({ kind: 'thermostatButton' }), true)
+  assert.equal(room.playerController.doesATapReachPastTheHands(down), true)
+  assert.equal(room.playerController.doesATapReachPastTheHands({ kind: 'thermostatButton' }), true)
 })
 
 test('downArrow_whenTappedFromTheRoom_walksToTheCounterWithoutStepping', () => {

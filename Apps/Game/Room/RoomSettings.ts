@@ -1,5 +1,6 @@
 import { controlSchemes, stickLayouts, type ControlScheme } from '../../Engine/Camera/FirstPersonControls.ts'
 import { defaultsOf, oneOf, onOff, someOf, type SettingsOf } from '../../Engine/SettingValues.ts'
+import { soundLoudnesses } from './SoundLoudness.ts'
 import { temperatureUnits } from './Temperatures.ts'
 
 export const coatColours = ['#3f7f8f', '#4a5a9a', '#7a4a7f', '#a8523a', '#6b7a3a', '#c9a13a', '#3a3a3a', '#e6dcc8'] as const
@@ -22,6 +23,7 @@ export const faceFeaturesOfANewGame: readonly [FaceFeature, ...FaceFeature[]] = 
 
 export const roomSettingValues = {
   areAchievementsShown: onOff(true),
+  soundLoudness: oneOf(soundLoudnesses, 'full'),
   coatColour: oneOf(coatColours, coatColours[0]),
   hasSoftShadowsInCorners: onOff(false),
   hasGlow: onOff(true),

@@ -11,14 +11,6 @@ test('clumsyRitual_overheatedThenWaitedThenOversteeped_isTastedWithAGrimace', ()
   assert.ok(['grimace', 'strongGrimace'].includes(eventsOfType(events, 'teaTasted')[0]?.verdict.reaction ?? 'none'), JSON.stringify(events))
 })
 
-test('clumsyRitual_overheatedThenWaitedThenOversteeped_isAcceptedAsAnOffering', () => {
-  const session = clumsySession()
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup2', figurineId: 'toad' })
-
-  assert.equal(eventsOfType(events, 'figurineAcceptedTea').length, 1, JSON.stringify(events))
-})
-
 function clumsySession(): TestTeaSession {
   const session = new TestTeaSession(testCatalog({ kettle: 0.003, thermos: 0.0004, cup: 0.02 }))
   session.heatKettleTo(100)

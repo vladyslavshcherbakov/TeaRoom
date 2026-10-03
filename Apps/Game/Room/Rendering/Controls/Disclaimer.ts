@@ -1,5 +1,6 @@
 import { text } from '../../../Texts/Texts.ts'
 import { button, icon, iconShape, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
+import { soundLoudnessChoiceOnThePage, type SoundLoudnessChoice } from './SoundLoudnessChoice.ts'
 
 type Daisy = {
   readonly x: number
@@ -18,7 +19,7 @@ const leafGreen = '#86b168'
 export class Disclaimer {
   private readonly element: HTMLElement
 
-  constructor(container: HTMLElement, read: () => void) {
+  constructor(container: HTMLElement, read: () => void, soundLoudnessChoice: SoundLoudnessChoice) {
     this.element = pageElement('div', 'disclaimer')
     const card = pageElement('div', 'disclaimer-card')
     card.setAttribute('role', 'dialog')
@@ -36,6 +37,8 @@ export class Disclaimer {
       pageElement('p', 'disclaimer-text', text('disclaimer.secondParagraph')),
       farewell(),
       okButton,
+      pageElement('p', 'disclaimer-footnote', text('disclaimer.footnote')),
+      soundLoudnessChoiceOnThePage(soundLoudnessChoice),
     )
     this.element.append(card)
     container.append(this.element)

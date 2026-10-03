@@ -11,6 +11,9 @@ import { isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isThePlayerAt, is
 import { moveItem } from './MoveItem.ts'
 import { tapOf, whereTheItemIs } from './Reach.ts'
 import { runningWaterOver } from './RunningWater.ts'
+import type { TapUse } from '../State/SessionState.ts'
+
+const defaultTapUse: TapUse = 'fill'
 
 export const putInTheSinkRule: TeaCommandEntry<'putInTheSink'> = commandRuleOnASubject({
   find: foundTap,
@@ -34,17 +37,19 @@ function putInTheSink(draft: Draft, tap: TapDefinition, command: CommandOfType<'
   const itemId = command.itemId
   const whereItWas = whereTheItemIs(draft.state, itemId)
   moveItem(draft, itemId, { kind: 'inTheSink', spot: tap.sinkSpot })
-  draft.state.sink.hasRunOverTheItemInside = false
+  draft.state.sink.hasRinsedTheItemInside = false
   note(draft, `${itemId}, which was ${whereItWas}, put in the sink`)
   draft.events.push({ type: 'putInTheSink', itemId })
-  if (draft.state.sink.runningWater === null) return note(draft, `the tap stays closed over ${itemId} until the player turns it on`)
-  draft.state.sink.runningWater = runningWaterOver(draft, itemId, isClosedAgainstTheTap(draft, itemId), draft.state.sink.runningWater)
-  note(draft, `the running tap now runs onto ${itemId}`)
+  const runningWater = draft.state.sink.runningWater
+  if (runningWater === null) return note(draft, `the tap stays closed over ${itemId} until the player turns it on`)
+  const use = command.use ?? runningWater.use
+  draft.state.sink.runningWater = runningWaterOver(draft, itemId, isClosedAgainstTheTap(draft, itemId), use, runningWater)
+  note(draft, `the running tap now runs onto ${itemId} to ${use} it`)
 }
 
 function turnTheTapOn(draft: Draft, tap: TapDefinition, command: CommandOfType<'turnTheTapOn'>): void {
   if (draft.state.sink.runningWater !== null) return refuse(draft, command, 'tapAlreadyOn')
-  openTheTap(draft, tap)
+  openTheTap(draft, tap, command.use ?? defaultTapUse)
 }
 
 function turnTheTapOff(draft: Draft, _tap: TapDefinition, command: CommandOfType<'turnTheTapOff'>): void {
@@ -67,12 +72,12 @@ function foundTap(draft: Draft): Found<TapDefinition, RefusalReason> {
   return tap === null ? refusedWith('noTapInThisRoom', '') : found(tap)
 }
 
-function openTheTap(draft: Draft, tap: TapDefinition): void {
+function openTheTap(draft: Draft, tap: TapDefinition, use: TapUse): void {
   const itemId = itemIdInTheSink(draft.state)
-  draft.state.sink.runningWater = runningWaterOver(draft, itemId, itemId !== null && isClosedAgainstTheTap(draft, itemId), null)
+  draft.state.sink.runningWater = runningWaterOver(draft, itemId, itemId !== null && isClosedAgainstTheTap(draft, itemId), use, null)
   note(
     draft,
-    `tap opened over ${itemId ?? 'the empty sink'}, water at ${tap.waterTemperatureC} °C, ${tap.flowMlPerSecond} ml/s` +
+    `tap opened over ${itemId ?? 'the empty sink'} to ${use}, water at ${tap.waterTemperatureC} °C, ${tap.flowMlPerSecond} ml/s` +
       (draft.state.sink.runningWater.isRunningOverTheLid ? ', running over the closed lid into the drain' : ''),
   )
   draft.events.push({ type: 'tapTurnedOn' })

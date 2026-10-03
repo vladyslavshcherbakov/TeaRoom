@@ -3,7 +3,7 @@ import test from 'node:test'
 import { furnitureWithId, walkerStart } from '../../../Apps/Game/Room/RoomLayout.ts'
 import type { FloorPoint } from '../../../Apps/Engine/Points.ts'
 import { RoomNavigator } from '../../../Apps/Game/Room/RoomNavigator.ts'
-import { isWalking } from '../../../Apps/Engine/Walking/Walk.ts'
+import { headingFrom, isWalking } from '../../../Apps/Engine/Walking/Walk.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { quietRoomLayout, backRightCorner, behindTheTeaTable, frameSeconds, inFrontOfTheTeaTable, openFloorFrontLeft, openFloorRight } from '../../Support/TestRoom.ts'
 
@@ -19,6 +19,28 @@ test('walker_whenTheFloorIsTapped_walksThereAndStops', () => {
   assertNear(navigator.walk.position.x, openFloorFrontLeft.x)
   assertNear(navigator.walk.position.z, openFloorFrontLeft.z)
   assert.deepEqual(navigator.view, { kind: 'overview' })
+})
+
+test('walker_facingTheFirstPersonLookWhenTheFloorIsTapped_startsTheWalkFromWhereTheLookWas', () => {
+  const navigator = quietRoomNavigator()
+  const headingToTheFloor = headingFrom(navigator.walk.position, openFloorFrontLeft)
+  navigator.faceTheLook(headingToTheFloor)
+
+  navigator.tapped({ kind: 'floor', point: openFloorFrontLeft })
+  navigator.advance(frameSeconds)
+
+  assertNear(navigator.walk.headingRadians, headingToTheFloor, 0.05)
+})
+
+test('walker_standingWhileTheMouseMovesOverTheFloor_turnsTowardsIt', () => {
+  const navigator = quietRoomNavigator()
+  const headingToTheFloor = headingFrom(navigator.walk.position, openFloorRight)
+
+  navigator.turnTowards(openFloorRight)
+  for (let frame = 0; frame < 60; frame += 1) navigator.advance(frameSeconds)
+
+  assertNear(navigator.walk.headingRadians, headingToTheFloor, 1e-9)
+  assert.deepEqual(navigator.walk.position, walkerStart)
 })
 
 test('walker_whenAPointInsideTheTeaTableIsTapped_staysWhereItIs', () => {

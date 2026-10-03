@@ -4,7 +4,7 @@ import { defaultRoomSettingsWith, roomSettingValues } from '../../../Apps/Game/R
 import { settingsFrom } from '../../../Apps/Engine/SettingValues.ts'
 
 test('roomSettings_savedWithEveryChoiceFromTheLists_keepThemAll', () => {
-  const saved = { areAchievementsShown: true, coatColour: '#7a4a7f', hasSoftShadowsInCorners: true, hasGlow: false, isFrameRateShown: true, hasFullResolution: true, hasSmoothEdges: true, objectDetail: 'full', faceFeaturesShown: ['googlyEyes', 'giantAfro'], isNerdModeOn: true, temperatureUnit: 'fahrenheit', cameraMode: 'firstPerson', controlScheme: 'keyboardAndLookStick', stickLayout: 'lookOnTheLeft' }
+  const saved = { areAchievementsShown: true, soundLoudness: 'quiet', coatColour: '#7a4a7f', hasSoftShadowsInCorners: true, hasGlow: false, isFrameRateShown: true, hasFullResolution: true, hasSmoothEdges: true, objectDetail: 'full', faceFeaturesShown: ['googlyEyes', 'giantAfro'], isNerdModeOn: true, temperatureUnit: 'fahrenheit', cameraMode: 'firstPerson', controlScheme: 'keyboardAndLookStick', stickLayout: 'lookOnTheLeft' }
 
   const settings = settingsFrom(roomSettingValues, saved, defaultRoomSettingsWith('twoSticks'))
 
@@ -12,9 +12,9 @@ test('roomSettings_savedWithEveryChoiceFromTheLists_keepThemAll', () => {
 })
 
 test('roomSettings_savedWithValuesNoLongerOffered_fallBackToTheDefaults', () => {
-  const settings = settingsFrom(roomSettingValues, { areAchievementsShown: 'yes', coatColour: '#ff00ff', hasSoftShadowsInCorners: 'yes', faceFeaturesShown: ['nose', 'moustache'], temperatureUnit: 'kelvin' }, defaultRoomSettingsWith('twoSticks'))
+  const settings = settingsFrom(roomSettingValues, { areAchievementsShown: 'yes', soundLoudness: 'loud', coatColour: '#ff00ff', hasSoftShadowsInCorners: 'yes', faceFeaturesShown: ['nose', 'moustache'], temperatureUnit: 'kelvin' }, defaultRoomSettingsWith('twoSticks'))
 
-  assert.deepEqual(settings, { areAchievementsShown: true, coatColour: '#3f7f8f', hasSoftShadowsInCorners: false, hasGlow: true, isFrameRateShown: false, hasFullResolution: false, hasSmoothEdges: false, objectDetail: 'reduced', faceFeaturesShown: ['nose'], isNerdModeOn: false, temperatureUnit: 'celsius', cameraMode: 'room', controlScheme: 'twoSticks', stickLayout: 'walkOnTheLeft' })
+  assert.deepEqual(settings, { areAchievementsShown: true, soundLoudness: 'full', coatColour: '#3f7f8f', hasSoftShadowsInCorners: false, hasGlow: true, isFrameRateShown: false, hasFullResolution: false, hasSmoothEdges: false, objectDetail: 'reduced', faceFeaturesShown: ['nose'], isNerdModeOn: false, temperatureUnit: 'celsius', cameraMode: 'room', controlScheme: 'twoSticks', stickLayout: 'walkOnTheLeft' })
 })
 
 test('roomSettings_savedBeforeTheCameraWasASetting_openInTheRoomViewWithTheControlsOfThisDeviceAndTheWalkStickOnTheLeft', () => {

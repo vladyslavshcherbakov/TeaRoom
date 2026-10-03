@@ -138,7 +138,7 @@ test('spoon_whenTakenWhileItBurns_crumblesWithTheLeavesOnIt', () => {
 
   assert.deepEqual(eventsOfType(events, 'spoonCrumbled'), [{ type: 'spoonCrumbled', gramsLost: 5 }])
   assert.deepEqual(session.state.spoon.location, { kind: 'gone' })
-  assert.deepEqual(itemIdsInTheHands(session.state), [null, null, null])
+  assert.deepEqual(itemIdsInTheHands(session.state), [null, null])
   assert.equal(itemIdOnTheHeater(session.state), null)
 })
 

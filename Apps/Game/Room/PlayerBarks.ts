@@ -27,12 +27,11 @@ export type PlayerBarkKind =
   | 'spoonAndCaddyReturned'
   | 'spoonReturned'
   | 'emptyCaddyRefilled'
-  | 'offering'
 
 export type HeardFact =
   | { readonly kind: 'pourQuestioned' }
   | { readonly kind: 'noRoomToPutDown'; readonly itemId: string }
-  | { readonly kind: 'figurineTappedFromAfar'; readonly figurineId: string }
+  | { readonly kind: 'figurineTapped'; readonly figurineId: string }
   | { readonly kind: 'putOnTheHeater'; readonly itemId: string; readonly shape: CarriedShape | undefined; readonly isKeptOff: boolean; readonly isTheHeaterOn: boolean }
   | { readonly kind: 'takenWithFullHands'; readonly itemId: string; readonly holdsOnlyBowls: boolean }
   | { readonly kind: 'putOnTheShelf'; readonly itemId: string; readonly isEverythingOnTheShelf: boolean }
@@ -56,7 +55,7 @@ const heaterRanLongFromSeconds = 120
 const barksInOrder: readonly Rule[] = [
   { kind: 'whyPouring', howOften: everyTime, isEarnedBy: (fact) => fact.kind === 'pourQuestioned' },
   { kind: 'noRoomToPutDown', howOften: everyTime, isEarnedBy: (fact) => fact.kind === 'noRoomToPutDown' },
-  eachLineOnce('sillIsTheRoomsOwn', (fact) => fact.kind === 'figurineTappedFromAfar'),
+  eachLineOnce('sillIsTheRoomsOwn', (fact) => fact.kind === 'figurineTapped'),
   {
     kind: 'heaterTester',
     howOften: onceAVisit,
@@ -79,7 +78,6 @@ const barksInOrder: readonly Rule[] = [
   { kind: 'spoonAndCaddyReturned', howOften: everyTime, isEarnedBy: onEvent('houseRestocked', (event) => event.spoonReturned && event.wasACaddyEmpty) },
   { kind: 'spoonReturned', howOften: everyTime, isEarnedBy: onEvent('houseRestocked', (event) => event.spoonReturned) },
   { kind: 'emptyCaddyRefilled', howOften: everyTime, isEarnedBy: onEvent('houseRestocked', (event) => event.wasACaddyEmpty) },
-  { kind: 'offering', howOften: everyTime, isEarnedBy: onEvent('figurineAcceptedTea') },
 ]
 
 export class PlayerBarks {
@@ -120,8 +118,8 @@ function describeFact(fact: HeardFact): string {
       return 'the question why a pour is aimed'
     case 'noRoomToPutDown':
       return `no room to put ${fact.itemId} down`
-    case 'figurineTappedFromAfar':
-      return `a tap on ${fact.figurineId} from afar`
+    case 'figurineTapped':
+      return `a tap on ${fact.figurineId}`
     case 'putOnTheHeater':
       return `${fact.itemId} tried on the ${fact.isTheHeaterOn ? 'working' : 'cold'} heater${fact.isKeptOff ? ' and kept off it' : ''}`
     case 'takenWithFullHands':

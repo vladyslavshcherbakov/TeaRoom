@@ -4,15 +4,26 @@ import { TestRoom } from '../../Support/TestRoom.ts'
 import { itemIdsInTheHands, itemIdOnTheHeater } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
 import { isHeating } from '../../../Shared/GameLogic/Judgement/HeaterModes.ts'
 
-test('kettle_whenItsHandIsChosenAndTheHeaterIsTapped_sitsOnTheHeater', () => {
+test('kettle_whenPutOnTheHeaterFromTheMenu_sitsOnTheHeater', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
+
+  room.tapAndChoose({ kind: 'heater' }, 'putOnTheHeater', 'kettle')
+
+  assert.equal(itemIdOnTheHeater(room.state), 'kettle')
+  assert.deepEqual(itemIdsInTheHands(room.state), [null, null])
+})
+
+test('heater_whenTappedWithTheKettleAndTheThermosInHand_offersToPutEitherOnIt', () => {
+  const room = new TestRoom()
+  room.walkTo('counter')
+  room.take('kettle')
+  room.take('thermos')
 
   room.tap({ kind: 'heater' })
 
-  assert.equal(itemIdOnTheHeater(room.state), 'kettle')
-  assert.deepEqual(itemIdsInTheHands(room.state), [null, null, null])
+  assert.deepEqual(room.actionsOffered(), ['putOnTheHeater kettle', 'putOnTheHeater thermos'])
 })
 
 test('heaterSwitch_whenTapped_switchesTheHeaterOn', () => {
@@ -24,76 +35,76 @@ test('heaterSwitch_whenTapped_switchesTheHeaterOn', () => {
   assert.equal(isHeating(room.state.heater.mode), true)
 })
 
-test('heaterSwitch_whenTappedWithBothHandsFullAndOneChosen_switchesTheHeaterOn', () => {
+test('heaterSwitch_whenTappedWithBothHandsFull_switchesTheHeaterOnWithNoMenu', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.take('kettle')
+  room.take('thermos')
 
   room.tap({ kind: 'heaterSwitch' })
 
   assert.equal(isHeating(room.state.heater.mode), true)
-  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', 'thermos', null])
+  assert.equal(room.playerController.actionMenuView, null)
+  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', 'thermos'])
 })
 
-test('heaterPanel_whenTappedWithBothHandsFullAndOneChosen_leavesTheHandsTheChoiceAndTheHeaterAsTheyWere', () => {
+test('heaterPanel_whenTappedWithBothHandsFull_leavesTheHandsAndTheHeaterAsTheyWere', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'item', itemId: 'thermos' })
+  room.take('kettle')
+  room.take('thermos')
 
   room.tap({ kind: 'heaterPanel' })
 
-  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', 'thermos', null])
-  assert.equal(room.playerController.chosenHandIndex, 1)
+  assert.deepEqual(itemIdsInTheHands(room.state), ['kettle', 'thermos'])
+  assert.equal(room.playerController.actionMenuView, null)
   assert.deepEqual({ isOn: isHeating(room.state.heater.mode), itemIdOnTheHeater: itemIdOnTheHeater(room.state) }, { isOn: false, itemIdOnTheHeater: null })
 })
 
-test('heaterPanel_behindTheChosenHandsTouchArea_isReachedByATap', () => {
+test('heaterPanel_behindAHandsTouchArea_isReachedByATap', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
 
-  assert.equal(room.playerController.doesATapReachPastTheChosenHand({ kind: 'heaterPanel' }), true)
+  assert.equal(room.playerController.doesATapReachPastTheHands({ kind: 'heaterPanel' }), true)
 })
 
-test('heaterSwitch_behindTheChosenHandsTouchArea_isReachedByATap', () => {
+test('heaterSwitch_behindAHandsTouchArea_isReachedByATap', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
+  room.take('kettle')
 
-  assert.equal(room.playerController.doesATapReachPastTheChosenHand({ kind: 'heaterSwitch' }), true)
+  assert.equal(room.playerController.doesATapReachPastTheHands({ kind: 'heaterSwitch' }), true)
 })
 
-test('heaterTap_withNoHandChosen_leavesTheHeaterEmpty', () => {
+test('heaterTap_withNothingInHand_opensNoMenuAndLeavesTheHeaterEmpty', () => {
   const room = new TestRoom()
   room.walkTo('counter')
-  room.tap({ kind: 'item', itemId: 'kettle' })
-  room.tap({ kind: 'hand', handIndex: 0 })
 
   room.tap({ kind: 'heater' })
 
+  assert.equal(room.playerController.actionMenuView, null)
   assert.equal(itemIdOnTheHeater(room.state), null)
 })
 
-test('cloth_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
+test('cloth_whenPutOnTheHeaterFromTheMenu_liesOnTheHeater', () => {
   const room = new TestRoom()
   room.walkTo('teaTable')
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   room.walkTo('counter')
 
-  room.tap({ kind: 'heater' })
+  room.tapAndChoose({ kind: 'heater' }, 'putOnTheHeater', 'cloth')
 
   assert.equal(itemIdOnTheHeater(room.state), 'cloth')
 })
 
-test('spoon_whenTheHeaterIsTappedWithItChosen_liesOnTheHeater', () => {
+test('spoon_whenPutOnTheHeaterFromTheMenu_liesOnTheHeater', () => {
   const room = new TestRoom()
   room.walkTo('teaTable')
-  room.takeAndChoose('spoon')
+  room.take('spoon')
   room.walkTo('counter')
 
-  room.tap({ kind: 'heater' })
+  room.tapAndChoose({ kind: 'heater' }, 'putOnTheHeater', 'spoon')
 
   assert.equal(itemIdOnTheHeater(room.state), 'spoon')
 })

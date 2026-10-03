@@ -14,6 +14,7 @@ export type CarriedItemsScene = {
   readonly view: WorldViewState
   readonly walk: Walk
   readonly heldInView: HeldInView | null
+  readonly inventoryInView: HeldInView
   readonly inspected: InspectedInView | null
   readonly aimedPour: AimedPourView | null
   readonly clothWiping: ClothWiping | null

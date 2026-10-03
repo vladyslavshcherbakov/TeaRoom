@@ -4,7 +4,7 @@ import { isThePourStreamRunning } from './PourStream.ts'
 
 export type LastingRoomSound = 'backgroundBirds' | 'tapRunning' | 'pouring' | 'kettleWhistle' | 'burning' | 'clothWiping' | 'heaterWorking'
 
-export type MomentaryRoomSound = 'sip' | 'achievement' | 'settingsGear' | 'buttonClick' | 'debugMenu' | 'pageTurn' | 'spoonCrumbling' | 'itemPutDown' | 'itemPickedUp' | 'closeUpWhoosh' | 'metalTooHot' | 'playerDied'
+export type MomentaryRoomSound = 'sip' | 'achievement' | 'settingsGear' | 'buttonClick' | 'debugMenu' | 'pageTurn' | 'spoonCrumbling' | 'itemPutDown' | 'itemPickedUp' | 'closeUpWhoosh' | 'metalTooHot' | 'playerDied' | 'leavesRustling'
 
 export type RoomSound = LastingRoomSound | MomentaryRoomSound
 

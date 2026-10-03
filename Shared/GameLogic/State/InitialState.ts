@@ -3,7 +3,7 @@ import { definitionIn } from '../../Engine/Catalog.ts'
 import type { RoomDefinition, Spot } from '../Definitions/RoomDefinition.ts'
 import { dryLeaves } from '../Chemistry/Brewing.ts'
 import { water } from '../Chemistry/Liquid.ts'
-import type { ClothState, FigurineState, SessionState, VesselState } from './SessionState.ts'
+import type { ClothState, SessionState, VesselState } from './SessionState.ts'
 
 export function initialSessionState(catalog: Catalog, roomId: string): SessionState {
   const room = definitionIn(catalog, 'rooms', roomId)
@@ -11,7 +11,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     elapsedSeconds: 0,
     roomId,
     atmosphere: { timeOfDay: firstOf(room.timesOfDay, room), shareThroughTheTimeOfDay: 0, weather: firstOf(room.weathers, room) },
-    player: { placeId: room.playerStartsAt, hasAMiddleHand: false },
+    player: { placeId: room.playerStartsAt },
     vessels: vesselsInTheRoom(room),
     heater: {
       definitionId: room.heaterId,
@@ -26,8 +26,7 @@ export function initialSessionState(catalog: Catalog, roomId: string): SessionSt
     spoon: { gramsByTeaId: {}, capacityGrams: room.spoonCapacityGrams, charring: 0, location: { kind: 'onSurface', spot: room.spoonStartsAt } },
     cloths: clothsInTheRoom(room),
     pour: null,
-    sink: { runningWater: null, hasRunOverTheItemInside: false },
-    figurines: figurinesOnTheShelf(room),
+    sink: { runningWater: null, hasRinsedTheItemInside: false },
     puddles: {},
     puddlesSpilled: 0,
   }
@@ -50,13 +49,6 @@ function vesselsInTheRoom(room: RoomDefinition): Record<string, VesselState> {
   return vessels
 }
 
-function figurinesOnTheShelf(room: RoomDefinition): Record<string, FigurineState> {
-  const figurines: Record<string, FigurineState> = {}
-  for (const id of room.figurineIds) {
-    figurines[id] = { id, satisfaction: 0, wasOfferedTeaThisRitual: false }
-  }
-  return figurines
-}
 
 function firstOf<Value>(values: readonly Value[], room: RoomDefinition): Value {
   const first = values[0]

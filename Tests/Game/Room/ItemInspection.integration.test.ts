@@ -33,7 +33,7 @@ test('heldKettle_whenItsLidIsPressedStillForOneSecond_isInspected', () => {
   assert.equal(room.playerController.inspectionView?.itemId, 'kettle')
 })
 
-test('heldItem_whenReleasedBeforeOneSecond_isNotInspectedAndItsHandIsChosenAsByATap', () => {
+test('heldItem_whenReleasedBeforeOneSecond_isNotInspectedAndOpensItsMenuAsByATap', () => {
   const room = new InspectingRoom()
   room.touchInput.fingerDown(1, onTheFirstHand)
   room.holdFor(0.875)
@@ -41,10 +41,10 @@ test('heldItem_whenReleasedBeforeOneSecond_isNotInspectedAndItsHandIsChosenAsByA
   room.touchInput.fingerUp(1)
 
   assert.equal(room.playerController.inspectionView, null)
-  assert.equal(room.playerController.chosenHandIndex, 0)
+  assert.deepEqual(room.actionsOffered(), ['putAway bowl'])
 })
 
-test('heldItem_whenTheBrowserCancelsThePressBeforeOneSecond_isNotInspectedAndNoHandIsChosen', () => {
+test('heldItem_whenTheBrowserCancelsThePressBeforeOneSecond_isNotInspectedAndOpensNoMenu', () => {
   const room = new InspectingRoom()
   room.touchInput.fingerDown(1, onTheFirstHand)
   room.holdFor(0.875)
@@ -53,7 +53,7 @@ test('heldItem_whenTheBrowserCancelsThePressBeforeOneSecond_isNotInspectedAndNoH
   room.holdFor(0.25)
 
   assert.equal(room.playerController.inspectionView, null)
-  assert.equal(room.playerController.chosenHandIndex, null)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
 test('heldItem_whenTheFingerDriftsTwelvePixelsWhileHeld_isInspected', () => {
@@ -86,7 +86,7 @@ test('heldItem_whenASecondFingerTouchesWhileHeld_isNotInspected', () => {
   assert.equal(room.playerController.inspectionView, null)
 })
 
-test('pressThatInspects_whenTheFingerLifts_isNotATapAndChoosesNoHand', () => {
+test('pressThatInspects_whenTheFingerLifts_isNotATapAndOpensNoMenu', () => {
   const room = new InspectingRoom()
   room.touchInput.fingerDown(1, onTheSecondHand)
   room.holdFor(1)
@@ -94,29 +94,17 @@ test('pressThatInspects_whenTheFingerLifts_isNotATapAndChoosesNoHand', () => {
   room.touchInput.fingerUp(1)
 
   assert.equal(room.playerController.inspectionView?.itemId, 'bowl2')
-  assert.equal(room.playerController.chosenHandIndex, null)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
-test('inspectionOfTheChosenHand_whenLeft_leavesThatHandChosen', () => {
+test('inspection_whenLeft_opensNoMenu', () => {
   const room = new InspectingRoom()
-  room.tapOn(onTheFirstHand)
   room.inspect(onTheFirstHand)
 
   room.tapOn(nearTheTop)
 
   assert.equal(room.playerController.inspectionView, null)
-  assert.equal(room.playerController.chosenHandIndex, 0)
-})
-
-test('inspectionOfAnUnchosenHand_whenLeft_leavesTheOtherHandChosen', () => {
-  const room = new InspectingRoom()
-  room.tapOn(onTheSecondHand)
-  room.inspect(onTheFirstHand)
-
-  room.tapOn(nearTheTop)
-
-  assert.equal(room.playerController.inspectionView, null)
-  assert.equal(room.playerController.chosenHandIndex, 1)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
 test('inspection_whenTappedOutsideTheItem_endsWithoutTheTapReachingTheRoom', () => {
@@ -127,17 +115,17 @@ test('inspection_whenTappedOutsideTheItem_endsWithoutTheTapReachingTheRoom', () 
 
   assert.equal(room.playerController.inspectionView, null)
   assert.deepEqual(room.playerController.view, { kind: 'closeUp', furnitureId: 'shelf' })
-  assert.deepEqual(itemIdsInTheHands(room.testSession.state), ['bowl1', 'bowl2', null])
+  assert.deepEqual(itemIdsInTheHands(room.testSession.state), ['bowl1', 'bowl2'])
 })
 
-test('inspection_whenTheOtherHeldItemIsTapped_endsWithoutChoosingItsHand', () => {
+test('inspection_whenTheOtherHeldItemIsTapped_endsWithoutOpeningItsMenu', () => {
   const room = new InspectingRoom()
   room.inspect(onTheFirstHand)
 
   room.tapOn(onTheSecondHand)
 
   assert.equal(room.playerController.inspectionView, null)
-  assert.equal(room.playerController.chosenHandIndex, null)
+  assert.equal(room.playerController.actionMenuView, null)
 })
 
 test('inspection_whenTheInspectedItemIsTapped_goesOn', () => {

@@ -24,7 +24,7 @@ test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAl
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
 
   strokeTheTeaTable(room, [acrossThePuddleFrom, acrossThePuddleTo, acrossThePuddleFrom], 10)
@@ -35,7 +35,7 @@ test('table_whenStrokedWithTheClothOneAndAHalfMetresInTenSeconds_isWipedSlowlyAl
 test('counter_whenStrokedWithTheClothOverItsPuddle_isWiped', () => {
   const room = new TestRoom()
   room.walkTo('teaTable')
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   room.walkTo('counter')
   room.testSession.doWithoutARefusal({ type: 'pickUp', itemId: 'kettle' })
   room.fillInTheSink('kettle')
@@ -51,7 +51,7 @@ test('table_whenStrokedWithTheClothWhileABowlsAreaHoldsTheFinger_isWiped', () =>
   const room = new TestRoom({ screen: () => screenWithTheFingerInTheAreaOfBowl1(fingerOnTheTableAt) })
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
 
   room.touchInput.fingerDown(1, { x: 0, y: 0 })
@@ -72,7 +72,7 @@ test('table_whenStrokedOverTwoPuddles_wipesBoth', () => {
   room.walkTo('teaTable')
   spillOnTheTeaTableAt(room, onTopOf('teaTable', -0.45, -0.05))
   spillOnTheTeaTableAt(room, onTopOf('teaTable', 0.2, -0.05))
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheStroke = Object.values(room.state.puddles).map((puddle) => puddle.wetMl)
 
   strokeTheTeaTable(room, [acrossThePuddleFrom, acrossThePuddleTo, acrossThePuddleFrom], 10)
@@ -86,7 +86,7 @@ test('table_whileStrokedWithTheCloth_driesBeforeTheFingerLifts', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
 
   moveTheClothOverTheTeaTable(room, [acrossThePuddleFrom, acrossThePuddleTo], 5)
@@ -100,7 +100,7 @@ test('table_whenStrokedWithTheClothAwayFromThePuddle_driesOnlyAsATableLeftAlone'
   for (const room of [stroked, leftAlone]) {
     room.setTheTeaTable()
     room.testSession.pour('kettle', null, 2)
-    room.takeAndChoose('cloth')
+    room.take('cloth')
   }
 
   strokeTheTeaTable(stroked, [farFromThePuddleFrom, farFromThePuddleTo, farFromThePuddleFrom], 10)
@@ -112,7 +112,7 @@ test('table_whenStrokedWithTheClothAwayFromThePuddle_driesOnlyAsATableLeftAlone'
 test('cloth_whileTheTableIsPressedWithoutMoving_staysInTheHand', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
-  room.takeAndChoose('cloth')
+  room.take('cloth')
 
   room.playerController.pressStarted({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable }, null)
 
@@ -122,7 +122,7 @@ test('cloth_whileTheTableIsPressedWithoutMoving_staysInTheHand', () => {
 test('cloth_whileStrokingTheTable_isUnderTheFinger', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
-  room.takeAndChoose('cloth')
+  room.take('cloth')
 
   moveTheClothOverTheTeaTable(room, [acrossThePuddleFrom, inTheTablesFarRightCorner], 1)
 
@@ -133,10 +133,10 @@ test('cloth_whenTheTeaTableIsTappedAwayFromThePuddle_isPutDownThereAndWipesNothi
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheTap = wetMlOnEveryPlace(room.state)
 
-  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: inTheTablesFarRightCorner })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'teaTable', point: inTheTablesFarRightCorner }, 'putDownHere', 'cloth')
 
   assert.equal(room.state.cloths['cloth']?.location.kind, 'onSurface')
   assert.equal(wetMlOnEveryPlace(room.state), wetMlBeforeTheTap)
@@ -146,9 +146,9 @@ test('cloth_whenPutDownInThePuddle_soaksItUpWhileItLies', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
 
-  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: inThePuddle })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'teaTable', point: inThePuddle }, 'putDownHere', 'cloth')
 
   assert.equal(room.state.cloths['cloth']?.location.kind, 'onSurface')
   assert.equal(room.state.cloths['cloth']?.soakingPuddleId, 'puddle1')
@@ -158,10 +158,10 @@ test('puddle_whenTheClothIsPutDownInIt_shrinksAtOnce', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheCloth = wetMlOnEveryPlace(room.state)
 
-  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: inThePuddle })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'teaTable', point: inThePuddle }, 'putDownHere', 'cloth')
 
   assert.ok(wetMlOnEveryPlace(room.state) < wetMlBeforeTheCloth * 0.8, `${wetMlOnEveryPlace(room.state)} ml of ${wetMlBeforeTheCloth} ml left`)
 })
@@ -186,7 +186,7 @@ test('cloth_lyingBesideASmallPuddle_staysDry', () => {
 test('cloth_strokedUnderABowl_isUnderTheFingerAndLiesFlat', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const bowl = whereTheTeaTableIsSet.bowl
 
   moveTheClothOverTheTeaTable(room, [{ x: bowl.x - 0.3, z: bowl.z }, bowl], 1)
@@ -200,7 +200,7 @@ test('cloth_strokedUnderABowl_isUnderTheFingerAndLiesFlat', () => {
 test('cloth_strokedOutFromUnderABowl_rumplesAgain', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const bowl = whereTheTeaTableIsSet.bowl
 
   moveTheClothOverTheTeaTable(room, [bowl, { x: bowl.x - 0.3, z: bowl.z }], 1)
@@ -214,7 +214,7 @@ test('table_whenTheCrosshairSweepsOverThePuddleWhileTheMouseButtonIsHeld_isWiped
   const room = new TestRoom({ screen: () => screenShowing(() => surfaceOfTheTeaTableAt(crosshairOn)) })
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   const wetMlBeforeTheStroke = wetMlOnEveryPlace(room.state)
 
   room.touchInput.fingerDown(1, { x: 0, y: 0 })
@@ -232,7 +232,7 @@ test('wipingSound_whileTheClothIsMovedAcrossAPuddle_isHeard', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 2)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
 
   moveTheClothOverTheTeaTable(room, [acrossThePuddleFrom, acrossThePuddleTo], 1)
 
@@ -242,7 +242,7 @@ test('wipingSound_whileTheClothIsMovedAcrossAPuddle_isHeard', () => {
 test('wipingSound_whileTheClothIsMovedAcrossADryTable_isNotHeard', () => {
   const room = new TestRoom()
   room.setTheTeaTable()
-  room.takeAndChoose('cloth')
+  room.take('cloth')
 
   moveTheClothOverTheTeaTable(room, [farFromThePuddleFrom, farFromThePuddleTo], 1)
 
@@ -260,7 +260,7 @@ function roomWithTheClothLyingBesideASmallPuddle(): TestRoom {
   const room = new TestRoom()
   room.setTheTeaTable()
   room.testSession.pour('kettle', null, 0.1)
-  room.takeAndChoose('cloth')
+  room.take('cloth')
   room.putDown(0, { x: 0.5, y: onTheTeaTable.y, z: -1.45 })
   return room
 }

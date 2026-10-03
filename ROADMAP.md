@@ -22,7 +22,7 @@ The next tasks, in order, up to 1.0. Each ends with something that opens on an i
 
 ## The whole ritual on screen
 
-1. An offering shows the figurine's glow and pose, with a resonant sound.
+1. The figurines take offerings in the room, and an offering shows the figurine's glow and pose, with a resonant sound.
 2. The gods' plaque shows their mood in the corner, with deadpan barks.
 3. The game's text ships in the agreed languages.
    - Which languages does the text ship in? The user answers.

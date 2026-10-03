@@ -33,9 +33,8 @@ test('player_whenPuttingABowlOnTheTeaTableWhileStandingThere_sitsDown', () => {
   room.carryFromTheShelf('bowl1')
   room.walkTo('teaTable')
   room.playerController.standUpToWalk()
-  room.tap({ kind: 'hand', handIndex: 0 })
 
-  room.tap({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable })
+  room.tapAndChoose({ kind: 'surface', furnitureId: 'teaTable', point: onTheTeaTable }, 'putDownHere')
 
   assert.equal(room.playerController.isSeatedAtTheRitualPlace, true)
 })

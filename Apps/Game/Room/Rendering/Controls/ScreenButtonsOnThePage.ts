@@ -1,7 +1,7 @@
 import { text } from '../../../Texts/Texts.ts'
 import { screenButtons, type ScreenButton } from '../../ScreenButton.ts'
 import { screenButtonRules, type ScreenButtonPress } from '../../ScreenControls.ts'
-import { actWhenLifted, actWhileHeld, icon, iconButton, iconShape, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
+import { actWhenLifted, actWhileHeld, icon, iconButton, iconShape } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 import { informationIcon, pouringIcon } from './PourIcons.ts'
 
 export type ScreenButtonsListener = {
@@ -20,7 +20,6 @@ type ScreenButtonLook = {
 }
 
 const lookByButton: Readonly<Record<ScreenButton, ScreenButtonLook>> = {
-  sip: { element: () => labelledButton('sip', text('hand.sip')), place: 'overTheRoom' },
   tilt: { element: () => iconButton('tilt', text('aim.tiltButton'), pouringIcon()), place: 'overTheRoom' },
   whyPouring: { element: () => iconButton('why-pouring', text('aim.whyButton'), informationIcon()), place: 'overTheRoom' },
   leaveFirstPerson: { element: () => iconButton('corner-button', text('firstPerson.leave'), icon('0 0 24 24', iconShape('path', { d: 'M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10' }))), place: 'inTheCorner' },
@@ -59,10 +58,4 @@ function actOn(element: HTMLButtonElement, press: ScreenButtonPress, pressed: ()
     case 'lift':
       return actWhenLifted(element, pressed)
   }
-}
-
-function labelledButton(className: string, label: string): HTMLButtonElement {
-  const pressable = pageElement('button', className, label)
-  pressable.type = 'button'
-  return pressable
 }

@@ -1,0 +1,32 @@
+.sound-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sound-choice-label {
+  color: #8a6a52;
+  font: 600 13px/1 system-ui, sans-serif;
+}
+
+.sound-choice-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.sound-choice-button {
+  min-width: 56px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 2px solid rgba(90, 58, 38, 0.3);
+  border-radius: 17px;
+  background: transparent;
+  color: #5a3a26;
+  font: 600 13px/1 system-ui, sans-serif;
+}
+
+.sound-choice-button[aria-pressed='true'] {
+  border-color: #5a3a26;
+  background: rgba(90, 58, 38, 0.12);
+}

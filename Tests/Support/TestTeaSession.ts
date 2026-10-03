@@ -8,7 +8,7 @@ import { RecordingLog } from './RecordingLog.ts'
 import { testCatalog } from './TestCatalog.ts'
 import type { Spot } from '../../Shared/GameLogic/Definitions/RoomDefinition.ts'
 import type { DeepReadonly } from '../../Shared/Engine/DeepReadonly.ts'
-import type { SessionState } from '../../Shared/GameLogic/State/SessionState.ts'
+import type { SessionState, TapUse } from '../../Shared/GameLogic/State/SessionState.ts'
 
 export const halfFlowTiltDegrees = 27.5
 export const fullFlowTiltDegrees = 45
@@ -94,13 +94,11 @@ export class TestTeaSession {
   }
 
   fillInTheSink(vesselId: string, seconds: number): readonly TeaEvent[] {
-    return [
-      ...this.doWithoutARefusal({ type: 'putInTheSink', itemId: vesselId }),
-      ...this.doWithoutARefusal({ type: 'turnTheTapOn' }),
-      ...this.wait(seconds),
-      ...this.doWithoutARefusal({ type: 'turnTheTapOff' }),
-      ...this.doWithoutARefusal({ type: 'pickUp', itemId: vesselId }),
-    ]
+    return this.runTheTapOver(vesselId, 'fill', seconds)
+  }
+
+  washInTheSink(vesselId: string, seconds: number): readonly TeaEvent[] {
+    return this.runTheTapOver(vesselId, 'wash', seconds)
   }
 
   addLeavesToKettle(grams: number): readonly TeaEvent[] {
@@ -162,6 +160,16 @@ export class TestTeaSession {
 
   waitFor(eventType: TeaEvent['type']): readonly TeaEvent[] {
     return this.waitStepByStep((eventsSoFar) => eventsSoFar.some((event) => event.type === eventType), `no ${eventType} happened`)
+  }
+
+  private runTheTapOver(vesselId: string, use: TapUse, seconds: number): readonly TeaEvent[] {
+    return [
+      ...this.doWithoutARefusal({ type: 'putInTheSink', itemId: vesselId }),
+      ...this.doWithoutARefusal({ type: 'turnTheTapOn', use }),
+      ...this.wait(seconds),
+      ...this.doWithoutARefusal({ type: 'turnTheTapOff' }),
+      ...this.doWithoutARefusal({ type: 'pickUp', itemId: vesselId }),
+    ]
   }
 
   private brewASpoonfulOf(caddyId: string, cupId: string): void {

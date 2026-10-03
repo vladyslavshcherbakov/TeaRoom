@@ -10,6 +10,10 @@
   font: 15px/1.4 system-ui, sans-serif;
   display: grid;
   gap: 8px;
+  max-height: calc(100vh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .debug-menu h2 {
@@ -60,4 +64,23 @@
   align-items: center;
   min-height: 44px;
   font-weight: 600;
+}
+
+.debug-animation {
+  display: contents;
+}
+
+.debug-animations {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.debug-credits {
+  font-size: 12px;
+  color: #8a6a52;
+}
+
+.debug-credits a {
+  color: inherit;
 }

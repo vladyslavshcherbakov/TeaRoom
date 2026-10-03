@@ -65,59 +65,6 @@ test('tasting_fromTheKettle_isRefused', () => {
   assert.deepEqual(events, [{ type: 'actionRefused', command: 'tasteCup', reason: 'notDrinkable' }])
 })
 
-test('figurine_whenOfferedATeaItLikesAtItsPreferredStrength_glows', () => {
-  const session = sessionWithTeaInCups(60)
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'toad' })
-
-  assert.deepEqual(eventsOfType(events, 'figurineAcceptedTea'), [
-    { type: 'figurineAcceptedTea', figurineId: 'toad', response: 'glow' },
-  ])
-})
-
-test('figurine_whenOfferedATeaItIsIndifferentTo_respondsSubtly', () => {
-  const session = sessionWithTeaInCups(60)
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'dragon' })
-
-  assert.equal(eventsOfType(events, 'figurineAcceptedTea')[0]?.response, 'subtle')
-})
-
-test('figurine_whenOfferedBitterOverbrewedTea_barelyResponds', () => {
-  const session = sessionWithTeaInCups(300)
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'toad' })
-
-  assert.equal(eventsOfType(events, 'figurineAcceptedTea')[0]?.response, 'barely')
-})
-
-test('figurine_whenOfferedTwiceInOneRitual_refusesTheSecondCup', () => {
-  const session = sessionWithTeaInCups(60)
-  session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'toad' })
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup2', figurineId: 'toad' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'offerCup', reason: 'figurineAlreadyOffered' }])
-  assertNear(session.vessel('cup2').liquid.volumeMl, 90)
-})
-
-test('offering_toAFigurineTheRoomDoesNotHave_isRefusedAndKeepsTheTea', () => {
-  const session = sessionWithTeaInCups(60)
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'monk' })
-
-  assert.deepEqual(events, [{ type: 'actionRefused', command: 'offerCup', reason: 'unknownFigurine' }])
-  assertNear(session.vessel('cup1').liquid.volumeMl, 90)
-})
-
-test('offering_emptiesTheWholeCupIntoTheSaucer', () => {
-  const session = sessionWithTeaInCups(60)
-
-  session.do({ type: 'offerCup', cupId: 'cup1', figurineId: 'dragon' })
-
-  assert.equal(session.vessel('cup1').liquid.volumeMl, 0)
-})
-
 test('player_whenSippingTeaOfExtremeStrengthStraightFromTheCaddy_dies', () => {
   const session = new TestTeaSession()
   session.heatKettleTo(80)

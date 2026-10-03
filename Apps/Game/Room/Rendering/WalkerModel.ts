@@ -1,8 +1,11 @@
 import * as THREE from 'three'
 import { GooglyPupil, type EyePlaneVector } from '../GooglyPupil.ts'
-import type { FaceFeature } from '../RoomSettings.ts'
+import type { FaceFeature, ObjectDetail } from '../RoomSettings.ts'
 import { isWalking, type Walk } from '../../../Engine/Walking/Walk.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
+import { SparrowModel } from './SparrowModel.ts'
+import type { SparrowAnimation } from '../SparrowAnimations.ts'
+import type { AppLog } from '../../../Engine/AppLog.ts'
 
 const bobHeightMetres = 0.03
 const stepsPerSecond = 4
@@ -30,6 +33,8 @@ const googlyEyesTurnOutwardRadians = 0.3
 const hardestHeadShakeMetresPerSecondSquared = 60
 const giantAfroScale = 3
 const giantAfroGrowsFrom = new THREE.Vector3(0, headHeightMetres, headRadiusMetres)
+const sparrowSinksIntoTheCurlsMetres = 0.02
+const isTheSparrowShadowCastIn: Readonly<Record<ObjectDetail, boolean>> = { full: true, reduced: false }
 
 type GooglyEye = {
   readonly eye: THREE.Object3D
@@ -47,17 +52,20 @@ export class WalkerModel {
   private readonly body: THREE.Mesh
   private readonly faces: Record<FaceFeature, THREE.Object3D>
   private readonly googlyEyes: readonly GooglyEye[]
+  private readonly sparrow: SparrowModel
+  private lastShownSeconds: number | null = null
   private headMotion: HeadMotion | null = null
   readonly root = new THREE.Group()
 
-  constructor(materials: RoomMaterials) {
+  constructor(materials: RoomMaterials, sparrowAnimation: SparrowAnimation, log: AppLog) {
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.5, 4, 10), materials.unsharedMaterialFor('walkerCoat'))
     body.position.y = 0.45
     this.body = body
     const head = new THREE.Mesh(new THREE.SphereGeometry(headRadiusMetres, 12, 10), materials.materialFor('walkerSkin'))
     head.position.y = headHeightMetres
     this.googlyEyes = [-1, 1].map((side) => googlyEye(materials, side))
-    this.faces = { nose: nose(materials), eyes: eyes(materials), googlyEyes: new THREE.Group().add(...this.googlyEyes.map((eye) => eye.eye)), ears: ears(materials), afro: afro(materials), giantAfro: giantAfro(materials) }
+    this.sparrow = new SparrowModel(sparrowAnimation, log)
+    this.faces = { nose: nose(materials), eyes: eyes(materials), googlyEyes: new THREE.Group().add(...this.googlyEyes.map((eye) => eye.eye)), ears: ears(materials), afro: afro(materials), giantAfro: giantAfro(materials, this.sparrow.root) }
     this.showTheFaces(['nose'])
     this.root.add(body, head, ...Object.values(this.faces))
     this.root.traverse((part) => (part.castShadow = true))
@@ -67,12 +75,20 @@ export class WalkerModel {
     const { position, rotation } = this.root
     if (!this.root.visible) return 'walker hidden'
     const shownFaces = Object.entries(this.faces).filter(([, face]) => face.visible).map(([feature]) => feature).join('+')
-    return `walker ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)} ${rotation.y.toFixed(3)} with ${shownFaces}`
+    return `walker ${position.x.toFixed(3)} ${position.y.toFixed(3)} ${position.z.toFixed(3)} ${rotation.y.toFixed(3)} with ${shownFaces}, ${this.sparrow.shadowPose}`
   }
 
   paintTheBody(colour: string): void {
     const material = this.body.material
     if (material instanceof THREE.MeshStandardMaterial) material.color.set(colour)
+  }
+
+  showTheSparrowShadow(objectDetail: ObjectDetail): void {
+    this.sparrow.castAShadow(isTheSparrowShadowCastIn[objectDetail])
+  }
+
+  playTheSparrowAnimation(animation: SparrowAnimation): void {
+    this.sparrow.play(animation)
   }
 
   showTheFaces(featuresShown: readonly FaceFeature[]): void {
@@ -84,6 +100,8 @@ export class WalkerModel {
     this.root.position.set(walk.position.x, bob, walk.position.z)
     this.root.rotation.y = walk.headingRadians
     if (this.faces.googlyEyes.visible) this.shakeTheGooglyEyes(timeSeconds)
+    if (this.lastShownSeconds !== null && this.faces.giantAfro.visible) this.sparrow.advance(Math.max(0, timeSeconds - this.lastShownSeconds))
+    this.lastShownSeconds = timeSeconds
   }
 
   private shakeTheGooglyEyes(timeSeconds: number): void {
@@ -173,8 +191,12 @@ function afro(materials: RoomMaterials): THREE.Object3D {
   return cloud
 }
 
-function giantAfro(materials: RoomMaterials): THREE.Object3D {
+function giantAfro(materials: RoomMaterials, sparrow: THREE.Object3D): THREE.Object3D {
   const cloud = afro(materials)
+  sparrow.scale.setScalar(1 / giantAfroScale)
+  sparrow.position.set(0, afroCentre.y + afroRadiiMetres.up + curlRadiusMetres - sparrowSinksIntoTheCurlsMetres, afroCentre.z)
+  sparrow.rotation.y = Math.PI
+  cloud.add(sparrow)
   cloud.scale.setScalar(giantAfroScale)
   cloud.position.copy(giantAfroGrowsFrom).multiplyScalar(1 - giantAfroScale)
   return cloud

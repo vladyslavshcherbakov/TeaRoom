@@ -16,7 +16,7 @@ test('startOverNote_whenAchievementsAreHidden_saysNothingOfThem', () => {
 test('heaterTesterLine_acrossThePlayersVoices_isEveryOneOfItsSixLines', () => {
   const heaterTesterLines = linesOf('heaterTester')
 
-  const linesHeard = new Set(Array.from({ length: 1000 }, (_, index) => new RoomTexts(index + 1, () => {}).linesOf([aBark('heaterTester', 1)])[0]))
+  const linesHeard = new Set(Array.from({ length: 1000 }, (_, index) => new RoomTexts(index + 1).linesOf([aBark('heaterTester', 1)])[0]))
 
   assert.equal(heaterTesterLines.length, 6)
   assert.deepEqual([...linesHeard].sort(), [...heaterTesterLines].sort())
@@ -25,7 +25,7 @@ test('heaterTesterLine_acrossThePlayersVoices_isEveryOneOfItsSixLines', () => {
 test('obituary_ofThePlayer_isOneOfTheFourObituaries', () => {
   const obituaries = linesOf('obituary')
 
-  const line = new RoomTexts(7, () => {}).obituaryLine()
+  const line = new RoomTexts(7).obituaryLine()
 
   assert.equal(obituaries.length, 4)
   assert.ok(obituaries.includes(line), line)
@@ -34,7 +34,7 @@ test('obituary_ofThePlayer_isOneOfTheFourObituaries', () => {
 test('lastWords_ofThePlayerWhoDied_areOneOfTheThreeLinesForDying', () => {
   const lastWords = linesOf('lastWords')
 
-  const line = new RoomTexts(7, () => {}).lastWordsLine()
+  const line = new RoomTexts(7).lastWordsLine()
 
   assert.equal(lastWords.length, 3)
   assert.ok(lastWords.includes(line), line)
@@ -47,7 +47,7 @@ test('playerTexts_nameTheKeeperNowhere', () => {
 })
 
 test('bark_ofTheSillTappedTwice_changesItsLine', () => {
-  const texts = new RoomTexts(7, () => {})
+  const texts = new RoomTexts(7)
   const firstLines = texts.linesOf([aBark('sillIsTheRoomsOwn', 1)])
 
   const secondLines = texts.linesOf([aBark('sillIsTheRoomsOwn', 2)])
@@ -56,7 +56,7 @@ test('bark_ofTheSillTappedTwice_changesItsLine', () => {
 })
 
 test('bark_ofABowlKeptOffTheHeaterAgain_changesItsLine', () => {
-  const texts = new RoomTexts(7, () => {})
+  const texts = new RoomTexts(7)
   const firstLines = texts.linesOf([aBark('bowlKeptOffTheHeater', 1)])
 
   const secondLines = texts.linesOf([aBark('bowlKeptOffTheHeater', 2)])
@@ -69,5 +69,5 @@ function linesOf(phrase: PhraseKey): readonly string[] {
 }
 
 function aBark(kind: PlayerBarkKind, timesMade: number): PlayerBark {
-  return { kind, timesMade, fact: { kind: 'figurineTappedFromAfar', figurineId: 'dragon' } }
+  return { kind, timesMade, fact: { kind: 'figurineTapped', figurineId: 'dragon' } }
 }

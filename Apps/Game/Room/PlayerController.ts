@@ -1,8 +1,8 @@
-import { carriedItemIdsIn, definitionIn, isHeating, isTheHeaterInUse, isTheThermostatWorking, itemIdInHand, itemIdsInTheHands, itemLocationIn, middleHandIndex, spoonItemId, standingSpotOf, totalLeafGrams, type Catalog, type Command, type DeepReadonly, type HandIndex, type ItemLocation, type TeaEvent, type Spot } from '../../../Shared/GameLogic/GameLogic.ts'
+import { carriedItemIdsIn, definitionIn, isACloth, isHeating, isTheHeaterInUse, isTheThermostatWorking, itemIdInHand, itemIdInTheInventory, itemIdInTheSink, itemIdsInTheHands, itemLocationIn, spoonItemId, standingSpotOf, totalLeafGrams, type Catalog, type Command, type DeepReadonly, type HandIndex, type InventorySlot, type ItemLocation, type TapUse, type TeaEvent, type Spot } from '../../../Shared/GameLogic/GameLogic.ts'
 import { stepsDueWhileAnArrowIsHeld } from '../../Engine/HeldArrow.ts'
-import { aimAPour, canAimAPour, whyNoPourCanBeAimed, type AimedPour, type AimedPourView } from './AimedPour.ts'
+import { aimAPour, canAimAPour, type AimedPour, type AimedPourView } from './AimedPour.ts'
 import { ItemInspection, type ItemInspectionView } from './ItemInspection.ts'
-import { whyThereIsNoRoomFor, type LyingLids } from './Placement.ts'
+import { nearestSpotWithRoomFor, whyThereIsNoRoomFor, type LyingLids } from './Placement.ts'
 import { screenRightOnTheFloor } from './Camera/CameraPoses.ts'
 import { PlayerBarks, type HeardFact, type PlayerBark } from './PlayerBarks.ts'
 import { SipGesture, type SipGestureView } from './SipGesture.ts'
@@ -24,6 +24,7 @@ import type { SessionPort } from './SessionPort.ts'
 import type { PlayerMode } from './PlayerMode.ts'
 import type { ScreenButton } from './ScreenButton.ts'
 import { ClothOnTheTable } from './ClothOnTheTable.ts'
+import type { ActionKind, ActionMenuView, MenuAction } from './ActionMenu.ts'
 
 export type ClothWiping = {
   readonly clothId: string
@@ -42,9 +43,16 @@ type ModeState =
   | { readonly kind: 'aiming'; readonly pour: AimedPour }
   | { readonly kind: 'lookingClosely'; readonly inspection: ItemInspection }
   | { readonly kind: 'sipping'; readonly gesture: SipGesture }
+  | { readonly kind: 'choosing'; readonly menu: ActionMenu }
   | { readonly kind: 'ended' }
 
-type Input = 'press' | 'handKey' | 'handHold' | 'sip' | 'tilt' | 'whyPouring' | 'pourFinger' | 'aimingTap' | 'inspection' | 'walk' | 'kettleFill' | 'leaveFirstPerson'
+type ActionMenu = {
+  readonly at: ScreenPoint | null
+  readonly actions: readonly MenuAction[]
+  readonly view: ActionMenuView
+}
+
+type Input = 'press' | 'handKey' | 'handHold' | 'sip' | 'tilt' | 'whyPouring' | 'pourFinger' | 'aimingTap' | 'inspection' | 'walk' | 'kettleFill' | 'leaveFirstPerson' | 'menuAction'
 
 export type PressOnTheScreen = {
   readonly point: ScreenPoint
@@ -67,14 +75,9 @@ type TapAction = {
   readonly pressSound: MomentaryRoomSound | null
 }
 
-type CloseUpAction = TapAction & {
-  readonly isDoneWithTheChosenItem: boolean
-  readonly isAControl: boolean
-}
 
 const fullSpoonDepth = 1
 const roseBushTapsThatOpenTheDebugMenu = 10
-const tapsWithFullHandsThatGrowAMiddleHand = 10
 const fullTurnDegrees = 360
 const freeMode: ModeState = { kind: 'free' }
 
@@ -83,6 +86,7 @@ const inputsTakenByMode: Readonly<Record<PlayerMode, readonly Input[]>> = {
   aiming: ['tilt', 'whyPouring', 'pourFinger', 'aimingTap', 'kettleFill', 'leaveFirstPerson'],
   lookingClosely: ['inspection', 'kettleFill', 'leaveFirstPerson'],
   sipping: ['walk', 'kettleFill', 'leaveFirstPerson'],
+  choosing: ['press', 'menuAction', 'kettleFill', 'leaveFirstPerson'],
   ended: ['leaveFirstPerson'],
 }
 
@@ -91,6 +95,7 @@ const whatIsGoingOnByMode: Readonly<Record<PlayerMode, string>> = {
   aiming: 'a pour is being aimed',
   lookingClosely: 'a held item is looked at closely',
   sipping: 'a sip is being taken',
+  choosing: 'a menu of actions is open',
   ended: 'the player has died',
 }
 
@@ -109,7 +114,6 @@ export type PlayerControllerSettings = Pick<RoomSettings, 'temperatureUnit' | 'i
 
 export type PlayerControllerQuestions = {
   readonly settings: () => PlayerControllerSettings
-  readonly mayGrowAMiddleHand: () => boolean
   readonly screenRightOnTheFloor: () => FloorPoint | null
 }
 
@@ -125,8 +129,6 @@ export class PlayerController {
   private readonly barks: PlayerBarks
   private readonly clothOnTheTable: ClothOnTheTable
   private readonly roseBushTaps: TapsInARow
-  private readonly tapsWithFullHands: TapsInARow
-  private choice: HandIndex | null = null
   private press: Press | null = null
   private modeState: ModeState = freeMode
   private walkRefusedIn: PlayerMode | null = null
@@ -144,7 +146,6 @@ export class PlayerController {
     this.barks = new PlayerBarks(heaterItemsBeforeTheTesterJoke, log)
     this.clothOnTheTable = new ClothOnTheTable(session, catalog, layout, lyingLids, log)
     this.roseBushTaps = new TapsInARow('on a rose bush', roseBushTapsThatOpenTheDebugMenu, log)
-    this.tapsWithFullHands = new TapsInARow('with full hands', tapsWithFullHandsThatGrowAMiddleHand, log)
     this.navigator = new RoomNavigator(layout, log, (furnitureId, byWalkingFreely) => this.playerMovedTo(furnitureId, byWalkingFreely), startsAt)
     this.isSeated = startsAt.closeUpOf !== null && startsAt.closeUpOf === this.ritualFurnitureId()
     this.furnitureShownCloseUp = this.furnitureInTheCloseUp()
@@ -170,10 +171,6 @@ export class PlayerController {
     return this.navigator.place
   }
 
-  get chosenHandIndex(): HandIndex | null {
-    return this.choice
-  }
-
   get isSeatedAtTheRitualPlace(): boolean {
     return this.isSeated && this.isAtTheRitualPlace()
   }
@@ -183,9 +180,11 @@ export class PlayerController {
   }
 
   get sippableCupId(): string | null {
-    const itemId = this.chosenItemId()
-    if (itemId === null) return null
-    return this.session.wouldRefuse([{ type: 'tasteCup', cupId: itemId }]) === null ? itemId : null
+    return itemIdsInTheHands(this.session.state).find((itemId) => itemId !== null && this.canSipFrom(itemId)) ?? null
+  }
+
+  get actionMenuView(): ActionMenuView | null {
+    return this.modeState.kind === 'choosing' ? this.modeState.menu.view : null
   }
 
   get aimedPourView(): AimedPourView | null {
@@ -205,15 +204,23 @@ export class PlayerController {
     return stroke === null ? null : { clothId: stroke.clothId, at: stroke.lastPoint, flatShare: stroke.flatShare }
   }
 
-  doesATapReachPastTheChosenHand(target: TapTarget): boolean {
-    if (this.chosenItemId() === null || this.view.kind !== 'closeUp') return false
-    const action = this.closeUpActionOn(target)
-    return action !== null && (action.isDoneWithTheChosenItem || action.isAControl)
+  doesATapReachPastTheHands(target: TapTarget): boolean {
+    return this.view.kind === 'closeUp' && this.closeUpActionOn(target, null) !== null
   }
 
   pressStarted(target: TapTarget, onTheScreen: PressOnTheScreen | null): void {
     if (this.isRefusedByTheMode('press', `press on ${describeTarget(target)}`)) return
-    this.press = { target, onTheScreen, heldSeconds: 0, hasMovedAway: false, stroke: this.clothOnTheTable.strokeStartingAt(this.chosenItemId(), onTheScreen?.touched ?? target), repeatedSteps: 0 }
+    const stroke = this.modeState.kind === 'choosing' ? null : this.clothOnTheTable.strokeStartingAt(this.heldClothId(), onTheScreen?.touched ?? target)
+    this.press = { target, onTheScreen, heldSeconds: 0, hasMovedAway: false, stroke, repeatedSteps: 0 }
+  }
+
+  actionChosen(index: number): void {
+    if (this.isRefusedByTheMode('menuAction', `action ${index} of the menu`) || this.modeState.kind !== 'choosing') return
+    const action = this.modeState.menu.actions[index]
+    this.modeState = freeMode
+    if (action === undefined) return this.log(`action ${index} of the menu does nothing: the menu has no such action`)
+    this.log(`the menu's action ${action.label.kind} with ${action.label.item}${action.label.target === null ? '' : ` on ${action.label.target}`} is chosen`)
+    action.act()
   }
 
   pressMovedOver(touched: TapTarget): void {
@@ -273,9 +280,8 @@ export class PlayerController {
 
   pourDone(): void {
     if (this.isRefusedByTheMode('aimingTap', 'the end of a pour') || this.modeState.kind !== 'aiming') return
-    this.log(`the pour from ${this.modeState.pour.view.sourceId} is done, and its hand is no longer chosen`)
+    this.log(`the pour from ${this.modeState.pour.view.sourceId} is done, and the vessel goes back to its hand`)
     this.endTheAim()
-    this.choice = null
   }
 
   aimingTapped(target: TapTarget): void {
@@ -290,17 +296,16 @@ export class PlayerController {
         if (target.itemId === sourceId || !this.session.isForDrinking(target.itemId)) return this.returnTheAimedVesselToItsHand(target)
         this.log(`tap on the opening of ${target.itemId} while aiming takes it to drink from, and ${sourceId} goes back to its hand`)
         this.pourDone()
-        return this.pickUpAndChoose(target.itemId)
+        return this.take(target.itemId)
       case 'surface':
         this.log(`tap on the ${target.furnitureId} while aiming puts the vessel down there`)
         this.endTheAim()
-        this.putDownTheChosenItemAt(target.furnitureId, target.point)
-        return this.letGoOfTheChoiceAfterTheAim()
+        return this.putDownAt(sourceId, target.furnitureId, target.point)
       case 'sink':
         this.log('tap on the sink while aiming puts the vessel in the sink')
         this.endTheAim()
-        this.putTheChosenItemInTheSink()
-        return this.letGoOfTheChoiceAfterTheAim()
+        if (this.session.state.sink.runningWater === null) return this.putInTheSink(sourceId, null)
+        return this.openTheMenu(this.tapUseActions(sourceId, (use) => this.putInTheSink(sourceId, use)), null, 'the sink')
       case 'floor':
       case 'furniture':
       case 'item':
@@ -311,6 +316,7 @@ export class PlayerController {
       case 'thermostatButton':
       case 'faucet':
       case 'hand':
+      case 'inventorySlot':
       case 'figurine':
       case 'roseBush':
       case 'medal':
@@ -338,7 +344,7 @@ export class PlayerController {
     const itemId = itemIdInHand(this.session.state, handIndex)
     if (itemId === null) return this.log(`hold on hand ${handIndex} inspects nothing: the hand is empty`)
     this.modeState = { kind: 'lookingClosely', inspection: new ItemInspection(itemId, handIndex) }
-    this.log(`inspecting ${itemId} from hand ${handIndex} after a hold of ${heldSeconds.toFixed(1)} s, ${this.describeTheChoice()} and stays so`)
+    this.log(`inspecting ${itemId} from hand ${handIndex} after a hold of ${heldSeconds.toFixed(1)} s`)
   }
 
   inspectionTurnedBy(fingerStep: ScreenPoint): void {
@@ -363,13 +369,11 @@ export class PlayerController {
     const isOnTheItem = (target.kind === 'hand' && target.handIndex === view.handIndex) || (target.kind === 'lid' && target.itemId === view.itemId)
     if (isOnTheItem) return this.log(`tap on the inspected ${view.itemId} does nothing`)
     this.modeState = freeMode
-    this.log(`inspecting ${view.itemId} ended by a tap on ${describeTarget(target)}, turned ${turnDegreesOf(view.yawRadians)}° across and ${turnDegreesOf(view.pitchRadians)}° over at ${view.magnification.toFixed(2)} times its size, ${this.describeTheChoice()} as before`)
+    this.log(`inspecting ${view.itemId} ended by a tap on ${describeTarget(target)}, turned ${turnDegreesOf(view.yawRadians)}° across and ${turnDegreesOf(view.pitchRadians)}° over at ${view.magnification.toFixed(2)} times its size`)
   }
 
   screenButtonPressed(button: ScreenButton): void {
     switch (button) {
-      case 'sip':
-        return this.sipTapped()
       case 'tilt':
         return this.tiltPressed()
       case 'whyPouring':
@@ -383,7 +387,6 @@ export class PlayerController {
     switch (button) {
       case 'tilt':
         return this.tiltReleased()
-      case 'sip':
       case 'whyPouring':
       case 'leaveFirstPerson':
         return this.log(`the ${button} button is let go, which changes nothing`)
@@ -393,14 +396,8 @@ export class PlayerController {
   sipTapped(): void {
     if (this.isRefusedByTheMode('sip', 'sip')) return
     const cupId = this.sippableCupId
-    if (cupId === null) return this.log('sip ignored: the chosen hand holds no tea bowl')
-    const volumeBeforeMl = this.session.state.vessels[cupId]?.liquid.volumeMl ?? 0
-    const events = this.session.dispatch({ type: 'tasteCup', cupId })
-    if (events.some((event) => event.type === 'teaTasted')) this.raiseToTheLips(cupId, volumeBeforeMl)
-    if (!events.some((event) => event.type === 'playerDied')) return
-    this.log(`the sip from ${cupId} killed the player, so the room shows it and takes no more input`)
-    this.modeState = { kind: 'ended' }
-    this.listener.playerDied()
+    if (cupId === null) return this.log('sip ignored: no hand holds something to sip from')
+    this.sipFrom(cupId)
   }
 
   fillTheKettleTapped(): void {
@@ -431,6 +428,14 @@ export class PlayerController {
     this.navigator.stopWalkingFreely()
   }
 
+  firstPersonLookTurned(headingRadians: number): void {
+    this.navigator.faceTheLook(headingRadians)
+  }
+
+  mouseMovedOverTheFloor(point: FloorPoint): void {
+    this.navigator.turnTowards(point)
+  }
+
   advance(frame: FrameSeconds): void {
     this.navigator.advance(frame.worldSeconds)
     this.whooshIfTheCloseUpChanged()
@@ -452,6 +457,16 @@ export class PlayerController {
     if (this.isRefusedByTheMode('leaveFirstPerson', 'leaving first person')) return
     this.log('the player asks to leave first person')
     this.listener.firstPersonLeaveAsked()
+  }
+
+  private sipFrom(cupId: string): void {
+    const volumeBeforeMl = this.session.state.vessels[cupId]?.liquid.volumeMl ?? 0
+    const events = this.session.dispatch({ type: 'tasteCup', cupId })
+    if (events.some((event) => event.type === 'teaTasted')) this.raiseToTheLips(cupId, volumeBeforeMl)
+    if (!events.some((event) => event.type === 'playerDied')) return
+    this.log(`the sip from ${cupId} killed the player, so the room shows it and takes no more input`)
+    this.modeState = { kind: 'ended' }
+    this.listener.playerDied()
   }
 
   private raiseToTheLips(cupId: string, volumeBeforeMl: number): void {
@@ -518,16 +533,15 @@ export class PlayerController {
   }
 
   private tapped(target: TapTarget, onTheScreen: PressOnTheScreen | null): void {
-    const chosenItemId = this.chosenItemId()
-    this.log(`tap on ${describeTarget(target)}${describeThePress(onTheScreen)}, ${chosenItemId === null ? 'no hand chosen' : `${chosenItemId} chosen in hand ${this.choice}`}`)
+    this.log(`tap on ${describeTarget(target)}${describeThePress(onTheScreen)}, holding ${describeTheItems(itemIdsInTheHands(this.session.state))}`)
+    if (this.modeState.kind === 'choosing') return this.closeTheMenu(`the tap on ${describeTarget(target)} falls outside it`)
     if (!this.roseBushTaps.isCounting(describeTarget(target))) this.roseBushTaps.startAgainAfterAnotherTap()
-    if ((target.kind !== 'item' && target.kind !== 'opening') || !this.tapsWithFullHands.isCounting(target.itemId)) this.tapsWithFullHands.startAgainAfterAnotherTap()
-    const action = this.tapActionOn(target)
+    const action = this.tapActionOn(target, onTheScreen?.point ?? null)
     if (action.pressSound !== null) this.listener.soundStarted(action.pressSound)
     action.act()
   }
 
-  private tapActionOn(target: TapTarget): TapAction {
+  private tapActionOn(target: TapTarget, at: ScreenPoint | null): TapAction {
     switch (target.kind) {
       case 'roseBush':
         return { act: () => this.countTheRoseBushTap(target), pressSound: null }
@@ -538,11 +552,13 @@ export class PlayerController {
       case 'guideBook':
         return { act: () => this.openTheGuide(), pressSound: 'buttonClick' }
       case 'hand':
-        return this.handAction(target.handIndex)
+        return { act: () => this.openTheMenu(this.handActions(target.handIndex), at, `hand ${target.handIndex}`), pressSound: null }
+      case 'inventorySlot':
+        return { act: () => this.openTheMenu(this.inventoryActions(target.slotIndex), at, `place ${target.slotIndex} of the inventory`), pressSound: null }
       case 'lid':
-        return this.lidAction(target)
+        return this.lidAction(target, at)
       case 'figurine':
-        return this.figurineAction(target)
+        return { act: () => this.keepTheSillForTheRoom(target.figurineId), pressSound: null }
       case 'floor':
       case 'furniture':
       case 'surface':
@@ -556,7 +572,7 @@ export class PlayerController {
       case 'faucet':
       case 'sink':
       case 'nothing':
-        return this.actionWhereThePlayerStands(target)
+        return this.actionWhereThePlayerStands(target, at)
     }
   }
 
@@ -565,36 +581,18 @@ export class PlayerController {
     return { act: () => this.openTheAchievements(), pressSound: 'buttonClick' }
   }
 
-  private handAction(handIndex: HandIndex): TapAction {
-    if (this.view.kind !== 'closeUp') return { act: () => this.log(`tap on hand ${handIndex} ignored: a hand is chosen only in a close-up`), pressSound: null }
-    const choiceAfterTheTap = itemIdInHand(this.session.state, handIndex) === null || this.choice === handIndex ? null : handIndex
-    return { act: () => this.chooseHand(choiceAfterTheTap, handIndex), pressSound: choiceAfterTheTap === this.choice ? null : 'buttonClick' }
-  }
-
-  private lidAction(target: Extract<TapTarget, { readonly kind: 'lid' }>): TapAction {
+  private lidAction(target: Extract<TapTarget, { readonly kind: 'lid' }>, at: ScreenPoint | null): TapAction {
     const location = itemLocationIn(this.session.state, target.itemId)
-    if (location?.kind !== 'inHand') return this.actionWhereThePlayerStands(target)
-    if (this.choice === location.handIndex) return { act: () => this.toggleLidOf(target.itemId), pressSound: null }
-    const handAction = this.handAction(location.handIndex)
-    return {
-      act: () => {
-        this.log(`tap on the lid of ${target.itemId} in the hand that is not chosen chooses hand ${location.handIndex}, as a tap on the item does`)
-        handAction.act()
-      },
-      pressSound: handAction.pressSound,
-    }
+    if (location?.kind !== 'inHand') return this.actionWhereThePlayerStands(target, at)
+    if (this.session.state.vessels[target.itemId]?.isLidOpen === true) return { act: () => this.closeTheLidOf(target.itemId), pressSound: null }
+    return { act: () => this.openTheMenu(this.handActions(location.handIndex), at, `hand ${location.handIndex}`), pressSound: null }
   }
 
-  private figurineAction(target: Extract<TapTarget, { readonly kind: 'figurine' }>): TapAction {
-    if (this.furnitureInTheCloseUp() !== this.ritualFurnitureId()) return { act: () => this.keepTheSillForTheRoom(target.figurineId), pressSound: null }
-    return this.actionWhereThePlayerStands(target)
-  }
-
-  private actionWhereThePlayerStands(target: TapTarget): TapAction {
+  private actionWhereThePlayerStands(target: TapTarget, at: ScreenPoint | null): TapAction {
     const closeUpFurnitureId = this.furnitureInTheCloseUp()
     const targetFurnitureId = this.furnitureOf(target)
     if (closeUpFurnitureId === null || targetFurnitureId !== closeUpFurnitureId) return { act: () => this.navigate(target, targetFurnitureId), pressSound: null }
-    const action = this.closeUpActionOn(target)
+    const action = this.closeUpActionOn(target, at)
     if (action === null) return { act: () => this.log(`tap on ${describeTarget(target)} in the close-up does nothing`), pressSound: null }
     return {
       act: () => {
@@ -603,10 +601,6 @@ export class PlayerController {
       },
       pressSound: action.pressSound,
     }
-  }
-
-  private describeTheChoice(): string {
-    return this.choice === null ? 'no hand is chosen' : `hand ${this.choice} is chosen`
   }
 
   private openTheSettings(): void {
@@ -633,15 +627,14 @@ export class PlayerController {
   }
 
   private keepTheSillForTheRoom(figurineId: string): void {
-    this.log(`tap on ${figurineId} from afar leaves the player in place: it stands on the sill`)
-    this.heard({ kind: 'figurineTappedFromAfar', figurineId })
+    this.log(`tap on ${figurineId} leaves the player in place: it stands on the sill and takes no tea`)
+    this.heard({ kind: 'figurineTapped', figurineId })
   }
 
   private navigate(target: TapTarget, targetFurnitureId: FurnitureId | null): void {
     if (targetFurnitureId !== null) this.navigator.tapped({ kind: 'furniture', furnitureId: targetFurnitureId })
     else if (target.kind === 'floor') this.navigator.tapped(target)
     else this.navigator.tapped({ kind: 'nothing' })
-    if (this.choice !== null) this.log(`hand ${this.choice} stays chosen while the player leaves the close-up`)
   }
 
   private sitDownAtTheRitualPlace(reason: string): void {
@@ -655,37 +648,35 @@ export class PlayerController {
     return view.kind === 'closeUp' && view.furnitureId === this.ritualFurnitureId()
   }
 
-  private closeUpActionOn(target: TapTarget): CloseUpAction | null {
+  private closeUpActionOn(target: TapTarget, at: ScreenPoint | null): TapAction | null {
     switch (target.kind) {
       case 'item':
-        return { act: () => this.touchItem(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId, isAControl: false, pressSound: null }
       case 'opening':
-        if (canAimAPour(this.session.state, this.chosenItemId(), target.itemId)) return { act: () => this.startAimingAt(target.itemId), isDoneWithTheChosenItem: true, isAControl: false, pressSound: null }
-        return { act: () => this.touchTheOpeningOf(target.itemId), isDoneWithTheChosenItem: this.chosenItemId() === spoonItemId, isAControl: false, pressSound: null }
+        return { act: () => this.openTheMenu(this.itemActions(target.itemId), at, target.itemId), pressSound: null }
       case 'lid':
-        if (canAimAPour(this.session.state, this.chosenItemId(), target.itemId)) return { act: () => this.startAimingAt(target.itemId), isDoneWithTheChosenItem: true, isAControl: false, pressSound: null }
-        return { act: () => this.toggleLidOf(target.itemId), isDoneWithTheChosenItem: false, isAControl: false, pressSound: null }
-      case 'figurine':
-        return { act: () => this.offerTheChosenCupTo(target.figurineId), isDoneWithTheChosenItem: true, isAControl: false, pressSound: null }
+        if (this.session.state.vessels[target.itemId]?.isLidOpen === true) return { act: () => this.closeTheLidOf(target.itemId), pressSound: null }
+        return { act: () => this.openTheMenu(this.itemActions(target.itemId), at, target.itemId), pressSound: null }
       case 'surface':
-        return { act: () => this.putDownTheChosenItemAt(target.furnitureId, target.point), isDoneWithTheChosenItem: true, isAControl: false, pressSound: null }
+        return this.menuActionOf(this.surfaceActions(target.furnitureId, target.point), at, `the ${target.furnitureId}`)
       case 'heater':
-        return { act: () => this.putTheChosenItemOnTheHeater(), isDoneWithTheChosenItem: true, isAControl: false, pressSound: null }
+        return this.menuActionOf(this.heaterActions(), at, 'the heater')
       case 'sink':
-        return { act: () => this.putTheChosenItemInTheSink(), isDoneWithTheChosenItem: true, isAControl: false, pressSound: null }
-      case 'heaterSwitch':
-        return { act: () => this.switchTheHeater(), isDoneWithTheChosenItem: false, isAControl: true, pressSound: 'buttonClick' }
-      case 'heaterPanel':
-        return { act: () => this.log('tap on the heater panel between its controls does nothing'), isDoneWithTheChosenItem: false, isAControl: true, pressSound: null }
-      case 'thermostatArrow':
-        return { act: () => this.stepTheThermostat(target.step), isDoneWithTheChosenItem: false, isAControl: true, pressSound: 'buttonClick' }
-      case 'thermostatButton':
-        return { act: () => this.pressTheThermostatButton(), isDoneWithTheChosenItem: false, isAControl: true, pressSound: 'buttonClick' }
+        return this.menuActionOf(this.sinkActions(), at, 'the sink')
       case 'faucet':
-        return { act: () => this.turnTheTap(), isDoneWithTheChosenItem: false, isAControl: true, pressSound: null }
+        return this.faucetAction(at)
+      case 'heaterSwitch':
+        return { act: () => this.switchTheHeater(), pressSound: 'buttonClick' }
+      case 'heaterPanel':
+        return { act: () => this.log('tap on the heater panel between its controls does nothing'), pressSound: null }
+      case 'thermostatArrow':
+        return { act: () => this.stepTheThermostat(target.step), pressSound: 'buttonClick' }
+      case 'thermostatButton':
+        return { act: () => this.pressTheThermostatButton(), pressSound: 'buttonClick' }
       case 'floor':
       case 'furniture':
       case 'hand':
+      case 'inventorySlot':
+      case 'figurine':
       case 'roseBush':
       case 'medal':
       case 'settingsGear':
@@ -693,6 +684,126 @@ export class PlayerController {
       case 'nothing':
         return null
     }
+  }
+
+  private menuActionOf(actions: readonly MenuAction[], at: ScreenPoint | null, about: string): TapAction | null {
+    return actions.length === 0 ? null : { act: () => this.openTheMenu(actions, at, about), pressSound: null }
+  }
+
+  private faucetAction(at: ScreenPoint | null): TapAction {
+    const sink = this.session.state.sink
+    const itemIdUnderTheTap = itemIdInTheSink(this.session.state)
+    if (sink.runningWater !== null) return { act: () => this.session.dispatch({ type: 'turnTheTapOff' }), pressSound: null }
+    if (itemIdUnderTheTap === null) return { act: () => this.session.dispatch({ type: 'turnTheTapOn' }), pressSound: null }
+    return { act: () => this.openTheMenu(this.tapUseActions(itemIdUnderTheTap, (use) => this.turnTheTapOnOver(itemIdUnderTheTap, use)), at, 'the tap'), pressSound: null }
+  }
+
+  private openTheMenu(actions: readonly MenuAction[], at: ScreenPoint | null, about: string): void {
+    if (actions.length === 0) return this.log(`no menu opens on ${about}: nothing can be done with it now`)
+    this.modeState = { kind: 'choosing', menu: { at, actions, view: { at, labels: actions.map((action) => action.label) } } }
+    this.log(`a menu opens on ${about} with ${actions.map((action) => action.label.kind).join(', ')}`)
+  }
+
+  private closeTheMenu(reason: string): void {
+    this.modeState = freeMode
+    this.log(`the menu closes with nothing chosen: ${reason}`)
+  }
+
+  private handActions(handIndex: HandIndex): readonly MenuAction[] {
+    const itemId = itemIdInHand(this.session.state, handIndex)
+    if (itemId === null) return []
+    return [
+      ...this.actionIf(this.canPutAway(itemId), 'putAway', itemId, null, () => this.putAway(itemId)),
+      ...this.openTheLidActionOn(itemId),
+      ...this.actionIf(this.canSipFrom(itemId), 'sip', itemId, null, () => this.sipFrom(itemId)),
+    ]
+  }
+
+  private inventoryActions(slotIndex: InventorySlot): readonly MenuAction[] {
+    const itemId = itemIdInTheInventory(this.session.state, slotIndex)
+    return itemId === null ? [] : this.actionIf(true, 'take', itemId, null, () => this.take(itemId))
+  }
+
+  private itemActions(itemId: string): readonly MenuAction[] {
+    const isInAHand = itemLocationIn(this.session.state, itemId)?.kind === 'inHand'
+    return [
+      ...this.actionIf(!isInAHand, 'take', itemId, null, () => this.take(itemId)),
+      ...this.actionIf(this.canPutAway(itemId), 'putAway', itemId, null, () => this.putAway(itemId)),
+      ...this.openTheLidActionOn(itemId),
+      ...this.heldItemIds().filter((heldId) => heldId !== itemId).flatMap((heldId) => this.actionsOfAHeldItemOn(heldId, itemId)),
+    ]
+  }
+
+  private openTheLidActionOn(itemId: string): readonly MenuAction[] {
+    if (this.session.state.vessels[itemId] === undefined) return []
+    const refusal = this.session.wouldRefuse([{ type: 'openVesselLid', vesselId: itemId }])
+    return this.actionIf(refusal === null || refusal.reason === 'tooHotToHold', 'openTheLid', itemId, null, () => this.session.dispatch({ type: 'openVesselLid', vesselId: itemId }))
+  }
+
+  private actionsOfAHeldItemOn(heldId: string, itemId: string): readonly MenuAction[] {
+    if (heldId === spoonItemId) return this.spoonActionsOn(itemId)
+    return this.actionIf(canAimAPour(this.session.state, heldId, itemId), 'pourInto', heldId, itemId, () => this.startAimingAt(heldId, itemId))
+  }
+
+  private spoonActionsOn(itemId: string): readonly MenuAction[] {
+    if (this.session.isACaddy(itemId)) {
+      const scoop: Command = { type: 'scoopTea', caddyId: itemId, depth: fullSpoonDepth }
+      return this.actionIf(this.session.wouldRefuse([scoop]) === null, 'scoopFrom', spoonItemId, itemId, () => this.session.dispatch(scoop))
+    }
+    const tip: Command = { type: 'tipSpoonInto', vesselId: itemId }
+    const hasLeavesToTip = totalLeafGrams(this.session.state.spoon.gramsByTeaId) > 0
+    return this.actionIf(hasLeavesToTip && this.session.wouldRefuse([tip]) === null, 'tipLeavesInto', spoonItemId, itemId, () => this.session.dispatch(tip))
+  }
+
+  private surfaceActions(furnitureId: FurnitureId, point: WorldPoint): readonly MenuAction[] {
+    return this.heldItemIds().flatMap((heldId) => this.actionIf(true, 'putDownHere', heldId, null, () => this.putDownAt(heldId, furnitureId, point)))
+  }
+
+  private heaterActions(): readonly MenuAction[] {
+    return this.heldItemIds().flatMap((heldId) => {
+      const refusal = this.session.wouldRefuse([{ type: 'placeOnHeater', itemId: heldId }])
+      return this.actionIf(refusal === null || refusal.reason === 'cannotSitOnHeater', 'putOnTheHeater', heldId, null, () => this.putOnTheHeater(heldId))
+    })
+  }
+
+  private sinkActions(): readonly MenuAction[] {
+    const state = this.session.state
+    const itemIdUnderTheTap = itemIdInTheSink(state)
+    if (itemIdUnderTheTap !== null) return state.sink.runningWater === null ? this.tapUseActions(itemIdUnderTheTap, (use) => this.turnTheTapOnOver(itemIdUnderTheTap, use)) : []
+    return this.heldItemIds()
+      .filter((heldId) => this.session.wouldRefuse([{ type: 'putInTheSink', itemId: heldId }]) === null)
+      .flatMap((heldId) => (state.sink.runningWater === null ? this.actionIf(true, 'putInTheSink', heldId, null, () => this.putInTheSink(heldId, null)) : this.tapUseActions(heldId, (use) => this.putInTheSink(heldId, use))))
+  }
+
+  private tapUseActions(itemId: string, runTheTap: (use: TapUse) => void): readonly MenuAction[] {
+    return [...this.actionIf(this.session.state.vessels[itemId] !== undefined, 'fillWithWater', itemId, null, () => runTheTap('fill')), ...this.actionIf(true, 'wash', itemId, null, () => runTheTap('wash'))]
+  }
+
+  private actionIf(isOffered: boolean, kind: ActionKind, itemId: string, targetId: string | null, act: () => void): readonly MenuAction[] {
+    if (!isOffered) return []
+    const item = carriedShapeOf(this.session.state, itemId)
+    const target = targetId === null ? null : carriedShapeOf(this.session.state, targetId)
+    if (item === undefined || target === undefined) {
+      this.log(`the action ${kind} with ${itemId}${targetId === null ? '' : ` on ${targetId}`} is not offered: the room knows no shape for it`, 'error')
+      return []
+    }
+    return [{ label: { kind, item, target }, act }]
+  }
+
+  private heldItemIds(): readonly string[] {
+    return itemIdsInTheHands(this.session.state).filter((itemId) => itemId !== null)
+  }
+
+  private heldClothId(): string | null {
+    return this.heldItemIds().find((itemId) => isACloth(this.session.state, itemId)) ?? null
+  }
+
+  private canPutAway(itemId: string): boolean {
+    return this.session.wouldRefuse([{ type: 'putAway', itemId }]) === null
+  }
+
+  private canSipFrom(itemId: string): boolean {
+    return this.session.wouldRefuse([{ type: 'tasteCup', cupId: itemId }]) === null
   }
 
   private heard(fact: HeardFact): void {
@@ -729,37 +840,25 @@ export class PlayerController {
 
   private playerMovedTo(furnitureId: FurnitureId | null, byWalkingFreely: boolean): void {
     if (this.modeState.kind === 'aiming') this.pourDone()
+    if (this.modeState.kind === 'choosing') this.closeTheMenu('the player moved')
     this.isSeated = false
     this.session.dispatch({ type: 'standAt', placeId: furnitureId })
     if (furnitureId !== null && !byWalkingFreely) this.sitDownAtTheRitualPlace('after walking to it')
   }
 
-  private touchItem(itemId: string): void {
-    if (this.chosenItemId() === spoonItemId) return this.useTheSpoonOn(itemId)
-    const chosenItemId = this.chosenItemId()
-    if (chosenItemId !== null) this.log(`tap on the body of ${itemId} with ${chosenItemId} chosen takes ${itemId}: a pour is aimed by a tap on its lid or its opening`)
-    this.pickUpAndChoose(itemId)
-  }
-
-  private touchTheOpeningOf(itemId: string): void {
-    const chosenItemId = this.chosenItemId()
-    if (chosenItemId !== null && chosenItemId !== spoonItemId) this.log(`no pour aimed from ${chosenItemId} at ${itemId}: ${whyNoPourCanBeAimed(this.session.state, this.chosenItemId(), itemId)}`)
-    this.touchItem(itemId)
-  }
-
-  private pickUpAndChoose(itemId: string): void {
+  private take(itemId: string): void {
     const events = this.session.dispatch({ type: 'pickUp', itemId })
-    if (events.some((event) => event.type === 'actionRefused' && event.reason === 'handsFull')) return this.tapWithFullHands(itemId)
-    const pickedUp = events.find((event) => event.type === 'pickedUp')
-    if (pickedUp === undefined) return
-    this.choice = pickedUp.handIndex
-    this.log(`chose ${itemId} in hand ${pickedUp.handIndex} as it was picked up`)
+    if (events.some((event) => event.type === 'actionRefused' && event.reason === 'handsFull')) this.barkOnFullHands(itemId)
   }
 
-  private startAimingAt(targetId: string): void {
+  private putAway(itemId: string): void {
+    this.session.dispatch({ type: 'putAway', itemId })
+  }
+
+  private startAimingAt(sourceId: string, targetId: string): void {
     const closeUp = this.closeUpInView
     if (closeUp === null) return this.log(`no pour to aim at ${targetId}: no close-up is in view`)
-    const pour = aimAPour({ session: this.session, catalog: this.catalog, layout: this.layout, log: this.log, sourceId: this.chosenItemId(), targetId, spoutDirection: this.questions.screenRightOnTheFloor() ?? screenRightOnTheFloor(closeUp) })
+    const pour = aimAPour({ session: this.session, catalog: this.catalog, layout: this.layout, log: this.log, sourceId, targetId, spoutDirection: this.questions.screenRightOnTheFloor() ?? screenRightOnTheFloor(closeUp) })
     if (pour !== null) this.modeState = { kind: 'aiming', pour }
   }
 
@@ -768,30 +867,21 @@ export class PlayerController {
     this.pourDone()
   }
 
-  private letGoOfTheChoiceAfterTheAim(): void {
-    if (this.choice === null) return
-    this.log(`the vessel stays in hand ${this.choice}, which is no longer chosen, as after any end of an aim`)
-    this.choice = null
+  private putInTheSink(itemId: string, use: TapUse | null): void {
+    const events = this.session.dispatch(use === null ? { type: 'putInTheSink', itemId } : { type: 'putInTheSink', itemId, use })
+    if (use !== null && !events.some((event) => event.type === 'actionRefused')) this.openTheLidForTheTap(itemId)
   }
 
-  private putTheChosenItemInTheSink(): void {
-    const itemId = this.chosenItemId()
-    if (itemId === null) return this.log('tap on the sink ignored: no hand is chosen')
-    this.letGoOfTheChoiceUnlessRefused(this.session.dispatch({ type: 'putInTheSink', itemId }))
+  private turnTheTapOnOver(itemId: string, use: TapUse): void {
+    this.openTheLidForTheTap(itemId)
+    this.session.dispatch({ type: 'turnTheTapOn', use })
   }
 
-  private turnTheTap(): void {
-    this.session.dispatch({ type: this.session.state.sink.runningWater === null ? 'turnTheTapOn' : 'turnTheTapOff' })
-  }
-
-  private useTheSpoonOn(itemId: string): void {
-    if (this.session.isACaddy(itemId)) {
-      this.session.dispatch({ type: 'scoopTea', caddyId: itemId, depth: fullSpoonDepth })
-      return
-    }
-    const isSomethingToTip = totalLeafGrams(this.session.state.spoon.gramsByTeaId) > 0 && this.session.state.vessels[itemId] !== undefined
-    if (!isSomethingToTip) return this.pickUpAndChoose(itemId)
-    this.session.dispatch({ type: 'tipSpoonInto', vesselId: itemId })
+  private openTheLidForTheTap(itemId: string): void {
+    const vessel = this.session.state.vessels[itemId]
+    if (vessel === undefined || vessel.isLidOpen || definitionIn(this.catalog, 'vessels', vessel.definitionId).lid === null) return
+    this.log(`the lid of ${itemId} is opened for the tap's water`)
+    this.session.dispatch({ type: 'openVesselLid', vesselId: itemId })
   }
 
   private toggleLidOf(itemId: string): void {
@@ -799,30 +889,23 @@ export class PlayerController {
     this.session.dispatch({ type: this.session.state.vessels[vesselId]?.isLidOpen === true ? 'closeVesselLid' : 'openVesselLid', vesselId })
   }
 
-  private offerTheChosenCupTo(figurineId: string): void {
-    const cupId = this.chosenItemId()
-    if (cupId === null) return this.log(`tap on ${figurineId} ignored: no hand is chosen`)
-    this.letGoOfTheChoiceUnlessRefused(this.session.dispatch({ type: 'offerCup', cupId, figurineId }))
+  private closeTheLidOf(itemId: string): void {
+    this.log(`tap on the open lid of ${itemId} closes it, with no menu`)
+    this.session.dispatch({ type: 'closeVesselLid', vesselId: itemId })
   }
 
-  private chooseHand(choice: HandIndex | null, tappedHandIndex: HandIndex): void {
-    this.choice = choice
-    this.log(choice === null ? `hand ${tappedHandIndex} let go of the choice` : `chose ${itemIdInHand(this.session.state, choice)} in hand ${choice}`)
-  }
-
-  private putDownTheChosenItemAt(furnitureId: FurnitureId, point: WorldPoint): void {
-    const itemId = this.chosenItemId()
-    if (itemId === null) return this.log(`tap on the ${furnitureId} ignored: no hand is chosen`)
+  private putDownAt(itemId: string, furnitureId: FurnitureId, point: WorldPoint): void {
     const closeUp = this.closeUpInView
-    const spot: Spot = closeUp === null ? { placeId: furnitureId, x: point.x, y: point.y, z: point.z } : { placeId: furnitureId, x: point.x, y: point.y, z: point.z, turnRadians: turnFacingTheCameraOf(closeUp) }
-    const refusal = whyThereIsNoRoomFor(itemId, spot, this.session.state, { layout: this.layout, heaterSpot: this.heaterSpot() }, this.lyingLids)
-    if (refusal !== null) {
-      this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}: ${refusal}`)
+    const tappedSpot: Spot = closeUp === null ? { placeId: furnitureId, x: point.x, y: point.y, z: point.z } : { placeId: furnitureId, x: point.x, y: point.y, z: point.z, turnRadians: turnFacingTheCameraOf(closeUp) }
+    const surroundings = { layout: this.layout, heaterSpot: this.heaterSpot() }
+    const spot = nearestSpotWithRoomFor(itemId, tappedSpot, this.session.state, surroundings, this.lyingLids)
+    if (spot === null) {
+      this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId} or near it: ${whyThereIsNoRoomFor(itemId, tappedSpot, this.session.state, surroundings, this.lyingLids)}`)
       return this.heard({ kind: 'noRoomToPutDown', itemId })
     }
-    const events = this.session.dispatch({ type: 'putDown', itemId, spot })
-    this.letGoOfTheChoiceUnlessRefused(events)
-    if (this.session.state.cloths[itemId]?.location.kind === 'onSurface') this.clothOnTheTable.putDown(itemId, furnitureId, point)
+    if (spot !== tappedSpot) this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}, so it goes to the snuggest free spot nearby, (${spot.x.toFixed(2)}, ${spot.z.toFixed(2)})`)
+    this.session.dispatch({ type: 'putDown', itemId, spot })
+    if (this.session.state.cloths[itemId]?.location.kind === 'onSurface') this.clothOnTheTable.putDown(itemId, furnitureId, { x: spot.x, y: spot.y, z: spot.z })
     if (furnitureId === 'shelf') this.heard({ kind: 'putOnTheShelf', itemId, isEverythingOnTheShelf: this.isEverythingOnTheShelf() })
   }
 
@@ -834,44 +917,17 @@ export class PlayerController {
     })
   }
 
-  private letGoOfTheChoiceUnlessRefused(events: readonly TeaEvent[]): void {
-    if (events.some((event) => event.type === 'actionRefused')) return this.log(`hand ${this.chosenHandIndex} stays chosen after the refusal`)
-    this.choice = null
-  }
-
-  private putTheChosenItemOnTheHeater(): void {
-    const itemId = this.chosenItemId()
-    if (itemId === null) return this.log('tap on the heater ignored: no hand is chosen')
+  private putOnTheHeater(itemId: string): void {
     const events = this.session.dispatch({ type: 'placeOnHeater', itemId })
-    this.letGoOfTheChoiceUnlessRefused(events)
     const isKeptOff = events.some((event) => event.type === 'actionRefused' && event.reason === 'cannotSitOnHeater')
     this.heard({ kind: 'putOnTheHeater', itemId, shape: carriedShapeOf(this.session.state, itemId), isKeptOff, isTheHeaterOn: isHeating(this.session.state.heater.mode) })
   }
 
-  private tapWithFullHands(itemId: string): void {
-    const { count, isReached } = this.tapsWithFullHands.countTapOn(itemId)
-    if (!isReached) return this.barkOnFullHands(itemId)
-    if (!this.questions.mayGrowAMiddleHand()) {
-      this.log(`${itemId} tapped ${count} times in a row with full hands, but the middle hand has been grown before, so none grows`)
-      return this.barkOnFullHands(itemId)
-    }
-    const events = this.session.dispatch({ type: 'pickUpWithAMiddleHand', itemId })
-    const pickedUp = events.find((event) => event.type === 'pickedUp')
-    if (pickedUp === undefined) return this.log(`${itemId} tapped ${count} times in a row with full hands, but it could not be taken into a middle hand`)
-    this.choice = pickedUp.handIndex
-    this.log(`${itemId} tapped ${count} times in a row with full hands grows a middle hand, which takes it and is chosen`)
-  }
-
   private barkOnFullHands(itemId: string): void {
     const state = this.session.state
-    const holdsOnlyBowls = itemIdsInTheHands(state).slice(0, middleHandIndex).every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
+    const holdsOnlyBowls = itemIdsInTheHands(state).every((heldId) => heldId !== null && carriedShapeOf(state, heldId) === 'bowl')
     this.log(`${itemId} not taken: both hands are full${holdsOnlyBowls ? ' of bowls' : ''}`)
     this.heard({ kind: 'takenWithFullHands', itemId, holdsOnlyBowls })
-  }
-
-  private chosenItemId(): string | null {
-    const handIndex = this.chosenHandIndex
-    return handIndex === null ? null : itemIdInHand(this.session.state, handIndex)
   }
 
   private furnitureOf(target: TapTarget): FurnitureId | null {
@@ -896,6 +952,7 @@ export class PlayerController {
         return this.ritualFurnitureId()
       case 'floor':
       case 'hand':
+      case 'inventorySlot':
       case 'roseBush':
       case 'medal':
       case 'settingsGear':
@@ -942,6 +999,10 @@ function whyTheAreaIsSetAside(area: AreaSetAside): string {
 function turnDegreesOf(radians: number): number {
   const degrees = Math.round((radians * 180) / Math.PI) % fullTurnDegrees
   return degrees < 0 ? degrees + fullTurnDegrees : degrees
+}
+
+function describeTheItems(itemIds: readonly (string | null)[]): string {
+  return itemIds.filter((itemId) => itemId !== null).join(' and ') || 'nothing'
 }
 
 function placeOf(location: DeepReadonly<ItemLocation> | undefined): string | null {

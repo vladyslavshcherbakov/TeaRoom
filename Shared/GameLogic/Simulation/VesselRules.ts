@@ -31,7 +31,7 @@ export const vesselRules: ItemKindRules = {
   heatOnTheWorkingHeater: (draft, itemId, seconds) => withTheVessel(draft, itemId, (vessel) => heatTheVessel(draft, vessel, seconds)),
   takeOffTheHeater: () => undefined,
   runTheTapOnto: (draft, itemId, runningWater, tap, seconds) => withTheVessel(draft, itemId, (vessel) => fillTheVessel(draft, vessel, runningWater, tap, seconds)),
-  liftOutOfTheSink: (draft, itemId) => withTheVessel(draft, itemId, (vessel) => pourAwayTheRinseWaterIfItRanOver(draft, vessel)),
+  liftOutOfTheSink: (draft, itemId) => withTheVessel(draft, itemId, (vessel) => pourAwayTheRinseWater(draft, vessel)),
   takeIntoAHand: (draft, itemId) => {
     withTheVessel(draft, itemId, (vessel) => closeTheLidAsItIsTaken(draft, vessel))
     return 'whole'
@@ -87,10 +87,7 @@ function fillTheVessel(draft: Draft, vessel: VesselState, runningWater: RunningW
   vessel.liquid = fill.liquid
   runningWater.filledMl += fill.filledMl
   drain(runningWater, fill.overflowedMl)
-  if (fill.overflowedMl > 0) {
-    draft.state.sink.hasRunOverTheItemInside = true
-    washTheLeavesOut(draft, vessel, fill.overflowedMl, capacityMl)
-  }
+  if (fill.overflowedMl > 0 && runningWater.use === 'wash') rinse(draft, vessel, fill.overflowedMl, capacityMl)
   if (fill.overflowedMl > 0 && !runningWater.hasOverflowed) {
     runningWater.hasOverflowed = true
     note(draft, `${vessel.id} is full at ${vessel.liquid.volumeMl.toFixed(1)} ml, the tap water runs over the rim into the drain`)
@@ -98,7 +95,8 @@ function fillTheVessel(draft: Draft, vessel: VesselState, runningWater: RunningW
   }
 }
 
-function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: number, capacityMl: number): void {
+function rinse(draft: Draft, vessel: VesselState, overflowedMl: number, capacityMl: number): void {
+  draft.state.sink.hasRinsedTheItemInside = true
   if (vessel.leaves === null) return
   const gramsBefore = totalLeafGrams(vessel.leaves.gramsByTeaId)
   const gramsLeft = leafGramsLeftAfterRunningOver(gramsBefore, overflowedMl, capacityMl)
@@ -112,9 +110,9 @@ function washTheLeavesOut(draft: Draft, vessel: VesselState, overflowedMl: numbe
   draft.events.push({ type: 'lastLeavesWashedOut', vesselId: vessel.id, isACaddy })
 }
 
-function pourAwayTheRinseWaterIfItRanOver(draft: Draft, vessel: VesselState): void {
-  if (!draft.state.sink.hasRunOverTheItemInside || !vesselDefinitionOf(draft, vessel).isDrinkable) return
-  note(draft, `${vessel.id} was rinsed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
+function pourAwayTheRinseWater(draft: Draft, vessel: VesselState): void {
+  if (!draft.state.sink.hasRinsedTheItemInside || !vesselDefinitionOf(draft, vessel).isDrinkable) return
+  note(draft, `${vessel.id} was washed until the tap ran over its rim, so its water is poured away as it leaves the sink: ${describeLiquid(vessel)}`)
   emptyTheVessel(vessel)
 }
 

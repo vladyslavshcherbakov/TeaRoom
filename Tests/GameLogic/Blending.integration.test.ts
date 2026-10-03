@@ -119,12 +119,3 @@ test('sip_ofTheSecondTeaAloneBrewedTheSameWay_tastesWeak', () => {
   assert.equal(eventsOfType(events, 'teaTasted')[0]?.verdict.strength, 'weak')
 })
 
-test('figurine_offeredHalfATeaItLikesAndHalfATeaItIsIndifferentTo_respondsSubtly', () => {
-  const session = new TestTeaSession(catalogOfTwoTeas)
-  session.mixInTheThermos(['caddy', 'blackCaddy'])
-  session.pour('thermos', 'cup3', 4)
-
-  const events = session.do({ type: 'offerCup', cupId: 'cup3', figurineId: 'toad' })
-
-  assert.deepEqual(eventsOfType(events, 'figurineAcceptedTea'), [{ type: 'figurineAcceptedTea', figurineId: 'toad', response: 'subtle' }])
-})

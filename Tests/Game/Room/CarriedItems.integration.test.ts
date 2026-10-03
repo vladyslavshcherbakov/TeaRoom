@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as THREE from 'three'
+import type { DyeInflow } from '../../../Apps/Engine/Rendering/Flow/SwirlingDye.ts'
 import { GlassThatClears } from '../../../Apps/Engine/Rendering/Looks.ts'
 import { carriedShapeOf, footprintCirclesOf, layoutByShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
 import { LyingLids } from '../../../Apps/Game/Room/Placement.ts'
@@ -10,7 +11,8 @@ import { aimOver, type AimedModel } from '../../../Apps/Game/Room/Rendering/Carr
 import type { CarriedItemsScene } from '../../../Apps/Game/Room/Rendering/Carried/CarriedItemsScene.ts'
 import { newCarriedModel, type CarriedModel } from '../../../Apps/Game/Room/Rendering/Carried/CarriedModel.ts'
 import { clearTheGlassAtItsSize, drawInTheDetailItsSizeNeeds } from '../../../Apps/Game/Room/Rendering/CarriedItems.ts'
-import { holdInView } from '../../../Apps/Game/Room/Rendering/Carried/Hands/HeldInView.ts'
+import { holdInView, type HeldInView } from '../../../Apps/Game/Room/Rendering/Carried/Hands/HeldInView.ts'
+import { inventoryShelf, inventoryShelfFrame, inventorySlots, keepInTheInventory, placeTheInventoryShelf, shelfTopOf, slotCentreAcross } from '../../../Apps/Game/Room/Rendering/Carried/Hands/InventoryInView.ts'
 import { inspectInView } from '../../../Apps/Game/Room/Rendering/Carried/Hands/InspectedInView.ts'
 import { showContentsOf } from '../../../Apps/Game/Room/Rendering/Carried/ItemContents.ts'
 import type { ItemSetUp } from '../../../Apps/Game/Room/Rendering/Carried/ItemParts.ts'
@@ -39,6 +41,7 @@ const drawingToleranceMetres = 0.001
 const streamTouchesTheWallWithinMetres = 0.002
 const tiltsDegrees = [0, 10, 20, 30, tiltOfFullFlowDegrees]
 const spoutDirections = [{ x: 1, z: 0 }, { x: 0, z: 1 }, { x: -0.6, z: -0.8 }]
+const framesInASecond = 30
 const portraitPhoneAspects = [375 / 667, 390 / 844, 412 / 915]
 const closeUpAndFirstPersonFieldsOfViewDegrees = [30, 70]
 const heldInViewCameras = [
@@ -249,6 +252,94 @@ test('invisibleMeshes_ofEveryShape_areAllTouchAreas', () => {
   }
 })
 
+test('kettleOfBoilingWater_overASecond_sendsUpWispsOfSteam', () => {
+  const session = new TestTeaSession(defaultCatalog, 'quietRoom')
+  session.doWithoutARefusal({ type: 'fillWithBoilingWater', vesselId: 'kettle' })
+  const kettle = newCarriedModel('kettle', 'kettle', plainMaterials())
+
+  showForASecond(kettle, session.state)
+
+  assert.ok(kettle.wisps.count > 0)
+})
+
+test('kettleOfColdWater_overASecond_sendsUpNoSteam', () => {
+  const session = new TestTeaSession(defaultCatalog, 'quietRoom')
+  const kettle = newCarriedModel('kettle', 'kettle', plainMaterials())
+
+  showForASecond(kettle, session.state)
+
+  assert.equal(kettle.wisps.count, 0)
+})
+
+test('bowlOfWater_withADarkStreamFallingInTheMiddle_darkensItsSurfaceThereFirst', () => {
+  const session = new TestTeaSession(defaultCatalog, 'quietRoom')
+  session.doWithoutARefusal({ type: 'fillWithBoilingWater', vesselId: 'bowl1' })
+  const bowl = newCarriedModel('bowl1', 'bowl', plainMaterials())
+
+  showForASecond(bowl, session.state, { u: 0.5, v: 0.5, colour: new THREE.Color('#3a1a08'), strength: 1, warmth: 0, pushU: 0, pushV: 0 })
+
+  const middle = bowl.dye?.colourAt(0.5, 0.5)
+  const edge = bowl.dye?.colourAt(0.5, 0.95)
+  assert.ok(middle !== undefined && edge !== undefined && middle.getHSL({ h: 0, s: 0, l: 0 }).l < edge.getHSL({ h: 0, s: 0, l: 0 }).l - 0.1, `the middle is ${middle?.getHexString()} and the edge ${edge?.getHexString()}`)
+})
+
+test('inventoryItem_ofEveryShapeInEitherPlace_staysInsideAPortraitPhoneScreen', () => {
+  const models = oneModelOfEachGeometry()
+
+  for (const aspect of portraitPhoneAspects) {
+    for (const { fieldOfViewDegrees, isFirstPerson, pitchRadians, screenHeightShareTakenByControls } of heldInViewCameras) {
+      const camera = new THREE.PerspectiveCamera(fieldOfViewDegrees, aspect, 0.1, 100)
+      camera.rotation.set(pitchRadians, 0, 0)
+      camera.updateMatrixWorld(true)
+      for (const model of models) {
+        for (const slotIndex of inventorySlots) {
+          keepInTheInventory(model, slotIndex, { camera, isFirstPerson, screenHeightShareTakenByControls })
+
+          const farthest = farthestFromTheScreensCentre(model, camera)
+          assert.ok(farthest <= 1, `${model.itemId} in place ${slotIndex} of the inventory, ${isFirstPerson ? 'in first person' : 'in a close-up'}, pitch ${pitchRadians}, controls taking ${screenHeightShareTakenByControls}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
+        }
+      }
+    }
+  }
+})
+
+test('ledge_withNothingOnIt_isSeenThrough', () => {
+  const ledge = inventoryShelf(plainMaterials().room)
+
+  placeTheInventoryShelf(ledge, phoneInventoryInView(), false)
+
+  assert.ok(meshesUnder(ledge).every((mesh) => mesh.material instanceof THREE.Material && mesh.material.transparent && mesh.material.opacity < 1))
+})
+
+test('ledge_withSomethingOnIt_isSolidAgain', () => {
+  const ledge = inventoryShelf(plainMaterials().room)
+  placeTheInventoryShelf(ledge, phoneInventoryInView(), false)
+
+  placeTheInventoryShelf(ledge, phoneInventoryInView(), true)
+
+  assert.ok(meshesUnder(ledge).every((mesh) => mesh.material instanceof THREE.Material && !mesh.material.transparent && mesh.material.opacity === 1))
+})
+
+test('inventoryItem_ofEveryShapeInEitherPlace_standsOnTheLedgeClearOfTheOtherPlace', () => {
+  const inventoryInView = phoneInventoryInView()
+  const frame = inventoryShelfFrame(inventoryInView)
+  const { depth } = shelfTopOf(frame)
+  const intoTheShelf = new THREE.Matrix4().compose(frame.topCentre, frame.turn, new THREE.Vector3(1, 1, 1)).invert()
+
+  for (const model of oneModelOfEachGeometry()) {
+    for (const slotIndex of inventorySlots) {
+      keepInTheInventory(model, slotIndex, inventoryInView)
+      model.root.updateMatrixWorld(true)
+
+      const ownSide = Math.sign(slotCentreAcross(frame, slotIndex))
+      const whereTheOtherItemReaches = Math.abs(slotCentreAcross(frame, slotIndex)) - frame.slotWidth / 2
+      const pointsOnTheShelf = drawnMeshesUnder(model.root, model).flatMap((mesh) => pointsOf(mesh).map((point) => point.applyMatrix4(intoTheShelf)))
+      const pointsOutside = pointsOnTheShelf.filter((point) => point.y < -drawingToleranceMetres || Math.abs(point.z) > depth / 2 || point.x * ownSide < -whereTheOtherItemReaches)
+      assert.deepEqual(pointsOutside.slice(0, 3).map((point) => point.toArray().map((value) => value.toFixed(3))), [], `${model.itemId} in place ${slotIndex} sinks into the ledge, hangs off its front or back, or reaches where the other place's item stands`)
+    }
+  }
+})
+
 test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDownAboveTheSticks_staysInsideAPortraitPhoneScreen', () => {
   const models = oneModelOfEachGeometry()
 
@@ -259,12 +350,10 @@ test('heldItem_ofEveryShapeInEitherHandInACloseUpOrInFirstPersonLookingUpOrDownA
       camera.updateMatrixWorld(true)
       for (const model of models) {
         for (const handIndex of [0, 1] as const) {
-          for (const chosenHandIndex of [null, handIndex]) {
-            holdInView(model, handIndex, { camera, chosenHandIndex, isFirstPerson, screenHeightShareTakenByControls })
+          holdInView(model, handIndex, { camera, isFirstPerson, screenHeightShareTakenByControls })
 
-            const farthest = farthestFromTheScreensCentre(model, camera)
-            assert.ok(farthest <= 1, `${model.itemId} in hand ${handIndex}, ${isFirstPerson ? 'in first person' : 'in a close-up'}, pitch ${pitchRadians}, controls taking ${screenHeightShareTakenByControls}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
-          }
+          const farthest = farthestFromTheScreensCentre(model, camera)
+          assert.ok(farthest <= 1, `${model.itemId} in hand ${handIndex}, ${isFirstPerson ? 'in first person' : 'in a close-up'}, pitch ${pitchRadians}, controls taking ${screenHeightShareTakenByControls}, ${aspect.toFixed(2)} aspect, ${fieldOfViewDegrees}°: reaches ${farthest.toFixed(3)} of the half screen`)
         }
       }
     }
@@ -503,6 +592,23 @@ function plainMaterials(): ItemSetUp {
   return { room, clothPatternOf: () => 'blueStripes', bowlIdWithTheToadUnderneath: 'bowl1', log: () => {} }
 }
 
+function showForASecond(model: CarriedModel, state: DeepReadonly<SessionState>, inflow: DyeInflow | null = null): void {
+  const lidsLying = new LyingLids(() => {}).layOpenLids(state, quietRoomSurroundings)
+  for (let frame = 0; frame <= framesInASecond; frame += 1) showContentsOf(model, { ...sceneOf(state), timeSeconds: frame / framesInASecond }, lidsLying, inflow)
+}
+
+function phoneInventoryInView(): HeldInView {
+  const camera = new THREE.PerspectiveCamera(closeUpAndFirstPersonFieldsOfViewDegrees[0], portraitPhoneAspects[0], 0.1, 100)
+  camera.updateMatrixWorld(true)
+  return { camera, isFirstPerson: false, screenHeightShareTakenByControls: 0 }
+}
+
+function pointsOf(mesh: THREE.Mesh): THREE.Vector3[] {
+  const positions = mesh.geometry.getAttribute('position')
+  if (positions === undefined) return []
+  return Array.from({ length: positions.count }, (_, index) => new THREE.Vector3().fromBufferAttribute(positions, index).applyMatrix4(mesh.matrixWorld))
+}
+
 function drawnMeshesUnder(object: THREE.Object3D, model: CarriedModel): THREE.Mesh[] {
   const meshes: THREE.Mesh[] = []
   object.traverseVisible((part) => {
@@ -530,7 +636,7 @@ function showStandingWhereItIs(model: CarriedModel, state: DeepReadonly<SessionS
 }
 
 function sceneOf(state: DeepReadonly<SessionState>): CarriedItemsScene {
-  return { state, view: worldViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inspected: null, aimedPour: null, clothWiping: null, sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
+  return { state, view: worldViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inventoryInView: { camera: new THREE.PerspectiveCamera(), isFirstPerson: false, screenHeightShareTakenByControls: 0 }, inspected: null, aimedPour: null, clothWiping: null, sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
 }
 
 function drawnBoundsOfTheLid(model: CarriedModel): THREE.Box3 {

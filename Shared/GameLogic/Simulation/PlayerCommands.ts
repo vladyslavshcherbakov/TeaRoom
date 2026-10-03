@@ -1,15 +1,15 @@
 import { definitionIn } from '../../Engine/Catalog.ts'
-import type { HandIndex } from '../State/SessionState.ts'
+import type { HandIndex, InventorySlot } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { type Draft } from './Draft.ts'
 import { note } from '../../Engine/Draft.ts'
 import { commandRule, refuse } from '../../Engine/Commands.ts'
 import type { TeaCommandEntry } from './TeaCommandEntry.ts'
-import { itemIdsInTheHands, middleHandIndex } from '../State/WhereItemsAre.ts'
+import { itemIdsInTheHands, itemIdsInTheInventory } from '../State/WhereItemsAre.ts'
 import { moveItem } from './MoveItem.ts'
 import { finishPour } from './PouringCommands.ts'
 import { whereTheItemIs } from './Reach.ts'
-import { isCoolEnoughToHold, isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isThePlayerAt, isWithinThePlayersReach, type Check } from './ItemRefusals.ts'
+import { isCoolEnoughToHold, isInAHand, isKnown, isNotBeingPoured, isNotBurntAway, isNotInAHand, isNotPutAway, isThePlayerAt, isWithinReachOrPutAway, isWithinThePlayersReach, type Check } from './ItemRefusals.ts'
 
 export const standAtRule: TeaCommandEntry<'standAt'> = commandRule({ carryOut: standAt })
 
@@ -18,9 +18,9 @@ export const pickUpRule: TeaCommandEntry<'pickUp'> = commandRule({
   carryOut: pickUp,
 })
 
-export const pickUpWithAMiddleHandRule: TeaCommandEntry<'pickUpWithAMiddleHand'> = commandRule({
-  checks: ({ itemId }) => [...checksToTake(itemId), areBothHandsFull, hasNoMiddleHandYet],
-  carryOut: pickUpWithAMiddleHand,
+export const putAwayRule: TeaCommandEntry<'putAway'> = commandRule({
+  checks: ({ itemId }) => [isKnown(itemId), isNotBurntAway(itemId), isNotPutAway(itemId), isWithinThePlayersReach(itemId), isNotBeingPoured(itemId), isCoolEnoughToHold(itemId)],
+  carryOut: putAway,
 })
 
 export const putDownRule: TeaCommandEntry<'putDown'> = commandRule({
@@ -47,12 +47,14 @@ function pickUp(draft: Draft, command: CommandOfType<'pickUp'>): void {
   takeIntoTheHand(draft, itemId, handIndex)
 }
 
-function pickUpWithAMiddleHand(draft: Draft, command: CommandOfType<'pickUpWithAMiddleHand'>): void {
+function putAway(draft: Draft, command: CommandOfType<'putAway'>): void {
   const itemId = command.itemId
-  if (takeIntoTheHand(draft, itemId, middleHandIndex) === 'crumbled') return note(draft, `no middle hand grows, since ${itemId} crumbled as it was taken`)
-  draft.state.player.hasAMiddleHand = true
-  note(draft, `a middle hand grows and takes ${itemId}`)
-  draft.events.push({ type: 'middleHandGrown', itemId })
+  const slotIndex = freeInventorySlotOf(draft)
+  if (slotIndex === null) return refuse(draft, command, 'inventoryFull', `the inventory holds ${itemIdsInTheInventory(draft.state).join(' and ')}`)
+  const whereItWas = whereTheItemIs(draft.state, itemId)
+  if (moveItem(draft, itemId, { kind: 'inTheInventory', slotIndex }) === 'crumbled') return
+  note(draft, `put ${itemId}, which was ${whereItWas}, away in place ${slotIndex} of the inventory`)
+  draft.events.push({ type: 'putAway', itemId, slotIndex })
 }
 
 function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
@@ -63,25 +65,14 @@ function putDown(draft: Draft, command: CommandOfType<'putDown'>): void {
 }
 
 function checksToTake(itemId: string): readonly Check[] {
-  return [isKnown(itemId), isNotBurntAway(itemId), isWithinThePlayersReach(itemId), isNotInAHand(itemId), isNotBeingPoured(itemId), isCoolEnoughToHold(itemId)]
+  return [isKnown(itemId), isNotBurntAway(itemId), isWithinReachOrPutAway(itemId), isNotInAHand(itemId), isNotBeingPoured(itemId), isCoolEnoughToHold(itemId)]
 }
 
-function takeIntoTheHand(draft: Draft, itemId: string, handIndex: HandIndex): 'whole' | 'crumbled' {
+function takeIntoTheHand(draft: Draft, itemId: string, handIndex: HandIndex): void {
   const whereItWas = whereTheItemIs(draft.state, itemId)
-  if (moveItem(draft, itemId, { kind: 'inHand', handIndex }) === 'crumbled') return 'crumbled'
+  if (moveItem(draft, itemId, { kind: 'inHand', handIndex }) === 'crumbled') return
   note(draft, `picked up ${itemId}, which was ${whereItWas}, into hand ${handIndex}`)
   draft.events.push({ type: 'pickedUp', itemId, handIndex })
-  return 'whole'
-}
-
-const areBothHandsFull: Check = (draft) => {
-  const [firstHand, secondHand] = itemIdsInTheHands(draft.state)
-  return firstHand !== null && secondHand !== null ? null : { reason: 'aHandIsFree', values: `holding ${describeWhatTheHandsHold(draft)}` }
-}
-
-const hasNoMiddleHandYet: Check = (draft) => {
-  const player = draft.state.player
-  return player.hasAMiddleHand ? { reason: 'middleHandAlreadyGrown', values: `the middle hand holds ${itemIdsInTheHands(draft.state)[middleHandIndex] ?? 'nothing'}` } : null
 }
 
 function describeWhatTheHandsHold(draft: Draft): string {
@@ -91,6 +82,11 @@ function describeWhatTheHandsHold(draft: Draft): string {
 function freeHandOf(draft: Draft): HandIndex | null {
   const hands = itemIdsInTheHands(draft.state)
   if (hands[0] === null) return 0
-  if (hands[1] === null) return 1
-  return draft.state.player.hasAMiddleHand && hands[middleHandIndex] === null ? middleHandIndex : null
+  return hands[1] === null ? 1 : null
+}
+
+function freeInventorySlotOf(draft: Draft): InventorySlot | null {
+  const inventory = itemIdsInTheInventory(draft.state)
+  if (inventory[0] === null) return 0
+  return inventory[1] === null ? 1 : null
 }

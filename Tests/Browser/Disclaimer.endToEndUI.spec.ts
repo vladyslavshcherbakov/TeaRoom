@@ -27,3 +27,16 @@ test('disclaimer_whenOkWasTappedAndThePageReloads_isNotShownAgain', async ({ pag
   await expect(page.locator('.disclaimer')).toHaveCount(0)
   expect(record.errors).toEqual([])
 })
+
+test('soundLoudness_whenChosenOnTheNoteAndThePageReloads_isTheChoiceOnTheScreenThatOffersToContinue', async ({ page }) => {
+  const record = consoleRecordOf(page)
+  await page.goto('./')
+  await roomOpening(record, 1)
+  await page.locator('.disclaimer').getByRole('button', { name: text('settings.sound.quiet') }).tap()
+  await page.getByRole('button', { name: text('disclaimer.ok') }).tap()
+
+  await page.reload()
+
+  await expect(page.locator('.continue').getByRole('button', { name: text('settings.sound.quiet') })).toHaveAttribute('aria-pressed', 'true')
+  expect(record.errors).toEqual([])
+})

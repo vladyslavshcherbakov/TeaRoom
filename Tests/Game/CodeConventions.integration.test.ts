@@ -69,7 +69,7 @@ test('views_neverImportTheirStyles', () => {
 })
 
 test('relativeImports_endInTsOrInWebmForASound', () => {
-  const importsWithoutTs = ['Apps', 'Shared', 'Tests'].flatMap(sourceFilesIn).flatMap((file) => [...file.text.matchAll(relativeImportPath)].map((match) => `${file.path}: ${match[1] ?? ''}`)).filter((line) => !line.endsWith('.ts') && !line.endsWith('.webm'))
+  const importsWithoutTs = ['Apps', 'Shared', 'Tests'].flatMap(sourceFilesIn).flatMap((file) => [...file.text.matchAll(relativeImportPath)].map((match) => `${file.path}: ${match[1] ?? ''}`)).filter((line) => !line.endsWith('.ts') && !line.endsWith('.webm') && !line.endsWith('.glb?url'))
 
   assert.deepEqual(importsWithoutTs, [])
 })

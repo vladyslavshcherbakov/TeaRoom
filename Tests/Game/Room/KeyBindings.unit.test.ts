@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { KeyBindings } from '../../../Apps/Game/Room/KeyBindings.ts'
-import { middleHandIndex } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
 
 test('handKey_whenPressedAndLetGo_tapsThatHand', () => {
   const { keyBindings, calls } = keyBindingsRecording()
@@ -23,13 +22,13 @@ test('handKey_whenHeldForASecond_showsTheItemUpCloseAndDoesNotTapWhenLetGo', () 
   assert.deepEqual(calls, ['hand held 0'])
 })
 
-test('handKey_forTheThirdHand_tapsTheMiddleHand', () => {
+test('key3_whenPressed_tapsNoHand', () => {
   const { keyBindings, calls } = keyBindingsRecording()
 
   keyBindings.keyPressed('Digit3')
   keyBindings.keyReleased('Digit3')
 
-  assert.deepEqual(calls, [`hand tapped ${middleHandIndex}`])
+  assert.deepEqual(calls, [])
 })
 
 test('handKey_whileAnItemIsShownUpClose_closesIt', () => {

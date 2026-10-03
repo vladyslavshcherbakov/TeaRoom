@@ -11,6 +11,8 @@ import { RoomVisit } from '../../Apps/Game/Room/RoomVisit.ts'
 import { arrangementOfANewGame } from '../../Apps/Game/Room/RoomArrangement.ts'
 import { roomEntrance } from '../../Apps/Game/Room/RoomNavigator.ts'
 import type { TapTarget } from '../../Apps/Game/Room/TapTarget.ts'
+import type { ActionKind } from '../../Apps/Game/Room/ActionMenu.ts'
+import type { CarriedShape } from '../../Apps/Game/Room/CarriedShapes.ts'
 import type { PlayerBark } from '../../Apps/Game/Room/PlayerBarks.ts'
 import type { TapReach } from '../../Apps/Game/Room/TapTargetAmong.ts'
 import type { TemperatureUnit } from '../../Apps/Game/Room/Temperatures.ts'
@@ -123,7 +125,7 @@ export class TestRoom {
   }
 
   buttonsShownInTheRoomView(): Readonly<Record<ScreenButton, boolean>> {
-    return screenControlsShown({ cameraMode: 'room', controlScheme: 'twoSticks', stickLayout: 'walkOnTheLeft', mode: this.playerController.mode, hasACupToSip: this.playerController.sippableCupId !== null }).buttons
+    return screenControlsShown({ cameraMode: 'room', controlScheme: 'twoSticks', stickLayout: 'walkOnTheLeft', mode: this.playerController.mode }).buttons
   }
 
   tap(target: TapTarget): void {
@@ -135,10 +137,25 @@ export class TestRoom {
     for (let tap = 0; tap < times; tap += 1) this.tap(target)
   }
 
-  takeAndChoose(itemId: string): void {
-    this.tap({ kind: 'item', itemId })
-    const handIndex = itemIdsInTheHands(this.state).indexOf(itemId)
-    if (this.playerController.chosenHandIndex !== handIndex) throw new Error(`${itemId} did not reach a chosen hand`)
+  choose(kind: ActionKind, item: CarriedShape | null = null, target: CarriedShape | null = null): void {
+    const labels = this.playerController.actionMenuView?.labels ?? []
+    const index = labels.findIndex((label) => label.kind === kind && (item === null || label.item === item) && (target === null || label.target === target))
+    if (index < 0) throw new Error(`the menu offers no ${kind}${item === null ? '' : ` with ${item}`}${target === null ? '' : ` on ${target}`}: it offers ${labels.map((label) => `${label.kind} ${label.item}${label.target === null ? '' : ` ${label.target}`}`).join(', ') || 'nothing'}`)
+    this.playerController.actionChosen(index)
+  }
+
+  tapAndChoose(target: TapTarget, kind: ActionKind, item: CarriedShape | null = null, otherItem: CarriedShape | null = null): void {
+    this.tap(target)
+    this.choose(kind, item, otherItem)
+  }
+
+  take(itemId: string): void {
+    this.tapAndChoose({ kind: 'item', itemId }, 'take')
+    if (!itemIdsInTheHands(this.state).includes(itemId)) throw new Error(`${itemId} did not reach a hand`)
+  }
+
+  actionsOffered(): readonly string[] {
+    return (this.playerController.actionMenuView?.labels ?? []).map((label) => `${label.kind} ${label.item}${label.target === null ? '' : ` ${label.target}`}`)
   }
 
   moveTheSpout(by: FloorPoint): void {

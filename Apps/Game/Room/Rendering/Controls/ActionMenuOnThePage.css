@@ -1,0 +1,38 @@
+.action-menu {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: calc(100vw - 32px);
+  padding: 6px;
+  border-radius: 16px;
+  background: rgba(251, 244, 232, 0.96);
+  box-shadow: 0 6px 18px rgba(40, 20, 10, 0.3);
+}
+
+.action-menu[hidden] {
+  display: none;
+}
+
+.action-menu-action {
+  min-height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #5a3a26;
+  font: 16px/1.2 system-ui, sans-serif;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.action-menu-action svg {
+  flex: none;
+}
+
+.action-menu-action:active {
+  background: rgba(95, 154, 124, 0.25);
+}

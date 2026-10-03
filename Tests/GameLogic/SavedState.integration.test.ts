@@ -3,7 +3,7 @@ import test from 'node:test'
 import type { Catalog } from '../../Shared/GameLogic/Definitions/Catalog.ts'
 import { TeaSession } from '../../Shared/GameLogic/Simulation/TeaSession.ts'
 import { sessionStateVersion } from '../../Shared/GameLogic/State/FittedSavedState.ts'
-import { itemIdsInTheHands } from '../../Shared/GameLogic/State/WhereItemsAre.ts'
+import { itemIdsInTheHands, itemIdsInTheInventory } from '../../Shared/GameLogic/State/WhereItemsAre.ts'
 import { RecordingLog } from '../Support/RecordingLog.ts'
 import { catalogWithRoomChanges, testCatalog, withAFourthCup, withASecondCloth } from '../Support/TestCatalog.ts'
 import { TestTeaSession } from '../Support/TestTeaSession.ts'
@@ -87,16 +87,14 @@ test('savedState_withAPuddleOnAPlaceTheRoomLost_doesNotFit', () => {
   assert.deepEqual(problems, ['puddle1 lies on window, which the room no longer has'])
 })
 
-test('savedState_withAnItemInTheMiddleHand_resumesWithTheMiddleHandHoldingIt', () => {
+test('savedState_withAnItemInEachHand_resumesWithBothHandsHoldingThem', () => {
   const session = new TestTeaSession()
   session.do({ type: 'pickUp', itemId: 'kettle' })
   session.do({ type: 'pickUp', itemId: 'thermos' })
-  session.do({ type: 'pickUpWithAMiddleHand', itemId: 'cup1' })
 
   const resumed = TestTeaSession.resumedFrom(session.savedState)
 
-  assert.deepEqual(resumed.state.player, { placeId: 'table', hasAMiddleHand: true })
-  assert.deepEqual(itemIdsInTheHands(resumed.state), ['kettle', 'thermos', 'cup1'])
+  assert.deepEqual(itemIdsInTheHands(resumed.state), ['kettle', 'thermos'])
 })
 
 test('savedState_withThePlayerWalking_resumesWithThePlayerWalking', () => {
@@ -172,14 +170,56 @@ test('savedState_withACupOnAPlaceTheRoomLost_doesNotFit', () => {
   assert.equal(problems.filter((problem) => problem.includes('cup1') && problem.includes('window')).length, 1, problems.join('\n'))
 })
 
-test('savedState_whoseMiddleHandHoldsAnItemBeforeItGrew_doesNotFit', () => {
+test('savedState_withTheTapRunningForAnUnknownUse_doesNotFit', () => {
+  const session = new TestTeaSession()
+  session.do({ type: 'turnTheTapOn' })
+  const savedState = session.savedState as { sink: { runningWater: Record<string, unknown> } }
+  savedState.sink.runningWater['use'] = 'boil'
+
+  const problems = problemsResuming(savedState)
+
+  assert.deepEqual(problems, ['state.sink.runningWater.use is an unknown use of the tap, boil'])
+})
+
+test('savedState_withAnItemInTheInventory_resumesWithItThere', () => {
+  const session = new TestTeaSession()
+  session.do({ type: 'putAway', itemId: 'cup1' })
+
+  const resumed = TestTeaSession.resumedFrom(session.savedState)
+
+  assert.deepEqual(itemIdsInTheInventory(resumed.state), ['cup1', null])
+})
+
+test('savedState_whosePlaceOfTheInventoryHoldsTwoItems_doesNotFit', () => {
+  const session = new TestTeaSession()
+  session.do({ type: 'putAway', itemId: 'cup1' })
+  const savedState = session.savedState as { vessels: Record<string, Record<string, unknown>> }
+  const cup = savedState.vessels['cup2']
+  if (cup !== undefined) cup['location'] = { kind: 'inTheInventory', slotIndex: 0 }
+
+  const problems = problemsResuming(savedState)
+
+  assert.deepEqual(problems, ['place 0 of the inventory holds cup1 and cup2 at once'])
+})
+
+test('savedState_withAnItemInAThirdPlaceOfTheInventory_doesNotFit', () => {
+  const savedState = new TestTeaSession().savedState as { vessels: Record<string, Record<string, unknown>> }
+  const cup = savedState.vessels['cup1']
+  if (cup !== undefined) cup['location'] = { kind: 'inTheInventory', slotIndex: 2 }
+
+  const problems = problemsResuming(savedState)
+
+  assert.deepEqual(problems, ['state.vessels.cup1.location is a place of the inventory that does not exist, 2'])
+})
+
+test('savedState_withAnItemInAThirdHand_doesNotFit', () => {
   const savedState = new TestTeaSession().savedState as { vessels: Record<string, Record<string, unknown>> }
   const cup = savedState.vessels['cup1']
   if (cup !== undefined) cup['location'] = { kind: 'inHand', handIndex: 2 }
 
   const problems = problemsResuming(savedState)
 
-  assert.deepEqual(problems, ['the middle hand holds cup1, though it has not grown'])
+  assert.deepEqual(problems, ['state.vessels.cup1.location is a hand that does not exist, 2'])
 })
 
 function problemsResuming(savedState: unknown, catalog: Catalog = testCatalog()): readonly string[] {

@@ -15,19 +15,8 @@ import type { LeafPile } from './LeafPile.ts'
 import { spoonShapeLook } from './Shapes/SpoonParts.ts'
 import { thermosShapeLook } from './Shapes/ThermosParts.ts'
 import { openingOf } from './VesselProfile.ts'
-
-export type PuffTrail = {
-  readonly material: THREE.Material
-  readonly origin: THREE.Vector3
-  readonly direction: THREE.Vector3
-  size: number
-  reachMetres: number
-  opacity: number
-  whereTheVesselWas: string
-  leftBehindAtSeconds: number | null
-  lastRise: number
-  isOut: boolean
-}
+import { RisingWisps, type WispsMotion } from '../../../../Engine/Rendering/Wisps/RisingWisps.ts'
+import { SwirlingDye, type DyeMotion } from '../../../../Engine/Rendering/Flow/SwirlingDye.ts'
 
 export type SteamLook = {
   readonly inRoom: THREE.Material
@@ -40,7 +29,10 @@ export type ModelNow = {
   leaves: { readonly pile: LeafPile; readonly teaId: string | null } | null
   soakedLeaves: { readonly pile: LeafPile; readonly teaId: string } | null
   soakedLeavesTurn: { radians: number; atSeconds: number } | null
-  sipSteamStartedAtSeconds: number | null
+  wispsPass: Pass | null
+  wispsShownAtSeconds: number | null
+  dyeShownAtSeconds: number | null
+  isTheDyeFilled: boolean
   isDrawnSimply: boolean
   glassClearShare: number
   tagKey: string
@@ -63,28 +55,56 @@ export type CarriedModel = {
   readonly opening: THREE.Mesh | null
   readonly liquid: THREE.Mesh | null
   readonly liquidMaterial: THREE.MeshStandardMaterial | null
+  readonly dye: SwirlingDye | null
   readonly vessel: VesselParts | null
   readonly liquidVolume: THREE.Mesh | null
   readonly leafHolder: THREE.Group | null
   readonly leafMaterial: THREE.Material
   readonly soakedLeafHolder: THREE.Group | null
-  readonly puffs: readonly THREE.Mesh[]
+  readonly wisps: RisingWisps
   readonly lookByWhereItIsDrawn: LookByWhereItIsDrawn | null
   readonly glassThatClears: GlassThatClears | null
   readonly steamLook: SteamLook
-  readonly puffTrails: readonly PuffTrail[]
-  readonly sipPuffs: readonly THREE.Mesh[]
-  readonly sipPuffTrails: readonly PuffTrail[]
   readonly displays: readonly Display[]
   readonly charTo: CharTo | null
   readonly levelsOfDetail: readonly LevelOfDetail[]
   readonly now: ModelNow
 }
 
-const mostSteamSources = 2
-const steamPuffGeometry = new THREE.SphereGeometry(0.03, 8, 6)
-const sipPuffGeometry = new THREE.SphereGeometry(0.03, 24, 16)
-export const mostPuffsFromOneSource = 3
+const dyeCellsAcross = 48
+const dyeMotion: DyeMotion = {
+  calmsDownSeconds: 4,
+  swirlKeeping: 3,
+  pressureRounds: 12,
+  inflowRadiusShare: 0.06,
+  inflowTakesOverPerSecond: 10,
+  spreadPerSecond: 60,
+  pushShare: 0.5,
+  pushRadiusShare: 0.15,
+  pushTakesOverPerSecond: 3,
+  sinkingBandShare: 0.2,
+  deepFlowShare: -0.4,
+  depthShowsShare: 0.35,
+  evensOutSeconds: 20,
+  churnCellsPerSecondSquared: 6,
+  churnSizeCells: 10,
+  churnChangePerSecond: 0.3,
+  upwellingsPerSecond: 6,
+  upwellingSeconds: 0.5,
+  upwellingSpreadPerSecond: 20,
+}
+const mostWispsOfOneItem = 160
+const wispsMotion: WispsMotion = {
+  riseMetresPerSecond: 0.07,
+  lifeSeconds: 2.2,
+  swirlMetresPerSecond: 0.05,
+  swirlSizeMetres: 0.05,
+  swirlChangePerSecond: 0.6,
+  sizeMetres: 0.035,
+  bornWithinMetres: 0.03,
+  keptShareOfTheSourcesSpeed: 0.5,
+  kickFadePerSecond: 2.5,
+}
 
 const openingTouchAreaAboveTheRimMetres = 0.005
 const liquidSurfaceSegments = 64
@@ -107,6 +127,8 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   const liquidParts = parts.vessel?.liquid ?? null
   const liquidMaterial = liquidParts === null ? null : (materials.room.unsharedMaterialFor('liquidSurface') as THREE.MeshStandardMaterial)
   const liquid = liquidMaterial === null ? null : new THREE.Mesh(new THREE.CircleGeometry(1, liquidSurfaceSegments), liquidMaterial)
+  const dye = liquidMaterial === null ? null : new SwirlingDye(dyeCellsAcross, dyeMotion)
+  if (liquidMaterial !== null && dye !== null) liquidMaterial.map = dye.texture
   if (liquid !== null && liquidMaterial !== null) {
     liquid.rotation.x = -Math.PI / 2
     liquid.renderOrder = liquidDrawnAfterThePaintingBelowIt
@@ -122,14 +144,7 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
   if (soakedLeafHolder !== null) root.add(soakedLeafHolder)
   root.traverse((part) => (part.castShadow = !roomLayers.isATouchArea(part)))
   const steamLook: SteamLook = { inRoom: materials.room.materialFor(look.steamSurface), heldInView: materials.room.materialFor('heldSteam'), drawnToTheEyes: materials.room.materialFor('steam') }
-  const puffTrails = Array.from({ length: mostPuffsFromOneSource * mostSteamSources }, () => newPuffTrail(steamLook.inRoom))
-  const sipPuffTrails = Array.from({ length: mostPuffsFromOneSource }, () => newPuffTrail(steamLook.drawnToTheEyes))
-  const puffs = puffTrails.map((trail) => new THREE.Mesh(steamPuffGeometry, trail.material))
-  const sipPuffs = sipPuffTrails.map((trail) => new THREE.Mesh(sipPuffGeometry, trail.material))
-  for (const puff of [...puffs, ...sipPuffs]) {
-    puff.castShadow = false
-    puff.visible = false
-  }
+  const wisps = new RisingWisps(mostWispsOfOneItem, wispsMotion, { colour: '#ffffff', opacity: 0 })
   return {
     itemId,
     shape,
@@ -143,22 +158,20 @@ export function newCarriedModel(itemId: string, shape: CarriedShape, materials: 
     opening,
     liquid,
     liquidMaterial,
+    dye,
     vessel: parts.vessel,
     liquidVolume,
     leafHolder,
     leafMaterial: materials.room.materialFor('leaves'),
     soakedLeafHolder,
-    puffs,
+    wisps,
     lookByWhereItIsDrawn: parts.lookByWhereItIsDrawn,
     glassThatClears: parts.glassThatClears,
     steamLook,
-    puffTrails,
-    sipPuffs,
-    sipPuffTrails,
     displays: parts.displays,
     charTo: parts.charTo,
     levelsOfDetail: parts.levelsOfDetail,
-    now: { liquidVolumeHeight: 0, leaves: null, soakedLeaves: null, soakedLeavesTurn: null, sipSteamStartedAtSeconds: null, isDrawnSimply: false, glassClearShare: 0, tagKey: '', pass: 'room', role: 'takesTaps', isHeldInView: false, castsShadow: true },
+    now: { liquidVolumeHeight: 0, leaves: null, soakedLeaves: null, soakedLeavesTurn: null, wispsPass: null, wispsShownAtSeconds: null, dyeShownAtSeconds: null, isTheDyeFilled: false, isDrawnSimply: false, glassClearShare: 0, tagKey: '', pass: 'room', role: 'takesTaps', isHeldInView: false, castsShadow: true },
   }
 }
 
@@ -171,10 +184,6 @@ export function tagForTaps(model: CarriedModel, tag: TapTargetTag): void {
   if (model.lid === null || !(tag.kind === 'item' || tag.kind === 'hand')) return
   const lidTag: TapTargetTag = { kind: 'lid', itemId: model.itemId }
   model.lid.traverse((part) => (part.userData = { ...part.userData, tapTarget: lidTag }))
-}
-
-function newPuffTrail(look: THREE.Material): PuffTrail {
-  return { material: look.clone(), origin: new THREE.Vector3(), direction: new THREE.Vector3(0, 1, 0), size: 1, reachMetres: 0, opacity: look.opacity, whereTheVesselWas: '', leftBehindAtSeconds: null, lastRise: 0, isOut: false }
 }
 
 function originAboveTheLowestDrawnPointOf(lid: THREE.Object3D): number {

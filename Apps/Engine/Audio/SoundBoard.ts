@@ -1,4 +1,5 @@
 import type { AppLog } from '../AppLog.ts'
+import { bytesAt } from '../BytesAt.ts'
 
 export type SoundPlaying =
   | { readonly kind: 'once' }
@@ -49,6 +50,8 @@ export class SoundBoard<SoundId extends string> {
   private readonly heard = new Map<SoundId, Heard>()
   private readonly soundsSkippedBeforeTheyLoaded = new Set<SoundId>()
   private context: AudioContext | null = null
+  private overallLoudness: GainNode | null = null
+  private overallLoudnessShare = 1
   private isThePageHidden = false
   private isUnlocking = false
   private readonly soundsWaitingForTheUnlock = new Map<SoundId, number>()
@@ -56,6 +59,13 @@ export class SoundBoard<SoundId extends string> {
   constructor(files: Readonly<Record<SoundId, SoundFile>>, log: AppLog) {
     this.files = files
     this.log = log
+  }
+
+  setOverallLoudness(share: number): void {
+    if (share === this.overallLoudnessShare) return
+    this.overallLoudnessShare = share
+    if (this.overallLoudness !== null) this.overallLoudness.gain.value = share
+    this.log(`every sound plays at ${Math.round(share * 100)}% of its loudness`)
   }
 
   unlockOnEveryGestureOf(page: Document): void {
@@ -93,7 +103,7 @@ export class SoundBoard<SoundId extends string> {
     }
     const loudness = context.createGain()
     loudness.gain.value = this.files[id].gain
-    loudness.connect(context.destination)
+    loudness.connect(this.overallLoudnessIn(context))
     const voice = context.createBufferSource()
     voice.buffer = buffer
     voice.connect(loudness)
@@ -191,7 +201,7 @@ export class SoundBoard<SoundId extends string> {
     if (buffer === undefined) return this.logTheSkipOnce(id, 'it has not loaded')
     const loudness = context.createGain()
     loudness.gain.value = file.gain
-    loudness.connect(context.destination)
+    loudness.connect(this.overallLoudnessIn(context))
     const startsAtSeconds = context.currentTime
     const firstVoice = voiceOf(buffer, loudness, context)
     if (playing.fadeInSeconds > 0) fadeIn(firstVoice.envelope, startsAtSeconds, playing.fadeInSeconds)
@@ -322,6 +332,15 @@ export class SoundBoard<SoundId extends string> {
     })
   }
 
+  private overallLoudnessIn(context: AudioContext): GainNode {
+    if (this.overallLoudness === null) {
+      this.overallLoudness = context.createGain()
+      this.overallLoudness.gain.value = this.overallLoudnessShare
+      this.overallLoudness.connect(context.destination)
+    }
+    return this.overallLoudness
+  }
+
   private audioContext(): AudioContext {
     this.context ??= new AudioContext()
     return this.context
@@ -357,19 +376,4 @@ function fadeOut(gainNode: GainNode, fromSeconds: number, durationSeconds: numbe
 
 function equalPowerCurve(loudnessAt: (share: number) => number): Float32Array {
   return Float32Array.from({ length: pointsInAFadeCurve }, (_, index) => loudnessAt(index / (pointsInAFadeCurve - 1)))
-}
-
-async function bytesAt(url: string): Promise<ArrayBuffer> {
-  if (url.startsWith('data:')) return bytesOfADataUrl(url)
-  const response = await fetch(url)
-  if (!response.ok) throw new Error(`${url} answered ${response.status}`)
-  return response.arrayBuffer()
-}
-
-function bytesOfADataUrl(url: string): ArrayBuffer {
-  const base64 = url.slice(url.indexOf(',') + 1)
-  const text = atob(base64)
-  const bytes = new Uint8Array(text.length)
-  for (let index = 0; index < text.length; index += 1) bytes[index] = text.charCodeAt(index)
-  return bytes.buffer
 }

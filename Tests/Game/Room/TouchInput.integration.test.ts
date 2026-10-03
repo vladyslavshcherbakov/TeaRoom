@@ -80,7 +80,7 @@ test('tap_isLoggedWithItsPointOnTheScreenWhatTheFingerTouchedAndTheAreasThatHeld
   room.touchInput.fingerDown(1, { x: 212.4, y: 530.6 })
   room.touchInput.fingerUp(1)
 
-  assert.ok(room.logLines.includes('tap on the counter at (212, 531) px, touching the floor, in the areas of the counter, kettle, no hand chosen'), room.logLines.join('\n'))
+  assert.ok(room.logLines.includes('tap on the counter at (212, 531) px, touching the floor, in the areas of the counter, kettle, holding nothing'), room.logLines.join('\n'))
 })
 
 function roomWhereEveryTapHitsTheCounter(): TestRoom {

@@ -1,8 +1,9 @@
 import { text, textWith, type TextKey } from '../../../Texts/Texts.ts'
 import { playerHeightByDefaultCentimetres, playerHeightSteppedBy } from '../../../../Engine/Camera/PlayerHeight.ts'
 import type { DebugSettings } from '../../DebugSettings.ts'
+import { sparrowAnimations } from '../../SparrowAnimations.ts'
 import { stepsDueWhileAnArrowIsHeld } from '../../../../Engine/HeldArrow.ts'
-import { actWhileHeld, button, pageElement, toggleRow } from '../../../../Engine/Rendering/Controls/PageControls.ts'
+import { actWhileHeld, button, choiceRow, pageElement, toggleRow } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
 export type DebugSettingChosen = (change: Partial<DebugSettings>) => void
 
@@ -28,12 +29,16 @@ type HeldHeightArrow = {
   repeatedSteps: number
 }
 
+const sparrowPageUrl = 'https://sketchfab.com/3d-models/sparrow-quirky-series-289e7db66cfa45fbbe7624b8f48f6c8c'
+const creativeCommonsAttributionUrl = 'https://creativecommons.org/licenses/by/4.0/'
+
 type NamesOfToggles = { [Name in keyof DebugSettings]: DebugSettings[Name] extends boolean ? Name : never }[keyof DebugSettings]
 
 export const debugMenuRows: readonly RowInTheMenu[] = [
   { setting: 'playerHeightCentimetres', build: heightStepper },
   toggle('isFrameBudgetShown', 'debug.frameBudget'),
   toggle('isTheWorldFast', 'debug.fastWorld'),
+  { setting: 'sparrowAnimation', build: sparrowAnimationChoice },
 ]
 
 export class DebugMenu {
@@ -46,7 +51,7 @@ export class DebugMenu {
     this.rows = debugMenuRows.map((row) => row.build(listener.debugSettingChosen))
     const fillTheKettleButton = button('debug-button', text('debug.fillTheKettle'), listener.kettleFillTapped)
     const closeButton = button('debug-button', text('debug.close'), () => (this.panel.hidden = true))
-    this.panel.append(pageElement('h2', '', text('debug.title')), ...this.rows.map((row) => row.element), fillTheKettleButton, closeButton)
+    this.panel.append(pageElement('h2', '', text('debug.title')), ...this.rows.map((row) => row.element), fillTheKettleButton, credits(), closeButton)
     container.append(this.panel)
   }
 
@@ -104,6 +109,27 @@ function heightStepper(chosen: DebugSettingChosen): Row {
       }
     },
   }
+}
+
+function sparrowAnimationChoice(chosen: DebugSettingChosen): Row {
+  const choices = choiceRow(sparrowAnimations, { rowClass: 'debug-animations', buttonClass: 'debug-choice', dress: (choice, animation) => (choice.textContent = text(`debug.sparrowAnimation.${animation}`)) }, (animation) => chosen({ sparrowAnimation: animation }))
+  const row = pageElement('div', 'debug-animation')
+  row.append(pageElement('p', '', text('debug.sparrowAnimation')), choices.element)
+  return { element: row, show: (settings) => choices.showTheChosen(settings.sparrowAnimation), advance: () => {} }
+}
+
+function credits(): HTMLElement {
+  const line = pageElement('p', 'debug-credits')
+  line.append(link(text('debug.credits.sparrow'), sparrowPageUrl), document.createTextNode(text('debug.credits.licensedUnder')), link(text('debug.credits.licence'), creativeCommonsAttributionUrl))
+  return line
+}
+
+function link(words: string, url: string): HTMLAnchorElement {
+  const anchor = pageElement('a', '', words)
+  anchor.href = url
+  anchor.target = '_blank'
+  anchor.rel = 'noopener'
+  return anchor
 }
 
 function toggle<Name extends NamesOfToggles>(setting: Name, textKey: TextKey): RowInTheMenu {

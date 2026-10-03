@@ -79,7 +79,7 @@ export class RoomVisit {
     const { session, screens, log } = setUp
     this.session = session
     this.setUp = setUp
-    this.texts = new RoomTexts(setUp.voiceSeed, log)
+    this.texts = new RoomTexts(setUp.voiceSeed)
     this.achievements = new Achievements(setUp.stores.achievements, log, (id) => this.announceTheAchievementIfShown(id))
     this.playTime = new PlayTime(setUp.stores.playTime, log)
     const sessionPort: SessionPort = {
@@ -111,7 +111,6 @@ export class RoomVisit {
       soundStarted: (sound) => screens.soundStarted(sound),
     }, {
       settings: setUp.settings,
-      mayGrowAMiddleHand: () => !this.achievements.isUnlocked('shiva'),
       screenRightOnTheFloor: setUp.screenRightOnTheFloor,
     }, setUp.place)
   }
@@ -161,6 +160,7 @@ export class RoomVisit {
     if (events.some((event) => event.type === 'pickedUp')) this.setUp.screens.soundStarted('itemPickedUp')
     if (events.some((event) => event.type === 'putDown' || event.type === 'placedOnHeater' || event.type === 'putInTheSink')) this.setUp.screens.soundStarted('itemPutDown')
     if (events.some((event) => event.type === 'vesselLidOpened' || event.type === 'vesselLidClosed')) this.setUp.screens.soundStarted('buttonClick')
+    if (events.some((event) => event.type === 'teaScooped' || event.type === 'leavesAdded')) this.setUp.screens.soundStarted('leavesRustling')
     this.achievements.eventsHappened(events, this.session.state)
     this.setUp.screens.captionShown(this.texts.linesOf(this.playerController.barksOn(events, this.session.state.elapsedSeconds)))
     return events
