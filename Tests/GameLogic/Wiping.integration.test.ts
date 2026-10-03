@@ -53,6 +53,23 @@ test('cloth_whenItWipesMoreThanItHolds_isFullAndTheTableLosesTheWholeWipe', () =
   assertNear(wetMlOnEveryPlace(session.state), wetMlBeforeWiping * 0.2)
 })
 
+test('cloth_whenItWipesMoreTeaThanItHolds_isStainedOnlyByTheTeaItTookIn', () => {
+  const session = new TestTeaSession()
+  session.heatKettleTo(80)
+  session.addLeavesToKettle(1)
+  session.wait(10)
+  session.pour('kettle', null, 5, fullFlowTiltDegrees)
+  session.do({ type: 'pickUp', itemId: 'cloth' })
+  const teaStrength = session.state.puddles['puddle1']?.strength ?? 0
+
+  session.do({ type: 'wipeTable', clothId: 'cloth', puddleId: 'puddle1', strokeSpeedCmPerSecond: 10, coveredFraction: 1 })
+
+  const clothHoldsMl = 40
+  const strongestTeaMlThatStainsFully = 20
+  assert.equal(session.cloth().wetMl, clothHoldsMl)
+  assertNear(session.cloth().teaStain, (clothHoldsMl * teaStrength) / 100 / strongestTeaMlThatStainsFully)
+})
+
 test('table_withTheClothLyingOnIt_isNotWiped', () => {
   const session = sessionWithSpillOnTheTable()
   const wetMlBeforeWiping = wetMlOnEveryPlace(session.state)

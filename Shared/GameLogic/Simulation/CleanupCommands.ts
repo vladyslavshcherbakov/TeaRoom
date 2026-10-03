@@ -71,7 +71,7 @@ function wipeUp(cloth: ClothState, puddle: PuddleState, strokeSpeedCmPerSecond: 
   const takenMl = mlTheClothTakesIn(cloth.wetMl, wipedMl)
   puddle.wetMl -= wipedMl
   cloth.wetMl += takenMl
-  cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, wipedMl, puddle.strength)
+  cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, takenMl, puddle.strength)
 }
 
 function foundCloth(draft: Draft, clothId: string): Found<ClothState, RefusalReason> {
