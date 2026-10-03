@@ -1,9 +1,9 @@
-import { FrameRate } from '../../FrameRate.ts'
+import { FrameRateShown } from '../../FrameRateShown.ts'
 
 export class FrameRateCounter {
   private readonly element: HTMLElement
   private readonly readingOf: (framesPerSecond: number) => string
-  private frameRate: FrameRate | null = null
+  private readonly frameRate = new FrameRateShown()
 
   constructor(container: HTMLElement, readingOf: (framesPerSecond: number) => string) {
     this.readingOf = readingOf
@@ -14,15 +14,19 @@ export class FrameRateCounter {
   }
 
   show(isShown: boolean): void {
-    if (isShown === !this.element.hidden) return
-    this.frameRate = isShown ? new FrameRate() : null
-    this.element.hidden = !isShown
-    this.element.textContent = ''
+    this.frameRate.show(isShown)
+    this.element.hidden = !this.frameRate.isShown
+    this.showTheReading()
   }
 
   frameDrawn(seconds: number): void {
-    const framesPerSecond = this.frameRate?.frameDrawn(seconds) ?? null
-    if (framesPerSecond === null) return
-    this.element.textContent = this.readingOf(Math.round(framesPerSecond))
+    this.frameRate.frameDrawn(seconds)
+    this.showTheReading()
+  }
+
+  private showTheReading(): void {
+    const reading = this.frameRate.reading
+    const readingText = reading === null ? '' : this.readingOf(reading)
+    if (this.element.textContent !== readingText) this.element.textContent = readingText
   }
 }
