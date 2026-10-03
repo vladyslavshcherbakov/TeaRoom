@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { itemIdInHand, itemIdInTheInventory, itemIdsInTheInventory, itemLocationIn, standingSpotOf, type DeepReadonly, type HandIndex, type InventorySlot, type Spot } from '../../../../Shared/GameLogic/GameLogic.ts'
+import { everyHandIndex, itemIdsInTheInventory, itemLocationIn, standingSpotOf, type DeepReadonly, type HandIndex, type InventorySlot, type Spot } from '../../../../Shared/GameLogic/GameLogic.ts'
 import type { AimedPourView } from '../Gestures/AimedPour.ts'
 import type { ShapedItem } from '../Layout/CarriedShapes.ts'
 import { turnOfItemAt, undersideOfTheBoardAbove } from '../Layout/RoomLayout.ts'
@@ -33,7 +33,6 @@ const inflowFarthestFromTheMiddleShare = 0.8
 const streamPushSurfaceWidthsPerSecond = 1
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
-const everyHandIndex: readonly HandIndex[] = [0, 1]
 const fewestPixelsAcrossDrawnInFull = 60
 const fewestPixelsAcrossOfTransmittingGlass = 50
 const pixelsAcrossOfFullyTransmittingGlass = 70
@@ -230,17 +229,13 @@ export class CarriedItems {
   }
 
   private placeHandTouchArea(area: THREE.Mesh, handIndex: HandIndex, scene: CarriedItemsScene): void {
-    const itemId = itemIdInHand(scene.state, handIndex)
-    const isPouringFromIt = itemId !== null && scene.state.pour?.sourceId === itemId
-    const isWipingWithIt = itemId !== null && scene.clothWiping?.clothId === itemId
-    const isInspectingIt = scene.inspected?.inspection.handIndex === handIndex
-    area.visible = scene.heldInView !== null && itemId !== null && !isPouringFromIt && !isWipingWithIt && !isInspectingIt
+    area.visible = scene.heldInView !== null && scene.handsThatTakeTaps.includes(handIndex)
     if (!area.visible || scene.heldInView === null) return
     placeTheHandsAreaOnTheScreen(area, handIndex, scene.heldInView)
   }
 
   private placeInventoryTouchArea(area: THREE.Mesh, slotIndex: InventorySlot, scene: CarriedItemsScene): void {
-    area.visible = itemIdInTheInventory(scene.state, slotIndex) !== null
+    area.visible = scene.inventorySlotsThatTakeTaps.includes(slotIndex)
     if (area.visible) placeTheInventoryAreaOnTheScreen(area, slotIndex, scene.inventoryInView)
   }
 }

@@ -1,4 +1,4 @@
-import { carriedItemIdsIn, definitionIn, isACloth, isHeating, isTheHeaterInUse, isTheThermostatWorking, itemIdInHand, itemIdInTheInventory, itemIdInTheSink, itemIdsInTheHands, itemLocationIn, spoonItemId, standingSpotOf, type Catalog, type Command, type DeepReadonly, type HandIndex, type InventorySlot, type ItemLocation, type TapUse, type TeaEvent, type Spot } from '../../../Shared/GameLogic/GameLogic.ts'
+import { carriedItemIdsIn, definitionIn, everyHandIndex, everyInventorySlot, isACloth, isHeating, isTheHeaterInUse, isTheThermostatWorking, itemIdInHand, itemIdInTheInventory, itemIdInTheSink, itemIdsInTheHands, itemLocationIn, spoonItemId, standingSpotOf, type Catalog, type Command, type DeepReadonly, type HandIndex, type InventorySlot, type ItemLocation, type TapUse, type TeaEvent, type Spot } from '../../../Shared/GameLogic/GameLogic.ts'
 import { stepsDueWhileAnArrowIsHeld } from '../../Engine/HeldArrow.ts'
 import { aimAPour, canAimAPour, type AimedPour, type AimedPourView } from './Gestures/AimedPour.ts'
 import { ItemInspection, type ItemInspectionView } from './Gestures/ItemInspection.ts'
@@ -203,6 +203,18 @@ export class PlayerController {
   get clothWiping(): ClothWiping | null {
     const stroke = this.press !== null && this.press.hasMovedAway ? this.press.stroke : null
     return stroke === null ? null : { clothId: stroke.clothId, at: stroke.lastPoint, flatShare: stroke.flatShare }
+  }
+
+  get handsThatTakeTaps(): readonly HandIndex[] {
+    const itemIdInUse = this.itemIdInUseByAGesture()
+    return everyHandIndex.filter((handIndex) => {
+      const itemId = itemIdInHand(this.session.state, handIndex)
+      return itemId !== null && itemId !== itemIdInUse
+    })
+  }
+
+  get inventorySlotsThatTakeTaps(): readonly InventorySlot[] {
+    return everyInventorySlot.filter((slotIndex) => itemIdInTheInventory(this.session.state, slotIndex) !== null)
   }
 
   doesATapReachPastTheHands(target: TapTarget): boolean {
@@ -860,6 +872,20 @@ export class PlayerController {
     if (closeUp === null) return this.log(`no pour to aim at ${targetId}: no close-up is in view`)
     const pour = aimAPour({ session: this.session, catalog: this.catalog, layout: this.layout, log: this.log, sourceId, targetId, spoutDirection: this.questions.screenRightOnTheFloor() ?? screenRightOnTheFloor(closeUp) })
     if (pour !== null) this.modeState = { kind: 'aiming', pour }
+  }
+
+  private itemIdInUseByAGesture(): string | null {
+    switch (this.modeState.kind) {
+      case 'aiming':
+        return this.modeState.pour.view.sourceId
+      case 'lookingClosely':
+        return this.modeState.inspection.view.itemId
+      case 'free':
+      case 'sipping':
+      case 'choosing':
+      case 'ended':
+        return this.clothWiping?.clothId ?? null
+    }
   }
 
   private returnTheAimedVesselToItsHand(target: TapTarget): void {

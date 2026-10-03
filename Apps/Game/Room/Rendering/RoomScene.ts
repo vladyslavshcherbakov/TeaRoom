@@ -337,7 +337,7 @@ export class RoomScene {
     const heldInView = isWalkerShown ? null : inventoryInView
     const inspection = this.playerController.inspectionView
     const inspected = inspection === null ? null : { camera: this.camera, inspection }
-    this.carried.show({ state, view: worldView, walk: this.playerController.walk, heldInView, inventoryInView, inspected, aimedPour: this.playerController.aimedPourView, clothWiping: this.playerController.clothWiping, sipGesture: this.playerController.sipGestureView, timeSeconds: this.host.elapsedSeconds, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null, distantDetail: this.settings.objectDetail === 'reduced' ? { camera: this.camera, screenHeightPixels: window.innerHeight } : null })
+    this.carried.show({ state, view: worldView, walk: this.playerController.walk, heldInView, inventoryInView, inspected, aimedPour: this.playerController.aimedPourView, clothWiping: this.playerController.clothWiping, handsThatTakeTaps: this.playerController.handsThatTakeTaps, inventorySlotsThatTakeTaps: this.playerController.inventorySlotsThatTakeTaps, sipGesture: this.playerController.sipGestureView, timeSeconds: this.host.elapsedSeconds, temperatureUnitShown: this.settings.isNerdModeOn ? this.settings.temperatureUnit : null, distantDetail: this.settings.objectDetail === 'reduced' ? { camera: this.camera, screenHeightPixels: window.innerHeight } : null })
     if (inspection !== null) this.inspectionStage.followTheCamera(this.camera)
     this.host.frameBudget.phaseEnded('carriedItems', performance.now())
     this.room.showHeater(worldView.isHeaterOn)

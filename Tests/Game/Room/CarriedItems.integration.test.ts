@@ -636,7 +636,7 @@ function showStandingWhereItIs(model: CarriedModel, state: DeepReadonly<SessionS
 }
 
 function sceneOf(state: DeepReadonly<SessionState>): CarriedItemsScene {
-  return { state, view: worldViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inventoryInView: { camera: new THREE.PerspectiveCamera(), isFirstPerson: false, screenHeightShareTakenByControls: 0 }, inspected: null, aimedPour: null, clothWiping: null, sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
+  return { state, view: worldViewState(state, defaultCatalog), walk: standingAt({ x: 0, z: 0 }), heldInView: null, inventoryInView: { camera: new THREE.PerspectiveCamera(), isFirstPerson: false, screenHeightShareTakenByControls: 0 }, inspected: null, aimedPour: null, clothWiping: null, handsThatTakeTaps: [], inventorySlotsThatTakeTaps: [], sipGesture: null, timeSeconds: 0, temperatureUnitShown: null, distantDetail: null }
 }
 
 function drawnBoundsOfTheLid(model: CarriedModel): THREE.Box3 {

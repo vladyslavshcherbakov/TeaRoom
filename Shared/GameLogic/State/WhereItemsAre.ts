@@ -33,6 +33,10 @@ export function itemWithItsLocationIn(state: SessionState, itemId: string): { lo
   return componentAcross(tablesOfCarriedItems<{ location: ItemLocation }>(state), itemId)
 }
 
+export const everyHandIndex: readonly HandIndex[] = [0, 1]
+
+export const everyInventorySlot: readonly InventorySlot[] = [0, 1]
+
 export function itemIdsInTheHands(state: DeepReadonly<SessionState>): ItemsInTheHands {
   return [itemIdInHand(state, 0), itemIdInHand(state, 1)]
 }

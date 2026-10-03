@@ -167,6 +167,19 @@ test('kettle_whenTheEmptySinkIsTappedWhileAiming_goesIntoTheSink', () => {
   assert.equal(room.state.vessels['kettle']?.location.kind, 'inTheSink')
 })
 
+test('handOfTheAimedKettle_fromTheStartOfTheAimBeforeAnyTilt_takesNoTaps', () => {
+  const room = new TestRoom()
+  room.bringABowlToTheCounterAndTakeTheKettle()
+  const kettlesHand = itemIdsInTheHands(room.state)[0] === 'kettle' ? 0 : 1
+  const wasTakingTapsBeforeTheAim = room.playerController.handsThatTakeTaps.includes(kettlesHand)
+
+  room.tapAndChoose({ kind: 'item', itemId: 'bowl1' }, 'pourInto')
+
+  assert.equal(wasTakingTapsBeforeTheAim, true)
+  assert.equal(room.state.pour, null)
+  assert.equal(room.playerController.handsThatTakeTaps.includes(kettlesHand), false)
+})
+
 test('bowl_whenItsOpeningIsTappedWhileAiming_offersItsMenuWithoutTakingItWhileTheKettleGoesBackToItsHand', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)

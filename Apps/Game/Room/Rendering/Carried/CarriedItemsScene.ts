@@ -1,6 +1,6 @@
 import type { DistantDetail } from '../../../../Engine/Rendering/LevelsOfDetail.ts'
 import type { TemperatureUnit } from '../../../../Engine/Temperatures.ts'
-import type { DeepReadonly, SessionState } from '../../../../../Shared/GameLogic/GameLogic.ts'
+import type { DeepReadonly, HandIndex, InventorySlot, SessionState } from '../../../../../Shared/GameLogic/GameLogic.ts'
 import type { WorldViewState } from '../../../Presentation/WorldViewState.ts'
 import type { AimedPourView } from '../../Gestures/AimedPour.ts'
 import type { ClothWiping } from '../../PlayerController.ts'
@@ -18,6 +18,8 @@ export type CarriedItemsScene = {
   readonly inspected: InspectedInView | null
   readonly aimedPour: AimedPourView | null
   readonly clothWiping: ClothWiping | null
+  readonly handsThatTakeTaps: readonly HandIndex[]
+  readonly inventorySlotsThatTakeTaps: readonly InventorySlot[]
   readonly sipGesture: SipGestureView | null
   readonly timeSeconds: number
   readonly temperatureUnitShown: TemperatureUnit | null
