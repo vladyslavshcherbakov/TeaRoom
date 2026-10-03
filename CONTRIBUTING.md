@@ -64,7 +64,7 @@ The room opens or resumes a session, sends one command for each decision of the 
 
 A tap travels like this. `RoomScene` draws the room and hands every press to `TouchInput`, which tells a tap from a stroke, a pinch or a hold. `PlayerController` decides what the press means in its current mode, such as free, choosing from a menu, aiming a pour or looking closely. A tap on a thing opens a menu of the actions that the session would not refuse, and a chosen action sends its commands to the session. `RoomVisit` turns the events into what the player says, the achievements, the saved visit and the death screen.
 
-The files at the root of `Apps/Game/Room` decide, import no Three.js, and are tested in Node. `Rendering/` only draws what they decided and reports what the finger did. `Camera/` holds the camera, and the engine walks the floor.
+The files at the root of `Apps/Game/Room` decide, import neither Three.js nor `Rendering/`, and are tested in Node. `RoomMain` alone builds the room and wires `Rendering/`, where `RoomScene` draws it. `Rendering/` only draws what they decided and reports what the finger did. `Camera/` holds the camera, and the engine walks the floor.
 
 ## Adding a kind of thing
 

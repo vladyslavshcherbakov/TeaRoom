@@ -4,7 +4,7 @@ import { arrangementOfANewGame, describeArrangement } from './RoomArrangement.ts
 import { catalogOfAContinuedVisit, catalogOfANewGame } from './GameCatalog.ts'
 import { roomEntrance } from './RoomNavigator.ts'
 import type { AppLog, AppLogLevel } from '../../Engine/AppLog.ts'
-import { RoomScene, type RoomArrival } from './RoomScene.ts'
+import { RoomScene, type RoomArrival } from './Rendering/RoomScene.ts'
 import { faceFeaturesOfANewGame } from './RoomSettings.ts'
 import { shareOfEverySoundsLoudnessBySetting, type SoundLoudness } from './SoundLoudness.ts'
 import { settingsStore } from './SettingsStore.ts'
