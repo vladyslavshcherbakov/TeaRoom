@@ -1,5 +1,4 @@
 import * as THREE from 'three'
-import { howTheSpoonChars } from '../../../../../../Shared/GameLogic/GameLogic.ts'
 import type { SurfaceMaterials } from '../../RoomMaterials.ts'
 import type { CarriedShapeLook } from '../CarriedShapeLook.ts'
 import type { ItemParts } from '../ItemParts.ts'
@@ -33,8 +32,8 @@ function spoonParts(materials: SurfaceMaterials): ItemParts {
   bowl.position.set(bowlSize.centreOutMetres, bowlSize.centreHeightMetres, 0)
   const coolBamboo = materials.colourOf('bamboo')
   const charredBamboo = materials.colourOf('charredBamboo')
-  const charTo = (charring: number): void => {
-    bamboo.color.copy(coolBamboo).lerp(charredBamboo, Math.min(1, charring / howTheSpoonChars.burnsFromCharring))
+  const charTo = (charredShare: number): void => {
+    bamboo.color.copy(coolBamboo).lerp(charredBamboo, charredShare)
   }
   return { meshes: [handle, bowl], lid: null, heightMetres: spoonShape.heightMetres, vessel: null, displays: [], lookByWhereItIsDrawn: null, glassThatClears: null, charTo, levelsOfDetail: [] }
 }

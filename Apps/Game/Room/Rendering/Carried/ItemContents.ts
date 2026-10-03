@@ -5,7 +5,7 @@ import { turnedBy } from '../../RoomLayout.ts'
 import type { FloorPoint } from '../../../../Engine/Points.ts'
 import { mostSoakedLeavesShown } from '../../../Presentation/WorldPresenter.ts'
 import { teaLookFor } from '../../../Presentation/TeaLooks.ts'
-import type { BrewStage, LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Presentation/WorldViewState.ts'
+import type { LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Presentation/WorldViewState.ts'
 import type { DyeInflow } from '../../../../Engine/Rendering/Flow/SwirlingDye.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
@@ -32,7 +32,7 @@ const straightUp = new THREE.Vector3(0, 1, 0)
 const whiteUnderTheDye = new THREE.Color('#ffffff')
 const longestDyeStepSeconds = 0.1
 const agitationByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0, shimmering: 0.3, simmering: 1, boiling: 3 }
-const seepingFromTheLeavesByBrewStage: Readonly<Record<BrewStage, number>> = { water: 0.5, pale: 0.4, good: 0.25, rich: 0.1, heavy: 0, overbrewed: 0, tar: 0 }
+const strongestSeepingFromTheLeaves = 0.5
 const seepingSpotsAroundTheLeaves = 3
 const seepingSpotsFromTheMiddleShare = 0.2
 const seepingColourShareOfTheTea = 0.7
@@ -145,7 +145,7 @@ function showTheDye(model: CarriedModel, vessel: VesselView, surfaceColour: THRE
 }
 
 function seepingFromTheLeaves(model: CarriedModel, vessel: VesselView, surfaceColour: THREE.Color): DyeInflow[] {
-  const strength = vessel.soakedLeaves === null ? 0 : seepingFromTheLeavesByBrewStage[vessel.brewStage]
+  const strength = vessel.leavesSeepShare * strongestSeepingFromTheLeaves
   if (strength <= 0) return []
   const turn = model.now.soakedLeavesTurn?.radians ?? 0
   const colour = surfaceColour.clone().multiplyScalar(seepingColourShareOfTheTea)

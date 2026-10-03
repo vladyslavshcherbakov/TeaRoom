@@ -21,7 +21,7 @@ function clothParts(materials: ItemSetUp, clothId: string): ItemParts {
   const woven = materials.room.unsharedMaterialFor(surfaceByClothPattern[materials.clothPatternOf(clothId)])
   const cloth = new THREE.Mesh(geometry, woven)
   const charredColour = materials.room.colourOf('charredCloth')
-  const charTo = (charring: number): void => charTheCloth(geometry, charring, charredColour)
+  const charTo = (charredShare: number): void => charTheCloth(geometry, charredShare, charredColour)
   const stainAndWetness: Display = ({ cloth: shown }) => woven.color.copy(materials.room.colourOfACloth(shown?.teaStain ?? 0, shown?.wetShare ?? 0))
   return { meshes: [cloth], lid: null, heightMetres: clothShape.heightMetres, vessel: null, displays: [stainAndWetness], lookByWhereItIsDrawn: null, glassThatClears: null, charTo, levelsOfDetail: [] }
 }

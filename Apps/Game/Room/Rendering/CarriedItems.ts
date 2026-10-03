@@ -3,7 +3,7 @@ import { itemIdInHand, itemIdInTheInventory, itemIdsInTheInventory, itemLocation
 import type { AimedPourView } from '../AimedPour.ts'
 import type { ShapedItem } from '../CarriedShapes.ts'
 import { turnOfItemAt, undersideOfTheBoardAbove } from '../RoomLayout.ts'
-import type { SipGestureView } from '../SipGesture.ts'
+import { viewWithTheSipStillInTheCup, type SipGestureView } from '../SipGesture.ts'
 import type { Walk } from '../../../Engine/Walking/Walk.ts'
 import { aimOver } from './Carried/Hands/AimedVessel.ts'
 import type { CarriedItemsScene } from './Carried/CarriedItemsScene.ts'
@@ -17,7 +17,6 @@ import { inspectInView, type InspectedInView } from './Carried/Hands/InspectedIn
 import { inventoryAreaOnTheScreen, inventoryShelf, inventorySlots, keepInTheInventory, placeTheInventoryAreaOnTheScreen, placeTheInventoryShelf } from './Carried/Hands/InventoryInView.ts'
 import { openingHeightOf, showContentsOf } from './Carried/ItemContents.ts'
 import type { DyeInflow } from '../../../Engine/Rendering/Flow/SwirlingDye.ts'
-import { isThePourStreamRunning } from '../PourStream.ts'
 import type { LyingLids, Surroundings } from '../Placement.ts'
 import type { AppLog } from '../../../Engine/AppLog.ts'
 import type { ClothPattern } from '../RoomArrangement.ts'
@@ -32,7 +31,6 @@ const handHeightMetres = 0.55
 const smallestSurfaceRadiusMetres = 0.01
 const inflowFarthestFromTheMiddleShare = 0.8
 const streamPushSurfaceWidthsPerSecond = 1
-const degreesOfDifferenceThatKeepAStreamInOneLayer = 15
 const handSideMetres = 0.26
 const handForwardMetres = 0.14
 const everyHandIndex: readonly HandIndex[] = [0, 1]
@@ -91,7 +89,7 @@ export class CarriedItems {
     for (const model of this.models) this.place(model, scene)
     this.waterStreams.show(scene, this.models)
     const sceneShown = { ...scene, view: this.waterReceiversShown.viewAfterAFrame(scene.view, this.waterStreams.receiversOfTheFallingWater(scene), scene.timeSeconds) }
-    const sceneOfTheContents = withTheSipStillInTheCup(sceneShown)
+    const sceneOfTheContents = { ...sceneShown, view: viewWithTheSipStillInTheCup(sceneShown.view, scene.sipGesture) }
     const lidsLying = this.lyingLids.layOpenLids(scene.state, this.surroundings)
     const pourInflow = this.inflowOfThePour(scene)
     for (const model of this.models) showContentsOf(model, sceneOfTheContents, lidsLying, pourInflow?.targetId === model.itemId ? pourInflow.inflow : null)
@@ -215,12 +213,11 @@ export class CarriedItems {
   }
 
   private inflowOfThePour(scene: CarriedItemsScene): { readonly targetId: string; readonly inflow: DyeInflow } | null {
-    const pour = scene.state.pour
-    if (pour === null || pour.targetId === null || !isThePourStreamRunning(pour) || pour.streamOnTargetFraction <= 0) return null
+    const pour = scene.view.pourStream
+    if (pour === null || pour.targetId === null || pour.onTargetShare <= 0) return null
     const source = this.models.find((model) => model.itemId === pour.sourceId)
     const target = this.models.find((model) => model.itemId === pour.targetId)
-    const sourceView = scene.view.vessels[pour.sourceId]
-    if (source === undefined || target === undefined || target.liquid === null || sourceView === undefined) return null
+    if (source === undefined || target === undefined || target.liquid === null) return null
     const spoutInTheSource = source.vessel?.spoutTip?.clone() ?? new THREE.Vector3(0, openingHeightOf(source), 0)
     const spoutInTheTarget = target.root.worldToLocal(source.root.localToWorld(spoutInTheSource.clone()))
     const behindTheSpoutInTheTarget = target.root.worldToLocal(source.root.localToWorld(new THREE.Vector3(0, spoutInTheSource.y, 0)))
@@ -229,8 +226,7 @@ export class CarriedItems {
     if (fromTheMiddle.length() > inflowFarthestFromTheMiddleShare) fromTheMiddle.setLength(inflowFarthestFromTheMiddleShare)
     const streamHeading = new THREE.Vector2(spoutInTheTarget.x - behindTheSpoutInTheTarget.x, behindTheSpoutInTheTarget.z - spoutInTheTarget.z)
     const push = streamHeading.lengthSq() > 0 ? streamHeading.setLength(streamPushSurfaceWidthsPerSecond) : streamHeading
-    const warmth = warmthOfTheStream(sourceView.waterTemperatureC, scene.view.vessels[pour.targetId]?.waterTemperatureC ?? null)
-    return { targetId: pour.targetId, inflow: { u: 0.5 + fromTheMiddle.x / 2, v: 0.5 + fromTheMiddle.y / 2, colour: new THREE.Color(sourceView.liquorColour), strength: pour.streamOnTargetFraction, warmth, pushU: push.x, pushV: push.y } }
+    return { targetId: pour.targetId, inflow: { u: 0.5 + fromTheMiddle.x / 2, v: 0.5 + fromTheMiddle.y / 2, colour: new THREE.Color(pour.colour), strength: pour.onTargetShare, warmth: pour.warmth, pushU: push.x, pushV: push.y } }
   }
 
   private placeHandTouchArea(area: THREE.Mesh, handIndex: HandIndex, scene: CarriedItemsScene): void {
@@ -298,19 +294,7 @@ function handPosition(walk: Walk, handIndex: HandIndex): THREE.Vector3 {
   return new THREE.Vector3(x, handHeightMetres, z)
 }
 
-function withTheSipStillInTheCup(scene: CarriedItemsScene): CarriedItemsScene {
-  const sip: SipGestureView | null = scene.sipGesture
-  const cup = sip === null ? undefined : scene.view.vessels[sip.cupId]
-  if (sip === null || cup === undefined || sip.fillShareNotYetSipped <= 0) return scene
-  return { ...scene, view: { ...scene.view, vessels: { ...scene.view.vessels, [sip.cupId]: { ...cup, fillShare: cup.fillShare + sip.fillShareNotYetSipped } } } }
-}
-
 function poseOf(object: THREE.Object3D): string {
   const { position, rotation } = object
   return [position.x, position.y, position.z, rotation.x, rotation.y, rotation.z].map((value) => value.toFixed(3)).join(' ')
-}
-
-function warmthOfTheStream(streamCelsius: number | null, liquidCelsius: number | null): number {
-  if (streamCelsius === null || liquidCelsius === null) return 0
-  return Math.min(1, Math.max(-1, (streamCelsius - liquidCelsius) / degreesOfDifferenceThatKeepAStreamInOneLayer))
 }

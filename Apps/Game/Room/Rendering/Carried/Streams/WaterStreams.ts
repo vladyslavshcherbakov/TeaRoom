@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import { itemIdInTheSink, type DeepReadonly, type PourState, type Spot } from '../../../../../../Shared/GameLogic/GameLogic.ts'
-import { isThePourRunningOverItsTarget, isThePourStreamRunning } from '../../../PourStream.ts'
+import { itemIdInTheSink, type Spot } from '../../../../../../Shared/GameLogic/GameLogic.ts'
+import type { PourLanding, TapLanding } from '../../../../Presentation/WorldViewState.ts'
 import type { CarriedShape } from '../../../CarriedShapes.ts'
 import type { WorldPoint } from '../../../../../Engine/Points.ts'
 import type { RoomMaterials, SurfaceMaterial } from '../../RoomMaterials.ts'
@@ -16,6 +16,7 @@ const pourStreamEndsAboveTheTargetMetres = 0.01
 const floorTopY = 0
 export const overflowSideFromTheGaugeRadians = 0.7
 export const overflowStreamRadiusMetres = 0.009
+const heightShareWhereTheTapLands: Readonly<Record<TapLanding, number>> = { onTheLid: 1, intoTheItem: 0.5, onTheSinkFloor: 0 }
 
 export class WaterStreams {
   private readonly pouredLiquid: SurfaceMaterial
@@ -57,34 +58,30 @@ export class WaterStreams {
   }
 
   private showPour(scene: CarriedItemsScene, models: readonly CarriedModel[]): void {
-    const pour = scene.state.pour
+    const pour = scene.view.pourStream
     const source = models.find((model) => model.itemId === pour?.sourceId)
     const target = models.find((model) => model.itemId === pour?.targetId)
     const spoutTip = source?.vessel?.spoutTip ?? null
-    const isStreamShown = pour !== null && isThePourStreamRunning(pour) && source !== undefined && target !== undefined && spoutTip !== null
-    if (!isStreamShown || source === undefined || target === undefined || spoutTip === null) return this.pourStream.show(null, scene.timeSeconds)
+    if (pour === null || source === undefined || target === undefined || spoutTip === null) return this.pourStream.show(null, scene.timeSeconds)
     const top = source.root.localToWorld(spoutTip.clone())
-    this.pourStream.show({ top, bottomY: pourStreamBottomY(pour, target.root.position.y) }, scene.timeSeconds)
-    const pouredColour = scene.view.vessels[source.itemId]?.liquorColour
-    if (pouredColour !== undefined) this.pouredLiquid.color.set(pouredColour)
+    this.pourStream.show({ top, bottomY: pourStreamBottomY(pour.landing, target.root.position.y) }, scene.timeSeconds)
+    this.pouredLiquid.color.set(pour.colour)
   }
 
   private showTapWater(scene: CarriedItemsScene, models: readonly CarriedModel[]): void {
-    const runningWater = scene.state.sink.runningWater
-    const inTheSink = models.find((model) => model.itemId === itemIdInTheSink(scene.state))
-    const isRunningOverTheLid = runningWater?.isRunningOverTheLid === true
-    const isTheSinkOverflowing = inTheSink !== undefined && runningWater?.hasOverflowed === true && !isRunningOverTheLid
-    const overflowing = isTheSinkOverflowing ? inTheSink : this.overfilledPourTarget(scene, models)
+    const tap = scene.view.tapStream
+    const underTheTap = models.find((model) => model.itemId === tap?.itemIdUnderIt)
+    const overflowing = tap?.isOverflowingTheItem === true ? underTheTap : this.overfilledPourTarget(scene, models)
     const overflowPath = overflowing === undefined ? null : this.overflowPathOf(overflowing)
     this.overflowStream.show(overflowing === undefined || overflowPath === null ? null : { path: overflowPath, position: overflowing.root.position, quaternion: overflowing.root.quaternion }, scene.timeSeconds)
-    if (runningWater === null || this.sinkSpot === null) return this.tapStream.show(null, scene.timeSeconds)
-    const bottomY = inTheSink === undefined ? this.sinkSpot.y : inTheSink.root.position.y + inTheSink.heightMetres * (isRunningOverTheLid ? 1 : 0.5)
+    if (tap === null || this.sinkSpot === null) return this.tapStream.show(null, scene.timeSeconds)
+    const bottomY = underTheTap === undefined ? this.sinkSpot.y : underTheTap.root.position.y + underTheTap.heightMetres * heightShareWhereTheTapLands[tap.landing]
     this.tapStream.show({ top: new THREE.Vector3(this.faucetSpout.x, this.faucetSpout.y, this.faucetSpout.z), bottomY }, scene.timeSeconds)
   }
 
   private overfilledPourTarget(scene: CarriedItemsScene, models: readonly CarriedModel[]): CarriedModel | undefined {
-    const pour = scene.state.pour
-    if (pour === null || !isThePourRunningOverItsTarget(pour)) return undefined
+    const pour = scene.view.pourStream
+    if (pour === null || !pour.isOverflowingItsTarget) return undefined
     return models.find((model) => model.itemId === pour.targetId)
   }
 
@@ -102,7 +99,13 @@ export class WaterStreams {
   }
 }
 
-function pourStreamBottomY(pour: DeepReadonly<PourState>, targetY: number): number {
-  if (pour.streamOnTargetFraction > 0) return targetY + pourStreamEndsAboveTheTargetMetres
-  return pour.missedStreamLandsAt === null ? floorTopY : pour.missedStreamLandsAt.y
+function pourStreamBottomY(landing: PourLanding, targetY: number): number {
+  switch (landing.kind) {
+    case 'onTheTarget':
+      return targetY + pourStreamEndsAboveTheTargetMetres
+    case 'atAHeight':
+      return landing.heightMetres
+    case 'onTheFloor':
+      return floorTopY
+  }
 }

@@ -61,7 +61,7 @@ export class ItemFire {
 
   show(view: WorldViewState, timeSeconds: number): void {
     const charring = view.charringByItem[this.item.itemId]
-    this.char(charring?.charring ?? 0)
+    this.char(charring?.charring ?? 0, charring?.charredShare ?? 0)
     const heating = charring?.heating ?? 'none'
     const isShown = heating !== 'none' && this.item.root.visible && !this.item.now.isHeldInView
     this.flame.visible = isShown && heating === 'burning'
@@ -76,10 +76,10 @@ export class ItemFire {
     this.risePuffs(rootOfTheFlame, heating, timeSeconds)
   }
 
-  private char(charring: number): void {
+  private char(charring: number, charredShare: number): void {
     if (charring === this.shownCharring) return
     this.shownCharring = charring
-    this.charTo(charring)
+    this.charTo(charredShare)
   }
 
   private glowEmbers(timeSeconds: number): void {

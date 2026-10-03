@@ -40,7 +40,9 @@ function viewWithTheClothCharred(clothCharring: number, bowlCharring = 0): World
     thermostat: { targetC: 90, isOn: false },
     looseLeavesByItem: {},
     cloths: { cloth: { wetShare: 1, teaStain: 0 } },
-    charringByItem: { cloth: { charring: clothCharring, heating: 'none' }, bowl1: { charring: bowlCharring, heating: 'none' } },
+    charringByItem: { cloth: { charring: clothCharring, charredShare: clothCharring, heating: 'none' }, bowl1: { charring: bowlCharring, charredShare: bowlCharring, heating: 'none' } },
     puddles: [],
+    pourStream: null,
+    tapStream: null,
   }
 }

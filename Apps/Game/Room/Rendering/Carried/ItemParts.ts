@@ -32,7 +32,7 @@ export type LiquidParts = {
   readonly volumeAt: LiquidVolumeAt | null
 }
 
-export type CharTo = (charring: number) => void
+export type CharTo = (charredShare: number) => void
 
 export type LiquidVolumeAt = (surfaceHeightMetres: number) => THREE.BufferGeometry
 

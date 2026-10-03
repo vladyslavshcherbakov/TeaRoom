@@ -36,12 +36,12 @@ export function rumpledClothGeometry(): THREE.BufferGeometry {
   return geometry
 }
 
-export function charTheCloth(geometry: THREE.BufferGeometry, charring: number, charredColour: THREE.Color): void {
+export function charTheCloth(geometry: THREE.BufferGeometry, charredShare: number, charredColour: THREE.Color): void {
   const thresholds = geometry.getAttribute(charThresholdAttribute)
   const colours = geometry.getAttribute('color')
   if (thresholds === undefined || colours === undefined) return
   for (let index = 0; index < thresholds.count; index += 1) {
-    const burnt = THREE.MathUtils.clamp((charring * (1 + charFrontSoftness) - thresholds.getX(index)) / charFrontSoftness, 0, 1)
+    const burnt = THREE.MathUtils.clamp((charredShare * (1 + charFrontSoftness) - thresholds.getX(index)) / charFrontSoftness, 0, 1)
     colours.setXYZ(index, 1 + (charredColour.r - 1) * burnt, 1 + (charredColour.g - 1) * burnt, 1 + (charredColour.b - 1) * burnt)
   }
   colours.needsUpdate = true

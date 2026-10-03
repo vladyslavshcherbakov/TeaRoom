@@ -1,4 +1,5 @@
 import { easedAtBothEnds } from '../../Engine/Arithmetic.ts'
+import type { WorldViewState } from '../Presentation/WorldViewState.ts'
 
 export type SipGestureView = {
   readonly cupId: string
@@ -48,3 +49,8 @@ export class SipGesture {
   }
 }
 
+export function viewWithTheSipStillInTheCup(view: WorldViewState, sip: SipGestureView | null): WorldViewState {
+  const cup = sip === null ? undefined : view.vessels[sip.cupId]
+  if (sip === null || cup === undefined || sip.fillShareNotYetSipped <= 0) return view
+  return { ...view, vessels: { ...view.vessels, [sip.cupId]: { ...cup, fillShare: cup.fillShare + sip.fillShareNotYetSipped } } }
+}

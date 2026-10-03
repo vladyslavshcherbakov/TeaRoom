@@ -1,5 +1,5 @@
-import { blendOf, clampedToShare, extremeStrengthFrom, definitionIn, howAClothChars, howTheSpoonChars, isEmpty, isHeating, isTheThermostatWorking, itemIdOnTheHeater, shareOfWhatTheClothHolds, judgeTaste, puddleRadiusMetres, spoonItemId, totalLeafGrams, type Catalog, type ClothState, type DeepReadonly, type Liquid, type SessionState, type TeaInABlend, type VesselDefinition, type VesselState } from '../../../Shared/GameLogic/GameLogic.ts'
-import type { WorldViewState, BrewStage, Heating, LooseLeavesView, SoakedLeavesView, SteamLevel, SurfaceMotion, VesselView } from './WorldViewState.ts'
+import { blendOf, clampedToShare, extremeStrengthFrom, isThePourRunningOverItsTarget, isThePourStreamRunning, itemIdInTheSink, definitionIn, howAClothChars, howTheSpoonChars, isEmpty, isHeating, isTheThermostatWorking, itemIdOnTheHeater, shareOfWhatTheClothHolds, judgeTaste, puddleRadiusMetres, spoonItemId, totalLeafGrams, type Catalog, type ClothState, type DeepReadonly, type Liquid, type SessionState, type TeaInABlend, type VesselDefinition, type VesselState } from '../../../Shared/GameLogic/GameLogic.ts'
+import type { BrewStage, Heating, LooseLeavesView, PourStreamView, SoakedLeavesView, SteamLevel, SurfaceMotion, TapStreamView, VesselView, WorldViewState } from './WorldViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
 
 const waterColour = '#c9e3f0'
@@ -17,6 +17,8 @@ const boilingFromC = 95
 const whistlingFromC = 90
 const soakedLeavesShownPerGram = 2
 export const mostSoakedLeavesShown = 12
+const leavesSeepShareByBrewStage: Readonly<Record<BrewStage, number>> = { water: 1, pale: 0.8, good: 0.5, rich: 0.2, heavy: 0, overbrewed: 0, tar: 0 }
+const degreesOfDifferenceThatKeepAStreamInOneLayer = 15
 const liquorOpacityByBrewStage: Readonly<Record<BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95, tar: 1 }
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
@@ -35,11 +37,42 @@ export function worldViewState(state: DeepReadonly<SessionState>, catalog: Catal
     looseLeavesByItem: looseLeavesByItemIn(state, catalog),
     cloths: Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { wetShare: shareOfWhatTheClothHolds(cloth.wetMl), teaStain: cloth.teaStain }])),
     charringByItem: {
-      ...Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { charring: cloth.charring, heating: clothHeatingOf(state, cloth) }])),
-      [spoonItemId]: { charring: state.spoon.charring, heating: spoonHeatingOf(state) },
+      ...Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { charring: cloth.charring, charredShare: cloth.charring, heating: clothHeatingOf(state, cloth) }])),
+      [spoonItemId]: { charring: state.spoon.charring, charredShare: clampedToShare(state.spoon.charring / howTheSpoonChars.burnsFromCharring), heating: spoonHeatingOf(state) },
     },
     puddles: Object.entries(state.puddles).map(([puddleId, puddle]) => ({ puddleId, placeId: puddle.centre.placeId, centre: { x: puddle.centre.x, y: puddle.centre.y, z: puddle.centre.z }, radiusMetres: puddleRadiusMetres(puddle.wetMl) })),
+    pourStream: pourStreamOf(state, vessels),
+    tapStream: tapStreamOf(state),
   }
+}
+
+export function warmthOfAStream(streamCelsius: number | null, liquidCelsius: number | null): number {
+  if (streamCelsius === null || liquidCelsius === null) return 0
+  return Math.min(1, Math.max(-1, (streamCelsius - liquidCelsius) / degreesOfDifferenceThatKeepAStreamInOneLayer))
+}
+
+function pourStreamOf(state: DeepReadonly<SessionState>, vessels: Readonly<Record<string, VesselView>>): PourStreamView | null {
+  const pour = state.pour
+  if (pour === null || !isThePourStreamRunning(pour)) return null
+  const source = vessels[pour.sourceId]
+  const target = pour.targetId === null ? undefined : vessels[pour.targetId]
+  return {
+    sourceId: pour.sourceId,
+    targetId: pour.targetId,
+    colour: source?.liquorColour ?? waterColour,
+    onTargetShare: pour.streamOnTargetFraction,
+    landing: pour.streamOnTargetFraction > 0 ? { kind: 'onTheTarget' } : pour.missedStreamLandsAt === null ? { kind: 'onTheFloor' } : { kind: 'atAHeight', heightMetres: pour.missedStreamLandsAt.y },
+    warmth: warmthOfAStream(source?.waterTemperatureC ?? null, target?.waterTemperatureC ?? null),
+    isOverflowingItsTarget: isThePourRunningOverItsTarget(pour),
+  }
+}
+
+function tapStreamOf(state: DeepReadonly<SessionState>): TapStreamView | null {
+  const runningWater = state.sink.runningWater
+  if (runningWater === null) return null
+  const itemIdUnderIt = itemIdInTheSink(state)
+  if (itemIdUnderIt === null) return { itemIdUnderIt, landing: 'onTheSinkFloor', isOverflowingTheItem: false }
+  return { itemIdUnderIt, landing: runningWater.isRunningOverTheLid ? 'onTheLid' : 'intoTheItem', isOverflowingTheItem: runningWater.hasOverflowed && !runningWater.isRunningOverTheLid }
 }
 
 function looseLeavesByItemIn(state: DeepReadonly<SessionState>, catalog: Catalog): Record<string, LooseLeavesView> {
@@ -94,6 +127,7 @@ function vesselView(vessel: DeepReadonly<VesselState>, definition: VesselDefinit
     brewStage,
     isLidOpen: definition.lid === null ? null : vessel.isLidOpen,
     soakedLeaves: soakedLeavesOf(vessel),
+    leavesSeepShare: soakedLeavesOf(vessel) === null ? 0 : leavesSeepShareByBrewStage[brewStage],
     shellGlow: vessel.shellHeat,
     waterTemperatureC: isEmpty(vessel.liquid) ? null : vessel.liquid.temperatureC,
     isWhistling: definition.isMadeForTheHeater && isHeated && !isEmpty(vessel.liquid) && vessel.liquid.temperatureC >= whistlingFromC,

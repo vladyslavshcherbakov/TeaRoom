@@ -1,6 +1,5 @@
-import type { DeepReadonly, SessionState } from '../../../Shared/GameLogic/GameLogic.ts'
+import { isThePourStreamRunning, type DeepReadonly, type SessionState } from '../../../Shared/GameLogic/GameLogic.ts'
 import type { Heating, WorldViewState } from '../Presentation/WorldViewState.ts'
-import { isThePourStreamRunning } from './PourStream.ts'
 
 export type LastingRoomSound = 'backgroundBirds' | 'tapRunning' | 'pouring' | 'kettleWhistle' | 'burning' | 'clothWiping' | 'heaterWorking'
 

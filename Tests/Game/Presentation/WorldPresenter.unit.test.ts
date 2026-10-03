@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { worldViewState } from '../../../Apps/Game/Presentation/WorldPresenter.ts'
+import { warmthOfAStream, worldViewState } from '../../../Apps/Game/Presentation/WorldPresenter.ts'
 import { teaLookFor } from '../../../Apps/Game/Presentation/TeaLooks.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { Liquid } from '../../../Shared/GameLogic/Chemistry/Liquid.ts'
-import type { SessionState } from '../../../Shared/GameLogic/State/SessionState.ts'
+import type { PourState, SessionState } from '../../../Shared/GameLogic/State/SessionState.ts'
 import { testCatalog, withMoreCaddies } from '../../Support/TestCatalog.ts'
 import { TestTeaSession } from '../../Support/TestTeaSession.ts'
 
@@ -210,7 +210,7 @@ test('spoon_offTheHeater_showsNoHeatingButKeepsItsCharring', () => {
 
   const charring = worldViewState(state, catalog).charringByItem.spoon
 
-  assert.deepEqual(charring, { charring: 0.4, heating: 'none' })
+  assert.deepEqual(charring, { charring: 0.4, charredShare: 0.5, heating: 'none' })
 })
 
 test('liquor_whenBrewed_isLessSeeThroughThanWater', () => {
@@ -281,6 +281,72 @@ test('looseLeaves_onASpoonOfTwoTeas_showTheTeaWithTheMostGrams', () => {
 
   assert.deepEqual(looseLeavesByItem['spoon'], { teaId: 'testBlack', fillShare: 1 })
 })
+
+test('warmthOfAStream_byTheDifferenceFromTheLiquid_staysOnTopWhenFifteenDegreesWarmerAndSinksWhenFifteenColder', () => {
+  assert.deepEqual([warmthOfAStream(85, 70), warmthOfAStream(70, 70), warmthOfAStream(55, 70), warmthOfAStream(90, null)], [1, 0, -1, 0])
+})
+
+test('pourStream_whileTheStreamRuns_carriesTheSourcesColourAndItsWarmthAgainstTheTarget', () => {
+  const state = stateWithLiquid('kettle', { temperatureC: 95 })
+  const cup = state.vessels['cup1']
+  if (cup === undefined) throw new Error('the test room has no cup1')
+  cup.liquid = { ...cup.liquid, volumeMl: 50, temperatureC: 20 }
+  state.pour = runningPour({ streamOnTargetFraction: 1 })
+
+  const pourStream = worldViewState(state, catalog).pourStream
+
+  assert.equal(pourStream?.colour, worldViewState(state, catalog).vessels['kettle']?.liquorColour)
+  assert.equal(pourStream?.warmth, 1)
+  assert.deepEqual(pourStream?.landing, { kind: 'onTheTarget' })
+})
+
+test('pourStream_whenTheSourceIsNotTiltedEnough_isNotShown', () => {
+  const state = sessionState()
+  state.pour = runningPour({ tiltDegrees: 5 })
+
+  assert.equal(worldViewState(state, catalog).pourStream, null)
+})
+
+test('pourStream_thatMissesItsTarget_landsWhereTheMissedStreamLands', () => {
+  const state = sessionState()
+  state.pour = runningPour({ streamOnTargetFraction: 0, missedStreamLandsAt: { placeId: 'table', x: 0, y: 0.7, z: 0 } })
+
+  assert.deepEqual(worldViewState(state, catalog).pourStream?.landing, { kind: 'atAHeight', heightMetres: 0.7 })
+})
+
+test('tapStream_overAnItemInTheSink_landsInIt', () => {
+  const session = new TestTeaSession(catalog)
+  session.doWithoutARefusal({ type: 'pickUp', itemId: 'cup1' })
+  session.doWithoutARefusal({ type: 'putInTheSink', itemId: 'cup1' })
+  session.doWithoutARefusal({ type: 'turnTheTapOn' })
+
+  const tapStream = worldViewState(session.state, catalog).tapStream
+
+  assert.deepEqual(tapStream, { itemIdUnderIt: 'cup1', landing: 'intoTheItem', isOverflowingTheItem: false })
+})
+
+test('leavesSeepShare_ofSoakedLeaves_fallsAsTheTeaGrowsRicherAndEndsBeyondRich', () => {
+  const shares = [0, 30, 60, 80, 99].map((strength) => {
+    const state = stateWithLiquid('cup1', ofTea('testBlack', { strength }))
+    const cup = state.vessels['cup1']
+    if (cup !== undefined) cup.leaves = { gramsByTeaId: { testBlack: 3 }, isSteeping: true, isStirredByTheBoil: false, steepedSecondsByTeaId: {} }
+    return worldViewState(state, catalog).vessels['cup1']?.leavesSeepShare ?? -1
+  })
+
+  assert.ok(shares.every((share, index) => index === 0 || share <= (shares[index - 1] ?? 1)), `${shares}`)
+  assert.equal(shares.at(-1), 0)
+})
+
+test('charredShare_ofTheSpoon_isFullWhereTheSpoonBurns', () => {
+  const state = sessionState()
+  state.spoon.charring = 1
+
+  assert.equal(worldViewState(state, catalog).charringByItem['spoon']?.charredShare, 1)
+})
+
+function runningPour(pour: Partial<PourState>): PourState {
+  return { sourceId: 'kettle', targetId: 'cup1', tiltDegrees: 30, highestTiltDegrees: 30, streamOnTargetFraction: 1, missedStreamLandsAt: null, pouredMl: 0, spilledMl: 0, hasOverflowed: false, hasRunDry: false, ...pour }
+}
 
 function sessionState(): SessionState {
   return structuredClone(new TestTeaSession(catalog).state) as SessionState

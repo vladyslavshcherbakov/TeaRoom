@@ -6,6 +6,8 @@ export type WorldViewState = {
   readonly cloths: Readonly<Record<string, ClothView>>
   readonly charringByItem: Readonly<Record<string, CharringView>>
   readonly puddles: readonly PuddleView[]
+  readonly pourStream: PourStreamView | null
+  readonly tapStream: TapStreamView | null
 }
 
 export type SteamLevel = 'none' | 'wisps' | 'visible' | 'billowing'
@@ -23,8 +25,29 @@ export type ThermostatView = {
 
 export type CharringView = {
   readonly charring: number
+  readonly charredShare: number
   readonly heating: Heating
 }
+
+export type PourStreamView = {
+  readonly sourceId: string
+  readonly targetId: string | null
+  readonly colour: string
+  readonly onTargetShare: number
+  readonly landing: PourLanding
+  readonly warmth: number
+  readonly isOverflowingItsTarget: boolean
+}
+
+export type PourLanding = { readonly kind: 'onTheTarget' } | { readonly kind: 'atAHeight'; readonly heightMetres: number } | { readonly kind: 'onTheFloor' }
+
+export type TapStreamView = {
+  readonly itemIdUnderIt: string | null
+  readonly landing: TapLanding
+  readonly isOverflowingTheItem: boolean
+}
+
+export type TapLanding = 'onTheLid' | 'intoTheItem' | 'onTheSinkFloor'
 
 export type ClothView = {
   readonly wetShare: number
@@ -48,6 +71,7 @@ export type VesselView = {
   readonly brewStage: BrewStage
   readonly isLidOpen: boolean | null
   readonly soakedLeaves: SoakedLeavesView | null
+  readonly leavesSeepShare: number
   readonly shellGlow: number
   readonly waterTemperatureC: number | null
   readonly isWhistling: boolean
