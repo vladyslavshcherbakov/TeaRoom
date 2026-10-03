@@ -5,7 +5,7 @@ import { turnedBy } from '../../RoomLayout.ts'
 import type { FloorPoint } from '../../../../Engine/Points.ts'
 import { mostSoakedLeavesShown } from '../../../Presentation/WorldPresenter.ts'
 import { teaLookFor } from '../../../Presentation/TeaLooks.ts'
-import type { LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Presentation/WorldViewState.ts'
+import type { BrewStage, LooseLeavesView, SteamLevel, SurfaceMotion, VesselView } from '../../../Presentation/WorldViewState.ts'
 import type { DyeInflow } from '../../../../Engine/Rendering/Flow/SwirlingDye.ts'
 import type { CarriedItemsScene } from './CarriedItemsScene.ts'
 import type { LooseLeavesLook } from './CarriedShapeLook.ts'
@@ -38,7 +38,7 @@ const seepingSpotsFromTheMiddleShare = 0.2
 const seepingColourShareOfTheTea = 0.7
 const warmthOfWhatSeepsFromTheLeaves = -1
 const leavesAboveTheWaterMetres = 0.0015
-const oilySheenOfTar = 0.9
+const oilySheenByBrewStage: Readonly<Record<BrewStage, number>> = { water: 0, pale: 0, good: 0, rich: 0, heavy: 0, overbrewed: 0, tar: 0.9 }
 const leavesDriftRadiansPerSecondByMotion: Readonly<Record<SurfaceMotion, number>> = { still: 0.05, shimmering: 0.08, simmering: 0.25, boiling: 0.9 }
 const noLooseLeaves: LooseLeavesView = { teaId: null, fillShare: 0 }
 
@@ -123,7 +123,7 @@ function showLiquid(model: CarriedModel, vessel: VesselView, wave: Wave, inflow:
   showTheDye(model, vessel, surfaceColour, inflow === null ? null : { ...inflow, colour: liquidParts.tint === null ? inflow.colour : inflow.colour.clone().multiply(liquidParts.tint) }, timeSeconds)
   model.liquidMaterial.color.set(model.dye === null ? surfaceColour : whiteUnderTheDye)
   model.liquidMaterial.opacity = vessel.liquorOpacity
-  if (model.liquidMaterial instanceof THREE.MeshPhysicalMaterial) model.liquidMaterial.iridescence = vessel.brewStage === 'tar' ? oilySheenOfTar : 0
+  if (model.liquidMaterial instanceof THREE.MeshPhysicalMaterial) model.liquidMaterial.iridescence = oilySheenByBrewStage[vessel.brewStage]
   if (model.liquidVolume !== null) showLiquidVolume(model, model.liquidVolume, surfaceHeight, vessel, surfaceColour)
 }
 

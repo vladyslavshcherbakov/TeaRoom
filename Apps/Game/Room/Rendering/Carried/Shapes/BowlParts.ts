@@ -25,6 +25,7 @@ type BowlRelief = 'smooth' | 'fluted'
 
 type BowlLook = {
   readonly glaze: Surface
+  readonly isClearGlass: boolean
   readonly relief: BowlRelief
   readonly painting: BottomPainting | null
   readonly liquidTint: string
@@ -50,7 +51,7 @@ const fluteDepthShare = 0.025
 const flutesStartAboveTheFootMetres = 0.008
 const flutesFullAboveTheFootMetres = 0.02
 const liquidTakesOnTheBowlsColourShare = 0.6
-const plainBowl = { relief: 'smooth', painting: null } as const
+const plainBowl = { relief: 'smooth', painting: null, isClearGlass: false } as const
 const porcelainBowl: BowlLook = { ...plainBowl, glaze: 'porcelain', liquidTint: '#f7f2e8' }
 const bowlLookById: Readonly<Record<TeaBowlId, BowlLook>> = {
   bowl1: { ...plainBowl, glaze: 'whiteGlaze', liquidTint: '#eef5ff', painting: { surface: 'koiPainting', lengthMetres: koiPondWidthMetres, aspect: koiPondAspect, turnRadians: 0 } },
@@ -60,7 +61,7 @@ const bowlLookById: Readonly<Record<TeaBowlId, BowlLook>> = {
   bowl5: { ...plainBowl, glaze: 'yellowGlaze', liquidTint: '#f1cd55', painting: { surface: 'heronPainting', lengthMetres: 0.064, aspect: heronPaintingAspect, turnRadians: 0 } },
   bowl6: { ...plainBowl, glaze: 'emeraldGlaze', liquidTint: '#5fb08a' },
   bowl7: { ...plainBowl, glaze: 'temperGlaze', liquidTint: '#b393cf' },
-  bowl8: { ...plainBowl, glaze: 'glass', relief: 'fluted', liquidTint: '#ffffff' },
+  bowl8: { ...plainBowl, glaze: 'glass', isClearGlass: true, relief: 'fluted', liquidTint: '#ffffff' },
   bowl11: { ...plainBowl, glaze: 'blackGlaze', liquidTint: '#8a6a4a', painting: { surface: 'ginkgoPainting', lengthMetres: 0.09, aspect: ginkgoPaintingAspect, turnRadians: 0 } },
   bowl10: { ...plainBowl, glaze: 'yixingClay', liquidTint: '#a8683f', painting: { surface: 'teaCharacterPainting', lengthMetres: 0.05, aspect: teaCharacterPaintingAspect, turnRadians: 0 } },
 }
@@ -93,7 +94,7 @@ export const bowlShapeLook: CarriedShapeLook = {
 function bowlParts(setUp: ItemSetUp, itemId: string): ItemParts {
   const materials = setUp.room
   const look = isATeaBowlId(itemId) ? bowlLookById[itemId] : porcelainBowl
-  const glass = look.glaze === 'glass' ? materials.glassThatClears('glass') : null
+  const glass = look.isClearGlass ? materials.glassThatClears('glass') : null
   const glazed = glass?.material ?? materials.unsharedMaterialFor(look.glaze)
   const body = new THREE.Mesh(bowlGeometryWith(look.relief), glazed)
   const meshes: THREE.Object3D[] = [body]

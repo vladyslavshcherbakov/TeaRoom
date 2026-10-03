@@ -18,6 +18,8 @@ const flameRadiusMetres = 0.012
 const flameHeightMetres = 0.04
 const flameCoreShare = 0.55
 const flickerPerSecond = 9
+const isAFlameShownBy: Readonly<Record<Heating, boolean>> = { none: false, steaming: false, warming: false, smoking: false, scorching: false, smouldering: false, burning: true }
+const areThePuffsSmokeBy: Readonly<Record<Heating, boolean>> = { none: true, steaming: false, warming: true, smoking: true, scorching: true, smouldering: true, burning: true }
 const puffsByHeating: Readonly<Record<Heating, number>> = { none: 0, steaming: puffCount, warming: 0, smoking: 2, scorching: 3, smouldering: puffCount, burning: puffCount }
 const flickerDepth = 0.2
 const emberCount = 14
@@ -64,7 +66,7 @@ export class ItemFire {
     this.char(charring?.charring ?? 0, charring?.charredShare ?? 0)
     const heating = charring?.heating ?? 'none'
     const isShown = heating !== 'none' && this.item.root.visible && !this.item.now.isHeldInView
-    this.flame.visible = isShown && heating === 'burning'
+    this.flame.visible = isShown && isAFlameShownBy[heating]
     this.puffs.forEach((puff, index) => (puff.visible = isShown && index < puffsByHeating[heating]))
     const areEmbersShown = isShown && embersFromHeating.has(heating)
     this.embers.forEach((ember) => (ember.visible = areEmbersShown))
@@ -101,7 +103,7 @@ export class ItemFire {
   }
 
   private risePuffs(rootOfTheFlame: THREE.Vector3, heating: Heating, timeSeconds: number): void {
-    const isSmoke = heating !== 'steaming'
+    const isSmoke = areThePuffsSmokeBy[heating]
     const risePerSecond = isSmoke ? smokeRiseMetresPerSecond : steamRiseMetresPerSecond
     const columnMetres = isSmoke ? smokeColumnMetres : steamColumnMetres
     this.puffs.forEach((puff, index) => {

@@ -1,6 +1,6 @@
 import { isEmpty, shareOfTheStrengthByTeaId, totalLeafGrams, type DeepReadonly, type Liquid, type TeaEvent, type SessionState } from '../../../Shared/GameLogic/GameLogic.ts'
 import { sipFeeling } from '../Presentation/SipTexts.ts'
-import { carriedShapeOf } from './CarriedShapes.ts'
+import { carriedShapeOf, type CarriedShape } from './CarriedShapes.ts'
 import type { AppLog } from '../../Engine/AppLog.ts'
 import type { PlayerBarkKind } from './PlayerBarks.ts'
 import { AchievementBook, type AchievementStorage as StorageOfAchievements } from '../../Engine/AchievementBook.ts'
@@ -187,6 +187,10 @@ function teasThatCountIn(liquid: Liquid): readonly string[] {
   return Object.entries(shareOfTheStrengthByTeaId(liquid)).filter(([, share]) => share >= shareOfTheStrengthThatCountsATea).map(([teaId]) => teaId)
 }
 
+const earnedWhenItsShellGlowsBy: Readonly<Record<CarriedShape, readonly AchievementId[]>> = { kettle: [], thermos: ['thermosGlowing'], caddy: [], bowl: [], spoon: [], cloth: [] }
+const earnedWhenFullAndBoiledDryBy: Readonly<Record<CarriedShape, readonly AchievementId[]>> = { kettle: ['kettleBoiledDry'], thermos: [], caddy: [], bowl: [], spoon: [], cloth: [] }
+const earnedWhenTeaIsBrewedAndDrunkIn: Readonly<Record<CarriedShape, readonly AchievementId[]>> = { kettle: [], thermos: [], caddy: [], bowl: ['teaBrewedInTheBowl'], spoon: [], cloth: [] }
+
 function achievementsOf(event: TeaEvent, state: DeepReadonly<SessionState>): readonly AchievementId[] {
   switch (event.type) {
     case 'burntClothWashedBackToNew':
@@ -196,9 +200,9 @@ function achievementsOf(event: TeaEvent, state: DeepReadonly<SessionState>): rea
     case 'playerDied':
       return ['died']
     case 'metalGlowsTooHotToHold':
-      return carriedShapeOf(state, event.vesselId) === 'thermos' ? ['thermosGlowing'] : []
+      return earnedByTheShapeOf(event.vesselId, state, earnedWhenItsShellGlowsBy)
     case 'boiledDry':
-      return event.wasFullAndOnlyBoiledDown && carriedShapeOf(state, event.vesselId) === 'kettle' ? ['kettleBoiledDry'] : []
+      return event.wasFullAndOnlyBoiledDown ? earnedByTheShapeOf(event.vesselId, state, earnedWhenFullAndBoiledDryBy) : []
     case 'teaTasted':
       return achievementsOfASip(event, state)
     default:
@@ -209,6 +213,11 @@ function achievementsOf(event: TeaEvent, state: DeepReadonly<SessionState>): rea
 function achievementsOfASip(sip: TeaTasted, state: DeepReadonly<SessionState>): readonly AchievementId[] {
   const earned: AchievementId[] = []
   if (sipFeeling(sip.verdict, sip.cupHeldLeaves) === 'justRight') earned.push('perfectTea')
-  if (sip.cupHeldLeaves && sip.verdict.strength !== 'none' && carriedShapeOf(state, sip.cupId) === 'bowl') earned.push('teaBrewedInTheBowl')
+  if (sip.cupHeldLeaves && sip.verdict.strength !== 'none') earned.push(...earnedByTheShapeOf(sip.cupId, state, earnedWhenTeaIsBrewedAndDrunkIn))
   return earned
+}
+
+function earnedByTheShapeOf(itemId: string, state: DeepReadonly<SessionState>, earnedByShape: Readonly<Record<CarriedShape, readonly AchievementId[]>>): readonly AchievementId[] {
+  const shape = carriedShapeOf(state, itemId)
+  return shape === undefined ? [] : earnedByShape[shape]
 }

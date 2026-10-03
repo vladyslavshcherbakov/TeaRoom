@@ -77,6 +77,7 @@ type TapAction = {
 
 
 const fullSpoonDepth = 1
+const isHeardWhenPutDownOn: Readonly<Record<FurnitureId, boolean>> = { counter: false, shelf: true, teaTable: false }
 const roseBushTapsThatOpenTheDebugMenu = 10
 const fullTurnDegrees = 360
 const freeMode: ModeState = { kind: 'free' }
@@ -905,7 +906,7 @@ export class PlayerController {
     if (spot !== tappedSpot) this.log(`no room for ${itemId} at (${point.x.toFixed(2)}, ${point.z.toFixed(2)}) on the ${furnitureId}, so it goes to the snuggest free spot nearby, (${spot.x.toFixed(2)}, ${spot.z.toFixed(2)})`)
     this.session.dispatch({ type: 'putDown', itemId, spot })
     if (this.session.state.cloths[itemId]?.location.kind === 'onSurface') this.clothOnTheTable.putDown(itemId, furnitureId, { x: spot.x, y: spot.y, z: spot.z })
-    if (furnitureId === 'shelf') this.heard({ kind: 'putOnTheShelf', itemId, isEverythingOnTheShelf: this.isEverythingOnTheShelf() })
+    if (isHeardWhenPutDownOn[furnitureId]) this.heard({ kind: 'putOnTheShelf', itemId, isEverythingOnTheShelf: this.isEverythingOnTheShelf() })
   }
 
   private isEverythingOnTheShelf(): boolean {
