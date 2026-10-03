@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { bowlShape } from './BowlShape.ts'
+import { bowlShape } from '../../../Shapes/BowlShape.ts'
 
 const bowlWallProfilePoints = 32
 export const bowlInsideProfile = new THREE.SplineCurve([

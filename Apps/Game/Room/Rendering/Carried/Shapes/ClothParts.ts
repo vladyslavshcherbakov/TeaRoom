@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { CarriedShapeLook } from '../CarriedShapeLook.ts'
 import { surfaceByClothPattern } from '../../RoomMaterials.ts'
 import type { ItemSetUp, Display, ItemParts } from '../ItemParts.ts'
-import { clothShape } from './ClothShape.ts'
+import { clothShape } from '../../../Shapes/ClothShape.ts'
 import { charTheCloth, rumpledClothGeometry } from './RumpledClothGeometry.ts'
 
 export const clothShapeLook: CarriedShapeLook = {

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { SurfaceMaterials } from '../../RoomMaterials.ts'
 import type { CarriedShapeLook } from '../CarriedShapeLook.ts'
 import type { ItemParts } from '../ItemParts.ts'
-import { spoonShape } from './SpoonShape.ts'
+import { spoonShape } from '../../../Shapes/SpoonShape.ts'
 
 const ashOnTheHandleFromMetres = -0.12
 const ashOnTheHandleToMetres = 0.03

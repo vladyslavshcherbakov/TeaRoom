@@ -5,7 +5,7 @@ import type { FurnitureId, RoomLayout } from './RoomLayout.ts'
 import type { FloorPoint, WorldPoint } from '../../Engine/Points.ts'
 import type { AppLog } from '../../Engine/AppLog.ts'
 import type { TapTarget } from './TapTarget.ts'
-import { clothShape } from './Rendering/Carried/Shapes/ClothShape.ts'
+import { clothShape } from './Shapes/ClothShape.ts'
 import { WipeStroke } from './WipeStroke.ts'
 import { isUnderAnotherItem, type LyingLids, type Surroundings } from './Placement.ts'
 

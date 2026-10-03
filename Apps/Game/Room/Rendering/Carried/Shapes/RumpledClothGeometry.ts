@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { clothShape } from './ClothShape.ts'
+import { clothShape } from '../../../Shapes/ClothShape.ts'
 
 const { lengthMetres: clothLengthMetres, widthMetres: clothWidthMetres } = clothShape
 

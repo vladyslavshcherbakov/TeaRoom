@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { kettleRadiusAt, kettleShape } from './KettleShape.ts'
+import { kettleRadiusAt, kettleShape } from '../../../Shapes/KettleShape.ts'
 
 const pointsAcross = 3
 const pointsUp = 14

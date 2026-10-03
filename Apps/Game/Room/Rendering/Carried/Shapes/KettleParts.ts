@@ -10,7 +10,7 @@ import type { VesselView } from '../../../../Presentation/WorldViewState.ts'
 import type { Wave } from '../Wave.ts'
 import { KettleGaugeStrip } from './KettleGaugeStrip.ts'
 import type { ItemSetUp, Display, ItemParts } from '../ItemParts.ts'
-import { kettleRadiusAt, kettleShape, kettleWaterHeightAt } from './KettleShape.ts'
+import { kettleRadiusAt, kettleShape, kettleWaterHeightAt } from '../../../Shapes/KettleShape.ts'
 import type { ProfilePoint, VesselProfile } from '../VesselProfile.ts'
 
 const lidTouchPadRadiusMetres = 0.095

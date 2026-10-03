@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { SurfaceMaterials } from '../../RoomMaterials.ts'
-import { caddyShape } from './CaddyShape.ts'
+import { caddyShape } from '../../../Shapes/CaddyShape.ts'
 import { disc, openWall, rimAround } from '../LatheParts.ts'
 import type { CarriedShapeLook } from '../CarriedShapeLook.ts'
 import type { ItemParts } from '../ItemParts.ts'

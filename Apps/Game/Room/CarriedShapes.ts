@@ -1,10 +1,10 @@
 import { itemKindOf, type DeepReadonly, type SessionState } from '../../../Shared/GameLogic/GameLogic.ts'
-import { bowlShape } from './Rendering/Carried/Shapes/BowlShape.ts'
-import { caddyShape } from './Rendering/Carried/Shapes/CaddyShape.ts'
-import { clothShape } from './Rendering/Carried/Shapes/ClothShape.ts'
-import { kettleShape } from './Rendering/Carried/Shapes/KettleShape.ts'
-import { spoonShape } from './Rendering/Carried/Shapes/SpoonShape.ts'
-import { thermosShape } from './Rendering/Carried/Shapes/ThermosShape.ts'
+import { bowlShape } from './Shapes/BowlShape.ts'
+import { caddyShape } from './Shapes/CaddyShape.ts'
+import { clothShape } from './Shapes/ClothShape.ts'
+import { kettleShape } from './Shapes/KettleShape.ts'
+import { spoonShape } from './Shapes/SpoonShape.ts'
+import { thermosShape } from './Shapes/ThermosShape.ts'
 
 export type CarriedShape = 'kettle' | 'thermos' | 'caddy' | 'bowl' | 'spoon' | 'cloth'
 
