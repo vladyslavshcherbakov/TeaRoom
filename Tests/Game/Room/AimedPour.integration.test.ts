@@ -167,25 +167,26 @@ test('kettle_whenTheEmptySinkIsTappedWhileAiming_goesIntoTheSink', () => {
   assert.equal(room.state.vessels['kettle']?.location.kind, 'inTheSink')
 })
 
-test('bowl_whenItsOpeningIsTappedWhileAiming_isTakenIntoAHandWhileTheKettleGoesBackToItsHand', () => {
+test('bowl_whenItsOpeningIsTappedWhileAiming_offersItsMenuWithoutTakingItWhileTheKettleGoesBackToItsHand', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
   room.playerController.aimingTapped({ kind: 'opening', itemId: 'bowl1' })
 
-  const hands = itemIdsInTheHands(room.state)
   assert.equal(room.playerController.aimedPourView, null)
-  assert.ok(hands.includes('kettle') && hands.includes('bowl1'), `the hands hold ${hands.join(', ')}`)
+  assert.deepEqual(itemIdsInTheHands(room.state).filter((itemId) => itemId !== null), ['kettle'])
+  assert.ok(room.actionsOffered().includes('take bowl'), `the menu offers ${room.actionsOffered().join(', ')}`)
 })
 
-test('thermos_whenItsOpeningIsTappedWhileAiming_isTakenAndTheKettleGoesBackToItsHand', () => {
+test('thermos_whenTappedWhileAiming_offersItsMenuWithoutTakingIt', () => {
   const room = new TestRoom()
   aimTheKettleAtTheBowl(room)
 
-  room.playerController.aimingTapped({ kind: 'opening', itemId: 'thermos' })
+  room.playerController.aimingTapped({ kind: 'item', itemId: 'thermos' })
 
   assert.equal(room.playerController.aimedPourView, null)
-  assert.deepEqual(itemIdsInTheHands(room.state).filter((itemId) => itemId !== null), ['kettle', 'thermos'])
+  assert.deepEqual(itemIdsInTheHands(room.state).filter((itemId) => itemId !== null), ['kettle'])
+  assert.ok(room.actionsOffered().includes('take thermos'), `the menu offers ${room.actionsOffered().join(', ')}`)
 })
 
 test('kettle_whenTheBowlIsTappedWhileAiming_returnsToItsHand', () => {

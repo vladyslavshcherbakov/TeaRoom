@@ -8,7 +8,6 @@ import { teaCommandBook } from './CommandBook.ts'
 import type { Command } from './Command.ts'
 import { lidsClosedAgainstAPour } from './PouringCommands.ts'
 import { teaStockIn } from './Reach.ts'
-import { definitionIn } from '../../Engine/Catalog.ts'
 import type { RefusalReason, TeaEvent } from './TeaEvent.ts'
 import type { SessionLog } from '../../Engine/Log.ts'
 import { Session, type GameRules } from '../../Engine/Session.ts'
@@ -70,11 +69,6 @@ export class TeaSession {
 
   isACaddy(vesselId: string): boolean {
     return teaStockIn(this.catalog, this.world.state, vesselId) !== null
-  }
-
-  isForDrinking(vesselId: string): boolean {
-    const vessel = this.world.state.vessels[vesselId]
-    return vessel !== undefined && definitionIn(this.catalog, 'vessels', vessel.definitionId).isDrinkable
   }
 
   returnAfter(awaySeconds: number, shareThroughTheNextTimeOfDay: number): readonly TeaEvent[] {

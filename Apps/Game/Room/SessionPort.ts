@@ -6,5 +6,4 @@ export type SessionPort = {
   wouldRefuse(commands: readonly Command[]): WouldBeRefused | null
   lidsThatClosePour(sourceId: string, targetId: string | null): readonly string[]
   isACaddy(vesselId: string): boolean
-  isForDrinking(vesselId: string): boolean
 }

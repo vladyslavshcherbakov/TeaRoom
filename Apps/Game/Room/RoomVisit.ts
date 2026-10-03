@@ -90,7 +90,6 @@ export class RoomVisit {
       wouldRefuse: (commands) => session.wouldRefuse(commands),
       lidsThatClosePour: (sourceId, targetId) => session.lidsThatClosePour(sourceId, targetId),
       isACaddy: (vesselId) => session.isACaddy(vesselId),
-      isForDrinking: (vesselId) => session.isForDrinking(vesselId),
     }
     this.playerController = new PlayerController(sessionPort, setUp.catalog, setUp.layout, setUp.lyingLids, log, setUp.heaterItemsBeforeTheTesterJoke, {
       barked: (bark) => {

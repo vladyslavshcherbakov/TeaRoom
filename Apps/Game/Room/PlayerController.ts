@@ -285,7 +285,7 @@ export class PlayerController {
     this.endTheAim()
   }
 
-  aimingTapped(target: TapTarget): void {
+  aimingTapped(target: TapTarget, at: ScreenPoint | null = null): void {
     if (this.isRefusedByTheMode('aimingTap', `tap on ${describeTarget(target)} to end a pour`) || this.modeState.kind !== 'aiming') return
     const sourceId = this.modeState.pour.view.sourceId
     switch (target.kind) {
@@ -293,11 +293,12 @@ export class PlayerController {
         if (target.itemId !== sourceId) return this.returnTheAimedVesselToItsHand(target)
         this.log(`tap on the lid of ${sourceId} while aiming opens or closes it and keeps the aim`)
         return this.toggleLidOf(sourceId)
+      case 'item':
       case 'opening':
-        if (target.itemId === sourceId || !this.session.isForDrinking(target.itemId)) return this.returnTheAimedVesselToItsHand(target)
-        this.log(`tap on the opening of ${target.itemId} while aiming takes it to drink from, and ${sourceId} goes back to its hand`)
+        if (target.itemId === sourceId) return this.returnTheAimedVesselToItsHand(target)
+        this.log(`tap on ${target.itemId} while aiming ends the aim, ${sourceId} goes back to its hand, and the menu of ${target.itemId} opens`)
         this.pourDone()
-        return this.take(target.itemId)
+        return this.openTheMenu(this.itemActions(target.itemId), at, target.itemId)
       case 'surface':
         this.log(`tap on the ${target.furnitureId} while aiming puts the vessel down there`)
         this.endTheAim()
@@ -309,7 +310,6 @@ export class PlayerController {
         return this.openTheMenu(this.tapUseActions(sourceId, (use) => this.putInTheSink(sourceId, use)), null, 'the sink')
       case 'floor':
       case 'furniture':
-      case 'item':
       case 'heater':
       case 'heaterSwitch':
       case 'heaterPanel':

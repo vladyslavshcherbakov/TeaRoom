@@ -240,6 +240,6 @@ export class TouchInput {
   private aimingFingerUp(finger: AimingFinger): void {
     this.touch = noTouch
     if (finger.hasMoved) return this.playerController.pourFingerUp()
-    this.playerController.aimingTapped(this.screen.tapTargetAt(finger.start).target)
+    this.playerController.aimingTapped(this.screen.tapTargetAt(finger.start).target, finger.start)
   }
 }
