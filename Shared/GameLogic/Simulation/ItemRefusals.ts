@@ -5,6 +5,7 @@ import { itemLocationIn } from '../State/WhereItemsAre.ts'
 import { isPlayerAt, isWithinReach, whereTheItemIs, whereThePlayerStands } from './Reach.ts'
 import type { RefusalReason } from './TeaEvent.ts'
 import type { VesselState } from '../State/SessionState.ts'
+import { isClosedAgainstPouring } from '../State/Lids.ts'
 
 export type Check = EngineCheck<Draft, RefusalReason>
 
@@ -73,8 +74,7 @@ export function isOpenForFilling(vesselId: string): Check {
 export function isOpenForPouring(vesselId: string): Check {
   return (draft) => {
     const vessel = draft.state.vessels[vesselId]
-    const isClosedAgainstPouring = vessel !== undefined && vesselDefinitionOf(draft, vessel).lid?.mustBeOpenToPour === true && !vessel.isLidOpen
-    return isClosedAgainstPouring ? { reason: 'lidClosed', values: `${vesselId} must be open to pour` } : null
+    return vessel !== undefined && isClosedAgainstPouring(vessel, vesselDefinitionOf(draft, vessel)) ? { reason: 'lidClosed', values: `${vesselId} must be open to pour` } : null
   }
 }
 

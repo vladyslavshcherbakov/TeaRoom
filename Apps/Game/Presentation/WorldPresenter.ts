@@ -1,4 +1,4 @@
-import { blendOf, clampedToShare, extremeStrengthFrom, isThePourRunningOverItsTarget, isThePourStreamRunning, itemIdInTheSink, definitionIn, howAClothChars, howTheSpoonChars, isEmpty, isHeating, isTheThermostatWorking, itemIdOnTheHeater, shareOfWhatTheClothHolds, judgeTaste, puddleRadiusMetres, spoonItemId, totalLeafGrams, type Catalog, type ClothState, type DeepReadonly, type Liquid, type SessionState, type TeaInABlend, type VesselDefinition, type VesselState } from '../../../Shared/GameLogic/GameLogic.ts'
+import { blendOf, clampedToShare, extremeStrengthFrom, highBitternessFrom, isClosedAgainstPouring, isOnAWorkingHeater, isSteamingInsteadOfCharring, isThePourRunningOverItsTarget, isThePourStreamRunning, itemIdInTheSink, definitionIn, howAClothChars, howTheSpoonChars, isEmpty, isHeating, isTheThermostatWorking, itemIdOnTheHeater, shareOfWhatTheClothHolds, judgeTaste, puddleRadiusMetres, spoonItemId, totalLeafGrams, type Catalog, type ClothState, type DeepReadonly, type Liquid, type SessionState, type TeaInABlend, type VesselDefinition, type VesselState } from '../../../Shared/GameLogic/GameLogic.ts'
 import type { BrewStage, Heating, LooseLeavesView, PourStreamView, SoakedLeavesView, SteamLevel, SurfaceMotion, TapStreamView, VesselView, WorldViewState } from './WorldViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
 
@@ -6,7 +6,6 @@ const waterColour = '#c9e3f0'
 const overbrewedColour = '#2b1a10'
 const tarColour = '#130b06'
 const strengthOfPureTar = 99
-const bitternessWhereDarkeningStarts = 45
 const darkestShareOfOverbrewedColour = 0.5
 const steamWispsFromC = 60
 const steamVisibleFromC = 75
@@ -94,17 +93,13 @@ function teaWithTheMostLeaves(gramsByTeaId: Readonly<Record<string, number>>): s
 
 function clothHeatingOf(state: DeepReadonly<SessionState>, cloth: DeepReadonly<ClothState>): Heating {
   if (!isOnAWorkingHeater(state, cloth.id)) return 'none'
-  if (cloth.wetMl > 0) return 'steaming'
+  if (isSteamingInsteadOfCharring(cloth)) return 'steaming'
   return heatingAsItChars(cloth.charring, howAClothChars.burnsFromCharring)
 }
 
 function spoonHeatingOf(state: DeepReadonly<SessionState>): Heating {
   if (!isOnAWorkingHeater(state, spoonItemId)) return 'none'
   return heatingAsItChars(state.spoon.charring, howTheSpoonChars.burnsFromCharring)
-}
-
-function isOnAWorkingHeater(state: DeepReadonly<SessionState>, itemId: string): boolean {
-  return isHeating(state.heater.mode) && itemIdOnTheHeater(state) === itemId
 }
 
 function heatingAsItChars(charring: number, burnsFromCharring: number): Heating {
@@ -163,7 +158,7 @@ function brewStageOf(liquid: Liquid, blend: readonly TeaInABlend[]): BrewStage {
 
 function liquorColour(liquid: Liquid, blend: readonly TeaInABlend[]): string {
   const brewed = mixColours(waterColour, liquorColourOfTheBlend(blend), liquid.strength / 100)
-  const darkening = share(liquid.bitterness - bitternessWhereDarkeningStarts, 100 - bitternessWhereDarkeningStarts)
+  const darkening = share(liquid.bitterness - highBitternessFrom, 100 - highBitternessFrom)
   const darkened = mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
   return mixColours(darkened, tarColour, share(liquid.strength - extremeStrengthFrom, strengthOfPureTar - extremeStrengthFrom))
 }
@@ -174,8 +169,7 @@ function liquorColourOfTheBlend(blend: readonly TeaInABlend[]): string {
 }
 
 function steamOf(vessel: DeepReadonly<VesselState>, definition: VesselDefinition): SteamLevel {
-  const isSealed = definition.lid?.mustBeOpenToPour === true && !vessel.isLidOpen
-  if (isSealed || isEmpty(vessel.liquid)) return 'none'
+  if (isClosedAgainstPouring(vessel, definition) || isEmpty(vessel.liquid)) return 'none'
   const temperatureC = vessel.liquid.temperatureC
   if (temperatureC >= steamBillowingFromC) return 'billowing'
   if (temperatureC >= steamVisibleFromC) return 'visible'

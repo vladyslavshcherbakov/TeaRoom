@@ -1,4 +1,4 @@
-import { carriedItemIdsIn, definitionIn, isACloth, isHeating, isTheHeaterInUse, isTheThermostatWorking, itemIdInHand, itemIdInTheInventory, itemIdInTheSink, itemIdsInTheHands, itemLocationIn, spoonItemId, standingSpotOf, totalLeafGrams, type Catalog, type Command, type DeepReadonly, type HandIndex, type InventorySlot, type ItemLocation, type TapUse, type TeaEvent, type Spot } from '../../../Shared/GameLogic/GameLogic.ts'
+import { carriedItemIdsIn, definitionIn, isACloth, isHeating, isTheHeaterInUse, isTheThermostatWorking, itemIdInHand, itemIdInTheInventory, itemIdInTheSink, itemIdsInTheHands, itemLocationIn, spoonItemId, standingSpotOf, type Catalog, type Command, type DeepReadonly, type HandIndex, type InventorySlot, type ItemLocation, type TapUse, type TeaEvent, type Spot } from '../../../Shared/GameLogic/GameLogic.ts'
 import { stepsDueWhileAnArrowIsHeld } from '../../Engine/HeldArrow.ts'
 import { aimAPour, canAimAPour, type AimedPour, type AimedPourView } from './AimedPour.ts'
 import { ItemInspection, type ItemInspectionView } from './ItemInspection.ts'
@@ -751,8 +751,7 @@ export class PlayerController {
       return this.actionIf(this.session.wouldRefuse([scoop]) === null, 'scoopFrom', spoonItemId, itemId, () => this.session.dispatch(scoop))
     }
     const tip: Command = { type: 'tipSpoonInto', vesselId: itemId }
-    const hasLeavesToTip = totalLeafGrams(this.session.state.spoon.gramsByTeaId) > 0
-    return this.actionIf(hasLeavesToTip && this.session.wouldRefuse([tip]) === null, 'tipLeavesInto', spoonItemId, itemId, () => this.session.dispatch(tip))
+    return this.actionIf(this.session.wouldRefuse([tip]) === null, 'tipLeavesInto', spoonItemId, itemId, () => this.session.dispatch(tip))
   }
 
   private surfaceActions(furnitureId: FurnitureId, point: WorldPoint): readonly MenuAction[] {

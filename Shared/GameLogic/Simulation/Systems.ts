@@ -20,6 +20,7 @@ import { takeLiquidFrom } from './VesselLiquid.ts'
 import { doesAPourDrain, dryThePuddles, spill } from './Puddles.ts'
 import { percent } from '../../Engine/Percent.ts'
 import type { Schedule } from '../../Engine/Session.ts'
+import { isOnAWorkingHeater } from '../State/OnTheHeater.ts'
 
 const fullWithinMl = 0.5
 
@@ -87,11 +88,10 @@ function countTheSecondsOnTheWorkingHeater(draft: Draft, seconds: number): void 
 }
 
 function heatOrCoolMetalShells(draft: Draft, seconds: number): void {
-  const heater = draft.state.heater
   for (const vessel of Object.values(draft.state.vessels)) {
     if (!vesselDefinitionOf(draft, vessel).hasAMetalShell) continue
     const wasTooHotToHold = isTooHotToHold(vessel.shellHeat)
-    vessel.shellHeat = shellHeatAfter(vessel.shellHeat, isHeating(heater.mode) && itemIdOnTheHeater(draft.state) === vessel.id, seconds)
+    vessel.shellHeat = shellHeatAfter(vessel.shellHeat, isOnAWorkingHeater(draft.state, vessel.id), seconds)
     const isNowTooHotToHold = isTooHotToHold(vessel.shellHeat)
     if (!wasTooHotToHold && isNowTooHotToHold) glowTooHotToHold(draft, vessel)
     if (wasTooHotToHold && !isNowTooHotToHold) note(draft, `${vessel.id}'s metal has cooled enough to hold, at ${percent(vessel.shellHeat)} of red heat`)
@@ -173,8 +173,7 @@ function steepAllLeaves(draft: Draft, seconds: number): void {
 
 function stirWithTheBoilIfItBoils(draft: Draft, vessel: VesselState): void {
   if (vessel.leaves === null) return
-  const heater = draft.state.heater
-  const isStirred = isHeating(heater.mode) && itemIdOnTheHeater(draft.state) === vessel.id && isAtTheBoil(vessel.liquid)
+  const isStirred = isOnAWorkingHeater(draft.state, vessel.id) && isAtTheBoil(vessel.liquid)
   if (isStirred === vessel.leaves.isStirredByTheBoil) return
   vessel.leaves = { ...vessel.leaves, isStirredByTheBoil: isStirred }
   note(draft, isStirred ? `the boil in ${vessel.id} stirs its leaves, and they brew twice as fast` : `the leaves in ${vessel.id} settle as the boil stops`)

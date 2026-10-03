@@ -2,6 +2,7 @@ import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { charringOnAHotPlate, howAClothChars } from '../Chemistry/Charring.ts'
 import { clothCharringAfterWashing, clothStainAfterWashing, clothWetMlAfterWringing, clothWetMlOnAHotPlate, clothWetMlUnderTheTap } from '../Chemistry/Table.ts'
 import type { ClothState, RunningWaterState } from '../State/SessionState.ts'
+import type { DeepReadonly } from '../../Engine/DeepReadonly.ts'
 import { type Draft } from './Draft.ts'
 import { note } from '../../Engine/Draft.ts'
 import type { ItemKindRules } from './ItemKindRules.ts'
@@ -34,7 +35,7 @@ function withTheCloth(draft: Draft, itemId: string, act: (cloth: ClothState) => 
 
 function heatTheCloth(draft: Draft, cloth: ClothState, seconds: number): void {
   if (cloth.charring === 1) return
-  if (cloth.wetMl > 0) {
+  if (isSteamingInsteadOfCharring(cloth)) {
     cloth.wetMl = clothWetMlOnAHotPlate(cloth.wetMl, seconds)
     if (cloth.wetMl === 0) note(draft, `${cloth.id} on the heater has steamed dry and starts to char`)
     return
@@ -77,4 +78,8 @@ function liftTheClothOutOfThePuddle(draft: Draft, cloth: ClothState): void {
   if (cloth.soakingPuddleId === null) return
   note(draft, `${cloth.id} is lifted out of ${cloth.soakingPuddleId} holding ${cloth.wetMl.toFixed(2)} ml`)
   cloth.soakingPuddleId = null
+}
+
+export function isSteamingInsteadOfCharring(cloth: DeepReadonly<ClothState>): boolean {
+  return cloth.wetMl > 0
 }

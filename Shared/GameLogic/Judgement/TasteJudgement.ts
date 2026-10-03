@@ -21,7 +21,7 @@ const coldBelowC = 30
 const richStrengthMargin = 15
 export const extremeStrengthFrom = 98
 const noticeableBitternessFrom = 25
-const highBitternessFrom = 45
+export const highBitternessFrom = 45
 const overbrewedBitternessFrom = 70
 const strengthsThatKillStraightFromTheCaddy: ReadonlySet<TasteVerdict['strength']> = new Set(['heavy', 'extreme'])
 
