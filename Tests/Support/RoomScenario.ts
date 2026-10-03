@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test'
-import type { TapTarget } from '../../Apps/Game/Room/TapTarget.ts'
+import type { TapTarget } from '../../Apps/Game/Room/Input/TapTarget.ts'
 import type { DrawnResources } from '../../Apps/Engine/Rendering/DrawnResources.ts'
 import { consoleRecordOf, roomOpening, type ConsoleRecord } from './BrowserRoom.ts'
 

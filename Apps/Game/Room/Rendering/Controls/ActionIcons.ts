@@ -1,5 +1,5 @@
 import type { ActionKind, ActionLabel } from '../../ActionMenu.ts'
-import type { CarriedShape } from '../../CarriedShapes.ts'
+import type { CarriedShape } from '../../Layout/CarriedShapes.ts'
 
 type Placed = { readonly x: number; readonly baseY: number; readonly size: number; readonly turnDegrees: number }
 

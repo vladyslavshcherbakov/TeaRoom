@@ -1,6 +1,6 @@
 import { text, textWith } from '../../../Texts/Texts.ts'
 import type { FrameBudgetReport } from '../../../../Engine/FrameBudget.ts'
-import type { FrameBudgetPhase } from '../../FrameBudgetPhases.ts'
+import type { FrameBudgetPhase } from '../../Debug/FrameBudgetPhases.ts'
 
 export type SceneCounts = {
   readonly drawCallsPerFrame: number

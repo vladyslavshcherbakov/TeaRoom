@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isUnderAnotherItem, nearestSpotSearchedWithinMetres, whyThereIsNoRoomFor, type LyingLid } from '../../../Apps/Game/Room/Placement.ts'
+import { isUnderAnotherItem, nearestSpotSearchedWithinMetres, whyThereIsNoRoomFor, type LyingLid } from '../../../Apps/Game/Room/Layout/Placement.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { definitionIn } from '../../../Shared/Engine/Catalog.ts'
 import { assertNear } from '../../Support/Assertions.ts'

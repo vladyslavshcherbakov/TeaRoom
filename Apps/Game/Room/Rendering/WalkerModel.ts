@@ -4,7 +4,7 @@ import type { FaceFeature, ObjectDetail } from '../RoomSettings.ts'
 import { isWalking, type Walk } from '../../../Engine/Walking/Walk.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'
 import { SparrowModel } from './SparrowModel.ts'
-import type { SparrowAnimation } from '../SparrowAnimations.ts'
+import type { SparrowAnimation } from '../Debug/SparrowAnimations.ts'
 import type { AppLog } from '../../../Engine/AppLog.ts'
 
 const bobHeightMetres = 0.03

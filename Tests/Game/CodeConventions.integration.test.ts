@@ -17,7 +17,7 @@ const worldOutsideTheGameLogic = /\bDate\b|Math\.random|performance\.|console\.|
 const browserStorage = /localStorage|sessionStorage|indexedDB/
 const writeOfALocation = /\.location\s*=[^=]/
 const importOfAStylesheet = /import [^\n]*'[^']+\.css'/
-const importOfRoomRendering = /from '\.\/Rendering\//
+const importOfRoomRendering = /from '(?:\.\.?\/)+Rendering\//
 const importOfThreeJs = /from 'three[/']/
 const changeOfLayers = /\.layers\.(set|enable|disable|enableAll|disableAll|toggle)\(/
 const relativeImportPath = /^import [^\n]*? from '(\.[^']+)'/gm
@@ -57,10 +57,10 @@ test('threeJs_isImportedOnlyByRendering', () => {
   assert.deepEqual(filesImportingThreeJs, [])
 })
 
-test('roomRoot_otherThanRoomMain_importsNothingFromRendering', () => {
-  const rootFilesImportingRendering = sourceFilesIn('Apps/Game/Room').filter((file) => file.path.split('/').length === 4 && importOfRoomRendering.test(file.text)).map((file) => file.path)
+test('room_outsideRenderingAndOtherThanRoomMain_importsNothingFromRendering', () => {
+  const filesImportingRendering = sourceFilesIn('Apps/Game/Room').filter((file) => !file.path.startsWith('Apps/Game/Room/Rendering/') && importOfRoomRendering.test(file.text)).map((file) => file.path)
 
-  assert.deepEqual(rootFilesImportingRendering, ['Apps/Game/Room/RoomMain.ts'])
+  assert.deepEqual(filesImportingRendering, ['Apps/Game/Room/RoomMain.ts'])
 })
 
 test('renderLayers_areChangedOnlyInTheEnginesLayersFile', () => {

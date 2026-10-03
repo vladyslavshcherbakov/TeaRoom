@@ -1,4 +1,4 @@
-import { directionIntoTheRoomFrom, metresClearOfFurnitureAlong, pointAwayFromTheWall, type CloseUp, type RoomLayout } from '../RoomLayout.ts'
+import { directionIntoTheRoomFrom, metresClearOfFurnitureAlong, pointAwayFromTheWall, type CloseUp, type RoomLayout } from '../Layout/RoomLayout.ts'
 import type { CameraPose, FloorPoint, WorldPoint } from '../../../Engine/Points.ts'
 import { clamped, easedAtBothEnds } from '../../../Engine/Arithmetic.ts'
 

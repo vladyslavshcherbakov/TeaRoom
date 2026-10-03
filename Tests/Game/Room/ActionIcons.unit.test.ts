@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { actionIconSvg } from '../../../Apps/Game/Room/Rendering/Controls/ActionIcons.ts'
 import type { ActionKind } from '../../../Apps/Game/Room/ActionMenu.ts'
-import type { CarriedShape } from '../../../Apps/Game/Room/CarriedShapes.ts'
+import type { CarriedShape } from '../../../Apps/Game/Room/Layout/CarriedShapes.ts'
 
 const everyActionKind: readonly ActionKind[] = ['take', 'putAway', 'openTheLid', 'sip', 'pourInto', 'scoopFrom', 'tipLeavesInto', 'putDownHere', 'putOnTheHeater', 'putInTheSink', 'fillWithWater', 'wash']
 const everyShape: readonly CarriedShape[] = ['kettle', 'thermos', 'caddy', 'bowl', 'spoon', 'cloth']

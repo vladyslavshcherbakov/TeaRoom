@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { sparrowAnimations } from '../../../Apps/Game/Room/SparrowAnimations.ts'
+import { sparrowAnimations } from '../../../Apps/Game/Room/Debug/SparrowAnimations.ts'
 
 const glbHeaderBytes = 12
 const chunkHeaderBytes = 8

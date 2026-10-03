@@ -1,5 +1,5 @@
-import type { FurnitureId } from '../RoomLayout.ts'
-import type { RoomView } from '../RoomNavigator.ts'
+import type { FurnitureId } from '../Layout/RoomLayout.ts'
+import type { RoomView } from '../Layout/RoomNavigator.ts'
 import { unzoomedDistanceShare } from './CameraPoses.ts'
 
 export class CameraZoom {

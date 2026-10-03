@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { HandIndex } from '../../../../../../Shared/GameLogic/GameLogic.ts'
 import type { CarriedModel } from '../CarriedModel.ts'
 import { roomLayers } from '../../RoomLayers.ts'
-import type { TapTargetTag } from '../../../TapTarget.ts'
+import type { TapTargetTag } from '../../../Input/TapTarget.ts'
 
 export type HeldInView = {
   readonly camera: THREE.PerspectiveCamera

@@ -1,5 +1,5 @@
 import { text, textWith } from '../../../Texts/Texts.ts'
-import type { AchievementId } from '../../Achievements.ts'
+import type { AchievementId } from '../../Reactions/Achievements.ts'
 import { FadingNotice } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
 const noticeSeconds = 4

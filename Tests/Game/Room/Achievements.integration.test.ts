@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { Achievements, achievementsOutOfReach, type AchievementId, type AchievementStorage } from '../../../Apps/Game/Room/Achievements.ts'
+import { Achievements, achievementsOutOfReach, type AchievementId, type AchievementStorage } from '../../../Apps/Game/Room/Reactions/Achievements.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import type { TasteVerdict } from '../../../Shared/GameLogic/Judgement/TasteJudgement.ts'
 import type { Catalog } from '../../../Shared/GameLogic/Definitions/Catalog.ts'

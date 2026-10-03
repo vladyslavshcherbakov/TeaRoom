@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { quietRoomArrangements } from '../../../Shared/Content/Rooms.ts'
 import { poseWatchingTheGears } from '../../../Apps/Game/Room/Camera/CameraPoses.ts'
-import { roomLayoutFor, type RoomLayout } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { roomLayoutFor, type RoomLayout } from '../../../Apps/Game/Room/Layout/RoomLayout.ts'
 import type { FloorPoint } from '../../../Apps/Engine/Points.ts'
 
 const portraitSquareAndLandscapeAspects = [0.46, 0.98, 1.6]

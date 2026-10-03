@@ -1,4 +1,4 @@
-import type { ClothPattern } from '../../RoomArrangement.ts'
+import type { ClothPattern } from '../../NewGame/RoomArrangement.ts'
 import { pseudoRandom } from '../../../../../Shared/Engine/Random.ts'
 import type { AppLog } from '../../../../Engine/AppLog.ts'
 import { paintedCanvas } from '../../../../Engine/Rendering/Painting/CanvasPainting.ts'

@@ -1,6 +1,6 @@
 import { text } from '../../../Texts/Texts.ts'
 import type { ActionLabel, ActionMenuView } from '../../ActionMenu.ts'
-import { actionText } from '../../RoomTexts.ts'
+import { actionText } from '../../Reactions/RoomTexts.ts'
 import { actionIconSvg } from './ActionIcons.ts'
 import { button, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 

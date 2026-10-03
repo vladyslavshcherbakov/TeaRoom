@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { worldViewState } from '../../../Apps/Game/Presentation/WorldPresenter.ts'
 import type { Heating } from '../../../Apps/Game/Presentation/WorldViewState.ts'
-import { soundsLastingIn, type LastingRoomSound } from '../../../Apps/Game/Room/RoomSounds.ts'
+import { soundsLastingIn, type LastingRoomSound } from '../../../Apps/Game/Room/Sounds/RoomSounds.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'
 import { TestRoom } from '../../Support/TestRoom.ts'
 

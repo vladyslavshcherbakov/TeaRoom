@@ -1,5 +1,5 @@
 import type { SoundFile } from '../../../Engine/Audio/SoundBoard.ts'
-import type { RoomSound } from '../RoomSounds.ts'
+import type { RoomSound } from './RoomSounds.ts'
 import achievementUrl from './achievement.webm'
 import backgroundBirdsUrl from './background-birds.webm'
 import burningUrl from './burning.webm'

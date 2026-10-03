@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { AimedPourView } from '../../../AimedPour.ts'
+import type { AimedPourView } from '../../../Gestures/AimedPour.ts'
 import { roomLayers } from '../../RoomLayers.ts'
 import type { CarriedModel } from '../CarriedModel.ts'
 

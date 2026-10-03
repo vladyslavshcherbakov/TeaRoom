@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import sparrowUrl from '../Models/sparrow.glb?url'
 import { bytesAt } from '../../../Engine/BytesAt.ts'
 import type { AppLog } from '../../../Engine/AppLog.ts'
-import type { SparrowAnimation } from '../SparrowAnimations.ts'
+import type { SparrowAnimation } from '../Debug/SparrowAnimations.ts'
 
 const sparrowHeightMetres = 0.3
 const animationBlendSeconds = 0.2

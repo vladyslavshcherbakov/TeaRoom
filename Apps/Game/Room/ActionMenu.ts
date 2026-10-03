@@ -1,5 +1,5 @@
 import type { ScreenPoint } from '../../Engine/ScreenPoint.ts'
-import type { CarriedShape } from './CarriedShapes.ts'
+import type { CarriedShape } from './Layout/CarriedShapes.ts'
 
 export type ActionKind = 'take' | 'putAway' | 'openTheLid' | 'sip' | 'pourInto' | 'scoopFrom' | 'tipLeavesInto' | 'putDownHere' | 'putOnTheHeater' | 'putInTheSink' | 'fillWithWater' | 'wash'
 

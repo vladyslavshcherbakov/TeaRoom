@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import type { InventorySlot } from '../../../../../../Shared/GameLogic/GameLogic.ts'
 import type { CarriedModel } from '../CarriedModel.ts'
 import { roomLayers } from '../../RoomLayers.ts'
-import type { TapTargetTag } from '../../../TapTarget.ts'
+import type { TapTargetTag } from '../../../Input/TapTarget.ts'
 import type { SurfaceMaterials } from '../../RoomMaterials.ts'
 import type { HeldInView } from './HeldInView.ts'
 

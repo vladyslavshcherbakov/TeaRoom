@@ -1,9 +1,9 @@
 import * as THREE from 'three'
-import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../GardenLayout.ts'
-import { roomHalfSize } from '../RoomLayout.ts'
+import { gardenPlants, roseBushCentreHeightMetres, roseBushRadiusMetres, roseBushSquash, type Plant, type PlantKind } from '../Layout/GardenLayout.ts'
+import { roomHalfSize } from '../Layout/RoomLayout.ts'
 import type { ObjectDetail } from '../RoomSettings.ts'
 import type { PlantSurface, RoomMaterials } from './RoomMaterials.ts'
-import type { TapTargetTag } from '../TapTarget.ts'
+import type { TapTargetTag } from '../Input/TapTarget.ts'
 
 type PlantPart = {
   readonly geometry: THREE.BufferGeometry

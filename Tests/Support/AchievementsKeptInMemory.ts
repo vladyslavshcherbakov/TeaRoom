@@ -1,4 +1,4 @@
-import { nothingUnlocked, type AchievementRecord, type AchievementStorage } from '../../Apps/Game/Room/Achievements.ts'
+import { nothingUnlocked, type AchievementRecord, type AchievementStorage } from '../../Apps/Game/Room/Reactions/Achievements.ts'
 
 export class AchievementsKeptInMemory implements AchievementStorage {
   private record: AchievementRecord

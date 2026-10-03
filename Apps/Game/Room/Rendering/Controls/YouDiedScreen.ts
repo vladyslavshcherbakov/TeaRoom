@@ -1,5 +1,5 @@
 import { text } from '../../../Texts/Texts.ts'
-import { startOverNote } from '../../RoomTexts.ts'
+import { startOverNote } from '../../Reactions/RoomTexts.ts'
 import { button, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
 export class YouDiedScreen {

@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { ScreenPoint } from '../../../Apps/Engine/ScreenPoint.ts'
-import type { TapTarget } from '../../../Apps/Game/Room/TapTarget.ts'
+import type { TapTarget } from '../../../Apps/Game/Room/Input/TapTarget.ts'
 import type { HandIndex } from '../../../Shared/GameLogic/State/SessionState.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { middleOfTheFloor, screenShowing, TestRoom } from '../../Support/TestRoom.ts'
-import type { FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
+import type { FurnitureId } from '../../../Apps/Game/Room/Layout/RoomLayout.ts'
 import { itemIdsInTheHands } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
 
 const onTheFirstHand: ScreenPoint = { x: 60, y: 780 }

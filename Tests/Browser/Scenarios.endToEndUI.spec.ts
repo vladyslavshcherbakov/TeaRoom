@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { text } from '../../Apps/Game/Texts/Texts.ts'
-import { actionText } from '../../Apps/Game/Room/RoomTexts.ts'
+import { actionText } from '../../Apps/Game/Room/Reactions/RoomTexts.ts'
 import { RoomScenario, shareOfTheStreamIn, type CameraMode } from '../Support/RoomScenario.ts'
 
 const cameraModes: readonly CameraMode[] = ['room', 'firstPerson']

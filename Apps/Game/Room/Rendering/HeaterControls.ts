@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { LampDisplay, type LampReading } from './LampDisplay.ts'
-import type { TapTargetTag } from '../TapTarget.ts'
+import type { TapTargetTag } from '../Input/TapTarget.ts'
 import { markAsGlowing } from '../../../Engine/Rendering/Glow.ts'
 import type { RoomMaterials, Surface } from './RoomMaterials.ts'
 import type { AppLog } from '../../../Engine/AppLog.ts'

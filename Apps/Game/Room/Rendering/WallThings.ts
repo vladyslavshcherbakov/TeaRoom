@@ -1,8 +1,8 @@
 import * as THREE from 'three'
-import { pointAwayFromTheWall, turnFacingTheRoom, type RoomLayout, type SpotOnAWall } from '../RoomLayout.ts'
+import { pointAwayFromTheWall, turnFacingTheRoom, type RoomLayout, type SpotOnAWall } from '../Layout/RoomLayout.ts'
 import { guideBookModel } from './GuideBookModel.ts'
 import type { SurfaceMaterials } from './RoomMaterials.ts'
-import type { TapTargetTag } from '../TapTarget.ts'
+import type { TapTargetTag } from '../Input/TapTarget.ts'
 import { SettingsGear } from './SettingsGear.ts'
 
 type Tagger = (object: THREE.Object3D, tag: TapTargetTag) => void

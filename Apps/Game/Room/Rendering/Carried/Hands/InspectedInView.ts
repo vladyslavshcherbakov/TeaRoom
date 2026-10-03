@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { ItemInspectionView } from '../../../ItemInspection.ts'
+import type { ItemInspectionView } from '../../../Gestures/ItemInspection.ts'
 import type { CarriedModel } from '../CarriedModel.ts'
 
 export type InspectedInView = {

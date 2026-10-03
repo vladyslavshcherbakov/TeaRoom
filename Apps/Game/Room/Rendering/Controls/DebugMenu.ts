@@ -1,7 +1,7 @@
 import { text, textWith, type TextKey } from '../../../Texts/Texts.ts'
 import { playerHeightByDefaultCentimetres, playerHeightSteppedBy } from '../../../../Engine/Camera/PlayerHeight.ts'
-import type { DebugSettings } from '../../DebugSettings.ts'
-import { sparrowAnimations } from '../../SparrowAnimations.ts'
+import type { DebugSettings } from '../../Debug/DebugSettings.ts'
+import { sparrowAnimations } from '../../Debug/SparrowAnimations.ts'
 import { stepsDueWhileAnArrowIsHeld } from '../../../../Engine/HeldArrow.ts'
 import { actWhileHeld, button, choiceRow, pageElement, toggleRow } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 

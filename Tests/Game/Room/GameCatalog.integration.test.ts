@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { catalogOfANewGame } from '../../../Apps/Game/Room/GameCatalog.ts'
-import { arrangementOfANewGame } from '../../../Apps/Game/Room/RoomArrangement.ts'
+import { catalogOfANewGame } from '../../../Apps/Game/Room/NewGame/GameCatalog.ts'
+import { arrangementOfANewGame } from '../../../Apps/Game/Room/NewGame/RoomArrangement.ts'
 
 test('bowlOrder_ofANewGame_isLoggedWithEachBowlsSpotInAllThreeDirections', () => {
   const logLines: string[] = []

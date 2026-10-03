@@ -1,6 +1,6 @@
 import { text } from '../../../Texts/Texts.ts'
-import { screenButtons, type ScreenButton } from '../../ScreenButton.ts'
-import { screenButtonRules, type ScreenButtonPress } from '../../ScreenControls.ts'
+import { screenButtons, type ScreenButton } from '../../Screen/ScreenButton.ts'
+import { screenButtonRules, type ScreenButtonPress } from '../../Screen/ScreenControls.ts'
 import { actWhenLifted, actWhileHeld, icon, iconButton, iconShape } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 import { informationIcon, pouringIcon } from './PourIcons.ts'
 

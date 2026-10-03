@@ -1,5 +1,5 @@
 import { text } from '../../../Texts/Texts.ts'
-import { achievementIds, type AchievementId } from '../../Achievements.ts'
+import { achievementIds, type AchievementId } from '../../Reactions/Achievements.ts'
 import { button, pageElement, SheetOverTheScene } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
 export type AchievementsListListener = {

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { furnitureWithId } from '../../../Apps/Game/Room/RoomLayout.ts'
+import { furnitureWithId } from '../../../Apps/Game/Room/Layout/RoomLayout.ts'
 import type { FloorPoint } from '../../../Apps/Engine/Points.ts'
 import { quietRoomLayout, inFrontOfTheTeaTable, onTheTeaTable, onTopOf, openFloorFrontRight, spotOn, TestRoom, withoutTheTurn } from '../../Support/TestRoom.ts'
 import { itemIdsInTheHands, itemIdsInTheInventory, standingSpotOf } from '../../../Shared/GameLogic/State/WhereItemsAre.ts'
-import { layoutOf } from '../../../Apps/Game/Room/CarriedShapes.ts'
+import { layoutOf } from '../../../Apps/Game/Room/Layout/CarriedShapes.ts'
 
 const snugGapAtMostMetres = 0.01
 const gapLeftForASecondBowlMetres = 0.005

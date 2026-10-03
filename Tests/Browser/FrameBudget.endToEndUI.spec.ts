@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { consoleRecordOf, roomOpening } from '../Support/BrowserRoom.ts'
 import type { FrameBudgetReport } from '../../Apps/Engine/FrameBudget.ts'
-import type { FrameBudgetPhase } from '../../Apps/Game/Room/FrameBudgetPhases.ts'
+import type { FrameBudgetPhase } from '../../Apps/Game/Room/Debug/FrameBudgetPhases.ts'
 
 const phasesOfThisProjectsCode: readonly FrameBudgetPhase[] = ['input', 'walking', 'playerController', 'gameLogic', 'bookkeeping', 'camera', 'carriedItems', 'roomParts', 'screenControls']
 const millisecondsOfThisProjectsCodeAFrameAtMost = 6

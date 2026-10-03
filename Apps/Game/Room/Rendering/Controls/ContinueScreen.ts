@@ -1,5 +1,5 @@
 import { text, type TextKey } from '../../../Texts/Texts.ts'
-import { startOverNote } from '../../RoomTexts.ts'
+import { startOverNote } from '../../Reactions/RoomTexts.ts'
 import { button, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 import { soundLoudnessChoiceOnThePage, type SoundLoudnessChoice } from './SoundLoudnessChoice.ts'
 

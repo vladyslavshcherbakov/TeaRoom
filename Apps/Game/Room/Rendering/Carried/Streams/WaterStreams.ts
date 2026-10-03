@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { itemIdInTheSink, type Spot } from '../../../../../../Shared/GameLogic/GameLogic.ts'
 import type { PourLanding, TapLanding } from '../../../../Presentation/WorldViewState.ts'
-import type { CarriedShape } from '../../../CarriedShapes.ts'
+import type { CarriedShape } from '../../../Layout/CarriedShapes.ts'
 import type { WorldPoint } from '../../../../../Engine/Points.ts'
 import type { RoomMaterials, SurfaceMaterial } from '../../RoomMaterials.ts'
 import type { CarriedItemsScene } from '../CarriedItemsScene.ts'
@@ -9,7 +9,7 @@ import type { CarriedModel } from '../CarriedModel.ts'
 import { CreepingStream } from '../../../../../Engine/Rendering/Streams/CreepingStream.ts'
 import { FallingStream } from '../../../../../Engine/Rendering/Streams/FallingStream.ts'
 import { pathDownTheOutside } from '../VesselProfile.ts'
-import type { WaterReceiver } from '../../../WaterReceiversShown.ts'
+import type { WaterReceiver } from '../../../Shown/WaterReceiversShown.ts'
 
 const streamRadiusMetres = 0.007
 const pourStreamEndsAboveTheTargetMetres = 0.01

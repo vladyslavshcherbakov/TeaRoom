@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import type { FloorPoint, WorldPoint } from '../../../Apps/Engine/Points.ts'
-import type { TapTarget } from '../../../Apps/Game/Room/TapTarget.ts'
+import type { TapTarget } from '../../../Apps/Game/Room/Input/TapTarget.ts'
 import { frameSeconds, onTheTeaTable, onTopOf, screenShowing, spotOn, TestRoom, whereTheTeaTableIsSet } from '../../Support/TestRoom.ts'
 import { fullFlowTiltDegrees } from '../../Support/TestTeaSession.ts'
-import type { FurnitureId } from '../../../Apps/Game/Room/RoomLayout.ts'
+import type { FurnitureId } from '../../../Apps/Game/Room/Layout/RoomLayout.ts'
 import type { ScreenPoint } from '../../../Apps/Engine/ScreenPoint.ts'
-import type { ScreenReader } from '../../../Apps/Game/Room/TouchInput.ts'
+import type { ScreenReader } from '../../../Apps/Game/Room/Input/TouchInput.ts'
 import { wetMlOnEveryPlace } from '../../../Shared/GameLogic/Simulation/Puddles.ts'
 
 const framesInFiveSeconds = 300

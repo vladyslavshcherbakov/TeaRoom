@@ -60,7 +60,7 @@ A tap on an item, a held item, a closed lid, a place of the inventory, a surface
 
 - An item is taken into the first free hand. With both hands full it stays, and the player answers each try with a line that changes every time, about a third arm or about carrying bowls when both hands hold bowls.
 - An item put away goes into the first free place of the inventory, and its lid closes. It goes on cooling there, and leaves in it steep. Only taking it into a hand reaches it again.
-- An item put down stands where the finger touched, turned to face the side it was put down from, if it fits. It does not fit over an edge, on the heater, over the sink, on another item, on an open lid lying there or on top of the shelf. Then it stands at the nearest spot of the same top where it fits, no farther than `nearestSpotSearchedWithinMetres` in `Apps/Game/Room/Placement.ts`. Among the spots a little farther than the nearest, up to `snugSpotsWithinMetresOfTheNearest`, it takes the one that touches the most of the edges, the heater, the sink, other items and open lids, so that it leaves no thin gaps. With no such spot it stays in the hand, and the player says there is no room.
+- An item put down stands where the finger touched, turned to face the side it was put down from, if it fits. It does not fit over an edge, on the heater, over the sink, on another item, on an open lid lying there or on top of the shelf. Then it stands at the nearest spot of the same top where it fits, no farther than `nearestSpotSearchedWithinMetres` in `Apps/Game/Room/Layout/Placement.ts`. Among the spots a little farther than the nearest, up to `snugSpotsWithinMetresOfTheNearest`, it takes the one that touches the most of the edges, the heater, the sink, other items and open lids, so that it leaves no thin gaps. With no such spot it stays in the hand, and the player says there is no room.
 
 | Gesture | What it does |
 |---|---|
@@ -155,7 +155,7 @@ Where a liquid's surface shows, as in a tea bowl, the thermos or the caddy, it m
 - An achievement earned while they are shown is announced at the top of the screen for four seconds, one after another.
 - They are kept in the browser for good, through new visits, death and Start over. Reset on the sheet clears them after a second tap.
 
-`achievementIds` in `Apps/Game/Room/Achievements.ts` lists them, and the rule that earns each is beside it.
+`achievementIds` in `Apps/Game/Room/Reactions/Achievements.ts` lists them, and the rule that earns each is beside it.
 
 ## The settings
 
@@ -172,7 +172,7 @@ A gear on the wall opens the settings. Each change turns the gear a tooth. While
 
 ## The debug menu
 
-Ten taps in a row on a rose bush open it. Any other tap before the tenth starts the count again. It sets the player's height from 70 to 200 cm, shows or hides the frame budget, runs the time of the world twenty times faster, chooses which of the sparrow's eighteen animations it plays, and fills the kettle with boiling water. Its foot credits the sparrow's author under CC BY 4.0, with links to the model and the licence. Everything it sets is kept in the browser. `debugSettingValues` in `Apps/Game/Room/DebugSettings.ts` lists them.
+Ten taps in a row on a rose bush open it. Any other tap before the tenth starts the count again. It sets the player's height from 70 to 200 cm, shows or hides the frame budget, runs the time of the world twenty times faster, chooses which of the sparrow's eighteen animations it plays, and fills the kettle with boiling water. Its foot credits the sparrow's author under CC BY 4.0, with links to the model and the licence. Everything it sets is kept in the browser. `debugSettingValues` in `Apps/Game/Room/Debug/DebugSettings.ts` lists them.
 
 ## The book of instructions
 

@@ -11,7 +11,7 @@ How Tea Room is built and how to change it, seen from above. The README says wha
 |---|---|
 | Only documents | Nothing. |
 | Texts, a setting, a constant, a move or a rename | The type-check, and the test files that name what changed. |
-| A rule, a decision or arithmetic, in `Shared` or at the root of `Apps/Game/Room` | The test files of that feature while you work, then `Scripts/test.sh` once. |
+| A rule, a decision or arithmetic, in `Shared` or in `Apps/Game/Room` outside `Rendering/` | The test files of that feature while you work, then `Scripts/test.sh` once. |
 | Drawing in `Rendering/` | The type-check, and the test files that name what changed. |
 | The UI tests, their support files, or the gestures, picking and `Host` they drive | The type-check and the UI project that the change touches. |
 
@@ -64,7 +64,7 @@ The room opens or resumes a session, sends one command for each decision of the 
 
 A tap travels like this. `RoomScene` draws the room and hands every press to `TouchInput`, which tells a tap from a stroke, a pinch or a hold. `PlayerController` decides what the press means in its current mode, such as free, choosing from a menu, aiming a pour or looking closely. A tap on a thing opens a menu of the actions that the session would not refuse, and a chosen action sends its commands to the session. `RoomVisit` turns the events into what the player says, the achievements, the saved visit and the death screen.
 
-The files at the root of `Apps/Game/Room` decide, import neither Three.js nor `Rendering/`, and are tested in Node. `RoomMain` alone builds the room and wires `Rendering/`, where `RoomScene` draws it. `Rendering/` only draws what they decided and reports what the finger did. `Camera/` holds the camera, and the engine walks the floor.
+The files of `Apps/Game/Room` outside `Rendering/` decide, import neither Three.js nor `Rendering/`, and are tested in Node. `RoomMain` alone builds the room and wires `Rendering/`, where `RoomScene` draws it. The root holds the entry points: `RoomMain`, `PlayerController`, `RoomVisit`, the session's port, the modes, the menu and the settings. Their parts are in `Input/`, `Gestures/`, `Layout/`, `Shapes/`, `NewGame/`, `Stores/`, `Reactions/`, `Shown/`, `Screen/`, `Sounds/` and `Debug/`. `Rendering/` only draws what they decided and reports what the finger did. `Camera/` holds the camera, and the engine walks the floor.
 
 ## Adding a kind of thing
 
