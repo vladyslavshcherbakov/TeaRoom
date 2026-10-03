@@ -122,6 +122,27 @@ test('liquorColour_atFullStrength_isOneTarDarkerThanTheDarkestTea', () => {
   assert.ok(channelsOf(puerhAtFullStrength).every((channel, index) => channel < (channelsOf(teaLookFor('shouPuerh').liquorColour)[index] ?? 0)), puerhAtFullStrength)
 })
 
+test('liquorColour_turnsTowardsTarOnlyFromTheStrengthOfTar', () => {
+  const colourAt97 = channelsOf(liquorColourInABowlOf(ofTea('sencha', { strength: 97 })))
+  const colourAt98 = channelsOf(liquorColourInABowlOf(ofTea('sencha', { strength: 98 })))
+
+  const colourAt99 = channelsOf(liquorColourInABowlOf(ofTea('sencha', { strength: 99 })))
+
+  assert.ok(colourAt97.every((channel, index) => Math.abs(channel - (colourAt98[index] ?? 0)) <= 3), `${colourAt97} at 97 and ${colourAt98} at 98`)
+  assert.ok(colourAt98.some((channel, index) => channel - (colourAt99[index] ?? 0) > 20), `${colourAt98} at 98 and ${colourAt99} at 99`)
+})
+
+test('cloth_holdingHalfOfWhatItCan_looksHalfWet', () => {
+  const state = sessionState()
+  const cloth = state.cloths['cloth']
+  if (cloth === undefined) throw new Error('the test room lost its cloth')
+  cloth.wetMl = 20
+
+  const clothView = worldViewState(state, catalog).cloths['cloth']
+
+  assert.equal(clothView?.wetShare, 0.5)
+})
+
 test('liquorColour_ofTwoTeasMixedHalfAndHalf_isTheirColoursMixedHalfAndHalf', () => {
   const senchaColour = liquorColourInABowlOf(ofTea('sencha', { strength: 90 }))
   const puerhColour = liquorColourInABowlOf(ofTea('shouPuerh', { strength: 90 }))

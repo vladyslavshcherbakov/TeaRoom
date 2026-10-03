@@ -1,11 +1,10 @@
-import { blendOf, clampedToShare, definitionIn, howAClothChars, howTheSpoonChars, isEmpty, isHeating, isTheThermostatWorking, itemIdOnTheHeater, judgeTaste, puddleRadiusMetres, spoonItemId, totalLeafGrams, type Catalog, type ClothState, type DeepReadonly, type Liquid, type SessionState, type TeaInABlend, type VesselDefinition, type VesselState } from '../../../Shared/GameLogic/GameLogic.ts'
+import { blendOf, clampedToShare, extremeStrengthFrom, definitionIn, howAClothChars, howTheSpoonChars, isEmpty, isHeating, isTheThermostatWorking, itemIdOnTheHeater, shareOfWhatTheClothHolds, judgeTaste, puddleRadiusMetres, spoonItemId, totalLeafGrams, type Catalog, type ClothState, type DeepReadonly, type Liquid, type SessionState, type TeaInABlend, type VesselDefinition, type VesselState } from '../../../Shared/GameLogic/GameLogic.ts'
 import type { WorldViewState, BrewStage, Heating, LooseLeavesView, SoakedLeavesView, SteamLevel, SurfaceMotion, VesselView } from './WorldViewState.ts'
 import { teaLookFor } from './TeaLooks.ts'
 
 const waterColour = '#c9e3f0'
 const overbrewedColour = '#2b1a10'
 const tarColour = '#130b06'
-const strengthWhereTarStarts = 94
 const strengthOfPureTar = 99
 const bitternessWhereDarkeningStarts = 45
 const darkestShareOfOverbrewedColour = 0.5
@@ -19,7 +18,6 @@ const whistlingFromC = 90
 const soakedLeavesShownPerGram = 2
 export const mostSoakedLeavesShown = 12
 const liquorOpacityByBrewStage: Readonly<Record<BrewStage, number>> = { water: 0.5, pale: 0.6, good: 0.68, rich: 0.8, heavy: 0.9, overbrewed: 0.95, tar: 1 }
-const clothSoakedAtMl = 25
 const smokingFromCharring = 0.035
 const scorchingFromCharring = 0.2
 export const smoulderingFromCharring = 0.5
@@ -35,7 +33,7 @@ export function worldViewState(state: DeepReadonly<SessionState>, catalog: Catal
     isHeaterOn: isHeating(state.heater.mode),
     thermostat: { targetC: state.heater.thermostatTargetC, isOn: isTheThermostatWorking(state.heater.mode) },
     looseLeavesByItem: looseLeavesByItemIn(state, catalog),
-    cloths: Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { wetShare: share(cloth.wetMl, clothSoakedAtMl), teaStain: cloth.teaStain }])),
+    cloths: Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { wetShare: shareOfWhatTheClothHolds(cloth.wetMl), teaStain: cloth.teaStain }])),
     charringByItem: {
       ...Object.fromEntries(Object.values(state.cloths).map((cloth) => [cloth.id, { charring: cloth.charring, heating: clothHeatingOf(state, cloth) }])),
       [spoonItemId]: { charring: state.spoon.charring, heating: spoonHeatingOf(state) },
@@ -133,7 +131,7 @@ function liquorColour(liquid: Liquid, blend: readonly TeaInABlend[]): string {
   const brewed = mixColours(waterColour, liquorColourOfTheBlend(blend), liquid.strength / 100)
   const darkening = share(liquid.bitterness - bitternessWhereDarkeningStarts, 100 - bitternessWhereDarkeningStarts)
   const darkened = mixColours(brewed, overbrewedColour, darkening * darkestShareOfOverbrewedColour)
-  return mixColours(darkened, tarColour, share(liquid.strength - strengthWhereTarStarts, strengthOfPureTar - strengthWhereTarStarts))
+  return mixColours(darkened, tarColour, share(liquid.strength - extremeStrengthFrom, strengthOfPureTar - extremeStrengthFrom))
 }
 
 function liquorColourOfTheBlend(blend: readonly TeaInABlend[]): string {

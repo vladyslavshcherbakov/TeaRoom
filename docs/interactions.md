@@ -139,7 +139,7 @@ Where a liquid's surface shows, as in a tea bowl, the thermos or the caddy, it m
 - A puddle lies where the water fell, on the top it fell on, and ends at the top's edges and at the sink's opening. A top can hold several puddles, and puddles that touch run into one. A puddle grows on the screen only as the drawn stream reaches the top, and a wiped puddle shrinks at once.
 - With the cloth in a hand, a finger stroked over a table or the counter moves the cloth under it and wipes as it goes, each 2 cm of the stroke at its own speed. The stroke follows the top the finger touches, also where the area of an item, the sink or the tap holds the finger. The cloth goes under the things standing on the top and wipes there too. While any part of it is under a thing or an open lid, its folds settle flat to a few millimetres within about a tenth of a second, and they rise again when it comes out. Only the part over the puddle counts, and the share it covers is that length times the cloth's 20 cm width over the puddle's area.
 - Put down in a puddle, the cloth soaks it up while it lies there.
-- The cloth darkens as it takes in water and lightens as it dries, is washed or is wrung out, over about two seconds, never at once. Its tea stain fades the same way.
+- The cloth darkens by the share it holds of all the water it can take, and lightens as it dries, is washed or is wrung out, over about two seconds, never at once. Tea stains it by the tea it takes in, and the stain fades the same way.
 
 ## What the player says
 
