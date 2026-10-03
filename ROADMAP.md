@@ -38,6 +38,7 @@ The next tasks, in order, up to 1.0. Each ends with something that opens on an i
 1. The cat sleeps, wakes, moves, settles and is petted, at two spots.
 2. It walks, never teleports: it looks, walks, turns and settles.
 3. Petting gives no reward. The cat keeps a safe distance from hot tea and now and then nudges a bowl.
+   - The rule of whether an item fits moves into the game logic, with the geometry of the surfaces, so that the cat can nudge a bowl.
 4. Its habits follow the time of day and the weather.
 
 ## Memory
