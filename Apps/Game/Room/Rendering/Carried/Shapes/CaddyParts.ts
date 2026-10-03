@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import type { SurfaceMaterials } from '../../RoomMaterials.ts'
 import { caddyShape } from '../../../Shapes/CaddyShape.ts'
-import { disc, openWall, rimAround } from '../LatheParts.ts'
+import { disc, openWall, rimAround } from '../../../../../Engine/Rendering/LatheParts.ts'
 import type { CarriedShapeLook } from '../CarriedShapeLook.ts'
 import type { ItemParts } from '../ItemParts.ts'
 import { liquidBelowTheRimMetres, type VesselProfile } from '../VesselProfile.ts'

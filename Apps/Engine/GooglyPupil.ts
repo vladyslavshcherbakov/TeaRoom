@@ -10,15 +10,15 @@ const longestStepSeconds = 1 / 240
 const longestAdvanceSeconds = 0.1
 
 export class GooglyPupil {
-  private readonly roomToRollMetres: number
+  private readonly spaceToRollMetres: number
   private x = 0
   private y: number
   private speedX = 0
   private speedY = 0
 
-  constructor(roomToRollMetres: number) {
-    this.roomToRollMetres = roomToRollMetres
-    this.y = -roomToRollMetres
+  constructor(spaceToRollMetres: number) {
+    this.spaceToRollMetres = spaceToRollMetres
+    this.y = -spaceToRollMetres
   }
 
   get offset(): EyePlaneVector {
@@ -41,11 +41,11 @@ export class GooglyPupil {
 
   private bounceOffTheRim(): void {
     const distanceFromTheMiddle = Math.hypot(this.x, this.y)
-    if (distanceFromTheMiddle <= this.roomToRollMetres) return
+    if (distanceFromTheMiddle <= this.spaceToRollMetres) return
     const outwardX = this.x / distanceFromTheMiddle
     const outwardY = this.y / distanceFromTheMiddle
-    this.x = outwardX * this.roomToRollMetres
-    this.y = outwardY * this.roomToRollMetres
+    this.x = outwardX * this.spaceToRollMetres
+    this.y = outwardY * this.spaceToRollMetres
     const outwardSpeed = this.speedX * outwardX + this.speedY * outwardY
     if (outwardSpeed <= 0) return
     this.speedX -= (1 + bounceShare) * outwardSpeed * outwardX

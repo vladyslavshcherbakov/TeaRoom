@@ -3,7 +3,7 @@ import type { SurfaceMaterials } from '../../RoomMaterials.ts'
 import { markAsGlowing } from '../../../../../Engine/Rendering/Glow.ts'
 import type { CarriedShapeLook } from '../CarriedShapeLook.ts'
 import type { Display, ItemParts } from '../ItemParts.ts'
-import { disc, openWall, rimAround } from '../LatheParts.ts'
+import { disc, openWall, rimAround } from '../../../../../Engine/Rendering/LatheParts.ts'
 import { thermosShape } from '../../../Shapes/ThermosShape.ts'
 import { liquidBelowTheRimMetres, type VesselProfile } from '../VesselProfile.ts'
 

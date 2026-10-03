@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { AppLog } from '../../../Engine/AppLog.ts'
-import type { TemperatureUnit } from '../Temperatures.ts'
+import type { TemperatureUnit } from '../../../Engine/Temperatures.ts'
 import type { SurfaceMaterial } from './RoomMaterials.ts'
 
 export type LampReading = {

@@ -1,5 +1,5 @@
 import type { DistantDetail } from '../../../../Engine/Rendering/LevelsOfDetail.ts'
-import type { TemperatureUnit } from '../../Temperatures.ts'
+import type { TemperatureUnit } from '../../../../Engine/Temperatures.ts'
 import type { DeepReadonly, SessionState } from '../../../../../Shared/GameLogic/GameLogic.ts'
 import type { WorldViewState } from '../../../Presentation/WorldViewState.ts'
 import type { AimedPourView } from '../../AimedPour.ts'

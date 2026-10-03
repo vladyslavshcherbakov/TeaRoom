@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { degreesShownIn, targetOneDegreeAway } from '../../../Apps/Game/Room/Temperatures.ts'
+import { degreesShownIn, targetOneDegreeAway } from '../../Apps/Engine/Temperatures.ts'
 
 const range = { lowestC: 40, highestC: 100 }
 

@@ -1,4 +1,4 @@
-import { clamped } from '../../Engine/Arithmetic.ts'
+import { clamped } from './Arithmetic.ts'
 
 export const temperatureUnits = ['celsius', 'fahrenheit'] as const
 

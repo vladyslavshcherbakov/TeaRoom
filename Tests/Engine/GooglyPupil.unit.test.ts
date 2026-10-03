@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { assertNear } from '../../Support/Assertions.ts'
-import { GooglyPupil } from '../../../Apps/Game/Room/GooglyPupil.ts'
+import { assertNear } from '../Support/Assertions.ts'
+import { GooglyPupil } from '../../Apps/Engine/GooglyPupil.ts'
 
 test('googlyPupil_whenTheHeadStandsStill_restsAtTheBottomOfTheEye', () => {
   const pupil = new GooglyPupil(0.02)

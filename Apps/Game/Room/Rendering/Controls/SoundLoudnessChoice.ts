@@ -1,5 +1,5 @@
 import { text } from '../../../Texts/Texts.ts'
-import { soundLoudnesses, type SoundLoudness } from '../../SoundLoudness.ts'
+import { soundLoudnesses, type SoundLoudness } from '../../../../Engine/Audio/SoundLoudness.ts'
 import { choiceRow, pageElement } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
 export type SoundLoudnessChoice = {

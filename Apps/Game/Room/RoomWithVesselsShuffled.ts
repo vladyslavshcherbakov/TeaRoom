@@ -1,4 +1,5 @@
-import type { RoomDefinition, Spot } from '../../../Shared/GameLogic/GameLogic.ts'
+import type { RoomDefinition } from '../../../Shared/GameLogic/GameLogic.ts'
+import { shuffled } from '../../../Shared/Engine/Shuffled.ts'
 
 export function roomWithVesselsShuffled(room: RoomDefinition, definitionId: string, nextRandom: () => number): RoomDefinition {
   const shuffledSpots = shuffled(room.vessels.filter((vessel) => vessel.definitionId === definitionId).map((vessel) => vessel.startsAt), nextRandom)
@@ -10,17 +11,4 @@ export function roomWithVesselsShuffled(room: RoomDefinition, definitionId: stri
     return { ...vessel, startsAt }
   })
   return { ...room, vessels }
-}
-
-function shuffled(spots: readonly Spot[], nextRandom: () => number): Spot[] {
-  const spotsInNewOrder = [...spots]
-  for (let index = spotsInNewOrder.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(nextRandom() * (index + 1))
-    const spotHere = spotsInNewOrder[index]
-    const spotThere = spotsInNewOrder[swapIndex]
-    if (spotHere === undefined || spotThere === undefined) continue
-    spotsInNewOrder[index] = spotThere
-    spotsInNewOrder[swapIndex] = spotHere
-  }
-  return spotsInNewOrder
 }

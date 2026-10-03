@@ -1,5 +1,5 @@
-import type { MouseMovement } from '../../../../Engine/Camera/FirstPersonLook.ts'
-import type { AppLog } from '../../../../Engine/AppLog.ts'
+import type { MouseMovement } from '../../Camera/FirstPersonLook.ts'
+import type { AppLog } from '../../AppLog.ts'
 
 export type KeyboardAndMouseListener = {
   readonly keyPressed: (code: string) => void

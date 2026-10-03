@@ -1,4 +1,4 @@
-import type { StickDeflection } from '../../../../Engine/Camera/FirstPersonLook.ts'
+import type { StickDeflection } from '../../Camera/FirstPersonLook.ts'
 
 type Stick = {
   readonly pad: HTMLElement

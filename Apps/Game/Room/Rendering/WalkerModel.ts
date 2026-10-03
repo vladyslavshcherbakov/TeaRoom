@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { GooglyPupil, type EyePlaneVector } from '../GooglyPupil.ts'
+import { GooglyPupil, type EyePlaneVector } from '../../../Engine/GooglyPupil.ts'
 import type { FaceFeature, ObjectDetail } from '../RoomSettings.ts'
 import { isWalking, type Walk } from '../../../Engine/Walking/Walk.ts'
 import type { RoomMaterials } from './RoomMaterials.ts'

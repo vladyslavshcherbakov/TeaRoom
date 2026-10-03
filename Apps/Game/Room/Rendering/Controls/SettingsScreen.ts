@@ -2,8 +2,8 @@ import { text, textWith, type TextKey } from '../../../Texts/Texts.ts'
 import { playTimeShownFor } from '../../../../Engine/PlayTime.ts'
 import { controlSchemes, stickLayouts } from '../../../../Engine/Camera/FirstPersonControls.ts'
 import { cameraModes, coatColours, faceFeatures, objectDetails, type CoatColour, type RoomSettingName, type RoomSettings } from '../../RoomSettings.ts'
-import { soundLoudnesses } from '../../SoundLoudness.ts'
-import { temperatureUnits } from '../../Temperatures.ts'
+import { soundLoudnesses } from '../../../../Engine/Audio/SoundLoudness.ts'
+import { temperatureUnits } from '../../../../Engine/Temperatures.ts'
 import { button, choiceRow, pageElement, SheetOverTheScene, toggleRow, type ChoiceLook } from '../../../../Engine/Rendering/Controls/PageControls.ts'
 
 export type SettingChosen = (change: Partial<RoomSettings>) => void

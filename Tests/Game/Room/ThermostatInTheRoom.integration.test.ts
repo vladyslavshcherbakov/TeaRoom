@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { degreesShownIn } from '../../../Apps/Game/Room/Temperatures.ts'
+import { degreesShownIn } from '../../../Apps/Engine/Temperatures.ts'
 import { assertNear } from '../../Support/Assertions.ts'
 import { TestRoom } from '../../Support/TestRoom.ts'
 import { defaultCatalog } from '../../../Shared/Content/DefaultCatalog.ts'

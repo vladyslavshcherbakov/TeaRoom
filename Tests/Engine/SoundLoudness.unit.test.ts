@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { shareOfEverySoundsLoudnessBySetting, soundLoudnesses } from '../../../Apps/Game/Room/SoundLoudness.ts'
+import { shareOfEverySoundsLoudnessBySetting, soundLoudnesses } from '../../Apps/Engine/Audio/SoundLoudness.ts'
 
 test('soundLoudness_fromFullToOff_playsEverySoundAtItsOwnLoudnessThenQuieterAtEveryStepThenNotAtAll', () => {
   const shares = soundLoudnesses.map((loudness) => shareOfEverySoundsLoudnessBySetting[loudness])
