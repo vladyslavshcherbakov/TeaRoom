@@ -1,4 +1,5 @@
 import type { RoomDefinition, Spot } from '../GameLogic/Definitions/RoomDefinition.ts'
+import { pointOn, type Facing, type PiecePlacement } from './PiecePlacement.ts'
 
 export type WindowPlace = 'inTheBackWall' | 'alongTheLeftWall'
 
@@ -10,8 +11,6 @@ export type ToolsPlacement = 'onTheTeaTable' | 'apart'
 
 export type ClothPlace = 'onTheTeaTable' | 'onTheShelf' | 'onTheCounter'
 
-export type Facing = 'towardsTheFront' | 'towardsTheBack' | 'towardsTheRight' | 'towardsTheLeft'
-
 export type QuietRoomArrangement = {
   readonly window: WindowPlace
   readonly besideTheWindow: BesideTheWindow
@@ -21,12 +20,6 @@ export type QuietRoomArrangement = {
 }
 
 export type FurnitureArrangement = Pick<QuietRoomArrangement, 'window' | 'besideTheWindow' | 'table'>
-
-export type PiecePlacement = {
-  readonly x: number
-  readonly z: number
-  readonly facing: Facing
-}
 
 export type TablePlacement = PiecePlacement & {
   readonly alsoFacing: Facing | null
@@ -136,24 +129,6 @@ export function furniturePlacementsFor(arrangement: FurnitureArrangement): Furni
   const tables = tablesByWindow[arrangement.window]
   const [, teaTable] = tables.find(([place]) => place === arrangement.table) ?? tables[0]
   return { ...kitchenAndShelfByWindow[arrangement.window][arrangement.besideTheWindow], teaTable }
-}
-
-export function facingDirection(facing: Facing): { readonly x: number; readonly z: number } {
-  switch (facing) {
-    case 'towardsTheFront':
-      return { x: 0, z: 1 }
-    case 'towardsTheBack':
-      return { x: 0, z: -1 }
-    case 'towardsTheRight':
-      return { x: 1, z: 0 }
-    case 'towardsTheLeft':
-      return { x: -1, z: 0 }
-  }
-}
-
-export function pointOn(placement: PiecePlacement, across: number, forward: number): { readonly x: number; readonly z: number } {
-  const ahead = facingDirection(placement.facing)
-  return { x: placement.x + ahead.z * across + ahead.x * forward, z: placement.z - ahead.x * across + ahead.z * forward }
 }
 
 export function quietRoomArrangedAs(arrangement: QuietRoomArrangement): RoomDefinition {

@@ -1,10 +1,13 @@
-import { facingDirection, figurineIds, furniturePlacementsFor, pointOn, shelfBoards, sinkOnTheCounter, type Facing, type FigurineId, type FurnitureArrangement, type PiecePlacement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
+import { figurineIds, furniturePlacementsFor, shelfBoards, sinkOnTheCounter, type FigurineId, type FurnitureArrangement, type WindowPlace } from '../../../Shared/Content/Rooms.ts'
+import { facingDirection, pointOn, type Facing, type PiecePlacement } from '../../../Shared/Content/PiecePlacement.ts'
 import type { Spot } from '../../../Shared/GameLogic/GameLogic.ts'
 import { floorDistanceBetween } from '../../Engine/Arithmetic.ts'
 import type { FloorPoint, Footprint, WorldPoint } from '../../Engine/Points.ts'
 import type { FloorGridShape } from '../../Engine/Walking/FloorGrid.ts'
 
 export type FurnitureId = 'counter' | 'shelf' | 'teaTable'
+
+const runsAlongXByFacing: Readonly<Record<Facing, boolean>> = { towardsTheFront: true, towardsTheBack: true, towardsTheRight: false, towardsTheLeft: false }
 
 export type CloseUp = {
   readonly target: WorldPoint
@@ -339,5 +342,5 @@ function worldPointOn(placement: PiecePlacement, spot: { readonly across: number
 }
 
 function runsAlongX(facing: Facing): boolean {
-  return facing === 'towardsTheFront' || facing === 'towardsTheBack'
+  return runsAlongXByFacing[facing]
 }
