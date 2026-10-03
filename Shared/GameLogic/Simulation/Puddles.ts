@@ -1,13 +1,11 @@
 import { definitionIn } from '../../Engine/Catalog.ts'
 import type { Spot } from '../Definitions/RoomDefinition.ts'
 import type { Liquid } from '../Chemistry/Liquid.ts'
-import { puddleRadiusMetres, puddleStrengthAfterSpill, puddleTemperatureAfterCooling, puddleTemperatureAfterSpill, wetMlAfterDrying } from '../Chemistry/Table.ts'
+import { distanceAcrossTheTop, doPuddlesTouch, isOnTheSameTop, puddleCentreAfterSpill, puddleRadiusMetres, puddleStrengthAfterSpill, puddleTemperatureAfterCooling, puddleTemperatureAfterSpill, wetMlAfterDrying } from '../Chemistry/Table.ts'
 import type { DeepReadonly } from '../../Engine/DeepReadonly.ts'
 import type { PuddleState, SessionState, VesselState } from '../State/SessionState.ts'
 import { type Draft } from './Draft.ts'
 import { note } from '../../Engine/Draft.ts'
-
-export const sameTopWithinMetres = 0.15
 
 export function spill(draft: Draft, spot: Spot, spilledMl: number, spilled: Liquid): void {
   if (spilledMl <= 0) return
@@ -58,7 +56,7 @@ function startAPuddle(draft: Draft, spot: Spot, spilled: Liquid): string {
 function addTo(puddle: PuddleState, spot: Spot, spilledMl: number, spilledStrength: number, spilledTemperatureC: number): void {
   const wetMlAfter = puddle.wetMl + spilledMl
   const shareOfTheNewWater = spilledMl / wetMlAfter
-  puddle.centre = { ...puddle.centre, x: puddle.centre.x + (spot.x - puddle.centre.x) * shareOfTheNewWater, z: puddle.centre.z + (spot.z - puddle.centre.z) * shareOfTheNewWater }
+  puddle.centre = puddleCentreAfterSpill(puddle.centre, spot, shareOfTheNewWater)
   puddle.strength = puddleStrengthAfterSpill(puddle.wetMl, puddle.strength, spilledMl, spilledStrength)
   puddle.temperatureC = puddleTemperatureAfterSpill(puddle.wetMl, puddle.temperatureC, spilledMl, spilledTemperatureC)
   puddle.wetMl = wetMlAfter
@@ -67,7 +65,7 @@ function addTo(puddle: PuddleState, spot: Spot, spilledMl: number, spilledStreng
 function mergeThePuddlesThatTouch(draft: Draft, grownPuddleId: string): void {
   const grown = draft.state.puddles[grownPuddleId]
   if (grown === undefined) return
-  const [touchedId, touched] = Object.entries(draft.state.puddles).find(([puddleId, other]) => puddleId !== grownPuddleId && doTheyTouch(grown, other)) ?? []
+  const [touchedId, touched] = Object.entries(draft.state.puddles).find(([puddleId, other]) => puddleId !== grownPuddleId && doPuddlesTouch(grown, other)) ?? []
   if (touchedId === undefined || touched === undefined) return
   const [keptId, kept, goneId, gone] = grown.wetMl >= touched.wetMl ? [grownPuddleId, grown, touchedId, touched] : [touchedId, touched, grownPuddleId, grown]
   addTo(kept, gone.centre, gone.wetMl, gone.strength, gone.temperatureC)
@@ -75,16 +73,4 @@ function mergeThePuddlesThatTouch(draft: Draft, grownPuddleId: string): void {
   for (const cloth of Object.values(draft.state.cloths)) if (cloth.soakingPuddleId === goneId) cloth.soakingPuddleId = keptId
   note(draft, `${goneId} runs into ${keptId} on the ${kept.centre.placeId}, which holds ${kept.wetMl.toFixed(1)} ml`)
   mergeThePuddlesThatTouch(draft, keptId)
-}
-
-function doTheyTouch(first: DeepReadonly<PuddleState>, second: DeepReadonly<PuddleState>): boolean {
-  return isOnTheSameTop(first.centre, second.centre) && distanceAcrossTheTop(first.centre, second.centre) < puddleRadiusMetres(first.wetMl) + puddleRadiusMetres(second.wetMl)
-}
-
-function isOnTheSameTop(first: Spot, second: Spot): boolean {
-  return first.placeId === second.placeId && Math.abs(first.y - second.y) <= sameTopWithinMetres
-}
-
-function distanceAcrossTheTop(first: Spot, second: Spot): number {
-  return Math.hypot(first.x - second.x, first.z - second.z)
 }

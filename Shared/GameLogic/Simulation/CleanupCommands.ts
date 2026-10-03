@@ -1,4 +1,5 @@
-import { clothStainAfterTakingIn, mlTheClothTakesIn, wetMlAfterWiping } from '../Chemistry/Table.ts'
+import { wetMlAfterWiping } from '../Chemistry/Table.ts'
+import { takeLiquidIntoTheCloth } from './ClothRules.ts'
 import type { ClothState, PuddleState } from '../State/SessionState.ts'
 import type { CommandOfType } from './Command.ts'
 import { type Draft } from './Draft.ts'
@@ -31,14 +32,6 @@ export const puddleReachesTheClothRule: TeaCommandEntry<'puddleReachesTheCloth'>
   carryOut: soakUpThePuddle,
 })
 
-export function takeIntoTheCloth(cloth: ClothState, puddle: PuddleState, offeredMl: number): number {
-  const takenMl = mlTheClothTakesIn(cloth.wetMl, offeredMl)
-  puddle.wetMl -= takenMl
-  cloth.wetMl += takenMl
-  cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, takenMl, puddle.strength)
-  return takenMl
-}
-
 function wipeTable(draft: Draft, cloth: ClothState, command: CommandOfType<'wipeTable'>): void {
   const puddle = draft.state.puddles[command.puddleId]
   if (puddle === undefined) return refuse(draft, command, 'tableIsDry', `${command.puddleId} is not spilled`)
@@ -68,10 +61,8 @@ function soakUpThePuddle(draft: Draft, cloth: ClothState, command: CommandOfType
 
 function wipeUp(cloth: ClothState, puddle: PuddleState, strokeSpeedCmPerSecond: number, coveredFraction: number): void {
   const wipedMl = puddle.wetMl - wetMlAfterWiping(puddle.wetMl, strokeSpeedCmPerSecond, coveredFraction)
-  const takenMl = mlTheClothTakesIn(cloth.wetMl, wipedMl)
   puddle.wetMl -= wipedMl
-  cloth.wetMl += takenMl
-  cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, takenMl, puddle.strength)
+  takeLiquidIntoTheCloth(cloth, wipedMl, puddle.strength)
 }
 
 function foundCloth(draft: Draft, clothId: string): Found<ClothState, RefusalReason> {

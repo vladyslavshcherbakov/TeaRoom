@@ -6,7 +6,8 @@ import { leafGramsScaledBy, totalLeafGrams } from '../Chemistry/Brewing.ts'
 import { heatLiquid, isTooHotToHold, liquidBoiledAway, shareOfTheHeatKeptBy } from '../Chemistry/Heat.ts'
 import { fillFromTap, leafGramsLeftAfterRunningOver } from '../Chemistry/TapWater.ts'
 import type { RunningWaterState, VesselState } from '../State/SessionState.ts'
-import { describeLiquid, describeTheLeaves, isClosedAgainstFilling, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { describeLiquid, describeTheLeaves, vesselDefinitionOf, type Draft } from './Draft.ts'
+import { isClosedAgainstFilling } from '../State/Lids.ts'
 import { note } from '../../Engine/Draft.ts'
 import type { ItemKindRules } from './ItemKindRules.ts'
 import { percent } from '../../Engine/Percent.ts'
@@ -42,7 +43,7 @@ export const vesselRules: ItemKindRules = {
   },
   isClosedAgainstTheTap: (draft, itemId) => {
     const vessel = draft.state.vessels[itemId]
-    return vessel !== undefined && isClosedAgainstFilling(draft, vessel)
+    return vessel !== undefined && isClosedAgainstFilling(vessel, vesselDefinitionOf(draft, vessel))
   },
 }
 
@@ -73,7 +74,7 @@ function noteBoilingAway(draft: Draft, vessel: VesselState, mlPerSecond: number)
 }
 
 function fillTheVessel(draft: Draft, vessel: VesselState, runningWater: RunningWaterState, tap: TapDefinition, seconds: number): void {
-  const isRunningOverTheLid = isClosedAgainstFilling(draft, vessel)
+  const isRunningOverTheLid = isClosedAgainstFilling(vessel, vesselDefinitionOf(draft, vessel))
   if (isRunningOverTheLid !== runningWater.isRunningOverTheLid) {
     runningWater.isRunningOverTheLid = isRunningOverTheLid
     note(draft, isRunningOverTheLid ? `${vessel.id} lid closed under the tap, the water runs over it into the drain` : `${vessel.id} lid open under the tap, the water runs in`)

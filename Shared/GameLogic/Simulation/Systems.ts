@@ -7,7 +7,7 @@ import { coolingPerSecondOf, coolLiquid, isAtTheBoil, isTooHotToHold, shellHeatA
 import { isEmpty, type Liquid } from '../Chemistry/Liquid.ts'
 import { landingOfTheStream, pourFlowMlPerSecond, type StreamLanding } from '../Chemistry/Pouring.ts'
 import { clothWetMlAfterDrying, mlSoakedUp } from '../Chemistry/Table.ts'
-import { takeIntoTheCloth } from './CleanupCommands.ts'
+import { takeIntoTheCloth } from './ClothRules.ts'
 import type { ClothState, VesselState } from '../State/SessionState.ts'
 import { itemIdInTheSink, itemIdOnTheHeater } from '../State/WhereItemsAre.ts'
 import { startOrEndBrews } from './Brews.ts'

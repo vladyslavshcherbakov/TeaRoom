@@ -1,7 +1,7 @@
 import type { TapDefinition } from '../Definitions/RoomDefinition.ts'
 import { charringOnAHotPlate, howAClothChars } from '../Chemistry/Charring.ts'
-import { clothCharringAfterWashing, clothStainAfterWashing, clothWetMlAfterWringing, clothWetMlOnAHotPlate, clothWetMlUnderTheTap } from '../Chemistry/Table.ts'
-import type { ClothState, RunningWaterState } from '../State/SessionState.ts'
+import { clothCharringAfterWashing, clothStainAfterTakingIn, clothStainAfterWashing, clothWetMlAfterWringing, clothWetMlOnAHotPlate, clothWetMlUnderTheTap, mlTheClothTakesIn } from '../Chemistry/Table.ts'
+import type { ClothState, PuddleState, RunningWaterState } from '../State/SessionState.ts'
 import type { DeepReadonly } from '../../Engine/DeepReadonly.ts'
 import { type Draft } from './Draft.ts'
 import { note } from '../../Engine/Draft.ts'
@@ -82,4 +82,17 @@ function liftTheClothOutOfThePuddle(draft: Draft, cloth: ClothState): void {
 
 export function isSteamingInsteadOfCharring(cloth: DeepReadonly<ClothState>): boolean {
   return cloth.wetMl > 0
+}
+
+export function takeIntoTheCloth(cloth: ClothState, puddle: PuddleState, offeredMl: number): number {
+  const takenMl = takeLiquidIntoTheCloth(cloth, offeredMl, puddle.strength)
+  puddle.wetMl -= takenMl
+  return takenMl
+}
+
+export function takeLiquidIntoTheCloth(cloth: ClothState, offeredMl: number, strength: number): number {
+  const takenMl = mlTheClothTakesIn(cloth.wetMl, offeredMl)
+  cloth.wetMl += takenMl
+  cloth.teaStain = clothStainAfterTakingIn(cloth.teaStain, takenMl, strength)
+  return takenMl
 }

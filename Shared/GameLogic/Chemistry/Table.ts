@@ -1,4 +1,5 @@
 import { clampedToShare } from '../../Engine/ClampedToShare.ts'
+import type { Spot } from '../Definitions/RoomDefinition.ts'
 
 const evaporationMlPerSecond = 0.1
 const evaporationDoublesAtC = 90
@@ -17,6 +18,12 @@ const wrungClothHoldsMl = 8
 const steamingOffAHotPlateMlPerSecond = 2
 const washingAFullCharringOffSeconds = 5
 const clothHoldsMl = 40
+export const sameTopWithinMetres = 0.15
+
+type PuddleOnATop = {
+  readonly centre: Spot
+  readonly wetMl: number
+}
 const puddleRadiusAtThirtyMlMetres = 0.25
 const puddleMlAtThatRadius = 30
 
@@ -98,4 +105,20 @@ function mixedBySpill(wetMl: number, value: number, spilledMl: number, spilledVa
   const wetMlAfterSpill = wetMl + spilledMl
   if (wetMlAfterSpill === 0) return spilledValue
   return (wetMl * value + spilledMl * spilledValue) / wetMlAfterSpill
+}
+
+export function puddleCentreAfterSpill(centre: Spot, spilledAt: Spot, shareOfTheNewWater: number): Spot {
+  return { ...centre, x: centre.x + (spilledAt.x - centre.x) * shareOfTheNewWater, z: centre.z + (spilledAt.z - centre.z) * shareOfTheNewWater }
+}
+
+export function doPuddlesTouch(first: PuddleOnATop, second: PuddleOnATop): boolean {
+  return isOnTheSameTop(first.centre, second.centre) && distanceAcrossTheTop(first.centre, second.centre) < puddleRadiusMetres(first.wetMl) + puddleRadiusMetres(second.wetMl)
+}
+
+export function isOnTheSameTop(first: Spot, second: Spot): boolean {
+  return first.placeId === second.placeId && Math.abs(first.y - second.y) <= sameTopWithinMetres
+}
+
+export function distanceAcrossTheTop(first: Spot, second: Spot): number {
+  return Math.hypot(first.x - second.x, first.z - second.z)
 }

@@ -42,12 +42,3 @@ export function teasOfTheLeaves(gramsByTeaId: Readonly<Record<string, number>>):
 export function vesselDefinitionOf(draft: Draft, vessel: VesselState): VesselDefinition {
   return definitionIn(draft.catalog, 'vessels', vessel.definitionId)
 }
-
-export function isClosedAgainstFilling(draft: Draft, vessel: VesselState): boolean {
-  return vesselDefinitionOf(draft, vessel).lid?.mustBeOpenToFill === true && !vessel.isLidOpen
-}
-
-export function isInvolvedInPour(draft: Draft, vesselId: string): boolean {
-  const pour = draft.state.pour
-  return pour !== null && (pour.sourceId === vesselId || pour.targetId === vesselId)
-}

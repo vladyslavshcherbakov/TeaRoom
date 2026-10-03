@@ -8,7 +8,7 @@ import { foundVessel, isInAHand, isNotBurntAway, isOpenForFilling, isWithinThePl
 import { spoonItemId } from '../State/WhereItemsAre.ts'
 import { teaStockOf } from './Reach.ts'
 import { clampedToShare } from '../../Engine/ClampedToShare.ts'
-import { dryLeaves, leafGramsTogether, leavesWithMoreAdded, splitLeafGrams, totalLeafGrams } from '../Chemistry/Brewing.ts'
+import { dryLeaves, gramsAScoopTakes, leafGramsTogether, leavesWithMoreAdded, splitLeafGrams, totalLeafGrams } from '../Chemistry/Brewing.ts'
 
 export const scoopTeaRule: TeaCommandEntry<'scoopTea'> = commandRuleOnASubject({
   find: (draft, command) => foundVessel(draft, command.caddyId),
@@ -30,7 +30,7 @@ function scoopTea(draft: Draft, caddy: VesselState, command: CommandOfType<'scoo
   const gramsOnTheSpoon = totalLeafGrams(spoon.gramsByTeaId)
   if (gramsOnTheSpoon >= spoon.capacityGrams) return refuse(draft, command, 'spoonIsFull', `spoon holds ${gramsOnTheSpoon.toFixed(1)} g`)
   const depth = clampedToShare(command.depth)
-  const grams = Math.min(spoon.capacityGrams * depth, spoon.capacityGrams - gramsOnTheSpoon, totalLeafGrams(leaves.gramsByTeaId))
+  const grams = gramsAScoopTakes(spoon.capacityGrams, depth, gramsOnTheSpoon, totalLeafGrams(leaves.gramsByTeaId))
   const { taken, left } = splitLeafGrams(leaves.gramsByTeaId, grams)
   caddy.leaves = totalLeafGrams(left) > 0 ? { ...leaves, gramsByTeaId: left } : null
   spoon.gramsByTeaId = leafGramsTogether(spoon.gramsByTeaId, taken)

@@ -117,3 +117,7 @@ function bitternessPerSecond(liquid: Liquid, leaves: Leaves, { teaId, tea, facto
   const overheatMultiplier = 1 + degreesAboveGood * tea.extraction.bitternessGainPerDegreeAboveGood
   return tea.extraction.bitternessPerSecond * factor * oversteepMultiplier * overheatMultiplier
 }
+
+export function gramsAScoopTakes(spoonHoldsGrams: number, depth: number, gramsOnTheSpoon: number, gramsInTheCaddy: number): number {
+  return Math.min(spoonHoldsGrams * depth, spoonHoldsGrams - gramsOnTheSpoon, gramsInTheCaddy)
+}

@@ -9,3 +9,7 @@ export function isThePourStreamRunning(pour: DeepReadonly<PourState>): boolean {
 export function isThePourRunningOverItsTarget(pour: DeepReadonly<PourState>): boolean {
   return pour.hasOverflowed && isThePourStreamRunning(pour) && pour.streamOnTargetFraction > 0
 }
+
+export function isInvolvedInThePour(pour: DeepReadonly<PourState> | null, vesselId: string): boolean {
+  return pour !== null && (pour.sourceId === vesselId || pour.targetId === vesselId)
+}
