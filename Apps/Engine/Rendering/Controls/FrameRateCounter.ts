@@ -1,11 +1,12 @@
-import { textWith } from '../../../Texts/Texts.ts'
-import { FrameRate } from '../../../../Engine/FrameRate.ts'
+import { FrameRate } from '../../FrameRate.ts'
 
 export class FrameRateCounter {
   private readonly element: HTMLElement
+  private readonly readingOf: (framesPerSecond: number) => string
   private frameRate: FrameRate | null = null
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, readingOf: (framesPerSecond: number) => string) {
+    this.readingOf = readingOf
     this.element = container.ownerDocument.createElement('div')
     this.element.className = 'frame-rate'
     this.element.hidden = true
@@ -22,6 +23,6 @@ export class FrameRateCounter {
   frameDrawn(seconds: number): void {
     const framesPerSecond = this.frameRate?.frameDrawn(seconds) ?? null
     if (framesPerSecond === null) return
-    this.element.textContent = textWith('frameRate.reading', { framesPerSecond: String(Math.round(framesPerSecond)) })
+    this.element.textContent = this.readingOf(Math.round(framesPerSecond))
   }
 }

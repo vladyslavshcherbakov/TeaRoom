@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { text, textWith } from '../../Texts/Texts.ts'
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { carriedItemIdsIn, definitionIn, hoursSinceSunriseOf, standingSpotOf, type Catalog, type DeepReadonly, type TeaEvent, type TeaSession, type RoomDefinition, type SessionState } from '../../../../Shared/GameLogic/GameLogic.ts'
 import { worldViewState } from '../../Presentation/WorldPresenter.ts'
@@ -42,8 +43,8 @@ import { shareOfEverySoundsLoudnessBySetting, type SoundLoudness } from '../../.
 import type { BrowserStore, StoreWithADefault } from '../../../Engine/BrowserStorage.ts'
 import { playTimeStore } from '../../../Engine/PlayTimeStore.ts'
 import { SettingsScreen } from './Controls/SettingsScreen.ts'
-import { FrameRateCounter } from './Controls/FrameRateCounter.ts'
-import { FullScreenButton } from './Controls/FullScreenButton.ts'
+import { FrameRateCounter } from '../../../Engine/Rendering/Controls/FrameRateCounter.ts'
+import { FullScreenButton } from '../../../Engine/Rendering/Controls/FullScreenButton.ts'
 import { achievementStore } from '../Stores/AchievementStore.ts'
 import { aimHintStore } from '../Stores/AimHintStore.ts'
 import { AchievementNotice } from './Controls/AchievementNotice.ts'
@@ -232,7 +233,7 @@ export class RoomScene {
     this.carried = new CarriedItems(materials, shapedItemsIn(session.state, log), roomDefinition.tap?.sinkSpot ?? null, { layout, heaterSpot: roomDefinition.heaterSpot }, lyingLids, clothPatternsByIdIn(roomDefinition, arrival.arrangement), bowlPaintings.bowlIdWithTheToadUnderneath, log)
     const cornerButtons = document.createElement('div')
     cornerButtons.className = 'corner-buttons'
-    new FullScreenButton(cornerButtons, log)
+    new FullScreenButton(cornerButtons, 'corner-button', { enter: text('fullScreen.enter'), leave: text('fullScreen.leave') }, log)
     this.screenButtons = new ScreenButtonsOnThePage({ overTheRoom: container, inTheCorner: cornerButtons }, {
       pressed: (button) => this.playerController.screenButtonPressed(button),
       letGo: (button) => this.playerController.screenButtonReleased(button),
@@ -277,7 +278,7 @@ export class RoomScene {
     this.debugSettingsStore = debugSettingsStore(log)
     this.debugSettings = this.debugSettingsStore.load()
     this.settingsScreen = new SettingsScreen(container, (change) => this.settingChosen(change))
-    this.frameRateCounter = new FrameRateCounter(container)
+    this.frameRateCounter = new FrameRateCounter(container, (framesPerSecond) => textWith('frameRate.reading', { framesPerSecond: String(framesPerSecond) }))
     this.frameBudgetPanel = new FrameBudgetPanel(container)
     container.append(cornerButtons)
     this.fitToWindow()

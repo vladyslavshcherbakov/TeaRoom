@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { FrameRateCounter } from '../../../Apps/Game/Room/Rendering/Controls/FrameRateCounter.ts'
+import { FrameRateCounter } from '../../../Apps/Engine/Rendering/Controls/FrameRateCounter.ts'
 
 const framesInHalfASecondAtEightFramesASecond = 4
 
 test('frameRate_whenTheSettingsChangeWhileItIsShown_keepsItsReading', () => {
   const page = new PageWithOneElement()
-  const counter = new FrameRateCounter(page.container)
+  const counter = new FrameRateCounter(page.container, (framesPerSecond) => `${framesPerSecond} fps`)
   counter.show(true)
   for (let frame = 0; frame < framesInHalfASecondAtEightFramesASecond; frame += 1) counter.frameDrawn(1 / 8)
 
@@ -17,7 +17,7 @@ test('frameRate_whenTheSettingsChangeWhileItIsShown_keepsItsReading', () => {
 
 test('frameRate_whenHidden_showsNoReading', () => {
   const page = new PageWithOneElement()
-  const counter = new FrameRateCounter(page.container)
+  const counter = new FrameRateCounter(page.container, (framesPerSecond) => `${framesPerSecond} fps`)
   counter.show(true)
   for (let frame = 0; frame < framesInHalfASecondAtEightFramesASecond; frame += 1) counter.frameDrawn(1 / 8)
 

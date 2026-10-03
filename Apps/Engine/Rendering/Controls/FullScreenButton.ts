@@ -1,14 +1,20 @@
-import { text } from '../../../Texts/Texts.ts'
-import type { AppLog } from '../../../../Engine/AppLog.ts'
-import { icon, iconButton, iconShape } from '../../../../Engine/Rendering/Controls/PageControls.ts'
+import type { AppLog } from '../../AppLog.ts'
+import { icon, iconButton, iconShape } from './PageControls.ts'
+
+export type FullScreenLabels = {
+  readonly enter: string
+  readonly leave: string
+}
 
 export class FullScreenButton {
   private readonly element: HTMLButtonElement
+  private readonly labels: FullScreenLabels
   private readonly log: AppLog
 
-  constructor(container: HTMLElement, log: AppLog) {
+  constructor(container: HTMLElement, buttonClass: string, labels: FullScreenLabels, log: AppLog) {
+    this.labels = labels
     this.log = log
-    this.element = iconButton('corner-button', text('fullScreen.enter'), icon('0 0 24 24', iconShape('path', { d: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5' })))
+    this.element = iconButton(buttonClass, labels.enter, icon('0 0 24 24', iconShape('path', { d: 'M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5' })))
     this.element.hidden = !canGoFullScreen()
     this.element.addEventListener('click', () => this.toggle())
     document.addEventListener('fullscreenchange', () => this.showTheLabel())
@@ -28,7 +34,7 @@ export class FullScreenButton {
   }
 
   private showTheLabel(): void {
-    const label = text(document.fullscreenElement === null ? 'fullScreen.enter' : 'fullScreen.leave')
+    const label = document.fullscreenElement === null ? this.labels.enter : this.labels.leave
     this.element.setAttribute('aria-label', label)
     this.element.title = label
   }
