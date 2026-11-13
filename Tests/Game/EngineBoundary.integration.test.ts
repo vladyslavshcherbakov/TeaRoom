@@ -19,8 +19,8 @@ test('sharedEngine_importsNothingOutsideItself', () => {
   assert.deepEqual(importsOutside, [])
 })
 
-test('appsEngine_importsOnlyTheEngineAndThreeJs', () => {
-  const importsOutside = engineFilesIn('Apps/Engine', ['.ts']).flatMap((file) => importsOf(file).filter((imported) => !isThreeJs(imported) && !isInside(file, imported, 'Apps/Engine') && !isInside(file, imported, 'Shared/Engine')).map((imported) => `${file.path}: ${imported}`))
+test('appsEngine_importsOnlyTheEngine', () => {
+  const importsOutside = engineFilesIn('Apps/Engine', ['.ts']).flatMap((file) => importsOf(file).filter((imported) => !isInside(file, imported, 'Apps/Engine') && !isInside(file, imported, 'Shared/Engine')).map((imported) => `${file.path}: ${imported}`))
 
   assert.deepEqual(importsOutside, [])
 })
@@ -46,10 +46,6 @@ function isInside(file: EngineFile, imported: string, folder: string): boolean {
   if (!imported.startsWith('.')) return false
   const importedPath = path.posix.normalize(path.posix.join(path.posix.dirname(file.path), imported))
   return importedPath.startsWith(`${folder}/`)
-}
-
-function isThreeJs(imported: string): boolean {
-  return imported === 'three' || imported.startsWith('three/')
 }
 
 function wordsIn(text: string): readonly string[] {

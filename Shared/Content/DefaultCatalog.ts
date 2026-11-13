@@ -1,18 +1,19 @@
-import type { Catalog } from '../GameLogic/Definitions/Catalog.ts'
-import { dragon, toad } from './Figurines.ts'
-import { electricPlate } from './Heaters.ts'
-import { quietRoom } from './Rooms.ts'
-import { oolong, sencha, shouPuerh } from './Teas.ts'
-import { clayKettle, teaBowl, teaCaddy, thermos } from './Vessels.ts'
+import type { TeahouseCatalog } from '../GameLogic/GameLogic.ts'
+import { bowls, brewTimings, pets, teas } from './Brewing.ts'
+import { apprenticeWithTheBow, coupleTogether, husbandAfterTheMoon, husbandWhoKnows, meiWithTheRumour } from './Stories/ArcherWife/NextDayVisits.ts'
+import { wifeFirstEvening, wifeReturns } from './Stories/ArcherWife/WifeEvenings.ts'
 
-export const defaultCatalog: Catalog = {
-  teas: byId([sencha, oolong, shouPuerh]),
-  vessels: byId([clayKettle, thermos, teaBowl, teaCaddy]),
-  heaters: byId([electricPlate]),
-  figurines: byId([dragon, toad]),
-  rooms: byId([quietRoom]),
-}
-
-function byId<Definition extends { readonly id: string }>(definitions: readonly Definition[]): Record<string, Definition> {
-  return Object.fromEntries(definitions.map((definition) => [definition.id, definition]))
+export const defaultCatalog: TeahouseCatalog = {
+  teas,
+  bowls,
+  pets,
+  visits: { wifeFirstEvening, wifeReturns, husbandAfterTheMoon, meiWithTheRumour, apprenticeWithTheBow, coupleTogether, husbandWhoKnows },
+  brewTimings,
+  opening: {
+    firstVisitId: 'wifeFirstEvening',
+    firstWindowView: 'dusk',
+    firstRumour: 'rumour.firstEvening',
+    petFedBeforeTheFirstEvening: 'budai',
+    thingsOnTheShelf: [],
+  },
 }

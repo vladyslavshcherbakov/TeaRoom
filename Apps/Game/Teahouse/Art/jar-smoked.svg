@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 180">
+<path fill="#2a1a14" opacity=".35" d="M14 160C32 152 98 152 116 160C100 170 30 170 14 160Z"/>
+<!-- sooty clay body -->
+<path fill="#6e4a36" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M36 68C26 72 22 82 23 94L27 148C29 156 35 160 44 161C56 163 74 163 86 161C95 160 101 156 103 148L107 94C108 82 104 72 94 68C78 64 52 64 36 68Z"/>
+<path fill="#3e2a26" d="M88 68C96 74 99 84 98 96L94 148C93 154 90 158 85 161C95 160 100 156 102 148L105.500 94C106.500 83 103 74 94 69.500Z"/>
+<path fill="#3e2a26" opacity=".85" d="M27 126C36 118 44 130 54 124C64 118 72 132 82 126C90 122 98 128 104 124L102 148C100 156 95 159 86 160.500C74 162 56 162 44 160.500C35 159 30 156 28 148Z"/>
+<path fill="#2a1a14" opacity=".45" d="M28 142C40 138 52 146 64 142C76 138 90 146 102 140L101 150C99 156 94 159 86 160.500C74 162 56 162 44 160.500C35 159 30 156 29 150Z"/>
+<path fill="#8a6450" d="M32 78C28 84 27 92 28 100L30 118C30 104 31 90 36 78Z"/>
+<g fill="none" stroke="#3e2a26" stroke-width="1.100" stroke-linecap="round" opacity=".9"><path d="M26 98C46 103 84 103 105 98M27 112C46 117 84 117 104 112M40 86C56 89 74 89 90 86"/></g>
+<g fill="#8a6450" opacity=".7"><path d="M42 108a1.300 1.300 0 1 0 .1 0ZM50 94a1.200 1.200 0 1 0 .1 0ZM84 108a1.200 1.200 0 1 0 .1 0ZM72 134a1.200 1.200 0 1 0 .1 0Z"/></g>
+<!-- bamboo scoop tucked under the cord -->
+<path fill="#a9a05a" stroke="#2a1a14" stroke-width="1.800" stroke-linejoin="round" d="M95 28C98 26 103 26 105 29C106 50 106 80 104 112C102 114 99 114 97 112C96 80 95 50 95 28Z"/>
+<path fill="#7d7a40" d="M101.500 30C103 50 103 80 101.500 111C102.500 112 103.500 112 104 111C105.500 80 105.500 50 104.500 30Z"/>
+<g fill="none" stroke="#2a1a14" stroke-width="1.200" stroke-linecap="round"><path d="M95.500 46C98 47.500 102 47.500 105 46M96 82C99 83.500 102 83.500 105 82"/></g>
+<path fill="none" stroke="#d6cf8a" stroke-width="1.200" stroke-linecap="round" d="M97.500 32C97.500 36 97.500 40 97.800 43M98 51C98 60 98.200 70 98.500 79"/>
+<!-- paper cover as a lid -->
+<path fill="#a8946e" stroke="#2a1a14" stroke-width="2" stroke-linejoin="round" d="M34 68C30 72 26 76 24 82L32 80L36 86L44 81L50 88L58 82L65 89L72 82L80 88L86 81L94 86L98 80L106 82C104 76 100 72 96 68Z"/>
+<path fill="#cdb892" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M35 68C34 54 42 46 65 46C88 46 96 54 95 68C86 72 44 72 35 68Z"/>
+<path fill="#a8946e" d="M82 50C90 54 93.500 60 93.500 67C88 69.500 80 70.500 72 71C82 66 86 58 82 50Z"/>
+<path fill="#e9d9b8" d="M42 56C46 51 54 49 62 48.500C54 51 48 54 44 60Z"/>
+<g fill="none" stroke="#a8946e" stroke-width="1.100" stroke-linecap="round"><path d="M50 52l4 12M64 50v14M76 52l-3 12M40 76l2 5M58 76v6M74 76l-1 6M90 75l-2 6"/></g>
+<!-- cord -->
+<path fill="#c9a15a" stroke="#2a1a14" stroke-width="1.700" stroke-linejoin="round" d="M33 65C44 70 86 70 97 65L98 71C86 76 44 76 32 71Z"/>
+<g fill="none" stroke="#8a6a30" stroke-width="1.100" stroke-linecap="round"><path d="M40 68l3 5M50 70l3 5M60 71l3 5M70 71l3 4.500M80 70l3 4M90 68l3 4"/></g>
+<path fill="#c9a15a" stroke="#2a1a14" stroke-width="1.500" stroke-linejoin="round" d="M44 70C40 68 37 72 40 75C43 78 47 75 46 72C50 76 48 86 44 94L41 93C44 86 45 80 43 76ZM46 72C52 74 56 82 56 90L53 90C52 84 50 78 45 76Z"/>
+<!-- hanging paper tag with a leaf mark -->
+<path fill="none" stroke="#2a1a14" stroke-width="1.100" d="M46 76C48 84 52 90 58 95"/>
+<path fill="#cdb892" stroke="#2a1a14" stroke-width="1.600" stroke-linejoin="round" d="M50 96L62 91L84 96C86 108 86 122 84 134C74 136.500 60 136 50 133C48 121 48 108 50 96Z"/>
+<path fill="#e9d9b8" d="M53 98L62 94L80 98.500C81.500 109 81.500 121 80 131C72 133 61 132.500 53 130.500C51.500 120 51.500 108 53 98Z"/>
+<path fill="#2a1a14" d="M61 95a1.500 1.500 0 1 0 .1 0Z"/>
+<g transform="translate(66 115)"><path fill="#4a3028" d="M0 10C-9 5-10-5-3-12C5-7 7 3 0 10Z"/><path fill="#6e4a36" d="M2 9C9 8 13 1 11-6C5-4 2 2 2 9Z"/><path fill="none" stroke="#2a1a14" stroke-width="1.100" stroke-linecap="round" d="M0 14C0 6-1-3-3-11M2 9C5 5 8 0 10-5"/></g>
+</svg>

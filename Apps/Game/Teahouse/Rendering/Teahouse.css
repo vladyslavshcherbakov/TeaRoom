@@ -1,0 +1,310 @@
+:root {
+  --ink: #2a1a14;
+  --wall: #1c1318;
+  --paper: #e9d9b8;
+  --paper-dim: #cdb892;
+  --lantern: #f6a94a;
+  --wood: #3a2730;
+  --wood-light: #4a333a;
+  --jade: #a9c9b0;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: var(--wall);
+  color: var(--paper);
+  font-family: Georgia, 'Times New Roman', serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#teahouse {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.stage {
+  position: relative;
+  flex: 0 0 auto;
+  background: #000;
+}
+
+.stage svg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 58dvh;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.day-title {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgb(28 19 24 / 70%);
+  color: var(--paper-dim);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.guest {
+  transition: opacity 0.4s;
+}
+
+.pet {
+  transition: filter 1.2s;
+}
+
+.pet.dull {
+  filter: saturate(0.3) brightness(0.62);
+}
+
+.pet.shining {
+  filter: saturate(1.15) brightness(1.02) contrast(1.08);
+}
+
+.choice {
+  cursor: pointer;
+}
+
+.dimming {
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transition: fill 2.5s;
+  fill: #fff;
+}
+
+.dimming.dusk {
+  fill: #f3c9a8;
+}
+
+.dimming.evening {
+  fill: #fff;
+}
+
+.dimming.night {
+  fill: #7c84b8;
+}
+
+.lantern-glow {
+  pointer-events: none;
+  animation: lantern-flicker 3.7s ease-in-out infinite;
+}
+
+@keyframes lantern-flicker {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  23% {
+    opacity: 1;
+  }
+  41% {
+    opacity: 0.74;
+  }
+  67% {
+    opacity: 0.95;
+  }
+}
+
+.wisp {
+  --thickness: 0;
+  pointer-events: none;
+  fill: #f3ece0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: wisp-rises 3s linear infinite;
+}
+
+@keyframes wisp-rises {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.5);
+  }
+  25% {
+    opacity: calc(var(--thickness) * 0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-190px) scale(1.9);
+  }
+}
+
+.rattling {
+  animation: kettle-rattles 0.18s linear infinite;
+}
+
+@keyframes kettle-rattles {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(1.5px);
+  }
+}
+
+.panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px 18px;
+  background: linear-gradient(var(--wood), var(--wall));
+  border-top: 2px solid var(--ink);
+}
+
+.beat .speaker {
+  margin-bottom: 4px;
+  color: var(--lantern);
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.line {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.beat.narrated .line {
+  color: var(--paper-dim);
+}
+
+.line em {
+  color: var(--paper-dim);
+}
+
+button {
+  font: inherit;
+  color: var(--paper);
+  background: var(--wood-light);
+  border: 1.5px solid var(--ink);
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-height: 48px;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:active,
+button.held {
+  background: #5d424a;
+}
+
+button.next,
+button.continue {
+  align-self: flex-end;
+  color: var(--lantern);
+}
+
+button.hold {
+  text-align: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  padding: 22px 14px;
+  border-color: var(--lantern);
+}
+
+button.choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+}
+
+.choice .kind {
+  color: var(--lantern);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.choice .mark {
+  color: var(--jade);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.choice .said {
+  flex: 1 0 100%;
+  font-size: 17px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.choice .detail {
+  flex: 1 0 100%;
+  color: var(--paper-dim);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.whisper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--jade);
+  background: rgb(169 201 176 / 8%);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.whisper .pet-name {
+  color: var(--jade);
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.note {
+  color: var(--paper-dim);
+  font-size: 13px;
+}
+
+@media (orientation: landscape) and (max-height: 560px) {
+  #teahouse {
+    flex-direction: row;
+    max-width: none;
+  }
+
+  .stage {
+    flex: 0 0 auto;
+    height: 100dvh;
+    aspect-ratio: 4 / 3;
+  }
+
+  .stage svg {
+    height: 100%;
+    max-height: none;
+  }
+
+  .panel {
+    border-top: none;
+    border-left: 2px solid var(--ink);
+  }
+}

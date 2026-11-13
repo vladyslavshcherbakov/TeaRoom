@@ -15,11 +15,8 @@ type MemberKind = (typeof memberOrder)[number]
 const repositoryFolder = fileURLToPath(new URL('../../', import.meta.url))
 const worldOutsideTheGameLogic = /\bDate\b|Math\.random|performance\.|console\.|setTimeout|setInterval|requestAnimationFrame|window\.|document\.|globalThis|localStorage/
 const browserStorage = /localStorage|sessionStorage|indexedDB/
-const writeOfALocation = /\.location\s*=[^=]/
 const importOfAStylesheet = /import [^\n]*'[^']+\.css'/
-const importOfRoomRendering = /from '(?:\.\.?\/)+Rendering\//
-const importOfThreeJs = /from 'three[/']/
-const changeOfLayers = /\.layers\.(set|enable|disable|enableAll|disableAll|toggle)\(/
+const importOfTeahouseRendering = /from '(?:\.\.?\/)+Rendering\//
 const relativeImportPath = /^import [^\n]*? from '(\.[^']+)'/gm
 const testName = /^(?:test|it)\((['"`])(.+?)\1/gm
 const subjectConditionOutcome = /^[a-z][A-Za-z0-9]*(_[a-z0-9][A-Za-z0-9]*){1,2}$/
@@ -31,12 +28,6 @@ test('gameLogic_readsNoClockRandomnessConsoleOrBrowser', () => {
   const filesReachingOut = sourceFilesIn('Shared/GameLogic').filter((file) => worldOutsideTheGameLogic.test(file.text)).map((file) => file.path)
 
   assert.deepEqual(filesReachingOut, [])
-})
-
-test('itemLocation_isWrittenOnlyByMoveItem', () => {
-  const filesWritingALocation = sourceFilesIn('Shared/GameLogic').filter((file) => writeOfALocation.test(file.text)).map((file) => file.path)
-
-  assert.deepEqual(filesWritingALocation, ['Shared/GameLogic/Simulation/MoveItem.ts'])
 })
 
 test('commandHandlers_neverThrow', () => {
@@ -51,22 +42,10 @@ test('browserStorage_isReachedOnlyThroughBrowserStorageFile', () => {
   assert.deepEqual(filesReachingStorage, ['Apps/Engine/BrowserStorage.ts'])
 })
 
-test('threeJs_isImportedOnlyByRendering', () => {
-  const filesImportingThreeJs = sourceFilesIn('Apps').filter((file) => importOfThreeJs.test(file.text) && !file.path.includes('/Rendering/')).map((file) => file.path)
+test('teahouse_outsideRenderingAndOtherThanTeahouseMain_importsNothingFromRendering', () => {
+  const filesImportingRendering = sourceFilesIn('Apps/Game/Teahouse').filter((file) => !file.path.startsWith('Apps/Game/Teahouse/Rendering/') && importOfTeahouseRendering.test(file.text)).map((file) => file.path)
 
-  assert.deepEqual(filesImportingThreeJs, [])
-})
-
-test('room_outsideRenderingAndOtherThanRoomMain_importsNothingFromRendering', () => {
-  const filesImportingRendering = sourceFilesIn('Apps/Game/Room').filter((file) => !file.path.startsWith('Apps/Game/Room/Rendering/') && importOfRoomRendering.test(file.text)).map((file) => file.path)
-
-  assert.deepEqual(filesImportingRendering, ['Apps/Game/Room/RoomMain.ts'])
-})
-
-test('renderLayers_areChangedOnlyInTheEnginesLayersFile', () => {
-  const filesChangingLayers = sourceFilesIn('Apps').filter((file) => changeOfLayers.test(file.text)).map((file) => file.path)
-
-  assert.deepEqual(filesChangingLayers, ['Apps/Engine/Rendering/Layers.ts'])
+  assert.deepEqual(filesImportingRendering, ['Apps/Game/Teahouse/TeahouseMain.ts'])
 })
 
 test('views_neverImportTheirStyles', () => {
@@ -75,8 +54,8 @@ test('views_neverImportTheirStyles', () => {
   assert.deepEqual(filesImportingStyles, [])
 })
 
-test('relativeImports_endInTsOrInWebmForASound', () => {
-  const importsWithoutTs = ['Apps', 'Shared', 'Tests'].flatMap(sourceFilesIn).flatMap((file) => [...file.text.matchAll(relativeImportPath)].map((match) => `${file.path}: ${match[1] ?? ''}`)).filter((line) => !line.endsWith('.ts') && !line.endsWith('.webm') && !line.endsWith('.glb?url'))
+test('relativeImports_endInTs', () => {
+  const importsWithoutTs = ['Apps', 'Shared', 'Tests'].flatMap(sourceFilesIn).flatMap((file) => [...file.text.matchAll(relativeImportPath)].map((match) => `${file.path}: ${match[1] ?? ''}`)).filter((line) => !line.endsWith('.ts'))
 
   assert.deepEqual(importsWithoutTs, [])
 })

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 180">
+<path fill="#2a1a14" opacity=".35" d="M16 162C34 154 96 154 114 162C98 171 32 171 16 162Z"/>
+<!-- foot -->
+<path fill="#7fa890" stroke="#2a1a14" stroke-width="2" stroke-linejoin="round" d="M42 152C42 157 43 161 45 164C56 166 74 166 85 164C87 161 88 157 88 152Z"/>
+<!-- tall ovoid body -->
+<path fill="#a9c9b0" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M42 62C26 68 19 84 21 104C23 126 31 144 41 155C54 158 76 158 89 155C99 144 107 126 109 104C111 84 104 68 88 62C74 59 56 59 42 62Z"/>
+<path fill="#7fa890" d="M84 64C96 72 100 88 99 104C97 124 90 142 80 156C84 156 87 155.500 89 155C98 144 105.500 126 107.500 104C109 86 103 70 88 63.500Z"/>
+<path fill="#d6e8d8" d="M36 70C28 78 26 90 27 102C28 116 31 128 36 138C33 124 32 110 33 98C34 86 36 78 42 70Z"/>
+<path fill="#f3f8ee" d="M32 88C30.500 94 30.500 100 31.500 106C32.500 100 33.500 94 35.500 89Z"/>
+<!-- incised rings -->
+<g fill="none" stroke="#5c8672" stroke-width="1.300" stroke-linecap="round"><path d="M27 78C46 84 84 84 103 78M24 86C46 92 84 92 106 86M36 146C50 150 80 150 94 146"/></g>
+<!-- crackle -->
+<g fill="none" stroke="#5c8672" stroke-width=".9" stroke-linecap="round" opacity=".8"><path d="M88 96l5 8l-3 9l6 7M93 104l7 2M90 113l-6 5M30 118l5 6l-2 8M35 124l6 1M86 132l5 6M40 96l4-3"/></g>
+<!-- neck and lid -->
+<path fill="#7fa890" stroke="#2a1a14" stroke-width="2" stroke-linejoin="round" d="M44 56C52 59 78 59 86 56L88 64C78 67.500 52 67.500 42 64Z"/>
+<path fill="#a9c9b0" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M36 52C38 44 92 44 94 52L92 58C84 62 46 62 38 58Z"/>
+<path fill="#7fa890" d="M82 47C88 48.500 92 50 92.500 52L91 57.500C87 59.500 81 60.500 75 61C82 57 84 52 82 47Z"/>
+<path fill="#d6e8d8" d="M42 50.500C48 48 56 47 64 47C56 48.500 50 50 44 53Z"/>
+<path fill="#a9c9b0" stroke="#2a1a14" stroke-width="2" stroke-linejoin="round" d="M60 46C58 42 58 38 61 35C63 32 67 32 69 35C72 38 72 42 70 46C67 47.500 63 47.500 60 46Z"/>
+<path fill="#d6e8d8" d="M62 37C63 35.500 64.500 35 66 35.500C64.500 37 64 39 64 41C62.500 40 61.500 38.500 62 37Z"/>
+<!-- paper seal with a leaf mark -->
+<path fill="#cdb892" stroke="#2a1a14" stroke-width="1.600" stroke-linejoin="round" d="M50 96C59 94.500 71 95 81 97C82 110 81.500 124 80 137C71 138.500 59 138 49 136C48 123 48.500 109 50 96Z"/>
+<path fill="#e9d9b8" d="M52 98C59 97 68 97 75.500 98.500C76.500 110 76 122 75 134C68 135 59 135 52 133.500C51 122 51 110 52 98Z"/>
+<g transform="translate(64 116)"><path fill="#5c8672" d="M0 10C-9 5-10-5-3-12C5-7 7 3 0 10Z"/><path fill="#7fa890" d="M2 9C9 8 13 1 11-6C5-4 2 2 2 9Z"/><path fill="none" stroke="#2a1a14" stroke-width="1.100" stroke-linecap="round" d="M0 14C0 6-1-3-3-11M2 9C5 5 8 0 10-5"/></g>
+</svg>

@@ -1,24 +1,11 @@
 import { Texts } from '../../Engine/Texts.ts'
-import { englishPhrases, englishTexts } from './EnglishTexts.ts'
 
-export type TextKey = keyof typeof englishTexts
+export type GameTexts = Texts<string, never>
 
-export type PhraseKey = keyof typeof englishPhrases
-
-const englishLines = new Texts<TextKey, PhraseKey>(englishTexts, englishPhrases)
-
-export function text(key: TextKey): string {
-  return englishLines.text(key)
+export function gameTexts(lines: Readonly<Record<string, string>>): GameTexts {
+  return new Texts<string, never>(lines, {} as Readonly<Record<never, readonly [string, ...string[]]>>)
 }
 
-export function textWith(key: TextKey, values: Readonly<Record<string, string>>): string {
-  return englishLines.textWith(key, values)
-}
-
-export function phraseVariantsOf(phrase: PhraseKey): number {
-  return englishLines.phraseVariantsOf(phrase)
-}
-
-export function phraseLineAtTurn(phrase: PhraseKey, voiceSeed: number, turn: number, values: Readonly<Record<string, string>> = {}): string {
-  return englishLines.phraseLineAtTurn(phrase, voiceSeed, turn, values)
+export function missingLines(lines: Readonly<Record<string, string>>, needed: readonly string[]): readonly string[] {
+  return needed.filter((key) => lines[key] === undefined).map((key) => `the texts have no line "${key}"`)
 }

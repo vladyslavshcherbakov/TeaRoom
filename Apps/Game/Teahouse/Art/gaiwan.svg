@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 170">
+<path fill="#2a1a14" opacity=".3" d="M10 150C40 140 160 140 190 150C164 164 36 164 10 150Z"/>
+<!-- saucer -->
+<path fill="#cdbfa8" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M14 137C16 147 44 158 100 158C156 158 184 147 186 137Z"/>
+<path fill="#f3ead6" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M14 137C14 127 52 121 100 121C148 121 186 127 186 137C186 146 148 152 100 152C52 152 14 146 14 137Z"/>
+<path fill="#dccfb6" d="M40 138C40 132 66 128 100 128C134 128 160 132 160 138C160 144 134 147 100 147C66 147 40 144 40 138Z"/>
+<path fill="none" stroke="#52639a" stroke-width="1.400" stroke-linecap="round" opacity=".8" d="M24 139C40 146 70 149 100 149C130 149 160 146 176 139"/>
+<!-- foot -->
+<path fill="#cdbfa8" stroke="#2a1a14" stroke-width="2.200" stroke-linejoin="round" d="M76 124C76 132 78 138 80 141C90 144 110 144 120 141C122 138 124 132 124 124Z"/>
+<path fill="#b3a48c" d="M110 127C111 133 110 138 108 142.500C113 142.500 117 142 120 141C122 138 123 132 123 127Z"/>
+<!-- bowl -->
+<path fill="#f3ead6" stroke="#2a1a14" stroke-width="2.400" stroke-linejoin="round" d="M22 58C24 78 40 102 66 120C74 126 126 126 134 120C160 102 176 78 178 58Z"/>
+<path fill="#cdbfa8" d="M140 80C132 98 120 112 104 124C118 124 130 123 134 120C158 103 174 80 177 62C168 70 152 76 140 80Z"/>
+<path fill="#fffaf0" d="M30 72C36 86 46 98 58 108C50 96 44 84 40 72Z"/>
+<!-- painted sprig -->
+<g fill="none" stroke="#52639a" stroke-width="1.600" stroke-linecap="round"><path d="M78 110C86 102 92 96 104 92M90 100C88 94 90 90 94 86M104 92C110 94 114 94 120 90"/></g>
+<g fill="#52639a"><path d="M94 86c-5-2-6-8-2-11c4 3 5 7 2 11ZM104 92c1-6 6-9 11-7c-1 5-6 8-11 7ZM120 90c4-4 9-4 12 0c-4 3-8 3-12 0ZM84 104c-5 0-8-4-7-8c4 1 7 4 7 8Z"/></g>
+<path fill="none" stroke="#52639a" stroke-width="1.300" stroke-linecap="round" opacity=".8" d="M27 72C50 82 80 86 100 86C120 86 150 82 173 72"/>
+<!-- rim and the inside: the tea surface is the ellipse (100,58) 70x20 -->
+<path fill="#f3ead6" stroke="#2a1a14" stroke-width="2.400" d="M22 58C22 44.500 57 34 100 34C143 34 178 44.500 178 58C178 71.500 143 82 100 82C57 82 22 71.500 22 58Z"/>
+<path fill="#e6dac2" d="M30 58a70 20 0 1 0 140 0a70 20 0 1 0-140 0Z"/>
+<path fill="#d3c5aa" d="M30 58C30 47 61.300 38 100 38C138.700 38 170 47 170 58C162 50 134 44.500 100 44.500C66 44.500 38 50 30 58Z"/>
+<path fill="none" stroke="#2a1a14" stroke-width="1.200" opacity=".55" d="M30 58a70 20 0 1 0 140 0a70 20 0 1 0-140 0Z"/>
+<path fill="none" stroke="#fffaf0" stroke-width="2" stroke-linecap="round" d="M34 49C46 41.500 68 37 92 36.300"/>
+</svg>

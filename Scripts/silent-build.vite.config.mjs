@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import roomConfig from '../Apps/Game/Room/vite.config.mjs'
+import teahouseConfig from '../Apps/Game/Teahouse/vite.config.mjs'
 
 const logFunctionNames = new Set(['note', 'noteDetail', 'log', 'roomLog', 'reportTheWorld'])
 const logMethodNamesOnThis = new Set(['log', 'write'])
@@ -9,8 +9,8 @@ const refusalArgumentsKept = 3
 const everyAssetIsInlined = Number.MAX_SAFE_INTEGER
 
 export default {
-  ...roomConfig,
-  build: { ...roomConfig.build, assetsInlineLimit: everyAssetIsInlined },
+  ...teahouseConfig,
+  build: { ...teahouseConfig.build, assetsInlineLimit: everyAssetIsInlined },
   plugins: [
     {
       name: 'strip-log-calls',
