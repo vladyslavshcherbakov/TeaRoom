@@ -11,7 +11,7 @@ export const defaultCatalog: TeahouseCatalog = {
   brewTimings,
   opening: {
     firstVisitId: 'wifeFirstEvening',
-    firstWindowView: 'dusk',
+    firstWindowView: 'moon',
     firstRumour: 'rumour.firstEvening',
     petFedBeforeTheFirstEvening: 'budai',
     thingsOnTheShelf: [],

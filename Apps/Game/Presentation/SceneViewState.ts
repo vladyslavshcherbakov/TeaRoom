@@ -1,3 +1,5 @@
+import type { TimeOfTheEvening } from './TimeOfTheEvening.ts'
+
 export type PetTone = 'shining' | 'dull'
 
 export type PetShown = { readonly petId: string; readonly tone: PetTone }
@@ -8,8 +10,6 @@ export type TableShown =
   | { readonly kind: 'steep'; readonly teaColour: string }
   | { readonly kind: 'bowls'; readonly bowlIds: readonly string[] }
   | { readonly kind: 'pets' }
-
-export type TimeOfTheEvening = 'dusk' | 'evening' | 'night'
 
 export type ServedBowl = { readonly bowlId: string; readonly teaColour: string }
 

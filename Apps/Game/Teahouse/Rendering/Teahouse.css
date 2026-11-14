@@ -81,43 +81,70 @@ body {
   cursor: pointer;
 }
 
-.dimming {
+.window-view {
+  transition: opacity 3s;
+}
+
+.room-light {
   pointer-events: none;
   mix-blend-mode: multiply;
-  transition: fill 2.5s;
-  fill: #fff;
+  opacity: 0;
+  transition: opacity 3s;
 }
 
-.dimming.dusk {
-  fill: #f3c9a8;
+.room-light.lit {
+  opacity: 1;
 }
 
-.dimming.evening {
-  fill: #fff;
-}
-
-.dimming.night {
-  fill: #7c84b8;
+.lantern-glow,
+.lantern-pool {
+  pointer-events: none;
+  transition: opacity 3s;
 }
 
 .lantern-glow {
-  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
   animation: lantern-flicker 3.7s ease-in-out infinite;
+}
+
+.lantern-glow.dusk {
+  opacity: 0.45;
+}
+
+.lantern-glow.twilight {
+  opacity: 0.8;
+}
+
+.lantern-pool {
+  mix-blend-mode: screen;
+}
+
+.lantern-pool.dusk {
+  opacity: 0;
+}
+
+.lantern-pool.twilight {
+  opacity: 0.3;
+}
+
+.lantern-pool.night {
+  opacity: 0.55;
 }
 
 @keyframes lantern-flicker {
   0%,
   100% {
-    opacity: 0.85;
+    transform: scale(1);
   }
   23% {
-    opacity: 1;
+    transform: scale(1.06);
   }
   41% {
-    opacity: 0.74;
+    transform: scale(0.95);
   }
   67% {
-    opacity: 0.95;
+    transform: scale(1.03);
   }
 }
 

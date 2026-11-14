@@ -1,4 +1,5 @@
 import type { SceneCue } from './SceneCue.ts'
+import { timeNamed } from './TimeOfTheEvening.ts'
 
 export type Beat = {
   readonly speakerId: string | null
@@ -6,7 +7,7 @@ export type Beat = {
   readonly cues: readonly SceneCue[]
 }
 
-type CueMaker = (argument: string) => SceneCue
+type CueMaker = (argument: string) => SceneCue | null
 
 const speakerTag = /^\{(\w+)\}/
 const cueTag = /^\[(\w+)(?: ([\w-]+))?\]/
@@ -16,6 +17,10 @@ const cueMakers: Readonly<Record<string, CueMaker>> = {
   hide: () => ({ kind: 'hide' }),
   mood: (portrait) => ({ kind: 'mood', portrait }),
   shine: (petId) => ({ kind: 'shine', petId }),
+  time: (name) => {
+    const time = timeNamed(name)
+    return time === null ? null : { kind: 'time', time }
+  },
 }
 
 export function beatsOf(line: string, speakerId: string | null): readonly Beat[] {
@@ -27,14 +32,14 @@ export function isAStageDirection(text: string): boolean {
 }
 
 export function unknownCuesIn(line: string): readonly string[] {
-  return line.split('\n').flatMap((paragraph) => tagsAtTheStartOf(paragraph).cueTags.filter((tagged) => cueMakers[tagged.verb] === undefined).map((tagged) => tagged.verb))
+  return line.split('\n').flatMap((paragraph) => tagsAtTheStartOf(paragraph).cueTags.filter((tagged) => (cueMakers[tagged.verb]?.(tagged.argument) ?? null) === null).map((tagged) => `${tagged.verb} ${tagged.argument}`.trim()))
 }
 
 function beatOf(paragraph: string, defaultSpeakerId: string | null): Beat {
   const { speakerId, cueTags, text } = tagsAtTheStartOf(paragraph)
   const cues = cueTags.flatMap((tagged) => {
-    const make = cueMakers[tagged.verb]
-    return make === undefined ? [] : [make(tagged.argument)]
+    const cue = cueMakers[tagged.verb]?.(tagged.argument) ?? null
+    return cue === null ? [] : [cue]
   })
   return { speakerId: isAStageDirection(text) ? null : (speakerId ?? defaultSpeakerId), text, cues }
 }

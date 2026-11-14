@@ -26,7 +26,7 @@ export class MomentPresenter {
       case 'dusk':
         return { key: this.keyOf(state), startsAnEvening: true, beats: this.spoken(state.rumour, null), prompt: this.continueWith('openTheDoor') }
       case 'guestSpeaks':
-        return { startsAnEvening: false, key: this.keyOf(state), beats: withMood(this.visitOf(state).openingMood, this.spoken(this.visitOf(state).opening, this.visitOf(state).guestId)), prompt: this.continueWith('startBrewing') }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: startingWith({ kind: 'time', time: 'twilight' }, withMood(this.visitOf(state).openingMood, this.spoken(this.visitOf(state).opening, this.visitOf(state).guestId))), prompt: this.continueWith('startBrewing') }
       case 'choosingLeaf':
         return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated(['brew.leaf']), prompt: this.leafChoices() }
       case 'heatingWater':
@@ -104,7 +104,7 @@ export class MomentPresenter {
 
   private beatsOfTheParting(state: State, endingId: string): readonly SpokenBeat[] {
     const ending = this.visitOf(state).endings[endingId]
-    return ending === undefined ? [] : withMood(ending.mood, this.spoken(ending.parting, this.visitOf(state).guestId))
+    return ending === undefined ? [] : startingWith({ kind: 'time', time: 'night' }, withMood(ending.mood, this.spoken(ending.parting, this.visitOf(state).guestId)))
   }
 
   private beatsOfTheBowlRemark(talk: DeepReadonly<Talk>, guestId: string): readonly SpokenBeat[] {
@@ -149,8 +149,11 @@ export class MomentPresenter {
 }
 
 function withMood(portrait: string, beats: readonly SpokenBeat[]): readonly SpokenBeat[] {
-  const moodCue: SceneCue = { kind: 'mood', portrait }
-  return beats.map((beat, index) => (index === 0 ? { ...beat, cues: [moodCue, ...beat.cues] } : beat))
+  return startingWith({ kind: 'mood', portrait }, beats)
+}
+
+function startingWith(cue: SceneCue, beats: readonly SpokenBeat[]): readonly SpokenBeat[] {
+  return beats.map((beat, index) => (index === 0 ? { ...beat, cues: [cue, ...beat.cues] } : beat))
 }
 
 export function interfaceLinesNeededFor(catalog: TeahouseCatalog): readonly string[] {

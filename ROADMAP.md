@@ -14,7 +14,7 @@ The next tasks, in order. Each ends with something that opens on an iPhone from 
 
 1. Every guest is redrawn after the wife's three portraits: an asymmetric pose, an expression told by gaze, mouth and shoulders, and the lantern's light.
    - Are the wife's new portraits the right manner for the other guests? The user answers.
-2. The room gets the lantern's light on the counter and less bare wall.
+2. The room has less bare wall.
 3. The window gets views for seasons and weather, and the room a seasonal branch.
 4. The old room's painted bowls come back as pictures of bowls.
    - Their paintings were removed with the 3D room. Do they return as drawn bowls? The user answers.

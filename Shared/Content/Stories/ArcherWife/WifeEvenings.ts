@@ -74,8 +74,8 @@ const endings: Readonly<Record<string, EndingDefinition>> = {
   waited: ending('wife.ending.waited', 'wife-open', { tomorrow: { visitId: 'coupleTogether', rumour: 'rumour.waited', windowView: 'moon', daysLater: 2 } }),
   drankInPanic: ending('wife.ending.drankInPanic', 'wife-tense', { tomorrow: { visitId: 'meiWithTheRumour', rumour: 'rumour.drankInPanic', windowView: 'moonWithHer', daysLater: 4 } }),
   leftTheFlask: ending('wife.ending.leftTheFlask', 'wife-open', { leavesOnTheShelf: ['flask'], tomorrow: { visitId: 'apprenticeWithTheBow', rumour: 'rumour.leftTheFlask', windowView: 'moon', daysLater: 2 } }),
-  comesBack: ending('wife.ending.comesBack', 'wife-tense', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'dusk', daysLater: 1 } }),
-  teaRanOut: ending('wife.ending.teaRanOut', 'wife-tense', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'dusk', daysLater: 1 } }),
+  comesBack: ending('wife.ending.comesBack', 'wife-tense', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'moon', daysLater: 1 } }),
+  teaRanOut: ending('wife.ending.teaRanOut', 'wife-tense', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'moon', daysLater: 1 } }),
   drank: ending('wife.ending.drank', 'wife-calm', { tomorrow: { visitId: 'husbandAfterTheMoon', rumour: 'rumour.drank', windowView: 'moonWithHer', daysLater: 2 } }),
   poured: ending('wife.ending.poured', 'wife-open', { leavesOnTheShelf: ['emptyFlask'], makesImmortal: ['toad'], tomorrow: { visitId: 'husbandWhoKnows', rumour: 'rumour.poured', windowView: 'moon', daysLater: 2 } }),
 }

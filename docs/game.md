@@ -10,6 +10,13 @@
 6. **Feeding.** The rest of the tea goes to one of the three pets.
 7. **Night.** The next evening follows from the ending. An ending with no next evening ends the story.
 
+## Light
+
+- An evening has three times: dusk, twilight and night. It only moves forward.
+- It is dusk while the rumour is told, twilight from the guest's first beat, and night from the beat where the guest leaves. A line moves it on earlier with a cue.
+- The window shows the sunset at dusk, the last light at twilight, and at night the moon as yesterday's ending left it.
+- The room darkens toward night away from the lantern, and the lantern's light on the guest and the counter grows.
+
 ## Brewing
 
 - Nothing is random. Brewing decides what the keeper can do in the talk, never a chance of success.
@@ -52,7 +59,7 @@ The thresholds are in `Shared/Content/Stories/ArcherWife/WifeEvenings.ts`.
 ## Writing a line
 
 - A line is one string. A line break starts a new beat, and the player reads one beat at a time.
-- The scene changes with the beat that tells of the change, never before it. A beat starts with its cues: `[show flask]` puts a thing on the counter, `[hide]` takes it away, `[mood wife-open]` changes the portrait, `[shine toad]` makes a pet shine. The portrait of an answer changes on its first beat without a cue.
+- The scene changes with the beat that tells of the change, never before it. A beat starts with its cues: `[show flask]` puts a thing on the counter, `[hide]` takes it away, `[mood wife-open]` changes the portrait, `[shine toad]` makes a pet shine, `[time night]` moves the evening on. The portrait of an answer changes on its first beat without a cue.
 - A beat wrapped in `*asterisks*` is a stage direction. `{speaker}` at the start of a beat names who says it, when it is not the visit's guest.
 - Events are named outright: who came, what happened, what they hold. Feelings and conclusions are never said: the player draws them.
 - A guest's opening is at most nine beats, an answer at most four, and a beat fits two or three lines on a phone.

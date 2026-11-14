@@ -1,5 +1,6 @@
 import type { AppLog } from '../../../Engine/AppLog.ts'
 import type { SceneViewState } from '../../Presentation/SceneViewState.ts'
+import { timesOfTheEvening, type TimeOfTheEvening } from '../../Presentation/TimeOfTheEvening.ts'
 import { picture, setShown, showArt, svgElement, type Box } from './SvgParts.ts'
 
 const scene: Box = { x: 0, y: 0, width: 800, height: 600 }
@@ -8,6 +9,8 @@ const windowHole = { cx: 610, cy: 165, r: 105 }
 const singleGuest: Box = { x: 140, y: 60, width: 400, height: 520 }
 const twoGuests: Box = { x: 40, y: 60, width: 600, height: 520 }
 const lanternGlow = { cx: 455, cy: 88, r: 150 }
+const lanternPool = { cx: 400, cy: 330, rx: 380, ry: 300 }
+const roomLight = { cx: 430, cy: 300, r: 560 }
 const servedBowl: Box = { x: 318, y: 418, width: 132, height: 90 }
 const teaInTheServedBowl = { cx: 384, cy: 446.8, rx: 44.4, ry: 10.8 }
 const thingOnTheCounter: Box = { x: 478, y: 398, width: 54, height: 85 }
@@ -25,19 +28,27 @@ const shelfPlaces: readonly Box[] = [
   { x: 172, y: 159, width: 56, height: 56 },
 ]
 const artOfAThing: Readonly<Record<string, string>> = { flask: 'flask', emptyFlask: 'gift-empty-flask', herCup: 'gift-her-cup', pairOfBowls: 'gift-pair-bowls' }
-const artOfAWindowView: Readonly<Record<string, string>> = { dusk: 'window-dusk', moon: 'window-moon', moonWithHer: 'window-moon-silhouette' }
+const artOfAWindowView: Readonly<Record<string, string>> = { dusk: 'window-dusk', twilight: 'window-twilight', moon: 'window-moon', moonWithHer: 'window-moon-silhouette' }
+const roomLightAt: Readonly<Record<TimeOfTheEvening, { readonly near: string; readonly far: string }>> = {
+  dusk: { near: '#ffe9d2', far: '#eebd9c' },
+  twilight: { near: '#fff0d8', far: '#9c94c4' },
+  night: { near: '#ffe7ba', far: '#4a5290' },
+}
 const widePortraits = new Set(['couple'])
 
 export class RoomView {
   private readonly log: AppLog
-  private readonly window = picture(windowView)
+  private readonly windowBefore = picture(windowView)
+  private readonly window = picture(windowView, 'window-view')
+  private readonly glow = svgElement('circle', { ...lanternGlow, fill: 'url(#lantern-light)' })
+  private readonly pool = svgElement('ellipse', { ...lanternPool, fill: 'url(#lantern-light)' })
+  private readonly lights = timesOfTheEvening.map((time) => svgElement('rect', { ...scene, fill: `url(#room-light-${time})` }))
   private readonly guest = picture(singleGuest, 'guest')
   private readonly bowl = picture(servedBowl)
   private readonly tea = svgElement('ellipse', teaInTheServedBowl)
   private readonly counterThing = picture(thingOnTheCounter)
   private readonly pets = petsOnTheBoard.map((box) => picture(box, 'pet'))
   private readonly shelf = shelfPlaces.map((box) => picture(box))
-  private readonly dimming = svgElement('rect', { ...scene, class: 'dimming' })
 
   readonly group = svgElement('g')
 
@@ -46,12 +57,12 @@ export class RoomView {
     const clip = svgElement('clipPath', { id: 'window-hole' })
     clip.append(svgElement('circle', windowHole))
     this.window.setAttribute('clip-path', 'url(#window-hole)')
-    const glow = svgElement('circle', { ...lanternGlow, class: 'lantern-glow', fill: 'url(#lantern-light)' })
-    this.group.append(clip, lanternLight(), this.window, this.fixed('interior-back'), ...this.shelf, this.guest, this.fixed('interior-front'), this.fixedAt('teaboard', teaBoard), ...this.pets, this.bowl, this.tea, this.counterThing, glow, this.dimming)
+    this.windowBefore.setAttribute('clip-path', 'url(#window-hole)')
+    this.group.append(clip, lightsOfTheRoom(), this.windowBefore, this.window, this.fixed('interior-back'), ...this.shelf, this.guest, this.fixed('interior-front'), this.fixedAt('teaboard', teaBoard), ...this.pets, this.bowl, this.tea, this.counterThing, ...this.lights, this.pool, this.glow)
   }
 
   show(state: SceneViewState): void {
-    showArt(this.window, artOfAWindowView[state.windowView] ?? state.windowView, this.log)
+    this.showTheWindow(artOfAWindowView[state.windowView] ?? state.windowView)
     this.showTheGuest(state.guestPortrait)
     showArt(this.bowl, state.servedBowl === null ? null : `bowl-${state.servedBowl.bowlId}`, this.log)
     setShown(this.tea, state.servedBowl !== null)
@@ -63,7 +74,16 @@ export class RoomView {
       showArt(pet, shown === undefined ? null : `pet-${shown.petId}`, this.log)
       pet.setAttribute('class', `pet ${shown?.tone ?? 'dull'}`)
     })
-    this.dimming.setAttribute('class', `dimming ${state.time}`)
+    this.lights.forEach((light, index) => light.setAttribute('class', timesOfTheEvening[index] === state.time ? 'room-light lit' : 'room-light'))
+    this.glow.setAttribute('class', `lantern-glow ${state.time}`)
+    this.pool.setAttribute('class', `lantern-pool ${state.time}`)
+  }
+
+  private showTheWindow(artName: string): void {
+    if (this.window.dataset.art === artName) return
+    showArt(this.windowBefore, this.window.dataset.art ?? null, this.log)
+    this.window.dataset.art = artName
+    showArt(this.window, artName, this.log)
   }
 
   private showTheGuest(portrait: string | null): void {
@@ -89,10 +109,14 @@ function artOfTheThingAt(shelf: readonly string[], index: number): string | null
   return thing === undefined ? null : (artOfAThing[thing] ?? thing)
 }
 
-function lanternLight(): SVGDefsElement {
+function lightsOfTheRoom(): SVGDefsElement {
   const defs = svgElement('defs')
-  const gradient = svgElement('radialGradient', { id: 'lantern-light' })
-  gradient.append(svgElement('stop', { offset: '0', 'stop-color': '#ffcf7a', 'stop-opacity': '0.45' }), svgElement('stop', { offset: '1', 'stop-color': '#ffcf7a', 'stop-opacity': '0' }))
-  defs.append(gradient)
+  defs.append(gradient('lantern-light', {}, '#ffcf7a', 0.45, '#ffcf7a', 0), ...timesOfTheEvening.map((time) => gradient(`room-light-${time}`, { ...roomLight, gradientUnits: 'userSpaceOnUse' }, roomLightAt[time].near, 1, roomLightAt[time].far, 1)))
   return defs
+}
+
+function gradient(id: string, shape: Readonly<Record<string, string | number>>, nearColour: string, nearOpacity: number, farColour: string, farOpacity: number): SVGRadialGradientElement {
+  const made = svgElement('radialGradient', { id, ...shape })
+  made.append(svgElement('stop', { offset: '0.15', 'stop-color': nearColour, 'stop-opacity': nearOpacity }), svgElement('stop', { offset: '1', 'stop-color': farColour, 'stop-opacity': farOpacity }))
+  return made
 }

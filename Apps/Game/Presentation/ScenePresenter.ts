@@ -1,9 +1,10 @@
 import type { Brew, Phase, TeahouseCatalog, TeahouseState } from '../../../Shared/GameLogic/GameLogic.ts'
 import type { DeepReadonly } from '../../../Shared/Engine/DeepReadonly.ts'
 import type { GameTexts } from '../Texts/Texts.ts'
-import type { PetShown, SceneViewState, ServedBowl, TableShown, TimeOfTheEvening } from './SceneViewState.ts'
+import type { PetShown, SceneViewState, ServedBowl, TableShown } from './SceneViewState.ts'
 import type { Staging } from './Staging.ts'
 import { teaColour } from './TeaLooks.ts'
+import type { TimeOfTheEvening } from './TimeOfTheEvening.ts'
 
 type State = DeepReadonly<TeahouseState>
 
@@ -14,10 +15,11 @@ const steepShareByVerdict: Readonly<Record<Brew['steep'], number>> = { weak: 0.3
 export function sceneOf(state: State, catalog: TeahouseCatalog, texts: GameTexts, staging: Staging): SceneViewState {
   const { phase } = state
   const isTheGuestHere = guestIsHereIn(phase)
+  const time = timeIn(phase, staging.time)
   return {
     dayTitle: texts.textWith('day.title', { day: String(state.day) }),
-    time: timeIn(phase),
-    windowView: state.windowView,
+    time,
+    windowView: windowAt(time, state.windowView),
     guestPortrait: isTheGuestHere ? (staging.portrait ?? state.mood) : null,
     thingOnTheCounter: isTheGuestHere ? staging.thingOnTheCounter : null,
     servedBowl: servedBowlIn(phase),
@@ -45,13 +47,13 @@ function guestIsHereIn(phase: AnyPhase): boolean {
   }
 }
 
-function timeIn(phase: AnyPhase): TimeOfTheEvening {
+function timeIn(phase: AnyPhase, staged: TimeOfTheEvening): TimeOfTheEvening {
   switch (phase.kind) {
-    case 'dusk':
-      return 'dusk'
+    case 'feeding':
     case 'night':
     case 'storyTold':
       return 'night'
+    case 'dusk':
     case 'guestSpeaks':
     case 'choosingLeaf':
     case 'heatingWater':
@@ -59,8 +61,18 @@ function timeIn(phase: AnyPhase): TimeOfTheEvening {
     case 'choosingBowl':
     case 'talking':
     case 'parting':
-    case 'feeding':
-      return 'evening'
+      return staged
+  }
+}
+
+function windowAt(time: TimeOfTheEvening, viewAtNight: string): string {
+  switch (time) {
+    case 'dusk':
+      return 'dusk'
+    case 'twilight':
+      return 'twilight'
+    case 'night':
+      return viewAtNight
   }
 }
 
