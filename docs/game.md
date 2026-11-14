@@ -53,4 +53,8 @@ The thresholds are in `Shared/Content/Stories/ArcherWife/WifeEvenings.ts`.
 
 - A line is one string. A line break starts a new beat, and the player reads one beat at a time.
 - A beat wrapped in `*asterisks*` is a stage direction. `{speaker}` at the start of a beat names who says it, when it is not the visit's guest.
-- The guest names the facts outright. Clues come before the conclusion, and the player says the conclusion.
+- Events are named outright: who came, what happened, what they hold. Feelings and conclusions are never said: the player draws them.
+- A guest's opening is at most nine beats, an answer at most four, and a beat fits two or three lines on a phone.
+- A line ends on a fact or a gesture, never on a maxim. Each guest has their own habits of speech.
+- A clue is told once in a scene.
+- Tea is called "чай", never "лист".

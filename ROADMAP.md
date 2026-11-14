@@ -5,7 +5,6 @@ The next tasks, in order. Each ends with something that opens on an iPhone from 
 ## The first story
 
 1. The user reads every line of the archer's wife and the lines change to the agreed tone.
-   - Is the long, talkative manner of the opening and the first cup the right tone? The user answers.
    - Does the third cup get a second move, where the keeper gives no advice and the guest decides alone? The user answers.
 2. The rules of the game logic get integration tests, and the presenters get unit tests.
 3. The game keeps the evening in the browser, so a reload continues it.

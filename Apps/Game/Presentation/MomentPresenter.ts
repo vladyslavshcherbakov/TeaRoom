@@ -76,7 +76,8 @@ export class MomentPresenter {
   }
 
   private bowlChoices(): Prompt {
-    return this.choicesAmong(Object.keys(this.catalog.bowls), 'bowl', (bowlId) => ({ type: 'serveIn', bowlId }))
+    const choices = Object.keys(this.catalog.bowls).map((bowlId): Choice => ({ command: { type: 'serveIn', bowlId }, label: null, text: this.texts.text(`bowl.${bowlId}.name`), detail: null, mark: null }))
+    return { kind: 'choices', choices, whisper: null, note: null }
   }
 
   private petChoices(state: State): Prompt {
@@ -144,5 +145,5 @@ export class MomentPresenter {
 export function interfaceLinesNeededFor(catalog: TeahouseCatalog): readonly string[] {
   const named = (group: string, ids: readonly string[]): string[] => ids.flatMap((id) => [`${group}.${id}.name`, `${group}.${id}.hint`])
   const guestIds = [...new Set(Object.values(catalog.visits).map((visit) => visit.guestId))]
-  return [...named('tea', Object.keys(catalog.teas)), ...named('bowl', Object.keys(catalog.bowls)), ...named('pet', Object.keys(catalog.pets)), ...guestIds.map((guestId) => `speaker.${guestId}`)]
+  return [...named('tea', Object.keys(catalog.teas)), ...Object.keys(catalog.bowls).map((bowlId) => `bowl.${bowlId}.name`), ...named('pet', Object.keys(catalog.pets)), ...guestIds.map((guestId) => `speaker.${guestId}`)]
 }
