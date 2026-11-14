@@ -58,3 +58,6 @@ The thresholds are in `Shared/Content/Stories/ArcherWife/WifeEvenings.ts`.
 - A line ends on a fact or a gesture, never on a maxim. Each guest has their own habits of speech.
 - A clue is told once in a scene.
 - Tea is called "чай", never "лист".
+- The speech is plain modern Russian with no rustic or archaic words, and the things named belong to a Chinese tale, not to a Russian village.
+- A pet remarks on what it sees. It never tells the keeper what to ask, and never repeats a reply the keeper is offered.
+- The moment a guest decides gets its own words about what is done, not a passing remark.
