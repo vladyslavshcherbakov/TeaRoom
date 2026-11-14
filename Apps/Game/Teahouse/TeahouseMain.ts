@@ -3,7 +3,7 @@ import { linesNamedBy, openNewTeahouse } from '../../../Shared/GameLogic/GameLog
 import type { AppLog } from '../../Engine/AppLog.ts'
 import { interfaceLinesNeededFor } from '../Presentation/MomentPresenter.ts'
 import { russianLines } from '../Texts/RussianTexts.ts'
-import { gameTexts, missingLines } from '../Texts/Texts.ts'
+import { gameTexts, linesWithUnknownCues, missingLines } from '../Texts/Texts.ts'
 import { loadEveryPictureAhead } from './Rendering/Art.ts'
 import { PanelView } from './Rendering/PanelView.ts'
 import { StageView } from './Rendering/StageView.ts'
@@ -16,7 +16,7 @@ const log: AppLog = (message, level = 'info') => (level === 'error' ? console.er
 
 function openTheTeahouse(page: HTMLElement): void {
   const texts = gameTexts(russianLines)
-  const textProblems = missingLines(russianLines, [...linesNamedBy(defaultCatalog), ...interfaceLinesNeededFor(defaultCatalog)])
+  const textProblems = [...missingLines(russianLines, [...linesNamedBy(defaultCatalog), ...interfaceLinesNeededFor(defaultCatalog)]), ...linesWithUnknownCues(russianLines)]
   const opening = openNewTeahouse(defaultCatalog, textProblems, { levelName: 'the teahouse', whatShowsInstead: 'an empty page', isDevelopmentBuild: import.meta.env.DEV }, { write: (line) => log(line.message, line.level === 'error' ? 'error' : 'info') })
   if (opening.kind === 'unavailable') return
   const viewModel = new TeahouseViewModel(opening.session, defaultCatalog, texts, log, () => openTheTeahouse(page))

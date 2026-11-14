@@ -1,9 +1,11 @@
 import type { TeahouseCommand } from '../../../Shared/GameLogic/GameLogic.ts'
+import type { SceneCue } from './SceneCue.ts'
 
 export type SpokenBeat = {
   readonly speaker: string | null
   readonly text: string
   readonly isAStageDirection: boolean
+  readonly cues: readonly SceneCue[]
 }
 
 export type Choice = {
@@ -27,6 +29,7 @@ export type Prompt =
 
 export type Moment = {
   readonly key: string
+  readonly startsAnEvening: boolean
   readonly beats: readonly SpokenBeat[]
   readonly prompt: Prompt
 }

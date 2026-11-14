@@ -68,7 +68,6 @@ export type VisitDefinition = {
   readonly guestId: string
   readonly opening: string
   readonly openingMood: string
-  readonly bringsToTheCounter: string | null
   readonly trustOnArrival: number
   readonly isAReturn: boolean
   readonly bowlRemarks: Readonly<Record<string, BowlRemark>>

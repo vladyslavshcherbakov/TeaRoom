@@ -2,6 +2,7 @@ import { isStrengthenedBy, repliesOffered, type ExchangeDefinition, type Phase, 
 import type { DeepReadonly } from '../../../Shared/Engine/DeepReadonly.ts'
 import type { GameTexts } from '../Texts/Texts.ts'
 import type { Choice, Moment, Prompt, SpokenBeat, Whisper } from './Moment.ts'
+import type { SceneCue } from './SceneCue.ts'
 import { beatsOf, isAStageDirection } from './SpokenLines.ts'
 
 type State = DeepReadonly<TeahouseState>
@@ -23,27 +24,27 @@ export class MomentPresenter {
     const { phase } = state
     switch (phase.kind) {
       case 'dusk':
-        return { key: this.keyOf(state), beats: this.spoken(state.rumour, null), prompt: this.continueWith('openTheDoor') }
+        return { key: this.keyOf(state), startsAnEvening: true, beats: this.spoken(state.rumour, null), prompt: this.continueWith('openTheDoor') }
       case 'guestSpeaks':
-        return { key: this.keyOf(state), beats: this.spoken(this.visitOf(state).opening, this.visitOf(state).guestId), prompt: this.continueWith('startBrewing') }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: withMood(this.visitOf(state).openingMood, this.spoken(this.visitOf(state).opening, this.visitOf(state).guestId)), prompt: this.continueWith('startBrewing') }
       case 'choosingLeaf':
-        return { key: this.keyOf(state), beats: this.narrated(['brew.leaf']), prompt: this.leafChoices() }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated(['brew.leaf']), prompt: this.leafChoices() }
       case 'heatingWater':
-        return { key: this.keyOf(state), beats: this.narrated(['brew.water']), prompt: this.continueWith('takeTheKettleOff') }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated(['brew.water']), prompt: this.continueWith('takeTheKettleOff') }
       case 'steeping':
-        return { key: this.keyOf(state), beats: this.narrated([`water.${phase.water}`, 'brew.steep']), prompt: { kind: 'hold', label: this.texts.text('action.holdTheSteep') } }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated([`water.${phase.water}`, 'brew.steep']), prompt: { kind: 'hold', label: this.texts.text('action.holdTheSteep') } }
       case 'choosingBowl':
-        return { key: this.keyOf(state), beats: this.narrated([`steep.${phase.brew.steep}`, this.cupsLine(phase.brew.cups), 'brew.bowl']), prompt: this.bowlChoices() }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated([`steep.${phase.brew.steep}`, this.cupsLine(phase.brew.cups), 'brew.bowl']), prompt: this.bowlChoices() }
       case 'talking':
-        return { key: `${this.keyOf(state)}/${phase.talk.exchangeId}`, beats: this.beatsOfTheTalk(state, phase), prompt: this.replyChoices(state, phase.talk) }
+        return { startsAnEvening: false, key: `${this.keyOf(state)}/${phase.talk.exchangeId}`, beats: this.beatsOfTheTalk(state, phase), prompt: this.replyChoices(state, phase.talk) }
       case 'parting':
-        return { key: this.keyOf(state), beats: [...this.beatsOfWhatWasHeard(state, phase.talk), ...this.spoken(this.visitOf(state).endings[phase.endingId]?.parting ?? '', this.visitOf(state).guestId)], prompt: this.continueWith('seeTheGuestOff') }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: [...this.beatsOfWhatWasHeard(state, phase.talk), ...this.beatsOfTheParting(state, phase.endingId)], prompt: this.continueWith('seeTheGuestOff') }
       case 'feeding':
-        return { key: this.keyOf(state), beats: this.narrated(['feeding.prompt']), prompt: this.petChoices(state) }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated(['feeding.prompt']), prompt: this.petChoices(state) }
       case 'night':
-        return { key: this.keyOf(state), beats: this.narrated(['night.fed']), prompt: this.continueWith('waitForTheNextEvening') }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated(['night.fed']), prompt: this.continueWith('waitForTheNextEvening') }
       case 'storyTold':
-        return { key: this.keyOf(state), beats: this.narrated(['story.told']), prompt: { kind: 'startOver', label: this.texts.text('action.startOver') } }
+        return { startsAnEvening: false, key: this.keyOf(state), beats: this.narrated(['story.told']), prompt: { kind: 'startOver', label: this.texts.text('action.startOver') } }
     }
   }
 
@@ -56,11 +57,11 @@ export class MomentPresenter {
   }
 
   private spoken(lineKey: string, speakerId: string | null): readonly SpokenBeat[] {
-    return beatsOf(this.texts.text(lineKey), speakerId).map((beat) => ({ speaker: beat.speakerId === null ? null : this.texts.text(`speaker.${beat.speakerId}`), text: beat.text, isAStageDirection: isAStageDirection(beat.text) }))
+    return beatsOf(this.texts.text(lineKey), speakerId).map((beat) => ({ speaker: beat.speakerId === null ? null : this.texts.text(`speaker.${beat.speakerId}`), text: beat.text, isAStageDirection: isAStageDirection(beat.text), cues: beat.cues }))
   }
 
   private narrated(lineKeys: readonly string[]): readonly SpokenBeat[] {
-    return [{ speaker: null, text: lineKeys.map((key) => this.texts.text(key)).join(' '), isAStageDirection: false }]
+    return [{ speaker: null, text: lineKeys.map((key) => this.texts.text(key)).join(' '), isAStageDirection: false, cues: [] }]
   }
 
   private cupsLine(cups: number): string {
@@ -101,6 +102,11 @@ export class MomentPresenter {
     return [...before, ...(prompt === null ? [] : this.spoken(prompt, guestId))]
   }
 
+  private beatsOfTheParting(state: State, endingId: string): readonly SpokenBeat[] {
+    const ending = this.visitOf(state).endings[endingId]
+    return ending === undefined ? [] : withMood(ending.mood, this.spoken(ending.parting, this.visitOf(state).guestId))
+  }
+
   private beatsOfTheBowlRemark(talk: DeepReadonly<Talk>, guestId: string): readonly SpokenBeat[] {
     return talk.bowlRemark === null ? [] : this.spoken(talk.bowlRemark, guestId)
   }
@@ -110,8 +116,8 @@ export class MomentPresenter {
     if (heard === null) return []
     const said = this.exchangeOf(state, heard.exchangeId).replies.find((reply) => reply.id === heard.replyId)?.says
     return [
-      ...(said === undefined ? [] : [{ speaker: this.texts.text('speaker.you'), text: `— ${this.texts.text(said)}`, isAStageDirection: false }]),
-      ...this.spoken(heard.answer, this.visitOf(state).guestId),
+      ...(said === undefined ? [] : [{ speaker: this.texts.text('speaker.you'), text: `— ${this.texts.text(said)}`, isAStageDirection: false, cues: [] }]),
+      ...withMood(state.mood, this.spoken(heard.answer, this.visitOf(state).guestId)),
       ...(heard.wasSmoothedByAPet ? this.spoken('pet.smoothed', null) : []),
     ]
   }
@@ -140,6 +146,11 @@ export class MomentPresenter {
     if (whisperingPetId === null || line === undefined) return null
     return { petName: this.texts.text(`pet.${whisperingPetId}.name`), text: this.texts.text(line) }
   }
+}
+
+function withMood(portrait: string, beats: readonly SpokenBeat[]): readonly SpokenBeat[] {
+  const moodCue: SceneCue = { kind: 'mood', portrait }
+  return beats.map((beat, index) => (index === 0 ? { ...beat, cues: [moodCue, ...beat.cues] } : beat))
 }
 
 export function interfaceLinesNeededFor(catalog: TeahouseCatalog): readonly string[] {

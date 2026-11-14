@@ -1,0 +1,26 @@
+import type { SceneCue } from './SceneCue.ts'
+
+export type Staging = {
+  readonly thingOnTheCounter: string | null
+  readonly portrait: string | null
+  readonly shiningPetIds: readonly string[]
+}
+
+export const emptyStage: Staging = { thingOnTheCounter: null, portrait: null, shiningPetIds: [] }
+
+export function stagedAfter(staging: Staging, cues: readonly SceneCue[]): Staging {
+  return cues.reduce(stagedAfterOne, staging)
+}
+
+function stagedAfterOne(staging: Staging, cue: SceneCue): Staging {
+  switch (cue.kind) {
+    case 'show':
+      return { ...staging, thingOnTheCounter: cue.thing }
+    case 'hide':
+      return { ...staging, thingOnTheCounter: null }
+    case 'mood':
+      return { ...staging, portrait: cue.portrait }
+    case 'shine':
+      return { ...staging, shiningPetIds: [...staging.shiningPetIds, cue.petId] }
+  }
+}

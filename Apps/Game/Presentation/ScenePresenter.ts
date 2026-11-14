@@ -2,6 +2,7 @@ import type { Brew, Phase, TeahouseCatalog, TeahouseState } from '../../../Share
 import type { DeepReadonly } from '../../../Shared/Engine/DeepReadonly.ts'
 import type { GameTexts } from '../Texts/Texts.ts'
 import type { PetShown, SceneViewState, ServedBowl, TableShown, TimeOfTheEvening } from './SceneViewState.ts'
+import type { Staging } from './Staging.ts'
 import { teaColour } from './TeaLooks.ts'
 
 type State = DeepReadonly<TeahouseState>
@@ -10,19 +11,18 @@ type AnyPhase = DeepReadonly<Phase>
 
 const steepShareByVerdict: Readonly<Record<Brew['steep'], number>> = { weak: 0.3, right: 0.7, bitter: 1 }
 
-export function sceneOf(state: State, catalog: TeahouseCatalog, texts: GameTexts): SceneViewState {
+export function sceneOf(state: State, catalog: TeahouseCatalog, texts: GameTexts, staging: Staging): SceneViewState {
   const { phase } = state
-  const visit = catalog.visits[state.visitId]
   const isTheGuestHere = guestIsHereIn(phase)
   return {
     dayTitle: texts.textWith('day.title', { day: String(state.day) }),
     time: timeIn(phase),
     windowView: state.windowView,
-    guestPortrait: isTheGuestHere ? state.mood : null,
-    thingOnTheCounter: isTheGuestHere && phase.kind !== 'parting' ? (visit?.bringsToTheCounter ?? null) : null,
+    guestPortrait: isTheGuestHere ? (staging.portrait ?? state.mood) : null,
+    thingOnTheCounter: isTheGuestHere ? staging.thingOnTheCounter : null,
     servedBowl: servedBowlIn(phase),
     shelf: state.shelf,
-    pets: Object.keys(catalog.pets).map((petId): PetShown => ({ petId, tone: shines(state, petId) ? 'shining' : 'dull' })),
+    pets: Object.keys(catalog.pets).map((petId): PetShown => ({ petId, tone: shines(state, petId) || staging.shiningPetIds.includes(petId) ? 'shining' : 'dull' })),
     table: tableIn(phase, catalog),
   }
 }

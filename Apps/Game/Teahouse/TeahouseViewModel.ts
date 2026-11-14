@@ -3,6 +3,7 @@ import type { AppLog } from '../../Engine/AppLog.ts'
 import type { Moment } from '../Presentation/Moment.ts'
 import { MomentPresenter } from '../Presentation/MomentPresenter.ts'
 import { sceneOf } from '../Presentation/ScenePresenter.ts'
+import { emptyStage, stagedAfter, type Staging } from '../Presentation/Staging.ts'
 import type { GameTexts } from '../Texts/Texts.ts'
 import type { TeahouseViewState } from './TeahouseViewState.ts'
 
@@ -15,6 +16,8 @@ export class TeahouseViewModel {
   private readonly startOver: () => void
   private momentKey = ''
   private beatsRead = 0
+  private beatsStaged = 0
+  private staging: Staging = emptyStage
 
   constructor(session: TeahouseSession, catalog: TeahouseCatalog, texts: GameTexts, log: AppLog, startOver: () => void) {
     this.session = session
@@ -29,8 +32,9 @@ export class TeahouseViewModel {
     const moment = this.currentMoment()
     const lastBeat = moment.beats.length - 1
     const beatShown = Math.min(this.beatsRead, lastBeat)
+    this.stageTheBeatsThrough(moment, beatShown)
     return {
-      scene: sceneOf(this.session.state, this.catalog, this.texts),
+      scene: sceneOf(this.session.state, this.catalog, this.texts, this.staging),
       panel: { key: `${moment.key}#${beatShown}`, beat: moment.beats[beatShown] ?? null, prompt: beatShown === lastBeat ? moment.prompt : null, nextLabel: this.texts.text('action.next') },
     }
   }
@@ -68,11 +72,19 @@ export class TeahouseViewModel {
     this.startOver()
   }
 
+  private stageTheBeatsThrough(moment: Moment, beatShown: number): void {
+    const beatsToStage = moment.beats.slice(this.beatsStaged, beatShown + 1)
+    this.staging = stagedAfter(this.staging, beatsToStage.flatMap((beat) => beat.cues))
+    this.beatsStaged = Math.max(this.beatsStaged, beatShown + 1)
+  }
+
   private currentMoment(): Moment {
     const moment = this.momentPresenter.moment(this.session.state)
     if (moment.key !== this.momentKey) {
       this.momentKey = moment.key
       this.beatsRead = 0
+      this.beatsStaged = 0
+      if (moment.startsAnEvening) this.staging = emptyStage
     }
     return moment
   }

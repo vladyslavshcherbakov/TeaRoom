@@ -52,6 +52,7 @@ The thresholds are in `Shared/Content/Stories/ArcherWife/WifeEvenings.ts`.
 ## Writing a line
 
 - A line is one string. A line break starts a new beat, and the player reads one beat at a time.
+- The scene changes with the beat that tells of the change, never before it. A beat starts with its cues: `[show flask]` puts a thing on the counter, `[hide]` takes it away, `[mood wife-open]` changes the portrait, `[shine toad]` makes a pet shine. The portrait of an answer changes on its first beat without a cue.
 - A beat wrapped in `*asterisks*` is a stage direction. `{speaker}` at the start of a beat names who says it, when it is not the visit's guest.
 - Events are named outright: who came, what happened, what they hold. Feelings and conclusions are never said: the player draws them.
 - A guest's opening is at most nine beats, an answer at most four, and a beat fits two or three lines on a phone.
