@@ -8,8 +8,8 @@ const firstCup: ExchangeDefinition = {
   prompt: null,
   whispers: { toad: 'wife.cup1.toad', pixiu: 'wife.cup1.pixiu', budai: 'wife.cup1.budai' },
   replies: [
-    replyOf('ask', 'whatIsHeLike', 'wife.cup1.ask', [outcome('wife.cup1.ask.answer', 'wife-calm', toExchange('aboutTheThief'), { learns: ['spokeOfTheThief'] })]),
-    replyOf('sympathise', 'threeYears', 'wife.cup1.sympathise', [outcome('wife.cup1.sympathise.answer', 'wife-tense', toExchange('aboutTheHusband'), { learns: ['spokeOfTheHusband'] })]),
+    replyOf('ask', 'whatIsHeLike', 'wife.cup1.ask', [outcome('wife.cup1.ask.answer', 'wife-tense', toExchange('aboutTheThief'), { learns: ['spokeOfTheThief'] })]),
+    replyOf('sympathise', 'threeYears', 'wife.cup1.sympathise', [outcome('wife.cup1.sympathise.answer', 'wife-calm', toExchange('aboutTheHusband'), { learns: ['spokeOfTheHusband'] })]),
     replyOf('object', 'couldHavePoured', 'wife.cup1.object', [outcome('wife.cup1.object.answer', 'wife-open', toExchange('aboutHerself'), { learns: ['spokeOfHerself'] })]),
   ],
 }
@@ -18,7 +18,7 @@ const aboutTheThief: ExchangeDefinition = {
   prompt: null,
   whispers: { toad: 'wife.thief.toad', pixiu: 'wife.thief.pixiu', budai: 'wife.thief.budai' },
   replies: [
-    replyOf('ask', 'doesHeTrustHim', 'wife.thief.ask', [outcome('wife.thief.ask.answer', 'wife-tense', toExchange('advice'), { changes: [grows('resolve')] })]),
+    replyOf('ask', 'doesHeTrustHim', 'wife.thief.ask', [outcome('wife.thief.ask.answer', 'wife-calm', toExchange('advice'), { changes: [grows('resolve')] })]),
     replyOf('sympathise', 'afraidToGoHome', 'wife.thief.sympathise', [outcome('wife.thief.sympathise.answer', 'wife-tense', toExchange('advice'), { changes: [falls('trust')] })]),
     replyOf('object', 'whyHere', 'wife.thief.object', [outcome('wife.thief.object.answer', 'wife-open', toExchange('advice'), { changes: [grows('trust')] })]),
   ],
@@ -29,7 +29,7 @@ const aboutTheHusband: ExchangeDefinition = {
   whispers: { toad: 'wife.husband.toad', pixiu: 'wife.husband.pixiu', budai: 'wife.husband.budai' },
   replies: [
     replyOf('ask', 'whenHeBroughtIt', 'wife.husband.ask', [outcome('wife.husband.ask.answer', 'wife-open', toExchange('advice'), { changes: [grows('attachment')] })]),
-    replyOf('sympathise', 'heRefusedForYou', 'wife.husband.sympathise', [outcome('wife.husband.sympathise.answer', 'wife-tense', toExchange('advice'), { changes: [grows('resolve')] })]),
+    replyOf('sympathise', 'heRefusedForYou', 'wife.husband.sympathise', [outcome('wife.husband.sympathise.answer', 'wife-calm', toExchange('advice'), { changes: [grows('resolve')] })]),
     replyOf('object', 'heIsAfraid', 'wife.husband.object', [outcome('wife.husband.object.answer', 'wife-open', toExchange('advice'), { changes: [grows('attachment', 2)] })]),
   ],
 }
@@ -52,7 +52,7 @@ const adviceReplies: readonly ReplyDefinition[] = [
   replyOf('advise', 'leaveItHere', 'wife.advice.leave', [
     outcome('wife.advice.leave.accepted', 'wife-open', toEnding('leftTheFlask'), { when: trustAtLeast(trustToLeaveTheFlask) }),
     outcome('wife.advice.leave.refusedAgain', 'wife-tense', toEnding('drankInPanic'), { when: onAReturnVisit }),
-    outcome('wife.advice.leave.refused', 'wife-calm', toEnding('comesBack')),
+    outcome('wife.advice.leave.refused', 'wife-tense', toEnding('comesBack')),
   ]),
   replyOf('advise', 'drink', 'wife.advice.drink', [
     outcome('wife.advice.drink.fromTheThief', 'wife-calm', toEnding('drank'), { when: knows('spokeOfTheThief') }),
@@ -73,8 +73,8 @@ const adviceOnTheSecondNight: ExchangeDefinition = { ...advice, prompt: 'wife.re
 const endings: Readonly<Record<string, EndingDefinition>> = {
   waited: ending('wife.ending.waited', 'wife-open', { tomorrow: { visitId: 'coupleTogether', rumour: 'rumour.waited', windowView: 'moon', daysLater: 2 } }),
   drankInPanic: ending('wife.ending.drankInPanic', 'wife-tense', { tomorrow: { visitId: 'meiWithTheRumour', rumour: 'rumour.drankInPanic', windowView: 'moonWithHer', daysLater: 4 } }),
-  leftTheFlask: ending('wife.ending.leftTheFlask', 'wife-calm', { leavesOnTheShelf: ['flask'], tomorrow: { visitId: 'apprenticeWithTheBow', rumour: 'rumour.leftTheFlask', windowView: 'moon', daysLater: 2 } }),
-  comesBack: ending('wife.ending.comesBack', 'wife-calm', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'dusk', daysLater: 1 } }),
+  leftTheFlask: ending('wife.ending.leftTheFlask', 'wife-open', { leavesOnTheShelf: ['flask'], tomorrow: { visitId: 'apprenticeWithTheBow', rumour: 'rumour.leftTheFlask', windowView: 'moon', daysLater: 2 } }),
+  comesBack: ending('wife.ending.comesBack', 'wife-tense', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'dusk', daysLater: 1 } }),
   teaRanOut: ending('wife.ending.teaRanOut', 'wife-tense', { tomorrow: { visitId: 'wifeReturns', rumour: 'rumour.comesBack', windowView: 'dusk', daysLater: 1 } }),
   drank: ending('wife.ending.drank', 'wife-calm', { tomorrow: { visitId: 'husbandAfterTheMoon', rumour: 'rumour.drank', windowView: 'moonWithHer', daysLater: 2 } }),
   poured: ending('wife.ending.poured', 'wife-open', { leavesOnTheShelf: ['emptyFlask'], makesImmortal: ['toad'], tomorrow: { visitId: 'husbandWhoKnows', rumour: 'rumour.poured', windowView: 'moon', daysLater: 2 } }),
@@ -89,7 +89,7 @@ const bowlRemarks: VisitDefinition['bowlRemarks'] = {
 export const wifeFirstEvening: VisitDefinition = {
   guestId: 'wife',
   opening: 'wife.opening',
-  openingMood: 'wife-calm',
+  openingMood: 'wife-tense',
   bringsToTheCounter: 'flask',
   trustOnArrival: 0,
   isAReturn: false,

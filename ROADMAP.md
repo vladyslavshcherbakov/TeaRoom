@@ -12,12 +12,13 @@ The next tasks, in order. Each ends with something that opens on an iPhone from 
 
 ## Art and sound
 
-1. The user accepts or redirects the drawn style.
-   - Does the game stay in vector, or move to low-resolution pixel art? The user answers.
-2. The window gets views for seasons and weather, and the room a seasonal branch.
-3. The old room's painted bowls come back as pictures of bowls.
+1. Every guest is redrawn after the wife's three portraits: an asymmetric pose, an expression told by gaze, mouth and shoulders, and the lantern's light.
+   - Are the wife's new portraits the right manner for the other guests? The user answers.
+2. The room gets the lantern's light on the counter and less bare wall.
+3. The window gets views for seasons and weather, and the room a seasonal branch.
+4. The old room's painted bowls come back as pictures of bowls.
    - Their paintings were removed with the 3D room. Do they return as drawn bowls? The user answers.
-4. The room gets sound: the kettle, the pour, the night outside.
+5. The room gets sound: the kettle, the pour, the night outside.
 
 ## The teahouse
 

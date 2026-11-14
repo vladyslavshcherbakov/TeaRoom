@@ -5,8 +5,8 @@ import { picture, setShown, showArt, svgElement, type Box } from './SvgParts.ts'
 const scene: Box = { x: 0, y: 0, width: 800, height: 600 }
 const windowView: Box = { x: 490, y: 45, width: 240, height: 240 }
 const windowHole = { cx: 610, cy: 165, r: 105 }
-const singleGuest: Box = { x: 140, y: 85, width: 400, height: 520 }
-const twoGuests: Box = { x: 40, y: 85, width: 600, height: 520 }
+const singleGuest: Box = { x: 140, y: 60, width: 400, height: 520 }
+const twoGuests: Box = { x: 40, y: 60, width: 600, height: 520 }
 const lanternGlow = { cx: 455, cy: 88, r: 150 }
 const servedBowl: Box = { x: 318, y: 418, width: 132, height: 90 }
 const teaInTheServedBowl = { cx: 384, cy: 446.8, rx: 44.4, ry: 10.8 }
